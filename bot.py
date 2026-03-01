@@ -50,7 +50,7 @@ from events import (
 # НАСТРОЙКИ
 # ============================================================
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-WEBAPP_URL = "https://daviddavidov20022-commits.github.io/-/webapp/"
+WEBAPP_URL = "https://daviddavidov20022-commits.github.io/Mir-Tankov/webapp/"
 
 # ID администратора (ваш Telegram ID)
 # Чтобы узнать свой ID: отправьте /myid боту
@@ -180,30 +180,88 @@ async def cmd_start(message: types.Message):
         first_name=message.from_user.first_name,
     )
 
-    reply_keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(
-                    text="🚀 Войти в Мир Танков",
-                    web_app=WebAppInfo(url=WEBAPP_URL),
-                )
-            ]
-        ],
-        resize_keyboard=True,
-        is_persistent=True,
-    )
+    # Проверяем подписку
+    sub = check_subscription(message.from_user.id)
+    is_admin = ADMIN_ID and message.from_user.id == ADMIN_ID
 
-    await message.answer(
-        "🪖 <b>Добро пожаловать, Танкист!</b>\n\n"
-        "🎰 Крути <b>Колесо Фортуны</b> и выигрывай!\n"
-        "📊 Статистика: /stats\n"
-        "🎯 Челленджи: /challenge\n"
-        "⚔️ Ивенты: /event\n"
-        "💎 Подписка: /subscribe\n"
-        "👤 Мой профиль: /profile\n\n"
-        "Нажми кнопку <b>«🚀 Войти в Мир Танков»</b> внизу 👇",
+    if sub and sub.get("active") or is_admin:
+        # === ПОДПИСЧИК / АДМИН — полный доступ ===
+        reply_keyboard = ReplyKeyboardMarkup(
+            keyboard=[
+                [
+                    KeyboardButton(
+                        text="🚀 Войти в Мир Танков",
+                        web_app=WebAppInfo(url=WEBAPP_URL),
+                    )
+                ]
+            ],
+            resize_keyboard=True,
+            is_persistent=True,
+        )
+
+        days_left = sub['days_left'] if sub and sub.get('active') else '∞'
+
+        await message.answer(
+            "🪖 <b>Добро пожаловать, Танкист!</b>\n\n"
+            f"✅ Подписка активна ({days_left} дн.)\n\n"
+            "🎰 Крути <b>Колесо Фортуны</b> и выигрывай!\n"
+            "📊 Статистика: /stats\n"
+            "🎯 Челленджи: /challenge\n"
+            "⚔️ Ивенты: /event\n"
+            "🔥 Донат: /donate\n"
+            "👤 Мой профиль: /profile\n\n"
+            "Нажми кнопку <b>«🚀 Войти в Мир Танков»</b> внизу 👇",
+            parse_mode="HTML",
+            reply_markup=reply_keyboard,
+        )
+    else:
+        # === БЕЗ ПОДПИСКИ — показываем paywall ===
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="💎 Оформить подписку",
+                callback_data="show_subscribe"
+            )],
+            [InlineKeyboardButton(
+                text="📊 Посмотреть статистику (бесплатно)",
+                callback_data="free_stats"
+            )],
+        ])
+
+        await message.answer(
+            "🪖 <b>Добро пожаловать в Мир Танков!</b>\n\n"
+            "🔒 Это <b>закрытый клуб</b> для подписчиков.\n\n"
+            "💎 <b>Что даёт подписка:</b>\n"
+            "├ 🎰 Колесо Фортуны\n"
+            "├ 📊 Полная статистика + WN8\n"
+            "├ 🎯 Челленджи с призами\n"
+            "├ ⚔️ Арена — вызовы на бой\n"
+            "├ 🤖 AI-ассистент\n"
+            "└ 🏅 Значок подписчика\n\n"
+            "💰 <b>От 490₽/мес</b> (250 ⭐)\n"
+            "🔥 Скидки до -25% за длительный период!\n\n"
+            "Нажми 👇 чтобы оформить:",
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
+
+
+@dp.callback_query(F.data == "show_subscribe")
+async def show_subscribe_from_start(callback: CallbackQuery):
+    """Перенаправляем на команду подписки"""
+    await callback.answer()
+    await cmd_subscribe(callback.message)
+
+
+@dp.callback_query(F.data == "free_stats")
+async def free_stats_from_start(callback: CallbackQuery, state: FSMContext):
+    """Бесплатная статистика"""
+    await callback.answer()
+    await state.set_state(StatsStates.waiting_nickname)
+    await callback.message.answer(
+        "🔍 <b>ПОИСК ИГРОКА</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "Введите никнейм игрока Мир Танков:",
         parse_mode="HTML",
-        reply_markup=reply_keyboard,
     )
 
 
