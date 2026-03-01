@@ -58,8 +58,9 @@ LESTA_APP_ID = os.getenv("LESTA_APP_ID", "")
 VERIFY_REDIRECT_URL = WEBAPP_URL + "verify.html"
 
 # ID администратора (ваш Telegram ID)
-# Чтобы узнать свой ID: отправьте /myid боту
-ADMIN_ID = None  # Будет установлен при первом /admin
+# Узнать свой ID: отправьте /myid боту, затем добавьте в .env: ADMIN_ID=123456789
+_admin_env = os.getenv("ADMIN_ID", "")
+ADMIN_ID = int(_admin_env) if _admin_env.strip() else None
 
 # Путь к конфигу призов
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "webapp", "prizes-config.json")
@@ -2026,6 +2027,39 @@ async def admin_subscription_stats(callback: CallbackQuery):
 
 
 # ==========================================
+# ОБРАБОТЧИК WEB APP DATA (промокоды из WebApp)
+# ==========================================
+@dp.message(F.web_app_data)
+async def handle_webapp_data(message: types.Message):
+    """Обработка данных из WebApp"""
+    try:
+        data = json.loads(message.web_app_data.data)
+        action = data.get("action")
+
+        if action == "create_promo":
+            if not ADMIN_ID or message.from_user.id != ADMIN_ID:
+                return
+
+            result = create_promo_code(
+                code=data["code"],
+                days=data.get("days", 30),
+                uses=data.get("uses", 1),
+                created_by=message.from_user.id,
+            )
+
+            if result.get("success"):
+                await message.answer(
+                    f"🎟️ Промокод <code>{result['code']}</code> создан!\n"
+                    f"📅 {result['days']} дней, 👤 {result['uses']} исп.",
+                    parse_mode="HTML",
+                )
+            else:
+                await message.answer(f"⚠️ {result.get('error', 'Ошибка')}")
+    except Exception as e:
+        logger.error(f"Ошибка обработки WebApp data: {e}")
+
+
+# ==========================================
 # ОБРАБОТЧИК ОСТАЛЬНЫХ СООБЩЕНИЙ
 # (должен быть последним!)
 # ==========================================
@@ -2427,7 +2461,72 @@ async def process_promo_code(message: types.Message, state: FSMContext):
 
 
 # ==========================================
-# СОЗДАНИЕ ПРОМОКОДА — /createpromo (Админ)
+# БЫСТРЫЙ ПРОМОКОД — /go (Админ, 1 клик!)
+# ==========================================
+import random
+import string
+
+@dp.message(Command("go"))
+async def cmd_go_promo(message: types.Message):
+    if not ADMIN_ID or message.from_user.id != ADMIN_ID:
+        await message.answer("❌ Только для администратора")
+        return
+
+    # Генерируем случайный код
+    code = 'MT-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+    result = create_promo_code(
+        code=code,
+        days=30,
+        uses=1,
+        created_by=message.from_user.id,
+    )
+
+    if result.get("success"):
+        # Красивый блок с кодом для копирования
+        await message.answer(
+            f"🎟️ <b>ПРОМОКОД СОЗДАН!</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"👇 Скопируйте и отправьте:\n\n"
+            f"<code>{result['code']}</code>\n\n"
+            f"📅 Действует: <b>30 дней</b>\n"
+            f"👤 Использований: <b>1</b>\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💡 Инструкция для юзера:\n"
+            f"<i>Зайди в бот → /start → 🎟️ Промокод</i>",
+            parse_mode="HTML",
+        )
+    else:
+        await message.answer(f"❌ {result.get('error', 'Ошибка')}")
+
+
+@dp.message(Command("golist"))
+async def cmd_golist(message: types.Message):
+    """Список всех промокодов"""
+    if not ADMIN_ID or message.from_user.id != ADMIN_ID:
+        await message.answer("❌ Только для администратора")
+        return
+
+    promos = get_promo_codes()
+    if not promos:
+        await message.answer("📭 Промокодов пока нет.\nСоздать: /go")
+        return
+
+    text = "🎟️ <b>ВСЕ ПРОМОКОДЫ</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+    for p in promos[:20]:
+        status = "✅" if p["uses_left"] > 0 else "❌"
+        text += (
+            f"{status} <code>{p['code']}</code> — "
+            f"{p['days']}д, "
+            f"осталось: {p['uses_left']}/{p['uses_total']}\n"
+        )
+
+    text += f"\n━━━━━━━━━━━━━━━━━━━━━━\nНовый: /go"
+    await message.answer(text, parse_mode="HTML")
+
+
+# ==========================================
+# СОЗДАНИЕ ПРОМОКОДА — /createpromo (Админ, ручной)
 # ==========================================
 @dp.message(Command("createpromo"))
 async def cmd_createpromo(message: types.Message, state: FSMContext):
@@ -2762,16 +2861,16 @@ async def _process_verify_code(message: types.Message, code: str):
 async def main():
     logger.info("Бот запускается...")
 
+    # НЕ ставим глобальную WebApp кнопку —
+    # она даётся только подписчикам через /start
     try:
+        from aiogram.types import MenuButtonDefault
         await bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(
-                text="🚀 Войти",
-                web_app=WebAppInfo(url=WEBAPP_URL),
-            )
+            menu_button=MenuButtonDefault()
         )
-        logger.info("Кнопка меню установлена")
+        logger.info("Меню по умолчанию установлено")
     except Exception as e:
-        logger.warning(f"Не удалось установить кнопку меню: {e}")
+        logger.warning(f"Не удалось установить меню: {e}")
 
     await dp.start_polling(bot)
 
