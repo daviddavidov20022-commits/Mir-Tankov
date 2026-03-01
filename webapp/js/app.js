@@ -267,15 +267,20 @@ const ADMIN_ID = 6507474079;
 let generatedPromos = JSON.parse(localStorage.getItem('admin_promos') || '[]');
 
 function checkAdmin() {
+    const panel = document.getElementById('adminPanel');
+    if (!panel) return;
+
     if (tg && tg.initDataUnsafe?.user) {
+        // В Telegram — проверяем ID
         const userId = tg.initDataUnsafe.user.id;
         if (userId === ADMIN_ID) {
-            const panel = document.getElementById('adminPanel');
-            if (panel) {
-                panel.style.display = 'block';
-                renderPromoHistory();
-            }
+            panel.style.display = 'block';
+            renderPromoHistory();
         }
+    } else {
+        // В браузере (для тестирования) — показываем всегда
+        panel.style.display = 'block';
+        renderPromoHistory();
     }
 }
 
