@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — Колесо Фортуны</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+    <header class="admin-header">
+        <div class="admin-header__left">
+            <a href="index.html" class="back-link">← Назад</a>
+            <h1>⚙️ Админ-панель</h1>
+            <span class="admin-badge">Колесо Фортуны</span>
+        </div>
+        <div class="admin-header__actions">
+            <button class="btn btn--outline" onclick="resetToDefault()">🔄 Сброс</button>
+            <button class="btn btn--primary" onclick="saveConfig()">💾 Сохранить</button>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <!-- Left: Prize Editor -->
+        <div class="admin-panel">
+            <!-- Settings Section -->
+            <section class="admin-section">
+                <h2 class="admin-section__title">⚙️ Настройки</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>Бесплатных вращений/день</label>
+                        <input type="number" id="settingFreeSpins" min="0" max="10" value="1"
+                            onchange="onSettingsChange()">
+                    </div>
+                    <div class="setting-item">
+                        <label>Цена за вращение (монеты)</label>
+                        <input type="number" id="settingSpinCost" min="0" max="10000" value="50"
+                            onchange="onSettingsChange()">
+                    </div>
+                    <div class="setting-item">
+                        <label>Цена Stars (⭐)</label>
+                        <input type="number" id="settingStarsCost" min="1" max="1000" value="5"
+                            onchange="onSettingsChange()">
+                    </div>
+                    <div class="setting-item">
+                        <label>Кол-во вращений за Stars</label>
+                        <input type="number" id="settingBuyAmount" min="1" max="100" value="5"
+                            onchange="onSettingsChange()">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Prizes Section -->
+            <section class="admin-section">
+                <div class="admin-section__header">
+                    <h2 class="admin-section__title">🎁 Призы</h2>
+                    <button class="btn btn--small btn--success" onclick="addPrize()">+ Добавить</button>
+                </div>
+                <div class="prizes-list" id="prizesList">
+                    <!-- Prizes will be rendered here -->
+                </div>
+            </section>
+
+            <!-- Export/Import -->
+            <section class="admin-section">
+                <h2 class="admin-section__title">📦 Экспорт / Импорт</h2>
+                <div class="export-actions">
+                    <button class="btn btn--outline" onclick="downloadConfig()">📥 Скачать config.json</button>
+                    <button class="btn btn--outline" onclick="document.getElementById('importFile').click()">📤
+                        Загрузить config.json</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none"
+                        onchange="importConfig(event)">
+                    <button class="btn btn--outline" onclick="copyConfigToClipboard()">📋 Скопировать JSON</button>
+                </div>
+                <p class="export-hint">
+                    💡 Скачайте файл и замените <code>prizes-config.json</code> на GitHub,<br>
+                    чтобы изменения отобразились у всех пользователей.
+                </p>
+            </section>
+        </div>
+
+        <!-- Right: Live Preview -->
+        <div class="admin-preview">
+            <h2 class="admin-section__title">👁️ Предпросмотр</h2>
+            <div class="preview-wheel-container">
+                <canvas id="previewCanvas" width="300" height="300"></canvas>
+            </div>
+            <div class="preview-stats">
+                <h3>📊 Шансы выпадения</h3>
+                <div class="chances-list" id="chancesList"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" style="display:none;">
+        <span class="toast__icon" id="toastIcon">✅</span>
+        <span class="toast__text" id="toastText">Сохранено!</span>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

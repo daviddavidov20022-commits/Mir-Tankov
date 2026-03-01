@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Мир Танков — Профиль</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+
+    <!-- Header -->
+    <header class="profile-header">
+        <button class="back-btn" onclick="goBack()">
+            <span>←</span>
+        </button>
+        <div class="header-title">
+            <h1>👤 Профиль</h1>
+            <span class="header-sub">Мир Танков Клуб</span>
+        </div>
+    </header>
+
+    <!-- Avatar Section -->
+    <section class="avatar-section">
+        <div class="avatar-container">
+            <div class="avatar-ring"></div>
+            <div class="avatar-image" id="avatarImage">🪖</div>
+            <div class="avatar-level" id="avatarLevel">1</div>
+        </div>
+        <h2 class="profile-name" id="profileName">Танкист</h2>
+        <div class="profile-tag" id="profileTag">Новобранец</div>
+        <div class="club-badge">
+            <span class="club-badge__icon">⭐</span>
+            <span class="club-badge__text">Член клуба</span>
+        </div>
+    </section>
+
+    <!-- WoT Nickname Section -->
+    <section class="section-card" id="nicknameSection">
+        <div class="section-card__header">
+            <span class="section-card__icon">🎮</span>
+            <h3>Никнейм в Мир Танков</h3>
+        </div>
+        <div class="nickname-wrap">
+            <div class="nickname-display" id="nicknameDisplay" style="display: none;">
+                <div class="nickname-saved">
+                    <span class="nickname-saved__icon">✅</span>
+                    <span class="nickname-saved__name" id="savedNickname">—</span>
+                </div>
+                <div class="nickname-actions">
+                    <button class="btn-icon" onclick="viewMyStats()" title="Моя статистика">
+                        📊
+                    </button>
+                    <button class="btn-icon btn-icon--edit" onclick="editNickname()" title="Изменить">
+                        ✏️
+                    </button>
+                </div>
+            </div>
+            <div class="nickname-edit" id="nicknameEdit">
+                <p class="nickname-hint">Введите ваш игровой ник, чтобы быстро просматривать статистику</p>
+                <div class="input-group">
+                    <input type="text" id="nicknameInput" class="input-field" placeholder="Ваш ник в Мир Танков..."
+                        autocomplete="off" autocorrect="off" maxlength="24">
+                    <button class="btn-save" id="saveNicknameBtn" onclick="saveNickname()">
+                        Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="section-card" id="quickStatsSection" style="display: none;">
+        <div class="section-card__header">
+            <span class="section-card__icon">📈</span>
+            <h3>Быстрая статистика</h3>
+        </div>
+        <div class="quick-stats-grid">
+            <div class="qs-item">
+                <div class="qs-value" id="qsBattles">—</div>
+                <div class="qs-label">Боёв</div>
+            </div>
+            <div class="qs-item">
+                <div class="qs-value" id="qsWinrate">—</div>
+                <div class="qs-label">Побед</div>
+            </div>
+            <div class="qs-item">
+                <div class="qs-value" id="qsDamage">—</div>
+                <div class="qs-label">Ср. урон</div>
+            </div>
+            <div class="qs-item">
+                <div class="qs-value" id="qsRating">—</div>
+                <div class="qs-label">Рейтинг</div>
+            </div>
+        </div>
+        <button class="btn-full-stats" onclick="viewMyStats()">
+            📊 Полная статистика →
+        </button>
+    </section>
+
+    <!-- Game Progress -->
+    <section class="section-card">
+        <div class="section-card__header">
+            <span class="section-card__icon">🏆</span>
+            <h3>Прогресс в клубе</h3>
+        </div>
+        <div class="progress-list">
+            <div class="progress-item">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">🪙 Монеты</span>
+                    <span class="progress-item__value" id="progCoins">0</span>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">⭐ Опыт</span>
+                    <span class="progress-item__value" id="progXP">0</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-bar__fill" id="xpBar"></div>
+                </div>
+                <div class="progress-item__sub">
+                    <span id="xpProgress">0 / 100 XP</span>
+                    <span id="xpLevel">Уровень 1</span>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">🎮 Игр сыграно</span>
+                    <span class="progress-item__value" id="progGames">0</span>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">🏆 Побед</span>
+                    <span class="progress-item__value" id="progWins">0</span>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">🔥 Серия дней</span>
+                    <span class="progress-item__value" id="progStreak">0 дн.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Achievements -->
+    <section class="section-card">
+        <div class="section-card__header">
+            <span class="section-card__icon">🎖</span>
+            <h3>Достижения</h3>
+        </div>
+        <div class="achievements-grid">
+            <div class="achievement" id="achFirst">
+                <div class="achievement__icon">🏁</div>
+                <div class="achievement__name">Первый бой</div>
+                <div class="achievement__desc">Сыграй 1 игру</div>
+            </div>
+            <div class="achievement" id="achVeteran">
+                <div class="achievement__icon">⚔️</div>
+                <div class="achievement__name">Ветеран</div>
+                <div class="achievement__desc">Сыграй 50 игр</div>
+            </div>
+            <div class="achievement" id="achRich">
+                <div class="achievement__icon">💰</div>
+                <div class="achievement__name">Богач</div>
+                <div class="achievement__desc">Накопи 5000 монет</div>
+            </div>
+            <div class="achievement" id="achStreak">
+                <div class="achievement__icon">🔥</div>
+                <div class="achievement__name">Серия</div>
+                <div class="achievement__desc">7 дней подряд</div>
+            </div>
+            <div class="achievement achievement--locked" id="achLucky">
+                <div class="achievement__icon">🍀</div>
+                <div class="achievement__name">Везунчик</div>
+                <div class="achievement__desc">Выиграй легенд. приз</div>
+            </div>
+            <div class="achievement achievement--locked" id="achPro">
+                <div class="achievement__icon">👑</div>
+                <div class="achievement__name">Про</div>
+                <div class="achievement__desc">Достигни 10 уровня</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions-section">
+        <button class="action-btn action-btn--stats" onclick="viewMyStats()">
+            <span class="action-btn__icon">📊</span>
+            <span class="action-btn__text">Моя статистика</span>
+            <span class="action-btn__arrow">→</span>
+        </button>
+        <button class="action-btn action-btn--games" onclick="goBack()">
+            <span class="action-btn__icon">🎮</span>
+            <span class="action-btn__text">Играть</span>
+            <span class="action-btn__arrow">→</span>
+        </button>
+    </section>
+
+    <div class="footer-spacer"></div>
+
+    <script src="js/app.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+
+</html>

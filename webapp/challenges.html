@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Арена Челленджей — Мир Танков</title>
+    <meta name="description" content="Вызови на бой и докажи кто лучший!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .arena-page {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px 16px 120px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #9AA4B5;
+            text-decoration: none;
+            font-size: 0.8rem;
+            margin-bottom: 16px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: #C8AA6E;
+        }
+
+        /* Tabs */
+        .arena-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 4px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .arena-tab {
+            flex: 1;
+            padding: 10px 8px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: #5A6577;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .arena-tab--active {
+            background: linear-gradient(135deg, rgba(200, 170, 110, 0.15), rgba(200, 170, 110, 0.05));
+            color: #C8AA6E;
+            box-shadow: 0 2px 12px rgba(200, 170, 110, 0.1);
+        }
+
+        .arena-tab:hover:not(.arena-tab--active) {
+            color: #9AA4B5;
+        }
+
+        /* Balance bar */
+        .cheese-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(245, 190, 11, 0.08), rgba(245, 190, 11, 0.02));
+            border: 1px solid rgba(245, 190, 11, 0.15);
+            border-radius: 14px;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.3s ease 0.05s backwards;
+        }
+
+        .cheese-bar__left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cheese-bar__icon {
+            font-size: 1.5rem;
+        }
+
+        .cheese-bar__label {
+            font-size: 0.65rem;
+            color: #5A6577;
+        }
+
+        .cheese-bar__amount {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+            color: #f5be0b;
+        }
+
+        .cheese-bar__buy {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(245, 190, 11, 0.3);
+            background: rgba(245, 190, 11, 0.1);
+            color: #f5be0b;
+            font-size: 0.65rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cheese-bar__buy:hover {
+            background: rgba(245, 190, 11, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* Section label */
+        .section-lbl {
+            font-size: 0.65rem;
+            color: #5A6577;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            padding-left: 4px;
+        }
+
+        /* ==========================================
+           TAB 1: Players list
+           ========================================== */
+        .players-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+
+        .player-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: linear-gradient(145deg, #1a2332, #161d28);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            animation: fadeInUp 0.35s ease backwards;
+        }
+
+        .player-card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .player-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .player-card:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .player-card:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .player-card:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .player-card:hover {
+            border-color: rgba(200, 170, 110, 0.2);
+            transform: translateX(4px);
+        }
+
+        .player-card:active {
+            transform: scale(0.98);
+        }
+
+        .player-card__avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .player-card__avatar--online {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .player-card__avatar--offline {
+            background: linear-gradient(135deg, #4B5563, #6B7280);
+        }
+
+        .player-card__info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-card__nick {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.82rem;
+            color: #E8E6E3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-card__stats-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 3px;
+        }
+
+        .player-card__stat {
+            font-size: 0.6rem;
+            color: #5A6577;
+        }
+
+        .player-card__stat span {
+            color: #9AA4B5;
+            font-weight: 600;
+        }
+
+        .player-card__status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .player-card__status--online {
+            background: #4ade80;
+            box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes statusPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .player-card__status--offline {
+            background: #4B5563;
+        }
+
+        .player-card__challenge-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.55rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .player-card__challenge-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        /* ==========================================
+           CHALLENGE MODAL
+           ========================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay--open {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 380px;
+            background: #0d1117;
+            border-radius: 20px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            animation: modalSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalSlide {
+            from {
+                transform: translateY(30px) scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 18px 20px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.03));
+            border-bottom: 1px solid rgba(239, 68, 68, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.9rem;
+            color: #ef4444;
+        }
+
+        .modal-header__close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: #9AA4B5;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        /* VS display */
+        .vs-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .vs-player {
+            text-align: center;
+        }
+
+        .vs-player__avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 800;
+            margin: 0 auto 6px;
+        }
+
+        .vs-player__avatar--you {
+            background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
+            color: #0a0e14;
+        }
+
+        .vs-player__avatar--enemy {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .vs-player__name {
+            font-size: 0.7rem;
+            color: #E8E6E3;
+            font-weight: 600;
+        }
+
+        .vs-icon {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.2rem;
+            color: #ef4444;
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            animation: vsPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes vsPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        /* Form fields */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 0.65rem;
+            color: #5A6577;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-select,
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #1a2332;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            font-size: 0.82rem;
+            color: #E8E6E3;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A6577' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        .form-select option {
+            background: #1a2332;
+            color: #E8E6E3;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        /* Battles count selector */
+        .battles-selector {
+            display: flex;
+            gap: 6px;
+        }
+
+        .battles-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            background: #1a2332;
+            color: #5A6577;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .battles-btn--selected {
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .battles-btn:hover:not(.battles-btn--selected) {
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #9AA4B5;
+        }
+
+        /* Wager */
+        .wager-group {
+            margin-bottom: 20px;
+        }
+
+        .wager-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wager-input-wrap .form-input {
+            text-align: center;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+        }
+
+        .wager-currency {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .wager-hint {
+            font-size: 0.6rem;
+            color: #5A6577;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .wager-hint span {
+            color: #f5be0b;
+            font-weight: 600;
+        }
+
+        /* Presets */
+        .wager-presets {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .wager-preset {
+            flex: 1;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(245, 190, 11, 0.15);
+            background: rgba(245, 190, 11, 0.05);
+            color: #f5be0b;
+            font-size: 0.6rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .wager-preset:hover {
+            background: rgba(245, 190, 11, 0.15);
+            transform: scale(1.05);
+        }
+
+        /* Summary */
+        .challenge-summary {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .challenge-summary__row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .challenge-summary__key {
+            font-size: 0.7rem;
+            color: #5A6577;
+        }
+
+        .challenge-summary__val {
+            font-size: 0.7rem;
+            color: #E8E6E3;
+            font-weight: 600;
+        }
+
+        /* Send challenge button */
+        .challenge-send-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: white;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .challenge-send-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .challenge-send-btn:hover::before {
+            left: 100%;
+        }
+
+        .challenge-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.3);
+        }
+
+        .challenge-send-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ==========================================
+           TAB 2: Active challenges
+           ========================================== */
+        .challenge-card {
+            background: linear-gradient(145deg, #1a2332, #161d28);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 10px;
+            animation: fadeInUp 0.35s ease backwards;
+        }
+
+        .challenge-card--incoming {
+            border-color: rgba(239, 68, 68, 0.2);
+            background: linear-gradient(145deg, #1f1a1a, #1a1215);
+        }
+
+        .challenge-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .challenge-card__vs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .challenge-card__player {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #E8E6E3;
+        }
+
+        .challenge-card__vs-icon {
+            font-size: 0.55rem;
+            font-weight: 800;
+            color: #ef4444;
+        }
+
+        .challenge-card__badge {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.5rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .challenge-card__badge--waiting {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .challenge-card__badge--active {
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .challenge-card__badge--incoming {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .challenge-card__details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .challenge-card__detail {
+            font-size: 0.65rem;
+            color: #5A6577;
+        }
+
+        .challenge-card__detail span {
+            color: #9AA4B5;
+            font-weight: 600;
+        }
+
+        .challenge-card__progress {
+            margin-bottom: 10px;
+        }
+
+        .challenge-card__progress-bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .challenge-card__progress-left {
+            height: 100%;
+            background: linear-gradient(90deg, #C8AA6E, #E8D5A3);
+            transition: width 0.5s ease;
+        }
+
+        .challenge-card__progress-right {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            margin-left: auto;
+            transition: width 0.5s ease;
+        }
+
+        .challenge-card__progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.6rem;
+            color: #5A6577;
+            margin-top: 4px;
+        }
+
+        .challenge-card__progress-text span {
+            font-weight: 700;
+        }
+
+        .challenge-card__actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .challenge-card__accept {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .challenge-card__decline {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+            color: #9AA4B5;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .challenge-card__accept:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+        }
+
+        .challenge-card__decline:hover {
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        /* ==========================================
+           TAB 3: History
+           ========================================== */
+        .history-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            margin-bottom: 6px;
+            animation: fadeInUp 0.35s ease backwards;
+        }
+
+        .history-card__result {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .history-card__info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-card__match {
+            font-size: 0.75rem;
+            color: #E8E6E3;
+            font-weight: 600;
+        }
+
+        .history-card__condition {
+            font-size: 0.6rem;
+            color: #5A6577;
+        }
+
+        .history-card__cheese {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .history-card__cheese--win {
+            color: #4ade80;
+        }
+
+        .history-card__cheese--loss {
+            color: #ef4444;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #5A6577;
+        }
+
+        .empty-state__icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state__text {
+            font-size: 0.8rem;
+        }
+
+        /* Tab content hide/show */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content--active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <div class="arena-page">
+        <a href="index.html" class="back-btn">← Назад</a>
+
+        <!-- Balance -->
+        <div class="cheese-bar">
+            <div class="cheese-bar__left">
+                <div class="cheese-bar__icon">🧀</div>
+                <div>
+                    <div class="cheese-bar__label">Баланс СЫР</div>
+                    <div class="cheese-bar__amount" id="cheeseBalance">1 250</div>
+                </div>
+            </div>
+            <button class="cheese-bar__buy" onclick="buyCheese()">+ Купить</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="arena-tabs">
+            <button class="arena-tab arena-tab--active" onclick="switchTab('players', this)">⚔️ Игроки</button>
+            <button class="arena-tab" onclick="switchTab('active', this)">🔥 Активные</button>
+            <button class="arena-tab" onclick="switchTab('history', this)">📜 История</button>
+        </div>
+
+        <!-- TAB: Players -->
+        <div class="tab-content tab-content--active" id="tab-players">
+            <div class="section-lbl">Подписчики онлайн</div>
+            <div class="players-list" id="playersList">
+
+                <div class="player-card" onclick="openChallenge('xXx_NAGIBATOR_xXx', '16.2k', '52.8%', '1840')">
+                    <div class="player-card__avatar player-card__avatar--online">NA</div>
+                    <div class="player-card__info">
+                        <div class="player-card__nick">xXx_NAGIBATOR_xXx</div>
+                        <div class="player-card__stats-row">
+                            <div class="player-card__stat">Боёв: <span>16.2k</span></div>
+                            <div class="player-card__stat">WR: <span>52.8%</span></div>
+                            <div class="player-card__stat">WN8: <span>1840</span></div>
+                        </div>
+                    </div>
+                    <div class="player-card__status player-card__status--online"></div>
+                    <button class="player-card__challenge-btn"
+                        onclick="event.stopPropagation(); openChallenge('xXx_NAGIBATOR_xXx', '16.2k', '52.8%', '1840')">⚔️
+                        БОЙ</button>
+                </div>
+
+                <div class="player-card" onclick="openChallenge('Tank_Destroyer_95', '24.1k', '54.3%', '2150')">
+                    <div class="player-card__avatar player-card__avatar--online">TD</div>
+                    <div class="player-card__info">
+                        <div class="player-card__nick">Tank_Destroyer_95</div>
+                        <div class="player-card__stats-row">
+                            <div class="player-card__stat">Боёв: <span>24.1k</span></div>
+                            <div class="player-card__stat">WR: <span>54.3%</span></div>
+                            <div class="player-card__stat">WN8: <span>2150</span></div>
+                        </div>
+                    </div>
+                    <div class="player-card__status player-card__status--online"></div>
+                    <button class="player-card__challenge-btn"
+                        onclick="event.stopPropagation(); openChallenge('Tank_Destroyer_95', '24.1k', '54.3%', '2150')">⚔️
+                        БОЙ</button>
+                </div>
+
+                <div class="player-card" onclick="openChallenge('Fors777_2016', '8.7k', '49.1%', '1120')">
+                    <div class="player-card__avatar player-card__avatar--online">F7</div>
+                    <div class="player-card__info">
+                        <div class="player-card__nick">Fors777_2016</div>
+                        <div class="player-card__stats-row">
+                            <div class="player-card__stat">Боёв: <span>8.7k</span></div>
+                            <div class="player-card__stat">WR: <span>49.1%</span></div>
+                            <div class="player-card__stat">WN8: <span>1120</span></div>
+                        </div>
+                    </div>
+                    <div class="player-card__status player-card__status--online"></div>
+                    <button class="player-card__challenge-btn"
+                        onclick="event.stopPropagation(); openChallenge('Fors777_2016', '8.7k', '49.1%', '1120')">⚔️
+                        БОЙ</button>
+                </div>
+
+                <div class="player-card">
+                    <div class="player-card__avatar player-card__avatar--offline">PS</div>
+                    <div class="player-card__info">
+                        <div class="player-card__nick">ProShoter_RU</div>
+                        <div class="player-card__stats-row">
+                            <div class="player-card__stat">Боёв: <span>31.5k</span></div>
+                            <div class="player-card__stat">WR: <span>56.1%</span></div>
+                            <div class="player-card__stat">WN8: <span>2480</span></div>
+                        </div>
+                    </div>
+                    <div class="player-card__status player-card__status--offline"></div>
+                    <button class="player-card__challenge-btn" onclick="event.stopPropagation()"
+                        style="opacity:0.4; pointer-events:none">Офлайн</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Active challenges -->
+        <div class="tab-content" id="tab-active">
+
+            <!-- Incoming challenge -->
+            <div class="section-lbl">📩 Входящий вызов</div>
+            <div class="challenge-card challenge-card--incoming">
+                <div class="challenge-card__header">
+                    <div class="challenge-card__vs">
+                        <span class="challenge-card__player">Tank_Destroyer_95</span>
+                        <span class="challenge-card__vs-icon">VS</span>
+                        <span class="challenge-card__player">Ты</span>
+                    </div>
+                    <span class="challenge-card__badge challenge-card__badge--incoming">ВЫЗОВ!</span>
+                </div>
+                <div class="challenge-card__details">
+                    <div class="challenge-card__detail">Тип: <span>Тяжёлые</span></div>
+                    <div class="challenge-card__detail">Боёв: <span>10</span></div>
+                    <div class="challenge-card__detail">Метрика: <span>Урон</span></div>
+                    <div class="challenge-card__detail">Ставка: <span>🧀 200</span></div>
+                </div>
+                <div class="challenge-card__actions">
+                    <button class="challenge-card__accept" onclick="acceptChallenge()">✅ Принять</button>
+                    <button class="challenge-card__decline" onclick="declineChallenge()">✕ Отклонить</button>
+                </div>
+            </div>
+
+            <!-- Active challenge with progress -->
+            <div class="section-lbl" style="margin-top:16px">🔥 В процессе</div>
+            <div class="challenge-card">
+                <div class="challenge-card__header">
+                    <div class="challenge-card__vs">
+                        <span class="challenge-card__player">Ты</span>
+                        <span class="challenge-card__vs-icon">VS</span>
+                        <span class="challenge-card__player">Fors777</span>
+                    </div>
+                    <span class="challenge-card__badge challenge-card__badge--active">ИДЁТ</span>
+                </div>
+                <div class="challenge-card__details">
+                    <div class="challenge-card__detail">Тип: <span>Средние</span></div>
+                    <div class="challenge-card__detail">Боёв: <span>5</span></div>
+                    <div class="challenge-card__detail">Метрика: <span>WN8</span></div>
+                    <div class="challenge-card__detail">Ставка: <span>🧀 100</span></div>
+                </div>
+                <div class="challenge-card__progress">
+                    <div class="challenge-card__progress-bar-bg">
+                        <div class="challenge-card__progress-left" style="width: 60%"></div>
+                        <div class="challenge-card__progress-right" style="width: 40%"></div>
+                    </div>
+                    <div class="challenge-card__progress-text">
+                        <span style="color:#C8AA6E">Ты: 3/5 ✅</span>
+                        <span style="color:#ef4444">Fors: 2/5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: History -->
+        <div class="tab-content" id="tab-history">
+            <div class="section-lbl">📜 История челленджей</div>
+
+            <div class="history-card">
+                <div class="history-card__result">🏆</div>
+                <div class="history-card__info">
+                    <div class="history-card__match">vs xXx_NAGIBATOR_xXx</div>
+                    <div class="history-card__condition">10 боёв · Тяжёлые · Урон · Вчера</div>
+                </div>
+                <div class="history-card__cheese history-card__cheese--win">+500 🧀</div>
+            </div>
+
+            <div class="history-card">
+                <div class="history-card__result">💀</div>
+                <div class="history-card__info">
+                    <div class="history-card__match">vs ProShoter_RU</div>
+                    <div class="history-card__condition">5 боёв · Любые · WN8 · 2 дня назад</div>
+                </div>
+                <div class="history-card__cheese history-card__cheese--loss">-200 🧀</div>
+            </div>
+
+            <div class="history-card">
+                <div class="history-card__result">🏆</div>
+                <div class="history-card__info">
+                    <div class="history-card__match">vs Fors777_2016</div>
+                    <div class="history-card__condition">10 боёв · Средние · Победы · 3 дня назад</div>
+                </div>
+                <div class="history-card__cheese history-card__cheese--win">+300 🧀</div>
+            </div>
+
+            <div class="history-card">
+                <div class="history-card__result">🏆</div>
+                <div class="history-card__info">
+                    <div class="history-card__match">vs Tank_Destroyer_95</div>
+                    <div class="history-card__condition">5 боёв · ПТ-САУ · Фраги · 5 дней назад</div>
+                </div>
+                <div class="history-card__cheese history-card__cheese--win">+150 🧀</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHALLENGE MODAL -->
+    <div class="modal-overlay" id="challengeModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-header__title">⚔️ Вызов на бой</div>
+                <button class="modal-header__close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- VS -->
+                <div class="vs-display">
+                    <div class="vs-player">
+                        <div class="vs-player__avatar vs-player__avatar--you">ТЫ</div>
+                        <div class="vs-player__name">ISERVERI</div>
+                    </div>
+                    <div class="vs-icon">VS</div>
+                    <div class="vs-player">
+                        <div class="vs-player__avatar vs-player__avatar--enemy" id="modalEnemyAvatar">NA</div>
+                        <div class="vs-player__name" id="modalEnemyName">xXx_NAGIBATOR</div>
+                    </div>
+                </div>
+
+                <!-- Tank type -->
+                <div class="form-group">
+                    <label class="form-label">Тип танков</label>
+                    <select class="form-select" id="tankType" onchange="updateSummary()">
+                        <option value="any">🔄 Любые танки</option>
+                        <option value="heavy" selected>🛡️ Тяжёлые танки</option>
+                        <option value="medium">⚡ Средние танки</option>
+                        <option value="light">🏎️ Лёгкие танки</option>
+                        <option value="td">🎯 ПТ-САУ</option>
+                        <option value="spg">💥 Артиллерия</option>
+                    </select>
+                </div>
+
+                <!-- Metric -->
+                <div class="form-group">
+                    <label class="form-label">Кто побеждает по</label>
+                    <select class="form-select" id="metric" onchange="updateSummary()">
+                        <option value="damage" selected>💥 Суммарный урон</option>
+                        <option value="kills">🎯 Фраги</option>
+                        <option value="wins">🏆 Победы</option>
+                        <option value="wn8">📊 Средний WN8</option>
+                        <option value="xp">⭐ Суммарный опыт</option>
+                    </select>
+                </div>
+
+                <!-- Battles count -->
+                <div class="form-group">
+                    <label class="form-label">Количество боёв</label>
+                    <div class="battles-selector" id="battlesSelector">
+                        <button class="battles-btn" data-val="5" onclick="selectBattles(this)">5</button>
+                        <button class="battles-btn battles-btn--selected" data-val="10"
+                            onclick="selectBattles(this)">10</button>
+                        <button class="battles-btn" data-val="15" onclick="selectBattles(this)">15</button>
+                        <button class="battles-btn" data-val="20" onclick="selectBattles(this)">20</button>
+                        <button class="battles-btn" data-val="30" onclick="selectBattles(this)">30</button>
+                    </div>
+                </div>
+
+                <!-- Wager -->
+                <div class="wager-group">
+                    <label class="form-label">Ставка</label>
+                    <div class="wager-input-wrap">
+                        <div class="wager-currency">🧀</div>
+                        <input type="number" class="form-input" id="wagerAmount" value="100" min="10" max="10000"
+                            oninput="updateSummary()">
+                    </div>
+                    <div class="wager-presets">
+                        <button class="wager-preset" onclick="setWager(50)">50</button>
+                        <button class="wager-preset" onclick="setWager(100)">100</button>
+                        <button class="wager-preset" onclick="setWager(250)">250</button>
+                        <button class="wager-preset" onclick="setWager(500)">500</button>
+                        <button class="wager-preset" onclick="setWager(1000)">1000</button>
+                    </div>
+                    <div class="wager-hint">Баланс: <span id="modalBalance">1 250 🧀</span></div>
+                </div>
+
+                <!-- Summary -->
+                <div class="challenge-summary" id="challengeSummary">
+                    <div class="challenge-summary__row">
+                        <span class="challenge-summary__key">Тип танков</span>
+                        <span class="challenge-summary__val" id="sumTank">🛡️ Тяжёлые</span>
+                    </div>
+                    <div class="challenge-summary__row">
+                        <span class="challenge-summary__key">Метрика</span>
+                        <span class="challenge-summary__val" id="sumMetric">💥 Суммарный урон</span>
+                    </div>
+                    <div class="challenge-summary__row">
+                        <span class="challenge-summary__key">Боёв</span>
+                        <span class="challenge-summary__val" id="sumBattles">10</span>
+                    </div>
+                    <div class="challenge-summary__row">
+                        <span class="challenge-summary__key">Ваша ставка</span>
+                        <span class="challenge-summary__val" id="sumWager">🧀 100</span>
+                    </div>
+                    <div class="challenge-summary__row">
+                        <span class="challenge-summary__key">Приз победителю</span>
+                        <span class="challenge-summary__val" id="sumPrize" style="color: #4ade80">🧀 200</span>
+                    </div>
+                </div>
+
+                <button class="challenge-send-btn" onclick="sendChallenge()">
+                    ⚔️ ОТПРАВИТЬ ВЫЗОВ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </div>
+        <div class="nav-item nav-item--active">
+            <span class="nav-icon">⚔️</span>
+            <span class="nav-label">Арена</span>
+        </div>
+        <div class="nav-item" onclick="location.href='subscribe.html'">
+            <span class="nav-icon">💎</span>
+            <span class="nav-label">Подписка</span>
+        </div>
+        <div class="nav-item" onclick="location.href='profile.html'">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
+        </div>
+    </nav>
+
+    <script>
+        let selectedBattles = 10;
+        let currentEnemy = '';
+
+        // Tab switching
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('tab-content--active'));
+            document.querySelectorAll('.arena-tab').forEach(t => t.classList.remove('arena-tab--active'));
+            document.getElementById('tab-' + tabId).classList.add('tab-content--active');
+            btn.classList.add('arena-tab--active');
+        }
+
+        // Battles selector
+        function selectBattles(btn) {
+            document.querySelectorAll('.battles-btn').forEach(b => b.classList.remove('battles-btn--selected'));
+            btn.classList.add('battles-btn--selected');
+            selectedBattles = parseInt(btn.dataset.val);
+            updateSummary();
+        }
+
+        // Wager presets
+        function setWager(val) {
+            document.getElementById('wagerAmount').value = val;
+            updateSummary();
+        }
+
+        // Open challenge modal
+        function openChallenge(nick, battles, wr, wn8) {
+            currentEnemy = nick;
+            document.getElementById('modalEnemyName').textContent = nick;
+            document.getElementById('modalEnemyAvatar').textContent = nick.substring(0, 2).toUpperCase();
+            document.getElementById('challengeModal').classList.add('modal-overlay--open');
+            updateSummary();
+        }
+
+        function closeModal() {
+            document.getElementById('challengeModal').classList.remove('modal-overlay--open');
+        }
+
+        // Update summary
+        function updateSummary() {
+            const tankSelect = document.getElementById('tankType');
+            const metricSelect = document.getElementById('metric');
+            const wager = parseInt(document.getElementById('wagerAmount').value) || 0;
+
+            document.getElementById('sumTank').textContent = tankSelect.options[tankSelect.selectedIndex].text;
+            document.getElementById('sumMetric').textContent = metricSelect.options[metricSelect.selectedIndex].text;
+            document.getElementById('sumBattles').textContent = selectedBattles;
+            document.getElementById('sumWager').textContent = '🧀 ' + wager.toLocaleString();
+            document.getElementById('sumPrize').textContent = '🧀 ' + (wager * 2).toLocaleString();
+        }
+
+        // Send challenge
+        function sendChallenge() {
+            const wager = parseInt(document.getElementById('wagerAmount').value) || 0;
+            const balance = 1250;
+
+            if (wager > balance) {
+                alert('❌ Недостаточно СЫР!\nВаш баланс: ' + balance + ' 🧀');
+                return;
+            }
+
+            if (wager < 10) {
+                alert('❌ Минимальная ставка: 10 🧀');
+                return;
+            }
+
+            alert(
+                `⚔️ Вызов отправлен!\n\n` +
+                `Противник: ${currentEnemy}\n` +
+                `Ставка: ${wager} 🧀\n` +
+                `Боёв: ${selectedBattles}\n\n` +
+                `Ожидаем подтверждение от игрока...`
+            );
+            closeModal();
+        }
+
+        function acceptChallenge() {
+            alert('✅ Вы приняли вызов!\n\n⚔️ Бой начался! Удачи на поле битвы!\n\nИграйте на тяжёлых танках — бот отслеживает вашу статистику.');
+        }
+
+        function declineChallenge() {
+            alert('❌ Вызов отклонён');
+        }
+
+        function buyCheese() {
+            alert('🧀 Покупка СЫР\n\nОтправьте /cheese в бот для покупки!\n\n1 СЫР = 1 ₽');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('challengeModal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Particles
+        (function () {
+            const container = document.getElementById('bgParticles');
+            if (!container) return;
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'bg-particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = (8 + Math.random() * 12) + 's';
+                p.style.animationDelay = Math.random() * 10 + 's';
+                p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+                container.appendChild(p);
+            }
+        })();
+    </script>
+</body>
+
+</html>

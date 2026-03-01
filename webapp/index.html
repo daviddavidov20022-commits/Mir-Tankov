@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Мир Танков — Клуб</title>
+    <meta name="description" content="Мир Танков — Клуб. Мини-игры, статистика и многое другое!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Animated background particles -->
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Tank icon -->
+                        <rect x="12" y="34" width="40" height="14" rx="3" fill="#C8AA6E" />
+                        <rect x="20" y="24" width="24" height="14" rx="2" fill="#A08850" />
+                        <rect x="36" y="18" width="18" height="8" rx="2" fill="#8B7340" />
+                        <circle cx="18" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
+                        <circle cx="32" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
+                        <circle cx="46" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>МИР ТАНКОВ</h1>
+                    <span class="logo-subtitle">Клуб</span>
+                </div>
+            </div>
+            <div class="user-info" id="userInfo">
+                <div class="user-avatar" id="userAvatar">🪖</div>
+                <span class="user-name" id="userName">Танкист</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats bar -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="stat-icon">🪙</div>
+            <div class="stat-value" id="coinsCount">0</div>
+            <div class="stat-label">Монеты</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value" id="xpCount">0</div>
+            <div class="stat-label">Опыт</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value" id="winsCount">0</div>
+            <div class="stat-label">Победы</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">🎮</div>
+            <div class="stat-value" id="gamesCount">0</div>
+            <div class="stat-label">Игры</div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <main class="main-content">
+
+        <!-- Player Stats Card - NEW! -->
+        <section class="section-header">
+            <h2>📊 Моя Статистика</h2>
+            <p>Проверь свои показатели в игре!</p>
+        </section>
+
+        <div class="games-grid" style="margin-bottom: 16px;">
+            <!-- Stats Card -->
+            <div class="game-card game-card--active game-card--stats" id="gameStats" onclick="openGame('stats.html')">
+                <div class="game-card__badge game-card__badge--hot">НОВИНКА</div>
+                <div class="game-card__icon">
+                    <div class="tank-mini">
+                        <div class="tank-mini__body">🏅</div>
+                    </div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Статистика Танкиста</h3>
+                    <p class="game-card__desc">Введи ник и узнай свой % побед, средний урон и рейтинг!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">📈 WN8 рейтинг</span>
+                    <span class="game-card__play">Открыть →</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Games Section -->
+        <section class="section-header">
+            <h2>🎮 Игры</h2>
+            <p>Выбери игру и получай награды!</p>
+        </section>
+
+        <div class="games-grid">
+            <!-- Wheel of Fortune -->
+            <div class="game-card game-card--active" id="gameWheel" onclick="openGame('wheel.html')">
+                <div class="game-card__badge">НОВИНКА</div>
+                <div class="game-card__icon">
+                    <div class="wheel-mini">
+                        <div class="wheel-mini__inner">🎰</div>
+                    </div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Колесо Фортуны</h3>
+                    <p class="game-card__desc">Крути колесо и выигрывай ценные призы!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">🪙 До 1000</span>
+                    <span class="game-card__play">Играть →</span>
+                </div>
+            </div>
+
+            <!-- Quiz - Coming soon -->
+            <div class="game-card game-card--locked" id="gameQuiz">
+                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
+                <div class="game-card__lock">🔒</div>
+                <div class="game-card__icon">
+                    <div class="quiz-mini">❓</div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Танковая Викторина</h3>
+                    <p class="game-card__desc">Проверь свои знания о танках!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">⭐ Опыт x2</span>
+                    <span class="game-card__play">Скоро</span>
+                </div>
+            </div>
+
+            <!-- Tank Battle - Coming soon -->
+            <div class="game-card game-card--locked" id="gameBattle">
+                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
+                <div class="game-card__lock">🔒</div>
+                <div class="game-card__icon">
+                    <div class="battle-mini">⚔️</div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Танковый Бой</h3>
+                    <p class="game-card__desc">Собери команду и победи врагов!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">🏆 Трофеи</span>
+                    <span class="game-card__play">Скоро</span>
+                </div>
+            </div>
+
+            <!-- Slot Machine - Coming soon -->
+            <div class="game-card game-card--locked" id="gameSlots">
+                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
+                <div class="game-card__lock">🔒</div>
+                <div class="game-card__icon">
+                    <div class="slots-mini">🎰</div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Слоты Танков</h3>
+                    <p class="game-card__desc">Испытай удачу на танковых слотах!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">🪙 Джекпот</span>
+                    <span class="game-card__play">Скоро</span>
+                </div>
+            </div>
+
+            <!-- Daily Missions - Coming soon -->
+            <div class="game-card game-card--locked" id="gameMissions">
+                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
+                <div class="game-card__lock">🔒</div>
+                <div class="game-card__icon">
+                    <div class="missions-mini">📋</div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Ежедневные Задания</h3>
+                    <p class="game-card__desc">Выполняй задания каждый день!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">🎁 Бонусы</span>
+                    <span class="game-card__play">Скоро</span>
+                </div>
+            </div>
+
+            <!-- Card Collection - Coming soon -->
+            <div class="game-card game-card--locked" id="gameCards">
+                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
+                <div class="game-card__lock">🔒</div>
+                <div class="game-card__icon">
+                    <div class="cards-mini">🃏</div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Коллекция Танков</h3>
+                    <p class="game-card__desc">Собери все карточки танков!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">🃏 Редкости</span>
+                    <span class="game-card__play">Скоро</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily bonus section -->
+        <section class="daily-bonus" id="dailyBonus">
+            <div class="daily-bonus__content">
+                <div class="daily-bonus__icon">🎁</div>
+                <div class="daily-bonus__text">
+                    <h3>Ежедневный Бонус</h3>
+                    <p id="dailyBonusText">Забери свой бонус!</p>
+                </div>
+                <button class="daily-bonus__btn" id="dailyBonusBtn" onclick="claimDailyBonus()">
+                    Забрать
+                </button>
+            </div>
+        </section>
+
+        <!-- Streaming Platforms Section -->
+        <section class="section-header" style="margin-top: 24px;">
+            <h2>📺 Трансляции</h2>
+            <p>Смотри стримы на любимой платформе!</p>
+        </section>
+
+        <div class="stream-links" id="streamLinks">
+            <a href="https://www.youtube.com/@ISERVERI" target="_blank" class="stream-card stream-card--youtube"
+                id="linkYoutube">
+                <div class="stream-card__icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                        <path
+                            d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                    </svg>
+                </div>
+                <div class="stream-card__info">
+                    <span class="stream-card__name">YouTube</span>
+                    <span class="stream-card__user">@ISERVERI</span>
+                </div>
+                <div class="stream-card__badge">LIVE</div>
+            </a>
+
+            <a href="https://vkplay.live/iserveri" target="_blank" class="stream-card stream-card--vkplay"
+                id="linkVkplay">
+                <div class="stream-card__icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                        <path
+                            d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.293 7.707l-4.586 4.586a1 1 0 0 1-1.414 0L7.707 11.707a1 1 0 0 1 1.414-1.414L11 12.172l3.879-3.879a1 1 0 0 1 1.414 1.414z" />
+                    </svg>
+                </div>
+                <div class="stream-card__info">
+                    <span class="stream-card__name">VK Play</span>
+                    <span class="stream-card__user">iserveri</span>
+                </div>
+                <div class="stream-card__badge">LIVE</div>
+            </a>
+
+            <a href="https://trovo.live/ISERVERI" target="_blank" class="stream-card stream-card--trovo" id="linkTrovo">
+                <div class="stream-card__icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                        <path
+                            d="M2.592 2l4.219 10.283L2.406 22h5.22l2.2-4.928L12.029 22h5.203l-4.39-9.717L17.219 2h-5.204L9.843 6.833 7.797 2H2.592zm14.19 0l2.7 6.07L22 2h-5.218z" />
+                    </svg>
+                </div>
+                <div class="stream-card__info">
+                    <span class="stream-card__name">Trovo</span>
+                    <span class="stream-card__user">ISERVERI</span>
+                </div>
+                <div class="stream-card__badge">LIVE</div>
+            </a>
+
+            <a href="https://www.twitch.tv/serverenok" target="_blank" class="stream-card stream-card--twitch"
+                id="linkTwitch">
+                <div class="stream-card__icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                        <path
+                            d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z" />
+                    </svg>
+                </div>
+                <div class="stream-card__info">
+                    <span class="stream-card__name">Twitch</span>
+                    <span class="stream-card__user">serverenok</span>
+                </div>
+                <div class="stream-card__badge">LIVE</div>
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Bottom navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item nav-item--active">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </div>
+        <div class="nav-item" onclick="openGame('wheel.html')">
+            <span class="nav-icon">🎰</span>
+            <span class="nav-label">Игры</span>
+        </div>
+        <div class="nav-item" onclick="openGame('stats.html')">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Стата</span>
+        </div>
+        <div class="nav-item" onclick="openGame('profile.html')">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
+        </div>
+    </nav>
+
+    <script src="js/app.js"></script>
+    <script src="js/chat-widget.js"></script>
+</body>
+
+</html>

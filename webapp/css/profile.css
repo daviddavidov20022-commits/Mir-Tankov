@@ -1,0 +1,711 @@
+/* ==========================================
+   PROFILE PAGE — Мир Танков Клуб
+   Premium dark military theme
+   ========================================== */
+
+:root {
+    --bg-primary: #0a0e14;
+    --bg-secondary: #0d1117;
+    --bg-card: #131a24;
+    --bg-card-inner: #171f2b;
+    --border-subtle: rgba(200, 170, 110, 0.08);
+    --border-gold: rgba(200, 170, 110, 0.25);
+    --border-active: rgba(200, 170, 110, 0.5);
+    --text-primary: #e8e6e3;
+    --text-secondary: #8b9bb4;
+    --text-gold: #C8AA6E;
+    --text-gold-light: #E8D5A3;
+    --gradient-gold: linear-gradient(135deg, #C8AA6E 0%, #E8D5A3 50%, #C8AA6E 100%);
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --yellow: #f1c40f;
+    --orange: #e67e22;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ==========================================
+   BACKGROUND GLOW
+   ========================================== */
+.bg-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(200, 170, 110, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(45, 90, 39, 0.04) 0%, transparent 40%);
+}
+
+/* ==========================================
+   HEADER
+   ========================================== */
+.profile-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(10, 14, 20, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.back-btn {
+    background: rgba(200, 170, 110, 0.1);
+    border: 1px solid var(--border-gold);
+    color: var(--text-gold);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.back-btn:active {
+    transform: scale(0.9);
+}
+
+.header-title h1 {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.15rem;
+    color: var(--text-gold);
+}
+
+.header-sub {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ==========================================
+   AVATAR SECTION
+   ========================================== */
+.avatar-section {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 32px 16px 24px;
+}
+
+.avatar-container {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 16px;
+}
+
+.avatar-ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    background: linear-gradient(135deg, #C8AA6E, #E8D5A3, #C8AA6E) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: ringRotate 6s linear infinite;
+}
+
+@keyframes ringRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.avatar-image {
+    width: 96px;
+    height: 96px;
+    background: linear-gradient(145deg, #1a2332, #131a24);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    border: 2px solid var(--border-gold);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.avatar-level {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 32px;
+    height: 32px;
+    background: var(--gradient-gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #0a0e14;
+    border: 3px solid var(--bg-primary);
+    box-shadow: 0 2px 8px rgba(200, 170, 110, 0.3);
+}
+
+.profile-name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.4rem;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.profile-tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--text-gold);
+    background: rgba(200, 170, 110, 0.1);
+    padding: 4px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border-gold);
+    margin-bottom: 12px;
+}
+
+.club-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(200, 170, 110, 0.15), rgba(200, 170, 110, 0.05));
+    padding: 6px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border-gold);
+    animation: badgeGlow 3s ease-in-out infinite;
+}
+
+.club-badge__icon {
+    font-size: 1rem;
+}
+
+.club-badge__text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-gold);
+    letter-spacing: 0.5px;
+}
+
+@keyframes badgeGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 rgba(200, 170, 110, 0);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(200, 170, 110, 0.15);
+    }
+}
+
+/* ==========================================
+   SECTION CARDS
+   ========================================== */
+.section-card {
+    position: relative;
+    z-index: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 20px;
+    margin: 0 16px 12px;
+    animation: cardSlideUp 0.5s ease-out both;
+}
+
+.section-card:nth-child(3) {
+    animation-delay: 0.05s;
+}
+
+.section-card:nth-child(4) {
+    animation-delay: 0.1s;
+}
+
+.section-card:nth-child(5) {
+    animation-delay: 0.15s;
+}
+
+.section-card:nth-child(6) {
+    animation-delay: 0.2s;
+}
+
+@keyframes cardSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-card__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.section-card__icon {
+    font-size: 1.3rem;
+}
+
+.section-card__header h3 {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text-gold);
+}
+
+/* ==========================================
+   NICKNAME
+   ========================================== */
+.nickname-wrap {
+    position: relative;
+}
+
+.nickname-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card-inner);
+    border-radius: 14px;
+    padding: 14px 16px;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+.nickname-saved {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nickname-saved__icon {
+    font-size: 1.1rem;
+}
+
+.nickname-saved__name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #fff;
+}
+
+.nickname-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-icon {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon:active {
+    transform: scale(0.9);
+}
+
+.btn-icon--edit {
+    border-color: rgba(200, 170, 110, 0.2);
+}
+
+.nickname-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.input-field {
+    flex: 1;
+    background: var(--bg-card-inner);
+    border: 2px solid var(--border-gold);
+    border-radius: 14px;
+    padding: 14px 16px;
+    color: #fff;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.input-field:focus {
+    border-color: var(--text-gold);
+    box-shadow: 0 0 20px rgba(200, 170, 110, 0.15);
+}
+
+.input-field::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-save {
+    background: var(--gradient-gold);
+    border: none;
+    border-radius: 14px;
+    padding: 14px 22px;
+    color: #0a0e14;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-save:active {
+    transform: scale(0.95);
+}
+
+/* ==========================================
+   QUICK STATS
+   ========================================== */
+.quick-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.qs-item {
+    background: var(--bg-card-inner);
+    border-radius: 12px;
+    padding: 12px 6px;
+    text-align: center;
+    border: 1px solid var(--border-subtle);
+}
+
+.qs-value {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1rem;
+    color: var(--text-gold);
+    margin-bottom: 2px;
+}
+
+.qs-label {
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-full-stats {
+    display: block;
+    width: 100%;
+    background: rgba(52, 152, 219, 0.1);
+    border: 1px solid rgba(52, 152, 219, 0.25);
+    border-radius: 12px;
+    padding: 12px;
+    color: #64b5f6;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-full-stats:active {
+    transform: scale(0.98);
+    background: rgba(52, 152, 219, 0.2);
+}
+
+/* ==========================================
+   PROGRESS
+   ========================================== */
+.progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.progress-item {
+    background: var(--bg-card-inner);
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--border-subtle);
+}
+
+.progress-item__info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-item__label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.progress-item__value {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.95rem;
+    color: #fff;
+}
+
+.progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress-bar__fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--gradient-gold);
+    transition: width 1s ease-out;
+    width: 0;
+}
+
+.progress-item__sub {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* ==========================================
+   ACHIEVEMENTS
+   ========================================== */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.achievement {
+    background: var(--bg-card-inner);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.achievement--unlocked {
+    border-color: var(--border-gold);
+    background: rgba(200, 170, 110, 0.08);
+}
+
+.achievement--locked {
+    opacity: 0.35;
+    filter: grayscale(80%);
+}
+
+.achievement__icon {
+    font-size: 1.8rem;
+    margin-bottom: 6px;
+}
+
+.achievement__name {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.achievement__desc {
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+/* ==========================================
+   ACTIONS
+   ========================================== */
+.actions-section {
+    position: relative;
+    z-index: 1;
+    padding: 4px 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: cardSlideUp 0.5s ease-out 0.25s both;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn:active {
+    transform: scale(0.98);
+}
+
+.action-btn--stats {
+    border-left: 3px solid var(--blue);
+}
+
+.action-btn--games {
+    border-left: 3px solid var(--green);
+}
+
+.action-btn__icon {
+    font-size: 1.4rem;
+}
+
+.action-btn__text {
+    flex: 1;
+    text-align: left;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.action-btn__arrow {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.footer-spacer {
+    height: 32px;
+}
+
+/* ==========================================
+   TOAST
+   ========================================== */
+.toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    border-radius: 14px;
+    padding: 12px 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast--visible {
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast__icon {
+    font-size: 1.2rem;
+}
+
+.toast__text {
+    font-size: 0.85rem;
+    color: #fff;
+    font-weight: 500;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 360px) {
+    .quick-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .achievements-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+}
+
+/* ==========================================
+   LOADING ANIMATION
+   ========================================== */
+.qs-value.loading {
+    color: transparent !important;
+    background: linear-gradient(90deg, rgba(200, 170, 110, 0.1) 25%, rgba(200, 170, 110, 0.25) 50%, rgba(200, 170, 110, 0.1) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+    min-height: 1.2em;
+    min-width: 40px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-6px);
+    }
+
+    75% {
+        transform: translateX(6px);
+    }
+}

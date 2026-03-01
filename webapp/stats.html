@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Мир Танков — Статистика</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/stats.css">
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <!-- Header -->
+    <header class="stats-header">
+        <button class="back-btn" onclick="goBack()">
+            <span>←</span>
+        </button>
+        <div class="header-title">
+            <h1>📊 Статистика</h1>
+            <span class="header-sub">Мир Танков</span>
+        </div>
+    </header>
+
+    <!-- Search Section -->
+    <section class="search-section" id="searchSection">
+        <div class="search-card">
+            <div class="search-icon">🔍</div>
+            <h2>Поиск игрока</h2>
+            <p>Введите никнейм игрока Мир Танков</p>
+
+            <div class="search-input-wrap">
+                <input type="text" id="nicknameInput" class="search-input" placeholder="Введите ник..."
+                    autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="24">
+                <button class="search-btn" id="searchBtn" onclick="searchPlayer()">
+                    <span class="search-btn__icon">🔍</span>
+                    <span class="search-btn__text">Найти</span>
+                </button>
+            </div>
+
+            <!-- Last searched -->
+            <div class="recent-searches" id="recentSearches" style="display: none;">
+                <span class="recent-label">Недавние:</span>
+                <div class="recent-list" id="recentList"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading -->
+    <section class="loading-section" id="loadingSection" style="display: none;">
+        <div class="loading-card">
+            <div class="tank-loader">
+                <div class="tank-loader__body">🏎️</div>
+                <div class="tank-loader__track"></div>
+            </div>
+            <p>Загрузка статистики...</p>
+        </div>
+    </section>
+
+    <!-- Player Stats -->
+    <section class="player-section" id="playerSection" style="display: none;">
+
+        <!-- Player header -->
+        <div class="player-header" id="playerHeader">
+            <div class="player-avatar">
+                <div class="player-avatar__ring" id="ratingRing"></div>
+                <div class="player-avatar__icon">🪖</div>
+            </div>
+            <div class="player-info">
+                <h2 class="player-nickname" id="playerNickname">—</h2>
+                <div class="player-rating" id="playerRating">
+                    <span class="rating-badge" id="ratingBadge">—</span>
+                    <span class="rating-value" id="ratingValue">0</span>
+                </div>
+                <div class="player-dates">
+                    <span id="playerCreated">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card stat-card--battles">
+                <div class="stat-card__icon">⚔️</div>
+                <div class="stat-card__value" id="statBattles">0</div>
+                <div class="stat-card__label">Боёв</div>
+            </div>
+            <div class="stat-card stat-card--winrate">
+                <div class="stat-card__icon">🏆</div>
+                <div class="stat-card__value" id="statWinrate">0%</div>
+                <div class="stat-card__label">Победы</div>
+                <div class="stat-card__bar">
+                    <div class="stat-card__bar-fill" id="winrateBar"></div>
+                </div>
+            </div>
+            <div class="stat-card stat-card--damage">
+                <div class="stat-card__icon">💥</div>
+                <div class="stat-card__value" id="statDamage">0</div>
+                <div class="stat-card__label">Ср. Урон</div>
+            </div>
+            <div class="stat-card stat-card--survive">
+                <div class="stat-card__icon">💚</div>
+                <div class="stat-card__value" id="statSurvive">0%</div>
+                <div class="stat-card__label">Выживание</div>
+                <div class="stat-card__bar">
+                    <div class="stat-card__bar-fill stat-card__bar-fill--green" id="surviveBar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Stats -->
+        <div class="detail-section">
+            <h3 class="detail-title">💥 Боевые показатели</h3>
+            <div class="detail-grid">
+                <div class="detail-row">
+                    <span class="detail-label">🎯 Средние фраги</span>
+                    <span class="detail-value" id="detailFrags">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">👁 Средний засвет</span>
+                    <span class="detail-value" id="detailSpotted">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🎯 Точность</span>
+                    <span class="detail-value" id="detailAccuracy">0%</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">⭐ Средний опыт</span>
+                    <span class="detail-value" id="detailXP">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🔥 Макс. урон</span>
+                    <span class="detail-value" id="detailMaxDmg">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">⭐ Макс. опыт</span>
+                    <span class="detail-value" id="detailMaxXP">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3 class="detail-title">📊 Результаты</h3>
+            <div class="detail-grid">
+                <div class="detail-row">
+                    <span class="detail-label">✅ Побед</span>
+                    <span class="detail-value detail-value--green" id="detailWins">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">❌ Поражений</span>
+                    <span class="detail-value detail-value--red" id="detailLosses">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🤝 Ничьих</span>
+                    <span class="detail-value" id="detailDraws">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🏰 Захват базы</span>
+                    <span class="detail-value" id="detailCapture">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🛡 Защита базы</span>
+                    <span class="detail-value" id="detailDefend">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skill Level -->
+        <div class="skill-section" id="skillSection">
+            <h3 class="detail-title">🎖 Оценка уровня</h3>
+            <div class="skill-card" id="skillCard">
+                <div class="skill-icon" id="skillIcon">🟢</div>
+                <div class="skill-info">
+                    <div class="skill-name" id="skillName">Хороший игрок</div>
+                    <div class="skill-desc" id="skillDesc">Уверенный боец на поле боя</div>
+                </div>
+            </div>
+            <div class="skill-bar-wrap">
+                <div class="skill-bar">
+                    <div class="skill-bar__fill" id="skillBar"></div>
+                </div>
+                <div class="skill-labels">
+                    <span>Новичок</span>
+                    <span>Средний</span>
+                    <span>Хороший</span>
+                    <span>Отличный</span>
+                    <span>Уникум</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Again -->
+        <button class="new-search-btn" onclick="showSearch()">
+            🔍 Искать другого игрока
+        </button>
+
+        <!-- Demo Warning -->
+        <div class="demo-notice" id="demoNotice">
+            ⚠️ Демо-данные. API ключ ещё не получен.
+        </div>
+    </section>
+
+    <script src="js/app.js"></script>
+    <script src="js/stats-page.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,20 @@
+# Секреты - НИКОГДА не загружать!
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.db
+
+# Моды WoT (большие файлы)
+mods/
+
+# Система
+*.bat
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
