@@ -2059,41 +2059,6 @@ async def handle_webapp_data(message: types.Message):
         logger.error(f"Ошибка обработки WebApp data: {e}")
 
 
-# ==========================================
-# ОБРАБОТЧИК ОСТАЛЬНЫХ СООБЩЕНИЙ
-# (должен быть последним!)
-# ==========================================
-@dp.message()
-async def handle_any(message: types.Message, state: FSMContext):
-    # Регистрируем пользователя при любом сообщении
-    get_or_create_user(
-        telegram_id=message.from_user.id,
-        username=message.from_user.username,
-        first_name=message.from_user.first_name,
-    )
-
-    current_state = await state.get_state()
-    if current_state is not None:
-        await message.answer("❌ Неверный формат. Попробуйте ещё раз или отправьте /admin")
-        return
-
-    if message.web_app_data:
-        data = message.web_app_data.data
-        await message.answer(f"🎁 Получены данные из приложения:\n{data}")
-    else:
-        await message.answer(
-            "🎮 <b>Команды:</b>\n\n"
-            "/start — Запуск мини-игр\n"
-            "/stats — Статистика игрока\n"
-            "/challenge — Челленджи\n"
-            "/event — Ивенты\n"
-            "/subscribe — Подписка\n"
-            "/profile — Мой профиль\n"
-            "/admin — Админ-панель\n\n"
-            "Или нажми <b>«🚀 Войти в Мир Танков»</b> внизу!",
-            parse_mode="HTML",
-        )
-
 
 # ==========================================
 # КОМАНДА /subscribe — Подписки через Telegram Stars ⭐
@@ -2851,6 +2816,51 @@ async def _process_verify_code(message: types.Message, code: str):
         "2. Ник совпадает с привязанным: <b>" + (nick or '—') + "</b>\n"
         "3. Код скопирован полностью\n\n"
         "Попробуйте ещё раз: /verify",
+        parse_mode="HTML",
+    )
+
+
+# ==========================================
+# ОБРАБОТЧИК ОСТАЛЬНЫХ СООБЩЕНИЙ
+# (должен быть ПОСЛЕДНИМ!)
+# ==========================================
+@dp.message()
+async def handle_any(message: types.Message, state: FSMContext):
+    get_or_create_user(
+        telegram_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+    )
+
+    current_state = await state.get_state()
+    if current_state is not None:
+        return  # Пусть state-specific хендлеры обработают
+
+    # Автодетект промокода (MT-XXXXX)
+    text = (message.text or "").strip().upper()
+    if text.startswith("MT-") and len(text) >= 6:
+        result = activate_promo_code(message.from_user.id, text)
+        if result.get("success"):
+            await message.answer(
+                f"🎉 <b>ПРОМОКОД АКТИВИРОВАН!</b>\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"✅ Подписка: <b>{result['days']} дней</b>\n"
+                f"📅 До: <b>{result['expires_at']}</b>\n\n"
+                f"Теперь нажмите /start чтобы войти! 🚀",
+                parse_mode="HTML",
+            )
+        else:
+            await message.answer(f"❌ {result.get('error', 'Промокод не найден')}")
+        return
+
+    await message.answer(
+        "🎮 <b>Команды:</b>\n\n"
+        "/start — Главная\n"
+        "/stats — Статистика игрока\n"
+        "/promo — Ввести промокод\n"
+        "/subscribe — Подписка\n"
+        "/profile — Мой профиль\n\n"
+        "Или просто отправьте промокод (MT-XXXXX)",
         parse_mode="HTML",
     )
 
