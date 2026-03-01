@@ -267,17 +267,41 @@ const ADMIN_ID = 6507474079;
 let generatedPromos = JSON.parse(localStorage.getItem('admin_promos') || '[]');
 
 function checkAdmin() {
-    const panel = document.getElementById('adminPanel');
-    if (!panel) return;
+    // ТОЛЬКО в Telegram и ТОЛЬКО для админа
+    if (!tg || !tg.initDataUnsafe?.user) return;
+    if (tg.initDataUnsafe.user.id !== ADMIN_ID) return;
 
-    // Показываем ТОЛЬКО админу по ID
-    if (tg && tg.initDataUnsafe?.user) {
-        const userId = tg.initDataUnsafe.user.id;
-        if (userId === ADMIN_ID) {
-            panel.style.display = 'block';
-            renderPromoHistory();
-        }
-    }
+    const container = document.getElementById('adminPanelContainer');
+    if (!container) return;
+
+    // Создаём панель динамически
+    container.innerHTML = `
+        <section class="section-header" style="margin-top:24px">
+            <h2>👑 Админ-панель</h2>
+            <p>Управление промокодами</p>
+        </section>
+        <div style="background:linear-gradient(145deg,#1a2332,#161d28);border:1px solid rgba(200,170,110,0.2);border-radius:16px;padding:20px;margin-bottom:16px">
+            <div style="text-align:center;margin-bottom:16px">
+                <span style="font-size:2rem">🎟️</span>
+                <h3 style="font-family:'Russo One',sans-serif;color:#C8AA6E;margin:8px 0 4px">Генератор промокодов</h3>
+                <p style="color:#5A6577;font-size:0.75rem">Одноразовый код на 30 дней</p>
+            </div>
+            <div id="promoResult" style="display:none;margin-bottom:16px">
+                <div style="background:rgba(200,170,110,0.08);border:2px dashed rgba(200,170,110,0.4);border-radius:12px;padding:16px;text-align:center">
+                    <div style="font-size:0.6rem;color:#5A6577;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px">Промокод</div>
+                    <div id="generatedCode" style="font-family:'Russo One',monospace;font-size:1.6rem;color:#C8AA6E;letter-spacing:4px;cursor:pointer;user-select:all"></div>
+                    <div style="font-size:0.65rem;color:#5A6577;margin-top:4px">Нажмите чтобы скопировать</div>
+                </div>
+            </div>
+            <button id="generatePromoBtn" onclick="generatePromo()" style="width:100%;padding:14px;border:none;border-radius:12px;font-family:'Russo One',sans-serif;font-size:0.85rem;cursor:pointer;background:linear-gradient(135deg,#C8AA6E,#E8D5A3);color:#0a0e14;margin-bottom:8px">🎟️ Сгенерировать промокод</button>
+            <button id="copyPromoBtn" onclick="copyPromo()" style="display:none;width:100%;padding:12px;border:1px solid rgba(200,170,110,0.3);border-radius:12px;font-family:'Inter',sans-serif;font-size:0.8rem;cursor:pointer;background:transparent;color:#C8AA6E">📋 Скопировать код</button>
+        </div>
+        <div style="background:linear-gradient(145deg,#1a2332,#161d28);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:16px">
+            <h4 style="color:#5A6577;font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📋 Последние коды</h4>
+            <div id="promoList" style="font-size:0.8rem;color:#9AA4B5"><i>Пока пусто</i></div>
+        </div>
+    `;
+    renderPromoHistory();
 }
 
 function generatePromo() {
@@ -287,43 +311,22 @@ function generatePromo() {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    // Show the code
-    const resultEl = document.getElementById('promoResult');
-    const codeEl = document.getElementById('generatedCode');
-    const copyBtn = document.getElementById('copyPromoBtn');
+    document.getElementById('generatedCode').textContent = code;
+    document.getElementById('promoResult').style.display = 'block';
+    document.getElementById('copyPromoBtn').style.display = 'block';
 
-    codeEl.textContent = code;
-    resultEl.style.display = 'block';
-    copyBtn.style.display = 'block';
-
-    // Save to history
-    generatedPromos.unshift({
-        code: code,
-        date: new Date().toLocaleString('ru'),
-        used: false
-    });
+    generatedPromos.unshift({ code, date: new Date().toLocaleString('ru'), used: false });
     if (generatedPromos.length > 20) generatedPromos = generatedPromos.slice(0, 20);
     localStorage.setItem('admin_promos', JSON.stringify(generatedPromos));
     renderPromoHistory();
 
-    // Send to bot to create in database
     if (tg) {
-        tg.sendData(JSON.stringify({
-            action: 'create_promo',
-            code: code,
-            days: 30,
-            uses: 1
-        }));
+        tg.sendData(JSON.stringify({ action: 'create_promo', code, days: 30, uses: 1 }));
     }
 
-    // Haptic
-    if (tg?.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred('success');
-    }
-
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     showToast('🎟️', 'Промокод создан! ' + code);
 
-    // Animate button
     const btn = document.getElementById('generatePromoBtn');
     btn.textContent = '✅ Создан!';
     btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
@@ -339,42 +342,26 @@ function copyPromo() {
         showToast('📋', 'Скопировано: ' + code);
         const btn = document.getElementById('copyPromoBtn');
         btn.textContent = '✅ Скопировано!';
-        btn.style.borderColor = 'rgba(74, 222, 128, 0.5)';
-        btn.style.color = '#4ade80';
-        setTimeout(() => {
-            btn.textContent = '📋 Скопировать код';
-            btn.style.borderColor = '';
-            btn.style.color = '';
-        }, 2000);
-
-        if (tg?.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred('light');
-        }
+        setTimeout(() => { btn.textContent = '📋 Скопировать код'; }, 2000);
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     });
 }
 
 function renderPromoHistory() {
     const listEl = document.getElementById('promoList');
     if (!listEl) return;
-
-    if (generatedPromos.length === 0) {
-        listEl.innerHTML = '<i>Пока пусто</i>';
-        return;
-    }
-
+    if (generatedPromos.length === 0) { listEl.innerHTML = '<i>Пока пусто</i>'; return; }
     listEl.innerHTML = generatedPromos.slice(0, 10).map(p => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)">
             <div>
-                <code style="color: #C8AA6E; font-size: 0.85rem; cursor:pointer;" onclick="navigator.clipboard.writeText('${p.code}'); showToast('📋','Скопировано!')">${p.code}</code>
-                <div style="font-size: 0.65rem; color: #3A4555;">${p.date}</div>
+                <code style="color:#C8AA6E;font-size:0.85rem;cursor:pointer" onclick="navigator.clipboard.writeText('${p.code}');showToast('📋','Скопировано!')">${p.code}</code>
+                <div style="font-size:0.65rem;color:#3A4555">${p.date}</div>
             </div>
-            <span style="font-size: 0.7rem; color: ${p.used ? '#ef4444' : '#4ade80'};">${p.used ? '❌ Использ.' : '✅ Активен'}</span>
+            <span style="font-size:0.7rem;color:${p.used ? '#ef4444' : '#4ade80'}">${p.used ? '❌' : '✅'}</span>
         </div>
     `).join('');
 }
 
-// Check admin on load
 document.addEventListener('DOMContentLoaded', checkAdmin);
-
 window.generatePromo = generatePromo;
 window.copyPromo = copyPromo;

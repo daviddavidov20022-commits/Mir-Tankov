@@ -290,72 +290,8 @@
             </a>
         </div>
 
-        <!-- ADMIN PANEL (only visible to admin) -->
-        <section id="adminPanel" style="display:none; margin-top: 24px;">
-            <section class="section-header">
-                <h2>👑 Админ-панель</h2>
-                <p>Управление промокодами</p>
-            </section>
-
-            <div
-                style="background: linear-gradient(145deg, #1a2332, #161d28); border: 1px solid rgba(200,170,110,0.2); border-radius: 16px; padding: 20px; margin-bottom: 16px;">
-                <div style="text-align:center; margin-bottom: 16px;">
-                    <span style="font-size: 2rem;">🎟️</span>
-                    <h3 style="font-family: 'Russo One', sans-serif; color: #C8AA6E; margin: 8px 0 4px;">Генератор
-                        промокодов</h3>
-                    <p style="color: #5A6577; font-size: 0.75rem;">Одноразовый код на 30 дней</p>
-                </div>
-
-                <!-- Generated code display -->
-                <div id="promoResult" style="display:none; margin-bottom: 16px;">
-                    <div
-                        style="background: rgba(200,170,110,0.08); border: 2px dashed rgba(200,170,110,0.4); border-radius: 12px; padding: 16px; text-align: center;">
-                        <div
-                            style="font-size: 0.6rem; color: #5A6577; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px;">
-                            Промокод</div>
-                        <div id="generatedCode"
-                            style="font-family: 'Russo One', monospace; font-size: 1.6rem; color: #C8AA6E; letter-spacing: 4px; cursor: pointer; user-select: all;">
-                        </div>
-                        <div style="font-size: 0.65rem; color: #5A6577; margin-top: 4px;">Нажмите чтобы скопировать
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Generate button -->
-                <button id="generatePromoBtn" onclick="generatePromo()" style="
-                    width: 100%; padding: 14px;
-                    border: none; border-radius: 12px;
-                    font-family: 'Russo One', sans-serif; font-size: 0.85rem;
-                    cursor: pointer;
-                    background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
-                    color: #0a0e14;
-                    transition: all 0.3s;
-                    margin-bottom: 8px;
-                ">🎟️ Сгенерировать промокод</button>
-
-                <button id="copyPromoBtn" onclick="copyPromo()" style="
-                    display: none;
-                    width: 100%; padding: 12px;
-                    border: 1px solid rgba(200,170,110,0.3); border-radius: 12px;
-                    font-family: 'Inter', sans-serif; font-size: 0.8rem;
-                    cursor: pointer;
-                    background: transparent;
-                    color: #C8AA6E;
-                    transition: all 0.3s;
-                ">📋 Скопировать код</button>
-            </div>
-
-            <!-- Promo history -->
-            <div id="promoHistory"
-                style="background: linear-gradient(145deg, #1a2332, #161d28); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 16px;">
-                <h4
-                    style="color: #5A6577; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
-                    📋 Последние коды</h4>
-                <div id="promoList" style="font-size: 0.8rem; color: #9AA4B5;">
-                    <i>Пока пусто</i>
-                </div>
-            </div>
-        </section>
+        <!-- Admin panel injected by JS for admin only -->
+        <div id="adminPanelContainer"></div>
 
     </main>
 
