@@ -50,6 +50,8 @@ def init_db():
                 first_name TEXT,
                 wot_nickname TEXT,
                 wot_account_id INTEGER,
+                wot_verified INTEGER DEFAULT 0,
+                verify_battles_snapshot INTEGER,
                 coins INTEGER DEFAULT 0,
                 xp INTEGER DEFAULT 0,
                 level INTEGER DEFAULT 1,
@@ -157,6 +159,46 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_cp_challenge ON challenge_participants(challenge_id);
             CREATE INDEX IF NOT EXISTS idx_events_active ON events(is_active);
         """)
+
+        # Таблица промокодов (создаём отдельно для совместимости)
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS promo_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT UNIQUE NOT NULL,
+                plan TEXT DEFAULT '1month',
+                days INTEGER DEFAULT 30,
+                uses_left INTEGER DEFAULT 1,
+                uses_total INTEGER DEFAULT 1,
+                created_by INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS promo_activations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                promo_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                activated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (promo_id) REFERENCES promo_codes(id),
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                UNIQUE(promo_id, user_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_promo_code ON promo_codes(code);
+        """)
+
+        # Уникальность ника WoT (один ник — один Telegram)
+        try:
+            conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_wot_nick ON users(wot_nickname) WHERE wot_nickname IS NOT NULL")
+        except Exception:
+            pass
+
+        # Миграция: добавить новые колонки если их нет
+        for col, default in [("wot_verified", "0"), ("verify_battles_snapshot", "NULL")]:
+            try:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col} INTEGER DEFAULT {default}")
+            except Exception:
+                pass  # Колонка уже существует
+
         logger.info("База данных инициализирована")
 
 
@@ -408,6 +450,164 @@ def get_subscription_stats() -> dict:
             "total_revenue": revenue,
             "by_plan": {r["plan"]: r["cnt"] for r in by_plan},
         }
+
+
+
+# ============================================================
+# ПРОМОКОДЫ
+# ============================================================
+
+def create_promo_code(code: str, days: int = 30, uses: int = 1, created_by: int = None) -> dict:
+    """Создать промокод"""
+    with get_db() as conn:
+        try:
+            conn.execute(
+                "INSERT INTO promo_codes (code, days, uses_left, uses_total, created_by) VALUES (?, ?, ?, ?, ?)",
+                (code.upper(), days, uses, uses, created_by)
+            )
+            return {"success": True, "code": code.upper(), "days": days, "uses": uses}
+        except sqlite3.IntegrityError:
+            return {"success": False, "error": "Такой промокод уже существует"}
+
+
+def activate_promo_code(telegram_id: int, code: str) -> dict:
+    """Активировать промокод"""
+    with get_db() as conn:
+        # Найти промокод
+        promo = conn.execute(
+            "SELECT * FROM promo_codes WHERE code = ? AND uses_left > 0",
+            (code.upper(),)
+        ).fetchone()
+
+        if not promo:
+            return {"success": False, "error": "Промокод не найден или исчерпан"}
+
+        # Получить пользователя
+        user = conn.execute(
+            "SELECT id FROM users WHERE telegram_id = ?", (telegram_id,)
+        ).fetchone()
+
+        if not user:
+            return {"success": False, "error": "Пользователь не найден"}
+
+        # Проверить, не активировал ли уже
+        already = conn.execute(
+            "SELECT id FROM promo_activations WHERE promo_id = ? AND user_id = ?",
+            (promo["id"], user["id"])
+        ).fetchone()
+
+        if already:
+            return {"success": False, "error": "Вы уже использовали этот промокод"}
+
+        # Активировать подписку
+        days = promo["days"]
+        expires_at = datetime.now() + timedelta(days=days)
+
+        conn.execute(
+            "INSERT INTO subscriptions (user_id, plan, price, expires_at, is_active, payment_method) "
+            "VALUES (?, 'promo', 0, ?, 1, 'promo_code')",
+            (user["id"], expires_at)
+        )
+
+        # Записать активацию
+        conn.execute(
+            "INSERT INTO promo_activations (promo_id, user_id) VALUES (?, ?)",
+            (promo["id"], user["id"])
+        )
+
+        # Уменьшить кол-во использований
+        conn.execute(
+            "UPDATE promo_codes SET uses_left = uses_left - 1 WHERE id = ?",
+            (promo["id"],)
+        )
+
+        return {
+            "success": True,
+            "days": days,
+            "expires_at": expires_at.strftime("%d.%m.%Y"),
+        }
+
+
+def get_promo_codes() -> list:
+    """Получить все промокоды"""
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM promo_codes ORDER BY created_at DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ============================================================
+# ПРИВЯЗКА НИКА WOT
+# ============================================================
+
+def bind_wot_nickname(telegram_id: int, nickname: str, account_id: int = None) -> dict:
+    """Привязать ник WoT к аккаунту. Один ник — один пользователь."""
+    with get_db() as conn:
+        # Проверить, не занят ли ник другим пользователем
+        existing = conn.execute(
+            "SELECT telegram_id FROM users WHERE wot_nickname = ? AND telegram_id != ?",
+            (nickname, telegram_id)
+        ).fetchone()
+
+        if existing:
+            return {"success": False, "error": "Этот ник уже привязан к другому аккаунту!"}
+
+        # Привязать
+        conn.execute(
+            "UPDATE users SET wot_nickname = ?, wot_account_id = ? WHERE telegram_id = ?",
+            (nickname, account_id, telegram_id)
+        )
+
+        return {"success": True, "nickname": nickname}
+
+
+def get_wot_nickname(telegram_id: int) -> str:
+    """Получить привязанный ник WoT"""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT wot_nickname FROM users WHERE telegram_id = ?",
+            (telegram_id,)
+        ).fetchone()
+        return row["wot_nickname"] if row and row["wot_nickname"] else None
+
+
+def start_verification(telegram_id: int, battles_count: int):
+    """Начать верификацию: сохранить текущее кол-во боёв"""
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET verify_battles_snapshot = ? WHERE telegram_id = ?",
+            (battles_count, telegram_id)
+        )
+
+
+def confirm_verification(telegram_id: int):
+    """Подтвердить верификацию"""
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET wot_verified = 1, verify_battles_snapshot = NULL WHERE telegram_id = ?",
+            (telegram_id,)
+        )
+
+
+def get_verify_snapshot(telegram_id: int) -> int:
+    """Получить сохранённое кол-во боёв для верификации"""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT verify_battles_snapshot FROM users WHERE telegram_id = ?",
+            (telegram_id,)
+        ).fetchone()
+        return row["verify_battles_snapshot"] if row else None
+
+
+def is_verified(telegram_id: int) -> bool:
+    """Проверить верифицирован ли аккаунт"""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT wot_verified FROM users WHERE telegram_id = ?",
+            (telegram_id,)
+        ).fetchone()
+        return bool(row and row["wot_verified"])
 
 
 # ============================================================

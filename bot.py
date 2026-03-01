@@ -31,6 +31,9 @@ from database import (
     add_coins, add_xp, get_total_users,
     create_subscription, check_subscription, get_active_subscribers,
     get_subscription_stats, deactivate_expired_subscriptions,
+    create_promo_code, activate_promo_code, get_promo_codes,
+    bind_wot_nickname, get_wot_nickname,
+    start_verification, confirm_verification, get_verify_snapshot, is_verified,
     SUBSCRIPTION_PLANS,
 )
 from challenges import (
@@ -51,6 +54,8 @@ from events import (
 # ============================================================
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 WEBAPP_URL = "https://daviddavidov20022-commits.github.io/Mir-Tankov/webapp/"
+LESTA_APP_ID = os.getenv("LESTA_APP_ID", "")
+VERIFY_REDIRECT_URL = WEBAPP_URL + "verify.html"
 
 # ID администратора (ваш Telegram ID)
 # Чтобы узнать свой ID: отправьте /myid боту
@@ -109,6 +114,17 @@ class EventStates(StatesGroup):
     waiting_boss_tank = State()
     waiting_schedule = State()
     waiting_wot_nick = State()
+
+
+class PromoStates(StatesGroup):
+    waiting_code = State()
+    waiting_create_code = State()
+    waiting_create_days = State()
+    waiting_create_uses = State()
+
+
+class NicknameStates(StatesGroup):
+    waiting_nickname = State()
 
 
 # ==========================================
@@ -222,6 +238,10 @@ async def cmd_start(message: types.Message):
                 callback_data="show_subscribe"
             )],
             [InlineKeyboardButton(
+                text="🎟️ У меня есть промокод",
+                callback_data="enter_promo"
+            )],
+            [InlineKeyboardButton(
                 text="📊 Посмотреть статистику (бесплатно)",
                 callback_data="free_stats"
             )],
@@ -261,6 +281,19 @@ async def free_stats_from_start(callback: CallbackQuery, state: FSMContext):
         "🔍 <b>ПОИСК ИГРОКА</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n\n"
         "Введите никнейм игрока Мир Танков:",
+        parse_mode="HTML",
+    )
+
+
+@dp.callback_query(F.data == "enter_promo")
+async def enter_promo_from_start(callback: CallbackQuery, state: FSMContext):
+    """Промокод из paywall"""
+    await callback.answer()
+    await state.set_state(PromoStates.waiting_code)
+    await callback.message.answer(
+        "🎟️ <b>ПРОМОКОД</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "Введите промокод:",
         parse_mode="HTML",
     )
 
@@ -2337,6 +2370,390 @@ async def process_donate(callback: CallbackQuery):
         provider_token="",
     )
     await callback.answer()
+
+
+# ==========================================
+# ПРОМОКОД — /promo
+# ==========================================
+@dp.message(Command("promo"))
+async def cmd_promo(message: types.Message, state: FSMContext):
+    get_or_create_user(
+        telegram_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+    )
+    await state.clear()
+    await state.set_state(PromoStates.waiting_code)
+    await message.answer(
+        "🎟️ <b>ПРОМОКОД</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "Введите промокод:",
+        parse_mode="HTML",
+    )
+
+
+@dp.message(PromoStates.waiting_code)
+async def process_promo_code(message: types.Message, state: FSMContext):
+    code = message.text.strip()
+    result = activate_promo_code(message.from_user.id, code)
+
+    if result.get("success"):
+        await state.clear()
+        await message.answer(
+            f"🎉 <b>ПРОМОКОД АКТИВИРОВАН!</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"✅ Подписка: <b>{result['days']} дней</b>\n"
+            f"📅 До: <b>{result['expires_at']}</b>\n\n"
+            f"Теперь нажмите /start чтобы войти! 🚀",
+            parse_mode="HTML",
+        )
+
+        # Предлагаем привязать ник
+        nick = get_wot_nickname(message.from_user.id)
+        if not nick:
+            await state.set_state(NicknameStates.waiting_nickname)
+            await message.answer(
+                "🎮 <b>Привяжите свой ник в Мир Танков</b>\n\n"
+                "Введите ваш никнейм в игре.\n"
+                "Он нужен для челленджей и арены.\n\n"
+                "⚠️ <i>Один ник = один аккаунт. Привязка навсегда.</i>",
+                parse_mode="HTML",
+            )
+    else:
+        await message.answer(
+            f"❌ {result.get('error', 'Ошибка')}",
+        )
+        await state.clear()
+
+
+# ==========================================
+# СОЗДАНИЕ ПРОМОКОДА — /createpromo (Админ)
+# ==========================================
+@dp.message(Command("createpromo"))
+async def cmd_createpromo(message: types.Message, state: FSMContext):
+    if not ADMIN_ID or message.from_user.id != ADMIN_ID:
+        await message.answer("❌ Только для администратора")
+        return
+
+    await state.clear()
+    await state.set_state(PromoStates.waiting_create_code)
+    await message.answer(
+        "🎟️ <b>СОЗДАНИЕ ПРОМОКОДА</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "Введите текст промокода\n"
+        "(например: TANKS2026, VIP, ДРУГ):",
+        parse_mode="HTML",
+    )
+
+
+@dp.message(PromoStates.waiting_create_code)
+async def process_create_code(message: types.Message, state: FSMContext):
+    code = message.text.strip().upper()
+    await state.update_data(code=code)
+    await state.set_state(PromoStates.waiting_create_days)
+    await message.answer(
+        f"Промокод: <b>{code}</b>\n\n"
+        f"На сколько <b>дней</b> подписка?\n"
+        f"(например: 30, 7, 90)",
+        parse_mode="HTML",
+    )
+
+
+@dp.message(PromoStates.waiting_create_days)
+async def process_create_days(message: types.Message, state: FSMContext):
+    try:
+        days = int(message.text.strip())
+        if days < 1 or days > 365:
+            raise ValueError
+    except ValueError:
+        await message.answer("❌ Введите число от 1 до 365")
+        return
+
+    await state.update_data(days=days)
+    await state.set_state(PromoStates.waiting_create_uses)
+    await message.answer(
+        f"Дней: <b>{days}</b>\n\n"
+        f"Сколько <b>раз</b> можно использовать?\n"
+        f"(1 = одноразовый, 10 = на 10 человек)",
+        parse_mode="HTML",
+    )
+
+
+@dp.message(PromoStates.waiting_create_uses)
+async def process_create_uses(message: types.Message, state: FSMContext):
+    try:
+        uses = int(message.text.strip())
+        if uses < 1 or uses > 1000:
+            raise ValueError
+    except ValueError:
+        await message.answer("❌ Введите число от 1 до 1000")
+        return
+
+    data = await state.get_data()
+    result = create_promo_code(
+        code=data["code"],
+        days=data["days"],
+        uses=uses,
+        created_by=message.from_user.id,
+    )
+
+    await state.clear()
+
+    if result.get("success"):
+        await message.answer(
+            f"✅ <b>ПРОМОКОД СОЗДАН!</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🎟️ Код: <code>{result['code']}</code>\n"
+            f"📅 Дней: <b>{result['days']}</b>\n"
+            f"👥 Использований: <b>{result['uses']}</b>\n\n"
+            f"Отправьте этот код пользователям!",
+            parse_mode="HTML",
+        )
+    else:
+        await message.answer(f"❌ {result.get('error', 'Ошибка')}")
+
+
+# ==========================================
+# ПРИВЯЗКА НИКА — /setnick
+# ==========================================
+@dp.message(Command("setnick"))
+async def cmd_setnick(message: types.Message, state: FSMContext):
+    get_or_create_user(
+        telegram_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+    )
+
+    current_nick = get_wot_nickname(message.from_user.id)
+    if current_nick:
+        await message.answer(
+            f"🎮 Ваш ник: <b>{current_nick}</b>\n\n"
+            f"⚠️ Ник уже привязан и изменить его нельзя.\n"
+            f"Если ошибка — обратитесь к администратору.",
+            parse_mode="HTML",
+        )
+        return
+
+    await state.clear()
+    await state.set_state(NicknameStates.waiting_nickname)
+    await message.answer(
+        "🎮 <b>ПРИВЯЗКА НИКА</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "Введите ваш никнейм в Мир Танков:\n\n"
+        "⚠️ <i>Внимательно! Один ник — один аккаунт.\n"
+        "Привязка навсегда.</i>",
+        parse_mode="HTML",
+    )
+
+
+@dp.message(NicknameStates.waiting_nickname)
+async def process_nickname(message: types.Message, state: FSMContext):
+    nickname = message.text.strip()
+
+    if len(nickname) < 3 or len(nickname) > 24:
+        await message.answer("❌ Ник должен быть от 3 до 24 символов")
+        return
+
+    # Проверяем через Lesta API
+    await message.answer("🔍 Проверяю ник через Lesta API...")
+
+    try:
+        player = await asyncio.to_thread(search_player, nickname)
+        if player and player.get("account_id"):
+            account_id = player["account_id"]
+            found_nick = player.get("nickname", nickname)
+
+            result = bind_wot_nickname(message.from_user.id, found_nick, account_id)
+
+            if result.get("success"):
+                await state.clear()
+                await message.answer(
+                    f"✅ <b>НИК ПРИВЯЗАН!</b>\n\n"
+                    f"🎮 Ник: <b>{found_nick}</b>\n"
+                    f"🆔 Account ID: <code>{account_id}</code>\n\n"
+                    f"Теперь вы можете участвовать в\n"
+                    f"челленджах и арене! ⚔️\n\n"
+                    f"Нажмите /start для входа 🚀",
+                    parse_mode="HTML",
+                )
+            else:
+                await state.clear()
+                await message.answer(
+                    f"❌ {result.get('error', 'Ошибка')}\n\n"
+                    f"Обратитесь к администратору.",
+                )
+        else:
+            await message.answer(
+                f"❌ Игрок <b>{nickname}</b> не найден!\n\n"
+                f"Проверьте написание и попробуйте снова:",
+                parse_mode="HTML",
+            )
+    except Exception as e:
+        logger.error(f"Ошибка проверки ника: {e}")
+        # Если API недоступен — привяжем без проверки
+        result = bind_wot_nickname(message.from_user.id, nickname)
+        if result.get("success"):
+            await state.clear()
+            await message.answer(
+                f"✅ Ник <b>{nickname}</b> привязан!\n"
+                f"(API временно недоступен, проверим позже)\n\n"
+                f"Нажмите /start для входа 🚀",
+                parse_mode="HTML",
+            )
+        else:
+            await state.clear()
+            await message.answer(f"❌ {result.get('error', 'Ошибка')}")
+
+
+# ==========================================
+# ВЕРИФИКАЦИЯ АККАУНТА — /verify (Lesta OAuth)
+# ==========================================
+
+def _generate_verify_code(account_id: str) -> str:
+    """Генерируем тот же код что и на verify.html"""
+    s = str(account_id) + '_MIRTANKOV_2026'
+    h = 0
+    for ch in s:
+        h = ((h << 5) - h) + ord(ch)
+        h = h & 0xFFFFFFFF  # 32bit
+    # Имитируем JS: Math.abs(hash).toString(36).toUpperCase().slice(0, 6)
+    if h > 0x7FFFFFFF:
+        h = h - 0x100000000
+    code = 'MT' + base36(abs(h))[:6].upper()
+    return code
+
+
+def base36(num: int) -> str:
+    """Конвертация числа в base36 (как JS toString(36))"""
+    chars = '0123456789abcdefghijklmnopqrstuvwxyz'
+    if num == 0:
+        return '0'
+    result = ''
+    while num > 0:
+        result = chars[num % 36] + result
+        num //= 36
+    return result
+
+
+@dp.message(Command("verify"))
+async def cmd_verify(message: types.Message):
+    get_or_create_user(
+        telegram_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+    )
+
+    # Уже верифицирован?
+    if is_verified(message.from_user.id):
+        nick = get_wot_nickname(message.from_user.id) or "—"
+        await message.answer(
+            f"✅ <b>Аккаунт верифицирован!</b>\n\n"
+            f"🎮 Ник: <b>{nick}</b>\n"
+            f"🛡️ Статус: Подтверждён через Lesta",
+            parse_mode="HTML",
+        )
+        return
+
+    # Проверяем, может юзер уже прислал код
+    args = message.text.split(maxsplit=1)
+    if len(args) > 1:
+        code = args[1].strip().upper()
+        # Ищем account_id по коду — перебираем через API
+        await _process_verify_code(message, code)
+        return
+
+    # Генерируем ссылку на Lesta OAuth
+    if not LESTA_APP_ID:
+        await message.answer(
+            "❌ LESTA_APP_ID не настроен.\n"
+            "Добавьте его в .env файл.",
+        )
+        return
+
+    auth_url = (
+        f"https://api.tanki.su/wot/auth/login/"
+        f"?application_id={LESTA_APP_ID}"
+        f"&redirect_uri={VERIFY_REDIRECT_URL}"
+        f"&nofollow=1"
+    )
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="🔐 Войти через Lesta",
+            url=auth_url
+        )],
+    ])
+
+    await message.answer(
+        "🔐 <b>ВЕРИФИКАЦИЯ АККАУНТА</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "Чтобы подтвердить что аккаунт ваш,\n"
+        "войдите через <b>официальный сайт Lesta</b>:\n\n"
+        "📋 <b>Инструкция:</b>\n"
+        "1️⃣ Нажмите кнопку ниже\n"
+        "2️⃣ Войдите в свой аккаунт на <b>tanki.su</b>\n"
+        "3️⃣ Скопируйте код, который появится\n"
+        "4️⃣ Отправьте его сюда: <code>/verify КОД</code>\n\n"
+        "🛡️ <i>Это безопасно! Мы НЕ получаем\n"
+        "ваш пароль — только никнейм и ID.</i>",
+        parse_mode="HTML",
+        reply_markup=keyboard,
+    )
+
+
+async def _process_verify_code(message: types.Message, code: str):
+    """Обработка кода верификации"""
+    # Пытаемся найти account_id через привязанный ник
+    nick = get_wot_nickname(message.from_user.id)
+
+    if nick:
+        # Проверяем код для привязанного ника
+        try:
+            player = await asyncio.to_thread(search_player, nick)
+            if player and player.get("account_id"):
+                expected_code = _generate_verify_code(player["account_id"])
+                if code == expected_code:
+                    # Верификация успешна!
+                    bind_wot_nickname(message.from_user.id, nick, player["account_id"])
+                    confirm_verification(message.from_user.id)
+                    add_coins(message.from_user.id, 100)
+                    add_xp(message.from_user.id, 50)
+
+                    await message.answer(
+                        "🎉 <b>АККАУНТ ВЕРИФИЦИРОВАН!</b>\n"
+                        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                        f"✅ Ник: <b>{nick}</b>\n"
+                        f"🆔 ID: <code>{player['account_id']}</code>\n"
+                        f"🛡️ Подтверждено через Lesta OAuth\n\n"
+                        "🎁 <b>Бонус:</b> +100 монет, +50 XP\n\n"
+                        "Теперь у вас значок ✅ в профиле!\n"
+                        "Арена и челленджи доступны ⚔️",
+                        parse_mode="HTML",
+                    )
+                    return
+        except Exception as e:
+            logger.error(f"Ошибка проверки верификации: {e}")
+
+    # Если ник не привязан — пробуем найти аккаунт по коду в ответе OAuth
+    # Код содержит account_id в себе — ищем через все возможные account_id
+    # Но это невозможно без account_id. Просим сначала привязать ник.
+    if not nick:
+        await message.answer(
+            "❌ Сначала привяжите ник: /setnick\n\n"
+            "После привязки ника введите /verify КОД",
+            parse_mode="HTML",
+        )
+        return
+
+    await message.answer(
+        "❌ <b>Неверный код!</b>\n\n"
+        "Убедитесь что:\n"
+        "1. Вы вошли в правильный аккаунт на tanki.su\n"
+        "2. Ник совпадает с привязанным: <b>" + (nick or '—') + "</b>\n"
+        "3. Код скопирован полностью\n\n"
+        "Попробуйте ещё раз: /verify",
+        parse_mode="HTML",
+    )
 
 
 # ==========================================
