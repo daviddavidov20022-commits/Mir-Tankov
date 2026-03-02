@@ -31,11 +31,17 @@ function loadProfile() {
         if (nameEl) nameEl.textContent = user.first_name || 'Танкист';
     }
 
-    // Загрузить сохранённый ник
+    // Загрузить сохранённый ник (только верифицированный!)
     const savedNick = localStorage.getItem('wot_nickname');
-    if (savedNick) {
+    const isVerified = localStorage.getItem('wot_verified') === 'true';
+
+    if (savedNick && isVerified) {
         showSavedNickname(savedNick);
         loadQuickStats(savedNick);
+    } else if (savedNick && !isVerified) {
+        // Старый ник без верификации — сбрасываем
+        localStorage.removeItem('wot_nickname');
+        localStorage.removeItem('wot_cached_stats');
     }
 
     // Уровень
@@ -71,7 +77,8 @@ function linkAccount() {
     if (window.Telegram?.WebApp?.openLink) {
         window.Telegram.WebApp.openLink(authUrl);
     } else {
-        window.open(authUrl, '_blank');
+        // Для браузера — переходим прямо по ссылке
+        window.location.href = authUrl;
     }
 }
 
