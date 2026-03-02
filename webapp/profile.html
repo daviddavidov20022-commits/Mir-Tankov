@@ -42,36 +42,39 @@
         </div>
     </section>
 
-    <!-- WoT Nickname Section -->
+    <!-- WoT Account Section -->
     <section class="section-card" id="nicknameSection">
         <div class="section-card__header">
             <span class="section-card__icon">🎮</span>
-            <h3>Никнейм в Мир Танков</h3>
+            <h3>Аккаунт Мир Танков</h3>
         </div>
         <div class="nickname-wrap">
+            <!-- Привязанный аккаунт -->
             <div class="nickname-display" id="nicknameDisplay" style="display: none;">
                 <div class="nickname-saved">
-                    <span class="nickname-saved__icon">✅</span>
+                    <span class="nickname-saved__icon" id="verifiedBadge">✅</span>
                     <span class="nickname-saved__name" id="savedNickname">—</span>
                 </div>
                 <div class="nickname-actions">
                     <button class="btn-icon" onclick="viewMyStats()" title="Моя статистика">
                         📊
                     </button>
-                    <button class="btn-icon btn-icon--edit" onclick="editNickname()" title="Изменить">
-                        ✏️
+                    <button class="btn-icon btn-icon--edit" onclick="unlinkAccount()" title="Отвязать">
+                        🔓
                     </button>
                 </div>
             </div>
-            <div class="nickname-edit" id="nicknameEdit">
-                <p class="nickname-hint">Введите ваш игровой ник, чтобы быстро просматривать статистику</p>
-                <div class="input-group">
-                    <input type="text" id="nicknameInput" class="input-field" placeholder="Ваш ник в Мир Танков..."
-                        autocomplete="off" autocorrect="off" maxlength="24">
-                    <button class="btn-save" id="saveNicknameBtn" onclick="saveNickname()">
-                        Сохранить
-                    </button>
-                </div>
+            <!-- Кнопка привязки через Lesta -->
+            <div id="nicknameLinkSection">
+                <p class="nickname-hint">Привяжите свой аккаунт через Lesta Games, чтобы подтвердить личность и видеть
+                    статистику</p>
+                <button class="btn-lesta" onclick="linkAccount()">
+                    <span class="btn-lesta__icon">🛡️</span>
+                    <span class="btn-lesta__text">Войти через Lesta Games</span>
+                </button>
+                <p class="nickname-hint" style="margin-top: 8px; font-size: 0.6rem; opacity: 0.6">
+                    Безопасный вход через официальный сайт Lesta Games
+                </p>
             </div>
         </div>
     </section>

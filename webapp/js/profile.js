@@ -13,6 +13,7 @@ const LESTA_APP_ID = 'c984faa7dc529f4cb0139505d5e8043c';
 // ИНИЦИАЛИЗАЦИЯ
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+    checkVerifyParams();
     loadProfile();
     loadProgress();
     checkAchievements();
@@ -42,57 +43,93 @@ function loadProfile() {
 }
 
 // ============================================================
-// НИКНЕЙМ
+// НИКНЕЙМ — ПРИВЯЗКА ЧЕРЕЗ LESTA OAUTH
 // ============================================================
-function saveNickname() {
-    const input = document.getElementById('nicknameInput');
-    const nickname = input.value.trim();
 
-    if (nickname.length < 2) {
-        input.style.borderColor = '#e74c3c';
-        input.style.animation = 'shake 0.4s ease';
-        setTimeout(() => {
-            input.style.borderColor = '';
-            input.style.animation = '';
-        }, 500);
+/**
+ * Привязка аккаунта через Lesta Games OAuth.
+ * Нельзя просто ввести ник — нужно войти через Lesta,
+ * чтобы подтвердить что это ТВОЙ аккаунт.
+ */
 
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-        }
-        return;
+// URL для OAuth авторизации через Lesta Games
+const LESTA_AUTH_URL = 'https://api.tanki.su/wot/auth/login/';
+// redirect_uri — наша страница verify.html
+function getRedirectUri() {
+    // Определяем базовый URL (GitHub Pages или localhost)
+    const origin = window.location.origin;
+    const path = window.location.pathname.replace(/\/[^\/]*$/, '/');
+    return origin + path + 'verify.html';
+}
+
+function linkAccount() {
+    // Открываем Lesta OAuth
+    const redirectUri = getRedirectUri();
+    const authUrl = `${LESTA_AUTH_URL}?application_id=${LESTA_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&nofollow=1`;
+
+    // В Telegram WebApp открываем через openLink
+    if (window.Telegram?.WebApp?.openLink) {
+        window.Telegram.WebApp.openLink(authUrl);
+    } else {
+        window.open(authUrl, '_blank');
     }
+}
 
-    localStorage.setItem('wot_nickname', nickname);
-    showSavedNickname(nickname);
-    loadQuickStats(nickname);
-    showToast('✅', `Ник "${nickname}" сохранён!`);
+function unlinkAccount() {
+    if (!confirm('Отвязать аккаунт Мир Танков?')) return;
 
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    }
+    localStorage.removeItem('wot_nickname');
+    localStorage.removeItem('wot_account_id');
+    localStorage.removeItem('wot_verified');
+    localStorage.removeItem('wot_cached_stats');
+
+    // Показываем кнопку привязки
+    const displayEl = document.getElementById('nicknameDisplay');
+    const linkEl = document.getElementById('nicknameLinkSection');
+    if (displayEl) displayEl.style.display = 'none';
+    if (linkEl) linkEl.style.display = 'block';
+
+    // Скрываем статистику
+    const section = document.getElementById('quickStatsSection');
+    if (section) section.style.display = 'none';
+
+    showToast('🔓', 'Аккаунт отвязан');
 }
 
 function showSavedNickname(nickname) {
     const displayEl = document.getElementById('nicknameDisplay');
-    const editEl = document.getElementById('nicknameEdit');
+    const linkEl = document.getElementById('nicknameLinkSection');
     const nameEl = document.getElementById('savedNickname');
+    const verifiedBadge = document.getElementById('verifiedBadge');
 
     if (displayEl) displayEl.style.display = 'flex';
-    if (editEl) editEl.style.display = 'none';
+    if (linkEl) linkEl.style.display = 'none';
     if (nameEl) nameEl.textContent = nickname;
+
+    // Показываем бейдж верификации
+    const isVerified = localStorage.getItem('wot_verified') === 'true';
+    if (verifiedBadge) {
+        verifiedBadge.style.display = isVerified ? 'inline' : 'none';
+    }
 }
 
-function editNickname() {
-    const displayEl = document.getElementById('nicknameDisplay');
-    const editEl = document.getElementById('nicknameEdit');
-    const input = document.getElementById('nicknameInput');
-    const savedNick = localStorage.getItem('wot_nickname') || '';
+// Проверяем URL на параметры верификации (после redirect от Lesta)
+function checkVerifyParams() {
+    const params = new URLSearchParams(window.location.search);
+    const nickname = params.get('verified_nick');
+    const accountId = params.get('verified_id');
 
-    if (displayEl) displayEl.style.display = 'none';
-    if (editEl) editEl.style.display = 'block';
-    if (input) {
-        input.value = savedNick;
-        setTimeout(() => input.focus(), 100);
+    if (nickname && accountId) {
+        localStorage.setItem('wot_nickname', nickname);
+        localStorage.setItem('wot_account_id', accountId);
+        localStorage.setItem('wot_verified', 'true');
+
+        showSavedNickname(nickname);
+        loadQuickStats(nickname);
+        showToast('✅', `Аккаунт ${nickname} привязан!`);
+
+        // Убираем параметры из URL
+        window.history.replaceState({}, '', window.location.pathname);
     }
 }
 
@@ -403,7 +440,7 @@ if (window.Telegram?.WebApp?.BackButton) {
 }
 
 // Expose
-window.saveNickname = saveNickname;
-window.editNickname = editNickname;
+window.linkAccount = linkAccount;
+window.unlinkAccount = unlinkAccount;
 window.viewMyStats = viewMyStats;
 window.goBack = goBack;

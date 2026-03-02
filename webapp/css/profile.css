@@ -395,6 +395,59 @@ body {
     transform: scale(0.95);
 }
 
+/* Lesta OAuth Button */
+.btn-lesta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #2d5a27, #1e7a1e);
+    border: 2px solid rgba(46, 204, 113, 0.3);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-lesta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(46, 204, 113, 0.25);
+    border-color: rgba(46, 204, 113, 0.5);
+}
+
+.btn-lesta:active {
+    transform: scale(0.98);
+}
+
+.btn-lesta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    transition: left 0.5s;
+}
+
+.btn-lesta:hover::before {
+    left: 100%;
+}
+
+.btn-lesta__icon {
+    font-size: 1.4rem;
+}
+
+.btn-lesta__text {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
 /* ==========================================
    QUICK STATS
    ========================================== */
