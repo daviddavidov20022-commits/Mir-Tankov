@@ -1392,12 +1392,22 @@ async def cmd_profile(message: types.Message):
         f"{sub['plan_name']} (до {sub['expires_at']}, осталось {sub['days_left']} дн.)"
     )
 
+    # Статус верификации
+    nick = get_wot_nickname(message.from_user.id)
+    verified = is_verified(message.from_user.id)
+    if nick and verified:
+        nick_text = f"✅ {nick} (верифицирован)"
+    elif nick:
+        nick_text = f"⚠️ {nick} (не верифицирован)"
+    else:
+        nick_text = "❌ Не привязан"
+
     text = (
         f"👤 <b>ПРОФИЛЬ</b>\n"
         f"━━━━━━━━━━━━━━━━━━━\n\n"
         f"🆔 ID: <code>{message.from_user.id}</code>\n"
         f"👤 Имя: <b>{message.from_user.first_name or '—'}</b>\n"
-        f"🪖 WoT Ник: <b>{user.get('wot_nickname') or 'Не привязан'}</b>\n\n"
+        f"🎮 WoT: <b>{nick_text}</b>\n\n"
         f"🪙 Монеты: <b>{user.get('coins', 0)}</b>\n"
         f"⭐ XP: <b>{user.get('xp', 0)}</b>\n"
         f"📊 Уровень: <b>{user.get('level', 1)}</b>\n\n"
@@ -1405,13 +1415,29 @@ async def cmd_profile(message: types.Message):
         f"🎯 Челленджей: <b>{len(challenges)}</b> (✅ {completed})\n"
     )
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎯 Мои челленджи", callback_data="my_challenges")],
-        [InlineKeyboardButton(text="💎 Подписка", callback_data="show_subscribe")],
-    ])
+    # Кнопки
+    buttons = []
+    if not nick:
+        buttons.append([InlineKeyboardButton(text="🎮 Привязать ник", callback_data="start_setnick")])
+    elif not verified:
+        buttons.append([InlineKeyboardButton(text="🔐 Верифицировать", callback_data="start_verify")])
+    buttons.append([InlineKeyboardButton(text="🎯 Мои челленджи", callback_data="my_challenges")])
+    buttons.append([InlineKeyboardButton(text="💎 Подписка", callback_data="show_subscribe")])
 
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
 
+
+@dp.callback_query(F.data == "start_setnick")
+async def cb_start_setnick(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer("Введите /setnick чтобы привязать ник 🎮")
+
+
+@dp.callback_query(F.data == "start_verify")
+async def cb_start_verify(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer("Введите /verify чтобы верифицировать аккаунт 🔐")
 
 # ==========================================
 # 🎯 ЧЕЛЛЕНДЖИ
@@ -2631,14 +2657,35 @@ async def process_nickname(message: types.Message, state: FSMContext):
 
             if result.get("success"):
                 await state.clear()
+
+                # Предлагаем верификацию
+                verify_kb = None
+                if LESTA_APP_ID:
+                    auth_url = (
+                        f"https://api.tanki.su/wot/auth/login/"
+                        f"?application_id={LESTA_APP_ID}"
+                        f"&redirect_uri={VERIFY_REDIRECT_URL}"
+                        f"&nofollow=1"
+                    )
+                    verify_kb = InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔐 Верифицировать через Lesta", url=auth_url)],
+                        [InlineKeyboardButton(text="⏩ Пропустить", callback_data="skip_verify")],
+                    ])
+
                 await message.answer(
                     f"✅ <b>НИК ПРИВЯЗАН!</b>\n\n"
                     f"🎮 Ник: <b>{found_nick}</b>\n"
                     f"🆔 Account ID: <code>{account_id}</code>\n\n"
-                    f"Теперь вы можете участвовать в\n"
-                    f"челленджах и арене! ⚔️\n\n"
-                    f"Нажмите /start для входа 🚀",
+                    f"━━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"🔐 <b>Верифицируйте аккаунт!</b>\n\n"
+                    f"Войдите через сайт Lesta чтобы\n"
+                    f"подтвердить что аккаунт ваш.\n"
+                    f"После верификации — значок ✅\n"
+                    f"и доступ к арене ⚔️\n\n"
+                    f"📋 Скопируйте код с сайта и\n"
+                    f"отправьте: <code>/verify КОД</code>",
                     parse_mode="HTML",
+                    reply_markup=verify_kb,
                 )
             else:
                 await state.clear()
@@ -2667,6 +2714,16 @@ async def process_nickname(message: types.Message, state: FSMContext):
         else:
             await state.clear()
             await message.answer(f"❌ {result.get('error', 'Ошибка')}")
+
+@dp.callback_query(F.data == "skip_verify")
+async def skip_verify(callback: CallbackQuery):
+    await callback.answer("Можете верифицировать позже: /verify")
+    await callback.message.answer(
+        "⏩ Верификация пропущена.\n\n"
+        "Вы можете верифицировать аккаунт позже\n"
+        "командой /verify\n\n"
+        "Нажмите /start чтобы войти! 🚀"
+    )
 
 
 # ==========================================

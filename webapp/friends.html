@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Друзья — Мир Танков</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/friends.css">
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <div class="friends-page">
+        <a href="index.html" class="back-btn">← Назад</a>
+
+        <!-- My Avatar -->
+        <div class="my-profile-bar">
+            <div class="my-avatar" id="myAvatar" onclick="openAvatarPicker()">🪖</div>
+            <div class="my-profile-info">
+                <div class="my-name" id="myName">Танкист</div>
+                <div class="my-status">🟢 Онлайн</div>
+            </div>
+            <button class="edit-avatar-btn" onclick="openAvatarPicker()">✏️</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="friends-tabs">
+            <button class="friends-tab friends-tab--active" onclick="switchFriendsTab('list', this)">👥 Друзья</button>
+            <button class="friends-tab" onclick="switchFriendsTab('requests', this)">📩 Запросы <span class="tab-badge"
+                    id="requestsBadge" style="display:none">0</span></button>
+            <button class="friends-tab" onclick="switchFriendsTab('add', this)">➕ Найти</button>
+        </div>
+
+        <!-- TAB: Friends List -->
+        <div class="ftab-content ftab-content--active" id="ftab-list">
+            <div class="friends-list" id="friendsList"></div>
+        </div>
+
+        <!-- TAB: Friend Requests -->
+        <div class="ftab-content" id="ftab-requests">
+            <div id="requestsList"></div>
+        </div>
+
+        <!-- TAB: Add Friend -->
+        <div class="ftab-content" id="ftab-add">
+            <div class="search-box">
+                <input type="text" class="search-box__input" id="friendSearchInput" placeholder="Введи ник игрока...">
+                <button class="search-box__btn" onclick="searchForFriend()">🔍</button>
+            </div>
+            <div id="friendSearchResults"></div>
+        </div>
+    </div>
+
+    <!-- CHAT MODAL -->
+    <div class="chat-overlay" id="chatOverlay">
+        <div class="chat-container">
+            <div class="chat-header">
+                <button class="chat-back" onclick="closeChat()">←</button>
+                <div class="chat-header__avatar" id="chatAvatar">🪖</div>
+                <div class="chat-header__info">
+                    <div class="chat-header__name" id="chatName">Друг</div>
+                    <div class="chat-header__status" id="chatStatus">В сети</div>
+                </div>
+                <button class="chat-duel-btn" id="chatDuelBtn" onclick="challengeFriend()">⚔️</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-bar">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Сообщение..."
+                    onkeydown="if(event.key==='Enter')sendMsg()">
+                <button class="chat-send" onclick="sendMsg()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AVATAR PICKER MODAL -->
+    <div class="modal-overlay" id="avatarModal">
+        <div class="avatar-picker">
+            <div class="avatar-picker__header">
+                <span>🎨 Выбери аватарку</span>
+                <button class="modal-header__close" onclick="closeAvatarPicker()">✕</button>
+            </div>
+            <div class="avatar-picker__grid" id="avatarGrid"></div>
+            <div class="avatar-picker__custom">
+                <label class="form-label">Или загрузи фото</label>
+                <input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarUpload(event)"
+                    style="display:none">
+                <button class="upload-avatar-btn" onclick="document.getElementById('avatarFileInput').click()">📷
+                    Загрузить фото</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </div>
+        <div class="nav-item" onclick="location.href='challenges.html'">
+            <span class="nav-icon">⚔️</span>
+            <span class="nav-label">Арена</span>
+        </div>
+        <div class="nav-item nav-item--active">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Друзья</span>
+        </div>
+        <div class="nav-item" onclick="location.href='profile.html'">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
+        </div>
+    </nav>
+
+    <script src="js/friends.js"></script>
+</body>
+
+</html>
