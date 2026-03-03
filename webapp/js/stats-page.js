@@ -14,6 +14,7 @@ const USE_REAL_API = Boolean(LESTA_APP_ID);
 // СОСТОЯНИЕ
 // ============================================================
 let recentSearches = JSON.parse(localStorage.getItem('wot_recent_searches') || '[]');
+let currentPlayerData = null;  // Данные найденного игрока
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ
@@ -276,7 +277,80 @@ function displayStats(data) {
     document.getElementById('loadingSection').style.display = 'none';
     document.getElementById('playerSection').style.display = 'block';
 
+    // Сохраняем данные текущего игрока для добавления в друзья
+    currentPlayerData = data;
+
+    // Показываем кнопку "Добавить в друзья"
+    updateAddFriendBtn(data);
+
     // Haptic
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }
+}
+
+// Обновить кнопку "Добавить в друзья"
+function updateAddFriendBtn(data) {
+    const bar = document.getElementById('addFriendBar');
+    const btn = document.getElementById('addFriendBtn');
+    if (!bar || !btn) return;
+
+    // Проверяем не свой ли это аккаунт
+    const myNick = localStorage.getItem('wot_nickname');
+    if (myNick && data.nickname && myNick.toLowerCase() === data.nickname.toLowerCase()) {
+        bar.style.display = 'none';
+        return;
+    }
+
+    // Проверяем не в друзьях ли уже
+    const friends = JSON.parse(localStorage.getItem('wot_friends') || '[]');
+    const alreadyFriend = friends.some(f => f.account_id === String(data.account_id));
+
+    bar.style.display = 'block';
+
+    if (alreadyFriend) {
+        btn.textContent = '✅ Уже в друзьях';
+        btn.style.background = 'rgba(74, 222, 128, 0.15)';
+        btn.style.color = '#4ade80';
+        btn.style.border = '1px solid rgba(74, 222, 128, 0.3)';
+        btn.disabled = true;
+    } else {
+        btn.textContent = '➕ Добавить в друзья';
+        btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.disabled = false;
+    }
+}
+
+// Добавить в друзья со страницы статистики
+function addFriendFromStats() {
+    if (!currentPlayerData) return;
+
+    const friends = JSON.parse(localStorage.getItem('wot_friends') || '[]');
+    const accountId = String(currentPlayerData.account_id);
+
+    if (friends.some(f => f.account_id === accountId)) {
+        showToast('✅', 'Уже в друзьях!');
+        return;
+    }
+
+    const newFriend = {
+        account_id: accountId,
+        telegram_id: null,
+        name: currentPlayerData.nickname,
+        wot_nick: currentPlayerData.nickname,
+        avatar: '🪖',
+        online: false,
+        status: 'pending',
+        addedAt: Date.now(),
+    };
+
+    friends.push(newFriend);
+    localStorage.setItem('wot_friends', JSON.stringify(friends));
+    showToast('📩', `Запрос отправлен ${currentPlayerData.nickname}!`);
+    updateAddFriendBtn(currentPlayerData);
+
     if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     }
@@ -404,3 +478,4 @@ window.searchPlayer = searchPlayer;
 window.quickSearch = quickSearch;
 window.showSearch = showSearch;
 window.goBack = goBack;
+window.addFriendFromStats = addFriendFromStats;

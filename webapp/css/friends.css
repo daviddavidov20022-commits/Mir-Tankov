@@ -170,6 +170,32 @@
     transform: translateX(4px);
 }
 
+/* Pending friend (grey, dimmed) */
+.friend-card--pending {
+    opacity: 0.55;
+    border-color: rgba(255, 255, 255, 0.03);
+    background: linear-gradient(145deg, #151b24, #12171f);
+}
+
+.friend-card--pending:hover {
+    opacity: 0.7;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.friend-card--pending .friend-card__avatar {
+    background: linear-gradient(135deg, #3A4555, #4B5563);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Accepted friend (green accent) */
+.friend-card--accepted {
+    border-color: rgba(74, 222, 128, 0.1);
+}
+
+.friend-card--accepted:hover {
+    border-color: rgba(74, 222, 128, 0.25);
+}
+
 .friend-card__avatar {
     width: 44px;
     height: 44px;
