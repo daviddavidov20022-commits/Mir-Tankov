@@ -1,6 +1,6 @@
 /**
- * Friends JS — Друзья, чат, аватарки, вызов на дуэль
- * Без тестовых данных — реальный поиск через Lesta API
+ * Friends JS — Друзья, чат, аватарки
+ * Работает через серверный API (bot.py → aiohttp)
  */
 
 // ============================================================
@@ -9,10 +9,16 @@
 let myTelegramId = 0;
 let currentChatFriend = null;
 const AVATAR_KEY = 'wot_user_avatar';
-const FRIENDS_KEY = 'wot_friends';
-const MESSAGES_KEY = 'wot_messages';
 const LESTA_API = 'https://api.tanki.su/wot';
 const LESTA_APP = 'c984faa7dc529f4cb0139505d5e8043c';
+
+// URL API бота — измените если бот на VPS
+const BOT_API_URL = localStorage.getItem('bot_api_url') || 'http://localhost:8081';
+
+// Данные из сервера
+let friends = [];
+let friendRequests = [];
+let messages = {};
 
 // Эмодзи для выбора аватарки
 const AVATAR_EMOJIS = [
@@ -22,12 +28,6 @@ const AVATAR_EMOJIS = [
     '🚀', '💣', '🔫', '🪓', '⚡', '🌟',
     '😎', '🤖', '👾', '🎃', '💜', '❤️',
 ];
-
-// Друзья из localStorage (без демо-данных!)
-// status: 'accepted' | 'pending' (ожидает подтверждения)
-let friends = JSON.parse(localStorage.getItem(FRIENDS_KEY) || '[]');
-let friendRequests = JSON.parse(localStorage.getItem('wot_friend_requests') || '[]');
-let messages = JSON.parse(localStorage.getItem(MESSAGES_KEY) || '{}');
 
 // ============================================================
 // INIT
@@ -42,8 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadAvatar();
-    renderFriends();
-    renderRequests();
+    loadFriendsFromServer();
     createParticles();
 
     // Enter в поле поиска
@@ -53,7 +52,67 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') searchForFriend();
         });
     }
+
+    // Автообновление каждые 30 сек
+    setInterval(loadFriendsFromServer, 30000);
 });
+
+// ============================================================
+// API HELPERS
+// ============================================================
+async function apiGet(path) {
+    try {
+        const resp = await fetch(`${BOT_API_URL}${path}`);
+        return await resp.json();
+    } catch (e) {
+        console.warn('API GET error:', e);
+        return null;
+    }
+}
+
+async function apiPost(path, body) {
+    try {
+        const resp = await fetch(`${BOT_API_URL}${path}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        return await resp.json();
+    } catch (e) {
+        console.warn('API POST error:', e);
+        return null;
+    }
+}
+
+// ============================================================
+// ЗАГРУЗКА ДРУЗЕЙ С СЕРВЕРА
+// ============================================================
+async function loadFriendsFromServer() {
+    if (!myTelegramId) return;
+
+    const data = await apiGet(`/api/friends?telegram_id=${myTelegramId}`);
+    if (!data) {
+        // Нет сервера — показываем оффлайн
+        showToast('⚠️ Нет подключения к серверу');
+        return;
+    }
+
+    if (data.error) {
+        console.warn('API error:', data.error);
+        return;
+    }
+
+    friends = data.friends || [];
+    friendRequests = data.requests || [];
+
+    renderFriends();
+    renderRequests();
+
+    // Обновляем бейдж непрочитанных
+    if (data.unread_messages > 0) {
+        showToast(`💬 ${data.unread_messages} непрочитанных сообщений`);
+    }
+}
 
 // ============================================================
 // AVATAR SYSTEM
@@ -62,7 +121,6 @@ function loadAvatar() {
     const saved = localStorage.getItem(AVATAR_KEY);
     const avatarEl = document.getElementById('myAvatar');
     if (!avatarEl) return;
-
     if (saved && saved.startsWith('data:image')) {
         avatarEl.innerHTML = `<img src="${saved}" alt="avatar">`;
     } else {
@@ -73,12 +131,10 @@ function loadAvatar() {
 function openAvatarPicker() {
     const grid = document.getElementById('avatarGrid');
     const current = localStorage.getItem(AVATAR_KEY) || '🪖';
-
     grid.innerHTML = AVATAR_EMOJIS.map(emoji => `
         <button class="avatar-emoji ${emoji === current ? 'avatar-emoji--selected' : ''}" 
                 onclick="selectAvatar('${emoji}')">${emoji}</button>
     `).join('');
-
     document.getElementById('avatarModal').classList.add('modal-overlay--open');
 }
 
@@ -89,13 +145,10 @@ function closeAvatarPicker() {
 function selectAvatar(emoji) {
     localStorage.setItem(AVATAR_KEY, emoji);
     const avatarEl = document.getElementById('myAvatar');
-    avatarEl.textContent = emoji;
     avatarEl.innerHTML = emoji;
-
     document.querySelectorAll('.avatar-emoji').forEach(el => {
         el.classList.toggle('avatar-emoji--selected', el.textContent === emoji);
     });
-
     showToast('✅ Аватарка сохранена!');
     setTimeout(closeAvatarPicker, 500);
 }
@@ -103,19 +156,16 @@ function selectAvatar(emoji) {
 function handleAvatarUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
-
     if (file.size > 512000) {
         showToast('❌ Файл слишком большой (макс. 500 КБ)');
         return;
     }
-
     const reader = new FileReader();
     reader.onload = function (e) {
         const img = new Image();
         img.onload = function () {
             const canvas = document.createElement('canvas');
-            canvas.width = 128;
-            canvas.height = 128;
+            canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
             const size = Math.min(img.width, img.height);
             const sx = (img.width - size) / 2;
@@ -123,8 +173,7 @@ function handleAvatarUpload(event) {
             ctx.drawImage(img, sx, sy, size, size, 0, 0, 128, 128);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
             localStorage.setItem(AVATAR_KEY, dataUrl);
-            const avatarEl = document.getElementById('myAvatar');
-            avatarEl.innerHTML = `<img src="${dataUrl}" alt="avatar">`;
+            document.getElementById('myAvatar').innerHTML = `<img src="${dataUrl}" alt="avatar">`;
             showToast('✅ Фото загружено!');
             setTimeout(closeAvatarPicker, 500);
         };
@@ -144,7 +193,7 @@ function switchFriendsTab(tabId, btn) {
 }
 
 // ============================================================
-// RENDER FRIENDS (с разными цветами по статусу)
+// RENDER FRIENDS
 // ============================================================
 function renderFriends() {
     const list = document.getElementById('friendsList');
@@ -154,7 +203,7 @@ function renderFriends() {
         return;
     }
 
-    // Сортируем: принятые сверху, потом ожидающие
+    // Сортируем: accepted сверху
     const sorted = [...friends].sort((a, b) => {
         if (a.status === 'accepted' && b.status !== 'accepted') return -1;
         if (a.status !== 'accepted' && b.status === 'accepted') return 1;
@@ -162,36 +211,36 @@ function renderFriends() {
     });
 
     list.innerHTML = sorted.map((f, i) => {
-        const avatarContent = f.avatar && f.avatar.startsWith('data:')
-            ? `<img src="${f.avatar}" alt="">` : (f.avatar || '🪖');
+        const avatar = f.avatar || '🪖';
+        const avatarContent = avatar.startsWith('data:') ? `<img src="${avatar}" alt="">` : avatar;
         const isPending = f.status === 'pending';
         const statusClass = isPending ? 'friend-card--pending' : 'friend-card--accepted';
-        const statusLabel = isPending ? '⏳ Ожидает подтверждения' : (f.online ? '🟢 В сети' : '⚫ Был недавно');
-        const onlineClass = (!isPending && f.online) ? 'friend-card__avatar--online' : '';
+        const name = f.wot_nickname || f.first_name || f.username || 'Игрок';
+        const statusLabel = isPending ? '⏳ Ожидает подтверждения' : '✅ Друг';
 
         return `
         <div class="friend-card ${statusClass}" style="animation-delay: ${i * 0.05}s">
-            <div class="friend-card__avatar ${onlineClass}">${avatarContent}</div>
-            <div class="friend-card__info" onclick="${isPending ? '' : `openChat('${f.account_id || f.telegram_id}')`}">
-                <div class="friend-card__name">${f.name}</div>
-                <div class="friend-card__wot">${f.wot_nick || 'Ник не привязан'}</div>
+            <div class="friend-card__avatar">${avatarContent}</div>
+            <div class="friend-card__info" onclick="${isPending ? '' : `openChat(${f.telegram_id})`}">
+                <div class="friend-card__name">${name}</div>
+                <div class="friend-card__wot">${f.wot_nickname || 'Ник не привязан'}</div>
                 <div class="friend-card__status-label" style="font-size:0.6rem;color:${isPending ? '#5A6577' : '#4ade80'};margin-top:2px;">${statusLabel}</div>
             </div>
             <div class="friend-card__actions">
                 ${isPending ? `
                     <button class="friend-card__action" style="opacity:0.4;cursor:default" title="Ожидает">⏳</button>
                 ` : `
-                    <button class="friend-card__action friend-card__action--chat" onclick="openChat('${f.account_id || f.telegram_id}')" title="Чат">💬</button>
-                    <button class="friend-card__action friend-card__action--duel" onclick="challengeFriendById('${f.account_id || f.telegram_id}')" title="Дуэль">⚔️</button>
+                    <button class="friend-card__action friend-card__action--chat" onclick="openChat(${f.telegram_id})" title="Чат">💬</button>
+                    <button class="friend-card__action friend-card__action--duel" onclick="challengeFriendById(${f.telegram_id})" title="Дуэль">⚔️</button>
                 `}
-                <button class="friend-card__action friend-card__action--remove" onclick="removeFriend('${f.account_id || f.telegram_id}')" title="Удалить">✕</button>
+                <button class="friend-card__action friend-card__action--remove" onclick="removeFriend(${f.telegram_id})" title="Удалить">✕</button>
             </div>
         </div>`;
     }).join('');
 }
 
 // ============================================================
-// FRIEND REQUESTS (входящие)
+// FRIEND REQUESTS (входящие — с сервера!)
 // ============================================================
 function renderRequests() {
     const list = document.getElementById('requestsList');
@@ -210,69 +259,76 @@ function renderRequests() {
         return;
     }
 
-    list.innerHTML = friendRequests.map(r => `
+    list.innerHTML = friendRequests.map(r => {
+        const name = r.wot_nickname || r.first_name || r.username || 'Игрок';
+        return `
         <div class="request-card">
             <div class="request-card__avatar">${r.avatar || '🪖'}</div>
             <div class="request-card__info">
-                <div class="request-card__name">${r.name}</div>
-                <div class="request-card__sub">${r.wot_nick || ''}</div>
+                <div class="request-card__name">${name}</div>
+                <div class="request-card__sub">${r.wot_nickname || ''}</div>
             </div>
             <div class="request-btns">
-                <button class="request-btn-accept" onclick="acceptRequest('${r.account_id}')">✅ Принять</button>
-                <button class="request-btn-decline" onclick="declineRequest('${r.account_id}')">✕</button>
+                <button class="request-btn-accept" onclick="acceptRequest(${r.telegram_id})">✅ Принять</button>
+                <button class="request-btn-decline" onclick="declineRequest(${r.telegram_id})">✕</button>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
-function acceptRequest(accountId) {
-    const req = friendRequests.find(r => r.account_id === accountId);
-    if (req) {
-        // Удаляем из запросов, добавляем как друга (accepted)
-        friends.push({ ...req, status: 'accepted', online: false });
-        friendRequests = friendRequests.filter(r => r.account_id !== accountId);
-        saveFriends();
-        saveFriendRequests();
-        renderFriends();
-        renderRequests();
-        showToast(`✅ ${req.name} теперь ваш друг!`);
+async function acceptRequest(fromTelegramId) {
+    const result = await apiPost('/api/friends/accept', {
+        my_telegram_id: myTelegramId,
+        from_telegram_id: fromTelegramId,
+    });
+
+    if (result?.success) {
+        showToast('✅ Запрос принят!');
+        loadFriendsFromServer();
+    } else {
+        showToast(`❌ ${result?.error || 'Ошибка'}`);
     }
 }
 
-function declineRequest(accountId) {
-    friendRequests = friendRequests.filter(r => r.account_id !== accountId);
-    saveFriendRequests();
-    renderRequests();
-    showToast('Запрос отклонён');
+async function declineRequest(fromTelegramId) {
+    const result = await apiPost('/api/friends/decline', {
+        my_telegram_id: myTelegramId,
+        from_telegram_id: fromTelegramId,
+    });
+
+    if (result?.success) {
+        showToast('Запрос отклонён');
+        loadFriendsFromServer();
+    }
 }
 
 // ============================================================
-// REMOVE FRIEND
+// REMOVE FRIEND (через API)
 // ============================================================
-function removeFriend(id) {
+async function removeFriend(friendTelegramId) {
     if (!confirm('Удалить из друзей?')) return;
-    const friend = friends.find(f => (f.account_id || f.telegram_id) == id);
-    friends = friends.filter(f => (f.account_id || f.telegram_id) != id);
-    saveFriends();
-    renderFriends();
-    showToast(`${friend?.name || 'Друг'} удалён`);
+
+    const result = await apiPost('/api/friends/remove', {
+        my_telegram_id: myTelegramId,
+        friend_telegram_id: friendTelegramId,
+    });
+
+    if (result?.success) {
+        showToast('Друг удалён');
+        loadFriendsFromServer();
+    }
 }
 
 // ============================================================
-// SEARCH FOR FRIEND — РЕАЛЬНЫЙ ПОИСК ЧЕРЕЗ LESTA API
+// SEARCH — ЧЕРЕЗ LESTA API
 // ============================================================
 async function searchForFriend() {
     const query = document.getElementById('friendSearchInput').value.trim();
-    if (query.length < 2) {
-        showToast('Введите минимум 2 символа');
-        return;
-    }
+    if (query.length < 2) { showToast('Введите минимум 2 символа'); return; }
 
     const results = document.getElementById('friendSearchResults');
     results.innerHTML = `<div style="text-align:center;padding:20px;color:#5A6577">
-        <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
-        Ищем «${query}»...
-    </div>`;
+        <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>Ищем «${query}»...</div>`;
 
     try {
         const url = `${LESTA_API}/account/list/?application_id=${LESTA_APP}&search=${encodeURIComponent(query)}&type=startswith&limit=10`;
@@ -282,24 +338,18 @@ async function searchForFriend() {
         if (data.status !== 'ok' || !data.data || data.data.length === 0) {
             results.innerHTML = `<div class="empty-state" style="padding:30px">
                 <div class="empty-state__icon">😕</div>
-                <div class="empty-state__text">Игрок «${query}» не найден в Мир Танков</div>
-            </div>`;
+                <div class="empty-state__text">Игрок «${query}» не найден</div></div>`;
             return;
         }
 
         results.innerHTML = data.data.map(player => {
-            const alreadyFriend = friends.some(f => f.account_id === String(player.account_id));
-            const isPending = friends.some(f => f.account_id === String(player.account_id) && f.status === 'pending');
-
-            let actionBtn = '';
-            if (alreadyFriend && !isPending) {
+            const alreadyFriend = friends.some(f => String(f.wot_account_id) === String(player.account_id));
+            let actionBtn;
+            if (alreadyFriend) {
                 actionBtn = `<span style="font-size:0.7rem;color:#4ade80;font-weight:700;padding:8px 12px;">✅ Друг</span>`;
-            } else if (isPending) {
-                actionBtn = `<span style="font-size:0.7rem;color:#5A6577;font-weight:700;padding:8px 12px;">⏳ Запрос</span>`;
             } else {
                 actionBtn = `<button class="request-btn-accept" onclick="addFriend('${player.nickname}', '${player.account_id}')">➕ Добавить</button>`;
             }
-
             return `
             <div class="friend-card" style="margin-bottom:6px">
                 <div class="friend-card__avatar">🪖</div>
@@ -310,89 +360,100 @@ async function searchForFriend() {
                 ${actionBtn}
             </div>`;
         }).join('');
-
     } catch (err) {
-        console.error('Search error:', err);
         results.innerHTML = `<div class="empty-state" style="padding:30px">
             <div class="empty-state__icon">⚠️</div>
-            <div class="empty-state__text">Ошибка поиска. Проверьте интернет.</div>
-        </div>`;
+            <div class="empty-state__text">Ошибка поиска</div></div>`;
     }
 }
 
-function addFriend(name, accountId) {
-    // Проверяем что уже нет
-    if (friends.some(f => f.account_id === String(accountId))) {
-        showToast('Уже в друзьях!');
+async function addFriend(name, accountId) {
+    if (!myTelegramId) {
+        showToast('❌ Откройте через Telegram');
         return;
     }
 
-    const newFriend = {
-        account_id: String(accountId),
-        telegram_id: null,
-        name: name,
-        wot_nick: name,
-        avatar: '🪖',
-        online: false,
-        status: 'pending',  // ← Ожидает подтверждения!
-        addedAt: Date.now(),
-    };
+    showToast('📩 Отправляю запрос...');
 
-    friends.push(newFriend);
-    saveFriends();
-    renderFriends();
-    showToast(`📩 Запрос отправлен ${name}!`);
+    const result = await apiPost('/api/friends/add', {
+        from_telegram_id: myTelegramId,
+        to_wot_account_id: accountId,
+    });
 
-    // Обновляем кнопку в поиске
-    searchForFriend();
+    if (!result) {
+        showToast('❌ Нет подключения к серверу');
+        return;
+    }
+
+    if (result.not_registered) {
+        showToast('⚠️ Игрок не зарегистрирован в боте');
+        return;
+    }
+
+    if (result.success) {
+        if (result.auto_accepted) {
+            showToast(`🤝 ${name} — теперь друзья!`);
+        } else {
+            showToast(`📩 Запрос отправлен ${name}!`);
+        }
+        loadFriendsFromServer();
+        searchForFriend(); // обновить кнопки
+    } else {
+        showToast(`ℹ️ ${result.error || 'Ошибка'}`);
+    }
 }
 
 // ============================================================
-// CHAT
+// CHAT (через сервер!)
 // ============================================================
-function openChat(id) {
-    currentChatFriend = friends.find(f => (f.account_id || f.telegram_id) == id);
+async function openChat(telegramId) {
+    currentChatFriend = friends.find(f => f.telegram_id == telegramId);
     if (!currentChatFriend) return;
 
-    // Если pending — не открываем чат
     if (currentChatFriend.status === 'pending') {
         showToast('⏳ Дождитесь подтверждения дружбы');
         return;
     }
 
-    const avatarContent = currentChatFriend.avatar && currentChatFriend.avatar.startsWith('data:')
-        ? `<img src="${currentChatFriend.avatar}" alt="">` : (currentChatFriend.avatar || '🪖');
+    const name = currentChatFriend.wot_nickname || currentChatFriend.first_name || 'Друг';
+    const avatar = currentChatFriend.avatar || '🪖';
+    const avatarContent = avatar.startsWith('data:') ? `<img src="${avatar}" alt="">` : avatar;
 
     document.getElementById('chatAvatar').innerHTML = avatarContent;
-    document.getElementById('chatName').textContent = currentChatFriend.name;
-    document.getElementById('chatStatus').textContent = currentChatFriend.online ? '🟢 В сети' : '⚫ Был недавно';
+    document.getElementById('chatName').textContent = name;
+    document.getElementById('chatStatus').textContent = '💬 Чат';
 
-    const chatId = currentChatFriend.account_id || currentChatFriend.telegram_id;
-    renderMessages(chatId);
+    // Загружаем сообщения с сервера
+    await loadChatMessages(telegramId);
+
     document.getElementById('chatOverlay').classList.add('chat-overlay--open');
     document.getElementById('chatInput').focus();
+
+    // Автообновление чата каждые 5 сек
+    if (window._chatInterval) clearInterval(window._chatInterval);
+    window._chatInterval = setInterval(() => {
+        if (currentChatFriend) loadChatMessages(currentChatFriend.telegram_id);
+    }, 5000);
 }
 
-function closeChat() {
-    document.getElementById('chatOverlay').classList.remove('chat-overlay--open');
-    currentChatFriend = null;
-}
+async function loadChatMessages(friendTelegramId) {
+    const data = await apiGet(`/api/messages?my_id=${myTelegramId}&friend_id=${friendTelegramId}`);
+    if (!data || !data.messages) return;
 
-function renderMessages(friendId) {
     const container = document.getElementById('chatMessages');
-    const chatMsgs = messages[friendId] || [];
+    const msgs = data.messages;
 
-    if (!chatMsgs.length) {
+    if (!msgs.length) {
         container.innerHTML = `<div class="empty-state" style="padding:60px 20px">
             <div class="empty-state__icon">💬</div>
-            <div class="empty-state__text">Напиши первое сообщение!</div>
-        </div>`;
+            <div class="empty-state__text">Напиши первое сообщение!</div></div>`;
         return;
     }
 
-    container.innerHTML = chatMsgs.map(m => {
-        const time = new Date(m.time).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
-        return `<div class="msg ${m.mine ? 'msg--mine' : 'msg--theirs'}">
+    container.innerHTML = msgs.map(m => {
+        const mine = m.sender_telegram_id == myTelegramId;
+        const time = new Date(m.created_at).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+        return `<div class="msg ${mine ? 'msg--mine' : 'msg--theirs'}">
             ${m.text}
             <div class="msg__time">${time}</div>
         </div>`;
@@ -401,35 +462,32 @@ function renderMessages(friendId) {
     container.scrollTop = container.scrollHeight;
 }
 
-function sendMsg() {
+function closeChat() {
+    document.getElementById('chatOverlay').classList.remove('chat-overlay--open');
+    currentChatFriend = null;
+    if (window._chatInterval) {
+        clearInterval(window._chatInterval);
+        window._chatInterval = null;
+    }
+}
+
+async function sendMsg() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
     if (!text || !currentChatFriend) return;
 
-    const friendId = currentChatFriend.account_id || currentChatFriend.telegram_id;
-    if (!messages[friendId]) messages[friendId] = [];
+    input.value = '';
 
-    messages[friendId].push({
+    const result = await apiPost('/api/messages/send', {
+        from_telegram_id: myTelegramId,
+        to_telegram_id: currentChatFriend.telegram_id,
         text: text,
-        mine: true,
-        time: Date.now(),
     });
 
-    input.value = '';
-    saveMessages();
-    renderMessages(friendId);
-
-    // Отправляем через Telegram WebApp (бот обработает и доставит)
-    try {
-        if (window.Telegram?.WebApp) {
-            Telegram.WebApp.sendData(JSON.stringify({
-                type: 'friend_message',
-                to_account_id: friendId,
-                message: text,
-            }));
-        }
-    } catch (e) {
-        console.warn('Message send error:', e);
+    if (result?.success) {
+        await loadChatMessages(currentChatFriend.telegram_id);
+    } else {
+        showToast('❌ Ошибка отправки');
     }
 }
 
@@ -438,33 +496,17 @@ function sendMsg() {
 // ============================================================
 function challengeFriend() {
     if (!currentChatFriend) return;
-    challengeFriendById(currentChatFriend.account_id || currentChatFriend.telegram_id);
+    challengeFriendById(currentChatFriend.telegram_id);
 }
 
-function challengeFriendById(id) {
-    const friend = friends.find(f => (f.account_id || f.telegram_id) == id);
+function challengeFriendById(telegramId) {
+    const friend = friends.find(f => f.telegram_id == telegramId);
     if (!friend) return;
-
     const params = new URLSearchParams({
-        opponent: friend.wot_nick || friend.name,
-        opponent_id: id,
+        opponent: friend.wot_nickname || friend.first_name || 'Соперник',
+        opponent_id: telegramId,
     });
     window.location.href = `challenges.html?${params.toString()}`;
-}
-
-// ============================================================
-// PERSISTENCE
-// ============================================================
-function saveFriends() {
-    localStorage.setItem(FRIENDS_KEY, JSON.stringify(friends));
-}
-
-function saveFriendRequests() {
-    localStorage.setItem('wot_friend_requests', JSON.stringify(friendRequests));
-}
-
-function saveMessages() {
-    localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
 }
 
 // ============================================================
@@ -473,7 +515,6 @@ function saveMessages() {
 function showToast(message) {
     const existing = document.querySelector('.friends-toast');
     if (existing) existing.remove();
-
     const toast = document.createElement('div');
     toast.className = 'friends-toast';
     toast.textContent = message;
@@ -506,7 +547,7 @@ function createParticles() {
     }
 }
 
-// Close modals on overlay click
+// Close modals
 document.getElementById('avatarModal')?.addEventListener('click', function (e) {
     if (e.target === this) closeAvatarPicker();
 });

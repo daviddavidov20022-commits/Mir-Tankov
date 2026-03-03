@@ -1008,6 +1008,197 @@ def get_cheese_stats() -> dict:
 
 
 # ============================================================
+# ДРУЗЬЯ
+# ============================================================
+
+def send_friend_request(from_telegram_id: int, to_telegram_id: int) -> dict:
+    """Отправить запрос в друзья"""
+    if from_telegram_id == to_telegram_id:
+        return {"success": False, "error": "Нельзя добавить себя"}
+
+    with get_db() as conn:
+        # Проверяем: не друзья ли уже?
+        existing = conn.execute(
+            "SELECT status FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ?",
+            (from_telegram_id, to_telegram_id)
+        ).fetchone()
+
+        if existing:
+            if existing["status"] == "accepted":
+                return {"success": False, "error": "Уже в друзьях"}
+            else:
+                return {"success": False, "error": "Запрос уже отправлен"}
+
+        # Проверяем обратное направление (может они нам уже отправили)
+        reverse = conn.execute(
+            "SELECT status FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ?",
+            (to_telegram_id, from_telegram_id)
+        ).fetchone()
+
+        if reverse and reverse["status"] == "pending":
+            # Они уже отправили нам — автоматически принимаем обоих!
+            conn.execute(
+                "UPDATE friends SET status = 'accepted' WHERE user_telegram_id = ? AND friend_telegram_id = ?",
+                (to_telegram_id, from_telegram_id)
+            )
+            conn.execute(
+                "INSERT INTO friends (user_telegram_id, friend_telegram_id, status) VALUES (?, ?, 'accepted')",
+                (from_telegram_id, to_telegram_id)
+            )
+            return {"success": True, "auto_accepted": True}
+
+        # Создаём запрос
+        conn.execute(
+            "INSERT INTO friends (user_telegram_id, friend_telegram_id, status) VALUES (?, ?, 'pending')",
+            (from_telegram_id, to_telegram_id)
+        )
+        return {"success": True, "auto_accepted": False}
+
+
+def accept_friend_request(my_telegram_id: int, from_telegram_id: int) -> dict:
+    """Принять запрос в друзья"""
+    with get_db() as conn:
+        # Проверяем что запрос существует
+        req = conn.execute(
+            "SELECT id FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ? AND status = 'pending'",
+            (from_telegram_id, my_telegram_id)
+        ).fetchone()
+
+        if not req:
+            return {"success": False, "error": "Запрос не найден"}
+
+        # Принимаем: меняем статус + создаём обратную связь
+        conn.execute(
+            "UPDATE friends SET status = 'accepted' WHERE user_telegram_id = ? AND friend_telegram_id = ?",
+            (from_telegram_id, my_telegram_id)
+        )
+
+        # Создаём обратную запись (если нет)
+        try:
+            conn.execute(
+                "INSERT INTO friends (user_telegram_id, friend_telegram_id, status) VALUES (?, ?, 'accepted')",
+                (my_telegram_id, from_telegram_id)
+            )
+        except Exception:
+            conn.execute(
+                "UPDATE friends SET status = 'accepted' WHERE user_telegram_id = ? AND friend_telegram_id = ?",
+                (my_telegram_id, from_telegram_id)
+            )
+
+        return {"success": True}
+
+
+def decline_friend_request(my_telegram_id: int, from_telegram_id: int) -> dict:
+    """Отклонить запрос в друзья"""
+    with get_db() as conn:
+        conn.execute(
+            "DELETE FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ? AND status = 'pending'",
+            (from_telegram_id, my_telegram_id)
+        )
+        return {"success": True}
+
+
+def remove_friend(my_telegram_id: int, friend_telegram_id: int) -> dict:
+    """Удалить из друзей"""
+    with get_db() as conn:
+        conn.execute(
+            "DELETE FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ?",
+            (my_telegram_id, friend_telegram_id)
+        )
+        conn.execute(
+            "DELETE FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ?",
+            (friend_telegram_id, my_telegram_id)
+        )
+        return {"success": True}
+
+
+def get_friends(telegram_id: int) -> list:
+    """Получить список друзей (accepted + pending отправленных)"""
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT f.friend_telegram_id as telegram_id, f.status, f.created_at,
+                   u.username, u.first_name, u.wot_nickname, u.wot_account_id, u.avatar
+            FROM friends f
+            LEFT JOIN users u ON u.telegram_id = f.friend_telegram_id
+            WHERE f.user_telegram_id = ?
+            ORDER BY f.status ASC, f.created_at DESC
+        """, (telegram_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_friend_requests(telegram_id: int) -> list:
+    """Получить входящие запросы в друзья"""
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT f.user_telegram_id as telegram_id, f.created_at,
+                   u.username, u.first_name, u.wot_nickname, u.wot_account_id, u.avatar
+            FROM friends f
+            LEFT JOIN users u ON u.telegram_id = f.user_telegram_id
+            WHERE f.friend_telegram_id = ? AND f.status = 'pending'
+            ORDER BY f.created_at DESC
+        """, (telegram_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ============================================================
+# СООБЩЕНИЯ
+# ============================================================
+
+def send_message(from_telegram_id: int, to_telegram_id: int, text: str) -> dict:
+    """Отправить сообщение"""
+    if not text or len(text) > 4000:
+        return {"success": False, "error": "Некорректное сообщение"}
+
+    with get_db() as conn:
+        cursor = conn.execute(
+            "INSERT INTO messages (sender_telegram_id, receiver_telegram_id, text) VALUES (?, ?, ?)",
+            (from_telegram_id, to_telegram_id, text)
+        )
+        return {"success": True, "message_id": cursor.lastrowid}
+
+
+def get_messages(user1_telegram_id: int, user2_telegram_id: int, limit: int = 50) -> list:
+    """Получить сообщения между двумя пользователями"""
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT id, sender_telegram_id, receiver_telegram_id, text, is_read, created_at
+            FROM messages
+            WHERE (sender_telegram_id = ? AND receiver_telegram_id = ?)
+               OR (sender_telegram_id = ? AND receiver_telegram_id = ?)
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (user1_telegram_id, user2_telegram_id,
+              user2_telegram_id, user1_telegram_id, limit)).fetchall()
+
+        # Помечаем как прочитанные
+        conn.execute("""
+            UPDATE messages SET is_read = 1
+            WHERE sender_telegram_id = ? AND receiver_telegram_id = ? AND is_read = 0
+        """, (user2_telegram_id, user1_telegram_id))
+
+        return [dict(r) for r in reversed(rows)]
+
+
+def get_unread_count(telegram_id: int) -> int:
+    """Количество непрочитанных сообщений"""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM messages WHERE receiver_telegram_id = ? AND is_read = 0",
+            (telegram_id,)
+        ).fetchone()
+        return row[0] if row else 0
+
+
+def get_user_by_wot_account_id(account_id: int):
+    """Найти пользователя по WoT account_id"""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM users WHERE wot_account_id = ?", (account_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+# ============================================================
 # ИНИЦИАЛИЗАЦИЯ ПРИ ИМПОРТЕ
 # ============================================================
 init_db()

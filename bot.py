@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+from aiohttp import web
 from dotenv import load_dotenv
 
 # ⚠️ ВАЖНО: загрузка .env ПЕРЕД импортом модулей,
@@ -36,6 +37,10 @@ from database import (
     start_verification, confirm_verification, get_verify_snapshot, is_verified,
     SUBSCRIPTION_PLANS,
     buy_cheese, spend_cheese, get_cheese_balance, get_cheese_history, get_cheese_stats,
+    send_friend_request, accept_friend_request, decline_friend_request,
+    remove_friend, get_friends, get_friend_requests,
+    send_message, get_messages, get_unread_count,
+    get_user_by_wot_account_id,
 )
 from challenges import (
     create_challenge, create_from_template, get_active_challenges,
@@ -3097,8 +3102,277 @@ async def handle_any(message: types.Message, state: FSMContext):
 
 
 # ==========================================
+# REST API — AIOHTTP СЕРВЕР
+# ==========================================
+API_PORT = int(os.getenv("API_PORT", "8081"))
+
+
+def cors_response(data, status=200):
+    """JSON ответ с CORS заголовками"""
+    return web.json_response(
+        data,
+        status=status,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        }
+    )
+
+
+async def handle_options(request):
+    """CORS preflight"""
+    return web.Response(
+        status=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        }
+    )
+
+
+# --- FRIENDS API ---
+
+async def api_get_friends(request):
+    """GET /api/friends?telegram_id=123"""
+    try:
+        tg_id = int(request.query.get("telegram_id", 0))
+        if not tg_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+
+        friends_list = get_friends(tg_id)
+        requests_list = get_friend_requests(tg_id)
+        unread = get_unread_count(tg_id)
+
+        return cors_response({
+            "friends": friends_list,
+            "requests": requests_list,
+            "unread_messages": unread,
+        })
+    except Exception as e:
+        logger.error(f"API get_friends error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_add_friend(request):
+    """POST /api/friends/add  {from_telegram_id, to_wot_account_id}"""
+    try:
+        data = await request.json()
+        from_tg_id = int(data.get("from_telegram_id", 0))
+        to_account_id = data.get("to_wot_account_id")
+        to_tg_id = int(data.get("to_telegram_id", 0))
+
+        if not from_tg_id:
+            return cors_response({"error": "from_telegram_id required"}, 400)
+
+        # Если указан wot_account_id — ищем пользователя в БД
+        if to_account_id and not to_tg_id:
+            user = get_user_by_wot_account_id(int(to_account_id))
+            if user:
+                to_tg_id = user["telegram_id"]
+            else:
+                return cors_response({"error": "Игрок не зарегистрирован в боте", "not_registered": True}, 404)
+
+        if not to_tg_id:
+            return cors_response({"error": "to_telegram_id required"}, 400)
+
+        result = send_friend_request(from_tg_id, to_tg_id)
+
+        # Отправляем уведомление через бот
+        if result.get("success"):
+            try:
+                from_user = get_user_by_telegram_id(from_tg_id)
+                from_name = from_user["wot_nickname"] or from_user["first_name"] or "Игрок" if from_user else "Игрок"
+
+                if result.get("auto_accepted"):
+                    await bot.send_message(
+                        to_tg_id,
+                        f"✅ <b>{from_name}</b> тоже добавил вас!\n"
+                        f"Теперь вы друзья! 🤝",
+                        parse_mode="HTML"
+                    )
+                else:
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                        [
+                            InlineKeyboardButton(text="✅ Принять", callback_data=f"fr_accept_{from_tg_id}"),
+                            InlineKeyboardButton(text="❌ Отклонить", callback_data=f"fr_decline_{from_tg_id}"),
+                        ]
+                    ])
+                    await bot.send_message(
+                        to_tg_id,
+                        f"📩 <b>Запрос в друзья!</b>\n\n"
+                        f"🪖 <b>{from_name}</b> хочет добавить вас в друзья.",
+                        parse_mode="HTML",
+                        reply_markup=keyboard
+                    )
+            except Exception as e:
+                logger.warning(f"Не удалось отправить уведомление: {e}")
+
+        return cors_response(result)
+    except Exception as e:
+        logger.error(f"API add_friend error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_accept_friend(request):
+    """POST /api/friends/accept  {my_telegram_id, from_telegram_id}"""
+    try:
+        data = await request.json()
+        my_tg_id = int(data.get("my_telegram_id", 0))
+        from_tg_id = int(data.get("from_telegram_id", 0))
+
+        result = accept_friend_request(my_tg_id, from_tg_id)
+
+        if result.get("success"):
+            try:
+                my_user = get_user_by_telegram_id(my_tg_id)
+                my_name = my_user["wot_nickname"] or my_user["first_name"] or "Игрок" if my_user else "Игрок"
+                await bot.send_message(
+                    from_tg_id,
+                    f"✅ <b>{my_name}</b> принял ваш запрос в друзья! 🤝",
+                    parse_mode="HTML"
+                )
+            except Exception:
+                pass
+
+        return cors_response(result)
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_decline_friend(request):
+    """POST /api/friends/decline  {my_telegram_id, from_telegram_id}"""
+    try:
+        data = await request.json()
+        my_tg_id = int(data.get("my_telegram_id", 0))
+        from_tg_id = int(data.get("from_telegram_id", 0))
+        result = decline_friend_request(my_tg_id, from_tg_id)
+        return cors_response(result)
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_remove_friend(request):
+    """POST /api/friends/remove  {my_telegram_id, friend_telegram_id}"""
+    try:
+        data = await request.json()
+        my_tg_id = int(data.get("my_telegram_id", 0))
+        friend_tg_id = int(data.get("friend_telegram_id", 0))
+        result = remove_friend(my_tg_id, friend_tg_id)
+        return cors_response(result)
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+# --- MESSAGES API ---
+
+async def api_get_messages(request):
+    """GET /api/messages?my_id=123&friend_id=456"""
+    try:
+        my_id = int(request.query.get("my_id", 0))
+        friend_id = int(request.query.get("friend_id", 0))
+        if not my_id or not friend_id:
+            return cors_response({"error": "my_id and friend_id required"}, 400)
+
+        msgs = get_messages(my_id, friend_id)
+        return cors_response({"messages": msgs})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_send_message(request):
+    """POST /api/messages/send  {from_telegram_id, to_telegram_id, text}"""
+    try:
+        data = await request.json()
+        from_tg_id = int(data.get("from_telegram_id", 0))
+        to_tg_id = int(data.get("to_telegram_id", 0))
+        text = data.get("text", "").strip()
+
+        if not from_tg_id or not to_tg_id or not text:
+            return cors_response({"error": "Missing fields"}, 400)
+
+        result = send_message(from_tg_id, to_tg_id, text)
+
+        # Отправляем уведомление через бот
+        if result.get("success"):
+            try:
+                from_user = get_user_by_telegram_id(from_tg_id)
+                from_name = from_user["wot_nickname"] or from_user["first_name"] or "Игрок" if from_user else "Игрок"
+                preview = text[:100] + ("..." if len(text) > 100 else "")
+                await bot.send_message(
+                    to_tg_id,
+                    f"💬 <b>Новое сообщение от {from_name}:</b>\n\n"
+                    f"{preview}",
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                logger.warning(f"Не удалось отправить уведомление о сообщении: {e}")
+
+        return cors_response(result)
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+# --- Callback handlers for friend requests from Telegram ---
+
+@dp.callback_query(F.data.startswith("fr_accept_"))
+async def cb_accept_friend(callback: CallbackQuery):
+    from_tg_id = int(callback.data.split("_")[-1])
+    my_tg_id = callback.from_user.id
+    result = accept_friend_request(my_tg_id, from_tg_id)
+
+    if result.get("success"):
+        await callback.message.edit_text("✅ Запрос принят! Теперь вы друзья 🤝")
+        try:
+            my_user = get_user_by_telegram_id(my_tg_id)
+            my_name = my_user["wot_nickname"] or my_user["first_name"] if my_user else "Игрок"
+            await bot.send_message(
+                from_tg_id,
+                f"✅ <b>{my_name}</b> принял ваш запрос в друзья! 🤝",
+                parse_mode="HTML"
+            )
+        except Exception:
+            pass
+    else:
+        await callback.message.edit_text(f"❌ {result.get('error', 'Ошибка')}")
+    await callback.answer()
+
+
+@dp.callback_query(F.data.startswith("fr_decline_"))
+async def cb_decline_friend(callback: CallbackQuery):
+    from_tg_id = int(callback.data.split("_")[-1])
+    my_tg_id = callback.from_user.id
+    decline_friend_request(my_tg_id, from_tg_id)
+    await callback.message.edit_text("❌ Запрос отклонён.")
+    await callback.answer()
+
+
+# ==========================================
 # ЗАПУСК
 # ==========================================
+
+def create_api_app():
+    """Создать aiohttp приложение с API маршрутами"""
+    app = web.Application()
+
+    # CORS preflight
+    app.router.add_route("OPTIONS", "/{path:.*}", handle_options)
+
+    # Friends API
+    app.router.add_get("/api/friends", api_get_friends)
+    app.router.add_post("/api/friends/add", api_add_friend)
+    app.router.add_post("/api/friends/accept", api_accept_friend)
+    app.router.add_post("/api/friends/decline", api_decline_friend)
+    app.router.add_post("/api/friends/remove", api_remove_friend)
+
+    # Messages API
+    app.router.add_get("/api/messages", api_get_messages)
+    app.router.add_post("/api/messages/send", api_send_message)
+
+    return app
+
+
 async def main():
     logger.info("Бот запускается...")
 
@@ -3113,6 +3387,15 @@ async def main():
     except Exception as e:
         logger.warning(f"Не удалось установить меню: {e}")
 
+    # Запускаем API сервер
+    api_app = create_api_app()
+    runner = web.AppRunner(api_app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", API_PORT)
+    await site.start()
+    logger.info(f"API сервер запущен на порту {API_PORT}")
+
+    # Запускаем бот
     await dp.start_polling(bot)
 
 
