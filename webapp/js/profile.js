@@ -140,10 +140,99 @@ function checkVerifyParams() {
     }
 }
 
+// ============================================================
+// ВВОД КОДА В ПРИЛОЖЕНИИ
+// ============================================================
+function showStep2() {
+    const step1 = document.getElementById('linkStep1');
+    const step2 = document.getElementById('linkStep2');
+    if (step1) step1.style.display = 'none';
+    if (step2) step2.style.display = 'block';
+
+    const nickInput = document.getElementById('verifyNickInput');
+    if (nickInput) setTimeout(() => nickInput.focus(), 100);
+}
+
+// Тот же алгоритм генерации кода что и в verify.html
+function generateCode(accountId) {
+    let hash = 0;
+    const str = String(accountId) + '_MIRTANKOV_2026';
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return 'MT' + Math.abs(hash).toString(36).toUpperCase().slice(0, 6);
+}
+
+async function verifyCode() {
+    const nickInput = document.getElementById('verifyNickInput');
+    const codeInput = document.getElementById('verifyCodeInput');
+    const nickname = nickInput.value.trim();
+    const code = codeInput.value.trim().toUpperCase();
+
+    if (!nickname || nickname.length < 2) {
+        nickInput.style.borderColor = '#e74c3c';
+        showToast('❌', 'Введите ваш ник');
+        return;
+    }
+    if (!code || code.length < 4) {
+        codeInput.style.borderColor = '#e74c3c';
+        showToast('❌', 'Введите код верификации');
+        return;
+    }
+
+    // Ищем игрока через Lesta API
+    showToast('🔍', 'Проверяю...');
+
+    try {
+        const searchUrl = `${LESTA_API_URL}/account/list/?application_id=${LESTA_APP_ID}&search=${encodeURIComponent(nickname)}&type=exact&limit=1`;
+        const resp = await fetch(searchUrl);
+        const data = await resp.json();
+
+        if (data.status !== 'ok' || !data.data || data.data.length === 0) {
+            showToast('❌', 'Игрок не найден в Мир Танков');
+            return;
+        }
+
+        const accountId = data.data[0].account_id;
+        const realNick = data.data[0].nickname;
+
+        // Генерируем код из account_id тем же алгоритмом
+        const expectedCode = generateCode(accountId);
+
+        if (code === expectedCode) {
+            // ✅ КОД СОВПАЛ — привязываем!
+            localStorage.setItem('wot_nickname', realNick);
+            localStorage.setItem('wot_account_id', String(accountId));
+            localStorage.setItem('wot_verified', 'true');
+
+            showSavedNickname(realNick);
+            loadQuickStats(realNick);
+            showToast('✅', `Аккаунт ${realNick} привязан навсегда!`);
+
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }
+        } else {
+            // ❌ Код не совпадает
+            codeInput.style.borderColor = '#e74c3c';
+            showToast('❌', 'Неверный код! Получите новый через Lesta');
+
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+            }
+        }
+    } catch (err) {
+        console.error('Ошибка верификации:', err);
+        showToast('❌', 'Ошибка сети. Попробуйте позже');
+    }
+}
+
 // Enter key
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && document.activeElement?.id === 'nicknameInput') {
-        saveNickname();
+    if (e.key === 'Enter' && document.activeElement?.id === 'verifyCodeInput') {
+        verifyCode();
     }
 });
 
@@ -449,5 +538,7 @@ if (window.Telegram?.WebApp?.BackButton) {
 // Expose
 window.linkAccount = linkAccount;
 window.unlinkAccount = unlinkAccount;
+window.showStep2 = showStep2;
+window.verifyCode = verifyCode;
 window.viewMyStats = viewMyStats;
 window.goBack = goBack;

@@ -64,17 +64,44 @@
                     </button>
                 </div>
             </div>
-            <!-- Кнопка привязки через Lesta -->
+
+            <!-- Привязка: шаг 1 + шаг 2 -->
             <div id="nicknameLinkSection">
-                <p class="nickname-hint">Привяжите свой аккаунт через Lesta Games, чтобы подтвердить личность и видеть
-                    статистику</p>
-                <button class="btn-lesta" onclick="linkAccount()">
-                    <span class="btn-lesta__icon">🛡️</span>
-                    <span class="btn-lesta__text">Войти через Lesta Games</span>
-                </button>
-                <p class="nickname-hint" style="margin-top: 8px; font-size: 0.6rem; opacity: 0.6">
-                    Безопасный вход через официальный сайт Lesta Games
-                </p>
+                <!-- ШАГ 1: Кнопка Lesta -->
+                <div id="linkStep1">
+                    <p class="nickname-hint">Шаг 1: Войдите через Lesta Games, скопируйте код</p>
+                    <button class="btn-lesta" onclick="linkAccount()">
+                        <span class="btn-lesta__icon">🛡️</span>
+                        <span class="btn-lesta__text">Войти через Lesta Games</span>
+                    </button>
+                    <p class="nickname-hint" style="margin-top: 12px;">
+                        <a href="javascript:void(0)" onclick="showStep2()"
+                            style="color: #C8AA6E; text-decoration: underline; font-size: 0.75rem;">
+                            У меня уже есть код →
+                        </a>
+                    </p>
+                </div>
+
+                <!-- ШАГ 2: Ввести код -->
+                <div id="linkStep2" style="display: none;">
+                    <p class="nickname-hint">Шаг 2: Вставьте ваш ник и код верификации</p>
+                    <div class="input-group" style="margin-bottom: 8px;">
+                        <input type="text" id="verifyNickInput" class="input-field"
+                            placeholder="Ваш ник (например Fors777_2016)" autocomplete="off" autocorrect="off"
+                            maxlength="24">
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="verifyCodeInput" class="input-field"
+                            placeholder="Код (например MTN10S7B)" autocomplete="off" autocorrect="off" maxlength="10"
+                            style="text-transform: uppercase; letter-spacing: 2px; font-family: 'Russo One', monospace; text-align: center;">
+                        <button class="btn-save" onclick="verifyCode()">
+                            ✅ Привязать
+                        </button>
+                    </div>
+                    <p class="nickname-hint" style="margin-top: 8px; font-size: 0.6rem; opacity: 0.6">
+                        Код вы получили после входа через Lesta Games
+                    </p>
+                </div>
             </div>
         </div>
     </section>
