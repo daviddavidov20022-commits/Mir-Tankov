@@ -274,6 +274,33 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_cheese_status ON cheese_purchases(status);
         """)
 
+        # ===== АРЕНА — ЧЕЛЛЕНДЖИ =====
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS arena_challenges (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                from_telegram_id INTEGER NOT NULL,
+                to_telegram_id INTEGER NOT NULL,
+                tank_id INTEGER,
+                tank_name TEXT,
+                condition TEXT DEFAULT 'damage',
+                battles INTEGER DEFAULT 5,
+                wager INTEGER DEFAULT 100,
+                status TEXT DEFAULT 'pending',
+                from_start_stats TEXT,
+                to_start_stats TEXT,
+                from_end_stats TEXT,
+                to_end_stats TEXT,
+                winner_telegram_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                accepted_at TIMESTAMP,
+                finished_at TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_arena_from ON arena_challenges(from_telegram_id);
+            CREATE INDEX IF NOT EXISTS idx_arena_to ON arena_challenges(to_telegram_id);
+            CREATE INDEX IF NOT EXISTS idx_arena_status ON arena_challenges(status);
+        """)
+
         logger.info("База данных инициализирована")
 
 
@@ -315,6 +342,14 @@ def get_user_by_telegram_id(telegram_id: int) -> dict | None:
         ).fetchone()
         return dict(user) if user else None
 
+
+def get_user_by_wot_account_id(account_id: int) -> dict | None:
+    """Получить пользователя по WoT account_id (Lesta ID)"""
+    with get_db() as conn:
+        user = conn.execute(
+            "SELECT * FROM users WHERE wot_account_id = ?", (account_id,)
+        ).fetchone()
+        return dict(user) if user else None
 
 def update_user_wot(telegram_id: int, nickname: str, account_id: int):
     """Привязать ник WoT к пользователю"""

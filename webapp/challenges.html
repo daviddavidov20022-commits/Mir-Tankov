@@ -5,11 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Арена — Мир Танков</title>
-    <meta name="description" content="PvP Арена и Челленджи — вызови на бой!">
+    <meta name="description" content="PvP Арена — вызови на бой!">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/arena.css">
 </head>
@@ -33,7 +34,7 @@
                 <div class="cheese-bar__icon">🧀</div>
                 <div>
                     <div class="cheese-bar__label">Баланс СЫР</div>
-                    <div class="cheese-bar__amount" id="cheeseBalance">1 250</div>
+                    <div class="cheese-bar__amount" id="cheeseBalance">0</div>
                 </div>
             </div>
             <button class="cheese-bar__buy" onclick="buyCheese()">+ Купить</button>
@@ -41,258 +42,210 @@
 
         <!-- Tabs -->
         <div class="arena-tabs">
-            <button class="arena-tab arena-tab--active" onclick="switchTab('challenges', this)">🎯 Челленджи</button>
-            <button class="arena-tab" onclick="switchTab('search', this)">🔍 Найти</button>
-            <button class="arena-tab" onclick="switchTab('active', this)">🔥 Мои</button>
+            <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">⚔️ Создать</button>
+            <button class="arena-tab" onclick="switchTab('active', this)">🔥 Мои <span class="arena-badge"
+                    id="activeBadge" style="display:none">0</span></button>
             <button class="arena-tab" onclick="switchTab('history', this)">📜 История</button>
         </div>
 
-        <!-- TAB: Challenges (preset challenges) -->
-        <div class="tab-content tab-content--active" id="tab-challenges">
-            <div class="section-lbl">🎯 Доступные челленджи</div>
+        <!-- ============================== -->
+        <!-- TAB: CREATE CHALLENGE           -->
+        <!-- ============================== -->
+        <div class="tab-content tab-content--active" id="tab-create">
 
-            <!-- Challenge 1: LT Spotting -->
-            <div class="challenge-preset" onclick="selectChallenge('lt_spotting')">
-                <div class="challenge-preset__glow"></div>
-                <div class="challenge-preset__header">
-                    <div class="challenge-preset__icon-wrap challenge-preset__icon-wrap--fire">🔦</div>
-                    <div class="challenge-preset__info">
-                        <div class="challenge-preset__title">Мастер Засвета</div>
-                        <div class="challenge-preset__desc">Лёгкий танк 10 ур. — кто насветит больше?</div>
-                    </div>
-                    <div class="challenge-preset__badge challenge-preset__badge--new">НОВЫЙ</div>
+            <!-- Step 1: Opponent -->
+            <div class="create-step" id="step-opponent">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Выбери соперника</div>
                 </div>
-                <div class="challenge-preset__conditions">
-                    <span>🏎️ ЛТ-10</span>
-                    <span>👁 Засвет</span>
-                    <span>⚔️ 10 боёв</span>
-                    <span>🧀 от 50</span>
+                <div class="search-box">
+                    <input type="text" class="search-box__input" id="opponentSearch" placeholder="Введи ник игрока..."
+                        onkeydown="if(event.key==='Enter')searchOpponent()">
+                    <button class="search-box__btn" onclick="searchOpponent()">🔍</button>
+                </div>
+                <div id="opponentResults"></div>
+                <div class="selected-opponent" id="selectedOpponent" style="display:none">
+                    <div class="selected-opponent__info">
+                        <div class="selected-opponent__name" id="selectedOpponentName"></div>
+                        <div class="selected-opponent__status" id="selectedOpponentStatus"></div>
+                    </div>
+                    <button class="selected-opponent__change" onclick="changeOpponent()">✏️ Изменить</button>
                 </div>
             </div>
 
-            <!-- Challenge 2: Damage -->
-            <div class="challenge-preset" onclick="selectChallenge('damage_dealer')">
-                <div class="challenge-preset__header">
-                    <div class="challenge-preset__icon-wrap challenge-preset__icon-wrap--red">💥</div>
-                    <div class="challenge-preset__info">
-                        <div class="challenge-preset__title">Дамагер</div>
-                        <div class="challenge-preset__desc">Набей больше суммарного урона</div>
-                    </div>
+            <!-- Step 2: Tank -->
+            <div class="create-step create-step--locked" id="step-tank">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Выбери танк</div>
                 </div>
-                <div class="challenge-preset__conditions">
-                    <span>🔄 Любые</span>
-                    <span>💥 Урон</span>
-                    <span>⚔️ 10 боёв</span>
-                    <span>🧀 от 50</span>
+                <div class="tank-filters" id="tankFilters">
+                    <div class="tank-class-filter">
+                        <button class="class-btn class-btn--active" data-type="all" onclick="filterTanks('all', this)">
+                            🔄 Все</button>
+                        <button class="class-btn" data-type="heavyTank" onclick="filterTanks('heavyTank', this)">🛡️
+                            ТТ</button>
+                        <button class="class-btn" data-type="mediumTank" onclick="filterTanks('mediumTank', this)">⚙️
+                            СТ</button>
+                        <button class="class-btn" data-type="lightTank" onclick="filterTanks('lightTank', this)">🏎️
+                            ЛТ</button>
+                        <button class="class-btn" data-type="AT-SPG" onclick="filterTanks('AT-SPG', this)">🎯
+                            ПТ</button>
+                        <button class="class-btn" data-type="SPG" onclick="filterTanks('SPG', this)">💣 САУ</button>
+                    </div>
+                    <div class="tank-tier-filter">
+                        <button class="tier-btn" data-tier="6" onclick="filterTier(6, this)">VI</button>
+                        <button class="tier-btn" data-tier="7" onclick="filterTier(7, this)">VII</button>
+                        <button class="tier-btn" data-tier="8" onclick="filterTier(8, this)">VIII</button>
+                        <button class="tier-btn" data-tier="9" onclick="filterTier(9, this)">IX</button>
+                        <button class="tier-btn tier-btn--active" data-tier="10" onclick="filterTier(10, this)">X
+                        </button>
+                    </div>
+                    <input type="text" class="tank-search-input" id="tankSearchInput" placeholder="🔍 Поиск танка..."
+                        oninput="filterTanksByName(this.value)">
+                </div>
+                <div class="tank-list" id="tankList">
+                    <div class="tank-loading" id="tankLoading">Загружаем танки...</div>
+                </div>
+                <div class="selected-tank" id="selectedTank" style="display:none">
+                    <img id="selectedTankIcon" src="" alt="" class="selected-tank__icon">
+                    <div class="selected-tank__name" id="selectedTankName"></div>
+                    <button class="selected-tank__change" onclick="changeTank()">✏️</button>
                 </div>
             </div>
 
-            <!-- Challenge 3: Frags -->
-            <div class="challenge-preset" onclick="selectChallenge('frag_hunter')">
-                <div class="challenge-preset__header">
-                    <div class="challenge-preset__icon-wrap">🎯</div>
-                    <div class="challenge-preset__info">
-                        <div class="challenge-preset__title">Охотник</div>
-                        <div class="challenge-preset__desc">Набей больше фрагов за N боёв</div>
-                    </div>
+            <!-- Step 3: Condition -->
+            <div class="create-step create-step--locked" id="step-condition">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Условие</div>
                 </div>
-                <div class="challenge-preset__conditions">
-                    <span>🔄 Любые</span>
-                    <span>🎯 Фраги</span>
-                    <span>⚔️ 10 боёв</span>
-                    <span>🧀 от 50</span>
+                <div class="condition-grid" id="conditionGrid">
+                    <button class="condition-card" data-cond="damage" onclick="selectCondition('damage', this)">
+                        <div class="condition-card__icon">💥</div>
+                        <div class="condition-card__name">Урон</div>
+                        <div class="condition-card__desc">Средний урон за серию</div>
+                    </button>
+                    <button class="condition-card" data-cond="spotting" onclick="selectCondition('spotting', this)">
+                        <div class="condition-card__icon">👁</div>
+                        <div class="condition-card__name">Засвет</div>
+                        <div class="condition-card__desc">Средний засвет за серию</div>
+                    </button>
+                    <button class="condition-card" data-cond="blocked" onclick="selectCondition('blocked', this)">
+                        <div class="condition-card__icon">🛡️</div>
+                        <div class="condition-card__name">Блок</div>
+                        <div class="condition-card__desc">Средний заблокированный</div>
+                    </button>
+                    <button class="condition-card" data-cond="frags" onclick="selectCondition('frags', this)">
+                        <div class="condition-card__icon">🎯</div>
+                        <div class="condition-card__name">Фраги</div>
+                        <div class="condition-card__desc">Среднее убийств</div>
+                    </button>
+                    <button class="condition-card" data-cond="xp" onclick="selectCondition('xp', this)">
+                        <div class="condition-card__icon">⭐</div>
+                        <div class="condition-card__name">Опыт</div>
+                        <div class="condition-card__desc">Средний опыт за бой</div>
+                    </button>
+                    <button class="condition-card" data-cond="wins" onclick="selectCondition('wins', this)">
+                        <div class="condition-card__icon">🏆</div>
+                        <div class="condition-card__name">Победы</div>
+                        <div class="condition-card__desc">Процент побед за серию</div>
+                    </button>
                 </div>
             </div>
 
-            <!-- Challenge 4: Wins -->
-            <div class="challenge-preset" onclick="selectChallenge('win_streak')">
-                <div class="challenge-preset__header">
-                    <div class="challenge-preset__icon-wrap challenge-preset__icon-wrap--gold">🏆</div>
-                    <div class="challenge-preset__info">
-                        <div class="challenge-preset__title">Победитель</div>
-                        <div class="challenge-preset__desc">Выиграй больше боёв из N</div>
-                    </div>
+            <!-- Step 4: Battles -->
+            <div class="create-step create-step--locked" id="step-battles">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Количество боёв</div>
                 </div>
-                <div class="challenge-preset__conditions">
-                    <span>🔄 Любые</span>
-                    <span>🏆 Победы</span>
-                    <span>⚔️ 15 боёв</span>
-                    <span>🧀 от 50</span>
+                <div class="battles-selector" id="battlesSelector">
+                    <button class="battles-btn" data-val="3" onclick="selectBattles(3, this)">3</button>
+                    <button class="battles-btn battles-btn--selected" data-val="5" onclick="selectBattles(5, this)">5
+                    </button>
+                    <button class="battles-btn" data-val="10" onclick="selectBattles(10, this)">10</button>
+                    <button class="battles-btn" data-val="15" onclick="selectBattles(15, this)">15</button>
+                    <button class="battles-btn" data-val="20" onclick="selectBattles(20, this)">20</button>
                 </div>
             </div>
 
-            <!-- Challenge 5: XP -->
-            <div class="challenge-preset" onclick="selectChallenge('xp_grind')">
-                <div class="challenge-preset__header">
-                    <div class="challenge-preset__icon-wrap challenge-preset__icon-wrap--purple">⭐</div>
-                    <div class="challenge-preset__info">
-                        <div class="challenge-preset__title">XP Машина</div>
-                        <div class="challenge-preset__desc">Набери больше суммарного опыта</div>
-                    </div>
+            <!-- Step 5: Wager -->
+            <div class="create-step create-step--locked" id="step-wager">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Ставка 🧀</div>
                 </div>
-                <div class="challenge-preset__conditions">
-                    <span>🔄 Любые</span>
-                    <span>⭐ Опыт</span>
-                    <span>⚔️ 10 боёв</span>
-                    <span>🧀 от 50</span>
+                <div class="wager-input-wrap">
+                    <div class="wager-currency">🧀</div>
+                    <input type="number" class="form-input" id="wagerAmount" value="100" min="10" max="10000">
                 </div>
+                <div class="wager-presets">
+                    <button class="wager-preset" onclick="setWager(50)">50</button>
+                    <button class="wager-preset" onclick="setWager(100)">100</button>
+                    <button class="wager-preset" onclick="setWager(250)">250</button>
+                    <button class="wager-preset" onclick="setWager(500)">500</button>
+                    <button class="wager-preset" onclick="setWager(1000)">1000</button>
+                </div>
+            </div>
+
+            <!-- Summary & Send -->
+            <div class="challenge-summary-full" id="challengeSummaryFull" style="display:none">
+                <div class="summary-title">📋 Сводка</div>
+                <div class="summary-row">
+                    <span class="summary-key">Соперник</span>
+                    <span class="summary-val" id="sumOpponent">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">Танк</span>
+                    <span class="summary-val" id="sumTank">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">Условие</span>
+                    <span class="summary-val" id="sumCondition">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">Боёв</span>
+                    <span class="summary-val" id="sumBattles">5</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">Ставка</span>
+                    <span class="summary-val" id="sumWager">🧀 100</span>
+                </div>
+                <div class="summary-row summary-row--prize">
+                    <span class="summary-key">Приз победителю</span>
+                    <span class="summary-val" id="sumPrize" style="color:#4ade80">🧀 200</span>
+                </div>
+                <button class="challenge-send-btn" id="sendChallengeBtn" onclick="sendChallenge()">
+                    ⚔️ ОТПРАВИТЬ ВЫЗОВ
+                </button>
             </div>
         </div>
 
-        <!-- TAB: Search player -->
-        <div class="tab-content" id="tab-search">
-            <div class="section-lbl">🔍 Найти игрока</div>
-            <div class="search-box">
-                <input type="text" class="search-box__input" id="searchInput" placeholder="Введи ник танкиста..."
-                    oninput="onSearchInput(this.value)">
-                <button class="search-box__btn" id="searchBtn" onclick="searchPlayer()">🔍</button>
-            </div>
-            <div class="search-results" id="searchResults">
-                <div class="empty-state">
-                    <div class="empty-state__icon">🔍</div>
-                    <div class="empty-state__text">Введи ник, чтобы найти соперника</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB: Active duels -->
+        <!-- ============================== -->
+        <!-- TAB: ACTIVE / INCOMING          -->
+        <!-- ============================== -->
         <div class="tab-content" id="tab-active">
+            <div class="section-lbl">📩 Входящие вызовы</div>
             <div id="incomingDuels"></div>
+            <div class="section-lbl" style="margin-top:20px">🔥 Активные челленджи</div>
             <div id="activeDuels"></div>
             <div class="empty-state" id="noActiveDuels">
                 <div class="empty-state__icon">⚔️</div>
-                <div class="empty-state__text">Нет активных дуэлей.<br>Выбери челлендж и найди соперника!</div>
+                <div class="empty-state__text">Нет активных дуэлей.<br>Создай челлендж!</div>
             </div>
         </div>
 
-        <!-- TAB: History -->
+        <!-- ============================== -->
+        <!-- TAB: HISTORY                    -->
+        <!-- ============================== -->
         <div class="tab-content" id="tab-history">
             <div class="section-lbl">📜 История дуэлей</div>
             <div id="historyList">
                 <div class="empty-state">
                     <div class="empty-state__icon">📜</div>
                     <div class="empty-state__text">История пока пуста</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CHALLENGE MODAL -->
-    <div class="modal-overlay" id="challengeModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div class="modal-header__title">⚔️ Вызов на бой</div>
-                <button class="modal-header__close" onclick="closeModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <!-- VS display -->
-                <div class="vs-display">
-                    <div class="vs-player">
-                        <div class="vs-player__avatar vs-player__avatar--you">ТЫ</div>
-                        <div class="vs-player__name" id="modalMyName">Танкист</div>
-                    </div>
-                    <div class="vs-icon">VS</div>
-                    <div class="vs-player">
-                        <div class="vs-player__avatar vs-player__avatar--enemy" id="modalEnemyAvatar">?</div>
-                        <div class="vs-player__name" id="modalEnemyName">Соперник</div>
-                    </div>
-                </div>
-
-                <!-- Challenge info -->
-                <div class="modal-challenge-info" id="modalChallengeInfo">
-                    <div class="modal-challenge-info__title" id="modalChallengeTitle">🔦 Мастер Засвета</div>
-                    <div class="modal-challenge-info__desc" id="modalChallengeDesc">ЛТ-10 — кто насветит больше?</div>
-                </div>
-
-                <!-- Battles count -->
-                <div class="form-group">
-                    <label class="form-label">Количество боёв</label>
-                    <div class="battles-selector" id="battlesSelector">
-                        <button class="battles-btn" data-val="5" onclick="selectBattles(this)">5</button>
-                        <button class="battles-btn battles-btn--selected" data-val="10"
-                            onclick="selectBattles(this)">10</button>
-                        <button class="battles-btn" data-val="15" onclick="selectBattles(this)">15</button>
-                        <button class="battles-btn" data-val="20" onclick="selectBattles(this)">20</button>
-                        <button class="battles-btn" data-val="30" onclick="selectBattles(this)">30</button>
-                    </div>
-                </div>
-
-                <!-- Wager -->
-                <div class="wager-group">
-                    <label class="form-label">Ставка</label>
-                    <div class="wager-input-wrap">
-                        <div class="wager-currency">🧀</div>
-                        <input type="number" class="form-input" id="wagerAmount" value="100" min="10" max="10000"
-                            oninput="updateSummary()">
-                    </div>
-                    <div class="wager-presets">
-                        <button class="wager-preset" onclick="setWager(50)">50</button>
-                        <button class="wager-preset" onclick="setWager(100)">100</button>
-                        <button class="wager-preset" onclick="setWager(250)">250</button>
-                        <button class="wager-preset" onclick="setWager(500)">500</button>
-                        <button class="wager-preset" onclick="setWager(1000)">1000</button>
-                    </div>
-                    <div class="wager-hint">Баланс: <span id="modalBalance">1 250 🧀</span></div>
-                </div>
-
-                <!-- Summary -->
-                <div class="challenge-summary" id="challengeSummary">
-                    <div class="challenge-summary__row">
-                        <span class="challenge-summary__key">Челлендж</span>
-                        <span class="challenge-summary__val" id="sumChallenge">🔦 Мастер Засвета</span>
-                    </div>
-                    <div class="challenge-summary__row">
-                        <span class="challenge-summary__key">Условие</span>
-                        <span class="challenge-summary__val" id="sumCondition">ЛТ-10 · Засвет</span>
-                    </div>
-                    <div class="challenge-summary__row">
-                        <span class="challenge-summary__key">Боёв</span>
-                        <span class="challenge-summary__val" id="sumBattles">10</span>
-                    </div>
-                    <div class="challenge-summary__row">
-                        <span class="challenge-summary__key">Ваша ставка</span>
-                        <span class="challenge-summary__val" id="sumWager">🧀 100</span>
-                    </div>
-                    <div class="challenge-summary__row">
-                        <span class="challenge-summary__key">Приз победителю</span>
-                        <span class="challenge-summary__val" id="sumPrize" style="color: #4ade80">🧀 200</span>
-                    </div>
-                </div>
-
-                <button class="challenge-send-btn" onclick="sendChallenge()">
-                    ⚔️ ОТПРАВИТЬ ВЫЗОВ
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- INCOMING DUEL MODAL -->
-    <div class="modal-overlay" id="incomingModal">
-        <div class="modal-card modal-card--incoming">
-            <div class="modal-header modal-header--incoming">
-                <div class="modal-header__title">📩 Входящий вызов!</div>
-                <button class="modal-header__close" onclick="closeIncomingModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="incoming-alert">
-                    <div class="incoming-alert__icon">⚔️</div>
-                    <div class="incoming-alert__text">Тебя вызвали на дуэль!</div>
-                </div>
-                <div class="vs-display">
-                    <div class="vs-player">
-                        <div class="vs-player__avatar vs-player__avatar--enemy" id="incomingChallengerAvatar">?</div>
-                        <div class="vs-player__name" id="incomingChallengerName">Соперник</div>
-                    </div>
-                    <div class="vs-icon">VS</div>
-                    <div class="vs-player">
-                        <div class="vs-player__avatar vs-player__avatar--you">ТЫ</div>
-                        <div class="vs-player__name">Ты</div>
-                    </div>
-                </div>
-                <div class="challenge-summary" id="incomingSummary"></div>
-                <div class="incoming-actions">
-                    <button class="challenge-card__accept" onclick="acceptIncoming()">✅ ПРИНЯТЬ</button>
-                    <button class="challenge-card__decline" onclick="declineIncoming()">✕ Отклонить</button>
                 </div>
             </div>
         </div>

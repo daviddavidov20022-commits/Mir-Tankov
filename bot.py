@@ -3434,6 +3434,76 @@ async def cb_decline_friend(callback: CallbackQuery):
     decline_friend_request(my_tg_id, from_tg_id)
     await callback.message.edit_text("❌ Запрос отклонён.")
     await callback.answer()
+# --- ARENA / CHALLENGES API ---
+
+async def api_create_challenge(request):
+    """POST /api/challenges/create — создать челлендж"""
+    try:
+        data = await request.json()
+        from_tg_id = data.get("from_telegram_id")
+        to_tg_id = data.get("to_telegram_id")
+        tank_id = data.get("tank_id")
+        tank_name = data.get("tank_name", "")
+        condition = data.get("condition", "damage")
+        battles = data.get("battles", 5)
+        wager = data.get("wager", 100)
+
+        if not from_tg_id or not to_tg_id or not tank_id:
+            return cors_response({"error": "Заполните все поля"}, 400)
+
+        if from_tg_id == to_tg_id:
+            return cors_response({"error": "Нельзя вызвать самого себя"}, 400)
+
+        if wager < 10:
+            return cors_response({"error": "Минимальная ставка: 10 🧀"}, 400)
+
+        # Проверяем баланс
+        balance = get_cheese_balance(from_tg_id)
+        if balance < wager:
+            return cors_response({"error": f"Недостаточно сыра! Баланс: {balance} 🧀"}, 400)
+
+        # Списываем ставку у создателя
+        spend_cheese(from_tg_id, wager, f"🎯 Ставка на челлендж: {tank_name}")
+
+        # Сохраняем челлендж в БД
+        from database import get_db
+        with get_db() as conn:
+            conn.execute("""
+                INSERT INTO arena_challenges 
+                (from_telegram_id, to_telegram_id, tank_id, tank_name, condition, battles, wager, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
+            """, (from_tg_id, to_tg_id, tank_id, tank_name, condition, battles, wager))
+
+        # Уведомляем соперника через Telegram
+        try:
+            from_user = get_user_by_telegram_id(from_tg_id)
+            from_name = from_user.get("wot_nickname") or from_user.get("first_name", "Игрок") if from_user else "Игрок"
+
+            CONDITION_NAMES = {
+                "damage": "💥 Урон", "spotting": "👁 Засвет", "blocked": "🛡 Блок",
+                "frags": "🎯 Фраги", "xp": "⭐ Опыт", "wins": "🏆 Победы"
+            }
+
+            cond_name = CONDITION_NAMES.get(condition, condition)
+
+            text = (
+                f"⚔️ <b>Вызов на челлендж!</b>\n\n"
+                f"👤 <b>{from_name}</b> вызвал тебя:\n\n"
+                f"🪖 Танк: <b>{tank_name}</b>\n"
+                f"📋 Условие: <b>{cond_name}</b>\n"
+                f"⚔️ Боёв: <b>{battles}</b>\n"
+                f"🧀 Ставка: <b>{wager}</b>\n"
+                f"🏆 Приз: <b>{wager * 2} 🧀</b>\n\n"
+                f"Открой Арену в приложении чтобы принять!"
+            )
+            await bot.send_message(to_tg_id, text, parse_mode="HTML")
+        except Exception as e:
+            logger.warning(f"Failed to notify opponent: {e}")
+
+        return cors_response({"success": True})
+    except Exception as e:
+        logger.error(f"API create_challenge error: {e}")
+        return cors_response({"error": str(e)}, 500)
 
 
 # ==========================================
@@ -3462,6 +3532,9 @@ def create_api_app():
     # Messages API
     app.router.add_get("/api/messages", api_get_messages)
     app.router.add_post("/api/messages/send", api_send_message)
+
+    # Arena / Challenges API
+    app.router.add_post("/api/challenges/create", api_create_challenge)
 
     return app
 

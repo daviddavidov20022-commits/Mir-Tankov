@@ -1060,3 +1060,394 @@
         opacity: 0.6;
     }
 }
+
+/* ==========================================
+   CHALLENGE CREATOR — STEPS
+   ========================================== */
+.create-step {
+    background: linear-gradient(145deg, #1a2332, #161d28);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    animation: fadeInUp 0.35s ease backwards;
+    transition: opacity 0.3s, filter 0.3s;
+}
+
+.create-step--locked {
+    opacity: 0.3;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C8AA6E, #A08850);
+    color: #0a0e14;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.step-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    color: #E8E6E3;
+}
+
+/* Selected opponent */
+.selected-opponent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 12px;
+}
+
+.selected-opponent__name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    color: #E8E6E3;
+}
+
+.selected-opponent__status {
+    font-size: 0.65rem;
+    color: #4ade80;
+    margin-top: 2px;
+}
+
+.selected-opponent__change {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(200, 170, 110, 0.2);
+    background: transparent;
+    color: #C8AA6E;
+    font-size: 0.65rem;
+    cursor: pointer;
+}
+
+/* ==========================================
+   TANK SELECTION
+   ========================================== */
+.tank-filters {
+    margin-bottom: 12px;
+}
+
+.tank-class-filter {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.class-btn {
+    flex: 1;
+    min-width: 48px;
+    padding: 8px 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: #1a2332;
+    color: #5A6577;
+    font-size: 0.55rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.class-btn--active {
+    border-color: rgba(200, 170, 110, 0.4);
+    color: #C8AA6E;
+    background: rgba(200, 170, 110, 0.08);
+}
+
+.tank-tier-filter {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.tier-btn {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: #1a2332;
+    color: #5A6577;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.tier-btn--active {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.tank-search-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: #E8E6E3;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.tank-search-input:focus {
+    border-color: rgba(200, 170, 110, 0.3);
+}
+
+.tank-search-input::placeholder {
+    color: #4A5568;
+}
+
+/* Tank list */
+.tank-list {
+    max-height: 280px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(200, 170, 110, 0.2) transparent;
+}
+
+.tank-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tank-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tank-list::-webkit-scrollbar-thumb {
+    background: rgba(200, 170, 110, 0.2);
+    border-radius: 4px;
+}
+
+.tank-loading {
+    text-align: center;
+    padding: 30px;
+    color: #5A6577;
+    font-size: 0.75rem;
+}
+
+.tank-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    margin-bottom: 2px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    animation: fadeInUp 0.2s ease backwards;
+}
+
+.tank-item:hover {
+    background: rgba(200, 170, 110, 0.08);
+}
+
+.tank-item:active {
+    transform: scale(0.98);
+}
+
+.tank-item__icon {
+    width: 50px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: brightness(1.1);
+}
+
+.tank-item__name {
+    font-size: 0.72rem;
+    color: #E8E6E3;
+    font-weight: 600;
+}
+
+.tank-item__meta {
+    font-size: 0.58rem;
+    color: #5A6577;
+    margin-top: 1px;
+}
+
+/* Selected tank */
+.selected-tank {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 12px;
+}
+
+.selected-tank__icon {
+    width: 60px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.selected-tank__name {
+    flex: 1;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.78rem;
+    color: #E8E6E3;
+}
+
+.selected-tank__change {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(200, 170, 110, 0.2);
+    background: transparent;
+    color: #C8AA6E;
+    font-size: 0.65rem;
+    cursor: pointer;
+}
+
+/* ==========================================
+   CONDITIONS
+   ========================================== */
+.condition-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+}
+
+.condition-card {
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.06);
+    background: #1a2332;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+}
+
+.condition-card:hover {
+    border-color: rgba(200, 170, 110, 0.2);
+}
+
+.condition-card--selected {
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    background: rgba(239, 68, 68, 0.08);
+    transform: scale(1.03);
+}
+
+.condition-card__icon {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.condition-card__name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.7rem;
+    color: #E8E6E3;
+}
+
+.condition-card__desc {
+    font-size: 0.5rem;
+    color: #5A6577;
+    margin-top: 2px;
+}
+
+/* ==========================================
+   SUMMARY (full page)
+   ========================================== */
+.challenge-summary-full {
+    background: linear-gradient(145deg, #1a2332, #161d28);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 20px;
+    padding: 20px;
+    margin-top: 12px;
+    animation: fadeInUp 0.4s ease;
+}
+
+.summary-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.9rem;
+    color: #C8AA6E;
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.summary-row:last-of-type {
+    border-bottom: none;
+}
+
+.summary-row--prize {
+    padding-top: 10px;
+    margin-top: 4px;
+    border-top: 1px solid rgba(74, 222, 128, 0.15);
+}
+
+.summary-key {
+    font-size: 0.72rem;
+    color: #5A6577;
+}
+
+.summary-val {
+    font-size: 0.72rem;
+    color: #E8E6E3;
+    font-weight: 600;
+}
+
+/* Arena badge */
+.arena-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.5rem;
+    font-weight: 800;
+    margin-left: 4px;
+    padding: 0 4px;
+}
+
+/* Invite button in arena */
+.invite-btn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(200, 170, 110, 0.2);
+    background: transparent;
+    color: #C8AA6E;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.invite-btn:hover {
+    background: rgba(200, 170, 110, 0.1);
+}
