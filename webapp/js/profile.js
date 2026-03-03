@@ -36,19 +36,34 @@ function loadProfile() {
     const isVerified = localStorage.getItem('wot_verified') === 'true';
 
     if (savedNick && isVerified) {
+        // Есть в localStorage — показываем сразу
         showSavedNickname(savedNick);
         loadQuickStats(savedNick);
+        // Но всё равно пытаемся синхронизировать с CloudStorage
+        syncToCloud(savedNick, localStorage.getItem('wot_account_id'));
     } else if (savedNick && !isVerified) {
         // Старый ник без верификации — сбрасываем
         localStorage.removeItem('wot_nickname');
         localStorage.removeItem('wot_cached_stats');
+        // Пробуем восстановить из облака
+        restoreFromCloud();
     } else {
-        // Пробуем восстановить из Telegram CloudStorage
+        // Нет данных — ВСЕГДА пробуем восстановить из Telegram CloudStorage
         restoreFromCloud();
     }
 
     // Уровень
     updateLevel();
+}
+
+// Синхронизация в CloudStorage (если ещё не там)
+function syncToCloud(nickname, accountId) {
+    const tg = window.Telegram?.WebApp;
+    if (!tg?.CloudStorage) return;
+    // Сохраняем в облако чтобы на других устройствах тоже было
+    tg.CloudStorage.setItem('wot_nickname', nickname);
+    if (accountId) tg.CloudStorage.setItem('wot_account_id', String(accountId));
+    tg.CloudStorage.setItem('wot_verified', 'true');
 }
 
 // Сохраняем верифицированный аккаунт в Telegram CloudStorage (не сбрасывается!)

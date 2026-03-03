@@ -452,3 +452,179 @@ function submitAdminPass() {
 
 window.toggleAdmin = toggleAdmin;
 window.submitAdminPass = submitAdminPass;
+
+// ==========================================
+// ПРОВЕРКА СТАТУСА СТРИМОВ (LIVE/OFFLINE)
+// ==========================================
+
+// Конфиг — замените на свои ключи
+const STREAM_CONFIG = {
+    // YouTube Data API v3 ключ (получить: https://console.cloud.google.com/)
+    YOUTUBE_API_KEY: 'AIzaSyAT7aSehc7wNkebqwXWrwAwIauUw7TUMAc',  // TODO: вставить ключ
+    YOUTUBE_CHANNEL_ID: 'UClMCysoDnCFN2oQUu9fcQRg',  // TODO: вставить Channel ID (не @handle)
+
+    // Twitch API (получить: https://dev.twitch.tv/console/apps)
+    TWITCH_CLIENT_ID: '',  // TODO: вставить Client ID
+
+    // Интервал обновления (мс)
+    REFRESH_INTERVAL: 120000,  // 2 минуты
+};
+
+// Хранилище статусов
+const streamStatus = {
+    youtube: { live: false, viewers: 0 },
+    vkplay: { live: false, viewers: 0 },
+    trovo: { live: false, viewers: 0 },
+    twitch: { live: false, viewers: 0 },
+};
+
+// === Обновить UI карточки ===
+function updateStreamCard(platform, isLive, viewers = 0) {
+    streamStatus[platform] = { live: isLive, viewers };
+
+    const badgeMap = { youtube: 'ytBadge', vkplay: 'vkBadge', trovo: 'trovoBadge', twitch: 'twitchBadge' };
+    const viewerMap = { youtube: 'ytViewers', vkplay: 'vkViewers', trovo: 'trovoViewers', twitch: 'twitchViewers' };
+    const cardMap = { youtube: 'linkYoutube', vkplay: 'linkVkplay', trovo: 'linkTrovo', twitch: 'linkTwitch' };
+
+    const badge = document.getElementById(badgeMap[platform]);
+    const viewerEl = document.getElementById(viewerMap[platform]);
+    const card = document.getElementById(cardMap[platform]);
+
+    if (!badge) return;
+
+    if (isLive) {
+        badge.textContent = 'LIVE';
+        badge.className = 'stream-card__badge stream-badge--live';
+        if (viewerEl) {
+            viewerEl.style.display = 'flex';
+            viewerEl.querySelector('.viewers-count').textContent = viewers.toLocaleString();
+        }
+        if (card) card.classList.add('stream-card--live');
+    } else {
+        badge.textContent = 'OFFLINE';
+        badge.className = 'stream-card__badge stream-badge--offline';
+        if (viewerEl) viewerEl.style.display = 'none';
+        if (card) card.classList.remove('stream-card--live');
+    }
+
+    // Обновить общий счётчик
+    updateTotalViewers();
+}
+
+// === Общий счётчик зрителей ===
+function updateTotalViewers() {
+    const total = Object.values(streamStatus).reduce((sum, s) => sum + (s.live ? s.viewers : 0), 0);
+    const anyLive = Object.values(streamStatus).some(s => s.live);
+    const totalEl = document.getElementById('streamTotal');
+    const countEl = document.getElementById('totalViewers');
+
+    if (totalEl) {
+        totalEl.style.display = anyLive ? 'flex' : 'none';
+    }
+    if (countEl) {
+        countEl.textContent = total.toLocaleString();
+    }
+}
+
+// === YouTube: проверка через Data API v3 ===
+async function checkYouTubeLive() {
+    if (!STREAM_CONFIG.YOUTUBE_API_KEY || !STREAM_CONFIG.YOUTUBE_CHANNEL_ID) return;
+
+    try {
+        const url = `https://www.googleapis.com/youtube/v3/search?` +
+            `part=snippet&channelId=${STREAM_CONFIG.YOUTUBE_CHANNEL_ID}` +
+            `&type=video&eventType=live&key=${STREAM_CONFIG.YOUTUBE_API_KEY}`;
+
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        if (data.items && data.items.length > 0) {
+            // Стрим идёт! Получаем зрителей
+            const videoId = data.items[0].id.videoId;
+            const statsUrl = `https://www.googleapis.com/youtube/v3/videos?` +
+                `part=liveStreamingDetails,statistics&id=${videoId}&key=${STREAM_CONFIG.YOUTUBE_API_KEY}`;
+            const statsResp = await fetch(statsUrl);
+            const statsData = await statsResp.json();
+
+            const viewers = parseInt(statsData.items?.[0]?.liveStreamingDetails?.concurrentViewers || '0');
+            updateStreamCard('youtube', true, viewers);
+        } else {
+            updateStreamCard('youtube', false, 0);
+        }
+    } catch (e) {
+        console.warn('YouTube API error:', e);
+    }
+}
+
+// === Twitch: проверка через Helix API ===
+async function checkTwitchLive() {
+    if (!STREAM_CONFIG.TWITCH_CLIENT_ID) return;
+
+    try {
+        const resp = await fetch(
+            `https://api.twitch.tv/helix/streams?user_login=serverenok`,
+            {
+                headers: {
+                    'Client-ID': STREAM_CONFIG.TWITCH_CLIENT_ID,
+                    'Authorization': `Bearer ${STREAM_CONFIG.TWITCH_CLIENT_ID}`,
+                }
+            }
+        );
+        const data = await resp.json();
+
+        if (data.data && data.data.length > 0) {
+            const stream = data.data[0];
+            updateStreamCard('twitch', true, stream.viewer_count || 0);
+        } else {
+            updateStreamCard('twitch', false, 0);
+        }
+    } catch (e) {
+        console.warn('Twitch API error:', e);
+    }
+}
+
+// === VK Play Live: проверка ===
+async function checkVKPlayLive() {
+    // VK Play не имеет публичного CORS-совместимого API
+    // Статус можно получить через бэкенд бота
+    // Пока оставляем offline, можно подключить через бот позже
+    try {
+        // Попытка через неофициальный API
+        const resp = await fetch(`https://api.vkplay.live/v1/blog/iserveri/public_video_stream`);
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data && data.category && data.count) {
+                updateStreamCard('vkplay', true, data.count?.viewers || 0);
+                return;
+            }
+        }
+    } catch (e) { /* CORS или нет стрима */ }
+    // Если не удалось — не меняем статус (оставляем offline)
+}
+
+// === Trovo: проверка ===
+async function checkTrovoLive() {
+    // Trovo API требует серверный вызов
+    // Можно проверить через бот бэкенд
+    // Пока заглушка
+}
+
+// === Запуск всех проверок ===
+async function checkAllStreams() {
+    // Запускаем все проверки параллельно
+    await Promise.allSettled([
+        checkYouTubeLive(),
+        checkTwitchLive(),
+        checkVKPlayLive(),
+        checkTrovoLive(),
+    ]);
+}
+
+// Запуск при загрузке + автообновление
+document.addEventListener('DOMContentLoaded', () => {
+    // Подождём секунду после загрузки
+    setTimeout(checkAllStreams, 1500);
+
+    // Автообновление каждые N минут
+    setInterval(checkAllStreams, STREAM_CONFIG.REFRESH_INTERVAL);
+});

@@ -253,9 +253,17 @@
             <p>Смотри стримы на любимой платформе!</p>
         </section>
 
+        <!-- Total viewers counter -->
+        <div class="stream-total" id="streamTotal" style="display: none;">
+            <div class="stream-total__icon">👁</div>
+            <div class="stream-total__text">
+                Сейчас смотрят: <span class="stream-total__count" id="totalViewers">0</span>
+            </div>
+        </div>
+
         <div class="stream-links" id="streamLinks">
             <a href="https://www.youtube.com/@ISERVERI" target="_blank" class="stream-card stream-card--youtube"
-                id="linkYoutube">
+                id="linkYoutube" data-platform="youtube" data-channel="ISERVERI">
                 <div class="stream-card__icon">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
                         <path
@@ -266,11 +274,17 @@
                     <span class="stream-card__name">YouTube</span>
                     <span class="stream-card__user">@ISERVERI</span>
                 </div>
-                <div class="stream-card__badge">LIVE</div>
+                <div class="stream-card__meta">
+                    <div class="stream-card__viewers" id="ytViewers" style="display: none;">
+                        <span class="viewers-dot"></span>
+                        <span class="viewers-count">0</span>
+                    </div>
+                    <div class="stream-card__badge stream-badge--offline" id="ytBadge">OFFLINE</div>
+                </div>
             </a>
 
             <a href="https://vkplay.live/iserveri" target="_blank" class="stream-card stream-card--vkplay"
-                id="linkVkplay">
+                id="linkVkplay" data-platform="vkplay" data-channel="iserveri">
                 <div class="stream-card__icon">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
                         <path
@@ -281,10 +295,17 @@
                     <span class="stream-card__name">VK Play</span>
                     <span class="stream-card__user">iserveri</span>
                 </div>
-                <div class="stream-card__badge">LIVE</div>
+                <div class="stream-card__meta">
+                    <div class="stream-card__viewers" id="vkViewers" style="display: none;">
+                        <span class="viewers-dot"></span>
+                        <span class="viewers-count">0</span>
+                    </div>
+                    <div class="stream-card__badge stream-badge--offline" id="vkBadge">OFFLINE</div>
+                </div>
             </a>
 
-            <a href="https://trovo.live/ISERVERI" target="_blank" class="stream-card stream-card--trovo" id="linkTrovo">
+            <a href="https://trovo.live/ISERVERI" target="_blank" class="stream-card stream-card--trovo" id="linkTrovo"
+                data-platform="trovo" data-channel="ISERVERI">
                 <div class="stream-card__icon">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
                         <path
@@ -295,11 +316,17 @@
                     <span class="stream-card__name">Trovo</span>
                     <span class="stream-card__user">ISERVERI</span>
                 </div>
-                <div class="stream-card__badge">LIVE</div>
+                <div class="stream-card__meta">
+                    <div class="stream-card__viewers" id="trovoViewers" style="display: none;">
+                        <span class="viewers-dot"></span>
+                        <span class="viewers-count">0</span>
+                    </div>
+                    <div class="stream-card__badge stream-badge--offline" id="trovoBadge">OFFLINE</div>
+                </div>
             </a>
 
             <a href="https://www.twitch.tv/serverenok" target="_blank" class="stream-card stream-card--twitch"
-                id="linkTwitch">
+                id="linkTwitch" data-platform="twitch" data-channel="serverenok">
                 <div class="stream-card__icon">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
                         <path
@@ -310,7 +337,13 @@
                     <span class="stream-card__name">Twitch</span>
                     <span class="stream-card__user">serverenok</span>
                 </div>
-                <div class="stream-card__badge">LIVE</div>
+                <div class="stream-card__meta">
+                    <div class="stream-card__viewers" id="twitchViewers" style="display: none;">
+                        <span class="viewers-dot"></span>
+                        <span class="viewers-count">0</span>
+                    </div>
+                    <div class="stream-card__badge stream-badge--offline" id="twitchBadge">OFFLINE</div>
+                </div>
             </a>
         </div>
 

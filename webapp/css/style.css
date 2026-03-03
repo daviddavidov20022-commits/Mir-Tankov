@@ -1165,10 +1165,16 @@ body {
     white-space: nowrap;
 }
 
+/* Stream card meta area */
+.stream-card__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
 .stream-card__badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
     background: #e74c3c;
     color: white;
     font-size: 0.45rem;
@@ -1176,7 +1182,96 @@ body {
     padding: 2px 5px;
     border-radius: 4px;
     letter-spacing: 1px;
+}
+
+/* LIVE badge */
+.stream-badge--live {
+    background: #e74c3c;
     animation: livePulse 2s ease-in-out infinite;
+}
+
+/* OFFLINE badge */
+.stream-badge--offline {
+    background: rgba(255, 255, 255, 0.1);
+    color: #5A6577;
+    animation: none;
+}
+
+/* Viewer counter */
+.stream-card__viewers {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #E8E6E3;
+}
+
+.viewers-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e74c3c;
+    animation: dotPulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes dotPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(0.7);
+    }
+}
+
+.viewers-count {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+}
+
+/* Stream card LIVE glow */
+.stream-card--live {
+    border-color: rgba(231, 76, 60, 0.35) !important;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.1);
+}
+
+.stream-card--live::before {
+    opacity: 1 !important;
+}
+
+/* Total viewers bar */
+.stream-total {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.08), rgba(231, 76, 60, 0.02));
+    border: 1px solid rgba(231, 76, 60, 0.15);
+    animation: fadeInUp 0.4s ease;
+}
+
+.stream-total__icon {
+    font-size: 1rem;
+}
+
+.stream-total__text {
+    font-size: 0.75rem;
+    color: #9AA4B5;
+}
+
+.stream-total__count {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    color: #e74c3c;
 }
 
 @keyframes livePulse {
