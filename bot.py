@@ -41,6 +41,7 @@ from database import (
     remove_friend, get_friends, get_friend_requests,
     send_message, get_messages, get_unread_count,
     get_user_by_wot_account_id,
+    search_users,
 )
 from challenges import (
     create_challenge, create_from_template, get_active_challenges,
@@ -3132,6 +3133,92 @@ async def handle_options(request):
         }
     )
 
+# --- USER IDENTIFICATION API ---
+
+async def api_me(request):
+    """GET /api/me?wot_account_id=123 — определить текущего пользователя"""
+    try:
+        account_id = request.query.get("wot_account_id")
+        if not account_id:
+            return cors_response({"error": "wot_account_id required"}, 400)
+
+        user = get_user_by_wot_account_id(int(account_id))
+        if not user:
+            return cors_response({"error": "User not found"}, 404)
+
+        return cors_response({
+            "telegram_id": user["telegram_id"],
+            "wot_nickname": user.get("wot_nickname"),
+            "first_name": user.get("first_name"),
+            "username": user.get("username"),
+            "avatar": user.get("avatar"),
+        })
+    except Exception as e:
+        logger.error(f"API me error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_check_users(request):
+    """POST /api/users/check  {account_ids: [123, 456, ...]}
+    Проверяет кто из игроков зарегистрирован в боте"""
+    try:
+        data = await request.json()
+        account_ids = data.get("account_ids", [])
+
+        if not account_ids or len(account_ids) > 50:
+            return cors_response({"error": "Provide 1-50 account_ids"}, 400)
+
+        registered = {}
+        for aid in account_ids:
+            user = get_user_by_wot_account_id(int(aid))
+            if user:
+                registered[str(aid)] = {
+                    "telegram_id": user["telegram_id"],
+                    "wot_nickname": user.get("wot_nickname"),
+                    "first_name": user.get("first_name"),
+                    "in_system": True,
+                }
+
+        return cors_response({"registered": registered})
+    except Exception as e:
+        logger.error(f"API check_users error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_search_users(request):
+    """GET /api/users/search?q=nick&my_id=123  — поиск среди зарегистрированных в боте"""
+    try:
+        query = request.query.get("q", "").strip()
+        my_id = int(request.query.get("my_id", 0))
+
+        if len(query) < 2:
+            return cors_response({"error": "Минимум 2 символа"}, 400)
+
+        users = search_users(query, exclude_telegram_id=my_id)
+
+        # Проверяем кто уже друг
+        my_friends = []
+        if my_id:
+            my_friends = get_friends(my_id)
+
+        friend_ids = set(f["telegram_id"] for f in my_friends)
+
+        results = []
+        for u in users:
+            results.append({
+                "telegram_id": u["telegram_id"],
+                "username": u.get("username"),
+                "first_name": u.get("first_name"),
+                "wot_nickname": u.get("wot_nickname"),
+                "avatar": u.get("avatar"),
+                "is_friend": u["telegram_id"] in friend_ids,
+            })
+
+        return cors_response({"users": results})
+    except Exception as e:
+        logger.error(f"API search_users error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
 
 # --- FRIENDS API ---
 
@@ -3359,6 +3446,11 @@ def create_api_app():
 
     # CORS preflight
     app.router.add_route("OPTIONS", "/{path:.*}", handle_options)
+
+    # User identification
+    app.router.add_get("/api/me", api_me)
+    app.router.add_post("/api/users/check", api_check_users)
+    app.router.add_get("/api/users/search", api_search_users)
 
     # Friends API
     app.router.add_get("/api/friends", api_get_friends)

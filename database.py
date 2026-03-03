@@ -709,172 +709,6 @@ def get_avatar(telegram_id: int) -> str:
         return row["avatar"] if row and row["avatar"] else "🪖"
 
 
-# ============================================================
-# ДРУЗЬЯ
-# ============================================================
-
-def send_friend_request(user_telegram_id: int, friend_telegram_id: int) -> dict:
-    """Отправить запрос в друзья"""
-    if user_telegram_id == friend_telegram_id:
-        return {"success": False, "error": "Нельзя добавить себя в друзья"}
-
-    with get_db() as conn:
-        # Проверяем существует ли уже запрос
-        existing = conn.execute(
-            "SELECT * FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ?",
-            (user_telegram_id, friend_telegram_id)
-        ).fetchone()
-
-        if existing:
-            return {"success": False, "error": "Запрос уже отправлен"}
-
-        # Проверяем обратный запрос (может уже прислали нам)
-        reverse = conn.execute(
-            "SELECT * FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ?",
-            (friend_telegram_id, user_telegram_id)
-        ).fetchone()
-
-        if reverse and reverse["status"] == "pending":
-            # Автоматически принимаем обоюдный запрос
-            conn.execute(
-                "UPDATE friends SET status = 'accepted' WHERE id = ?",
-                (reverse["id"],)
-            )
-            conn.execute(
-                "INSERT INTO friends (user_telegram_id, friend_telegram_id, status) VALUES (?, ?, 'accepted')",
-                (user_telegram_id, friend_telegram_id)
-            )
-            return {"success": True, "status": "accepted", "message": "Вы теперь друзья!"}
-
-        conn.execute(
-            "INSERT INTO friends (user_telegram_id, friend_telegram_id, status) VALUES (?, ?, 'pending')",
-            (user_telegram_id, friend_telegram_id)
-        )
-    return {"success": True, "status": "pending", "message": "Запрос отправлен!"}
-
-
-def accept_friend_request(user_telegram_id: int, friend_telegram_id: int) -> dict:
-    """Принять запрос в друзья"""
-    with get_db() as conn:
-        req = conn.execute(
-            "SELECT * FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ? AND status = 'pending'",
-            (friend_telegram_id, user_telegram_id)
-        ).fetchone()
-
-        if not req:
-            return {"success": False, "error": "Запрос не найден"}
-
-        conn.execute("UPDATE friends SET status = 'accepted' WHERE id = ?", (req["id"],))
-        # Создаём обратную запись
-        try:
-            conn.execute(
-                "INSERT INTO friends (user_telegram_id, friend_telegram_id, status) VALUES (?, ?, 'accepted')",
-                (user_telegram_id, friend_telegram_id)
-            )
-        except Exception:
-            conn.execute(
-                "UPDATE friends SET status = 'accepted' WHERE user_telegram_id = ? AND friend_telegram_id = ?",
-                (user_telegram_id, friend_telegram_id)
-            )
-    return {"success": True, "message": "Запрос принят!"}
-
-
-def remove_friend(user_telegram_id: int, friend_telegram_id: int) -> dict:
-    """Удалить из друзей"""
-    with get_db() as conn:
-        conn.execute(
-            "DELETE FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ?",
-            (user_telegram_id, friend_telegram_id)
-        )
-        conn.execute(
-            "DELETE FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ?",
-            (friend_telegram_id, user_telegram_id)
-        )
-    return {"success": True}
-
-
-def get_friends(telegram_id: int) -> list:
-    """Получить список друзей"""
-    with get_db() as conn:
-        rows = conn.execute("""
-            SELECT u.telegram_id, u.username, u.first_name, u.wot_nickname,
-                   u.avatar, u.last_active, f.status
-            FROM friends f
-            JOIN users u ON u.telegram_id = f.friend_telegram_id
-            WHERE f.user_telegram_id = ? AND f.status = 'accepted'
-            ORDER BY u.last_active DESC
-        """, (telegram_id,)).fetchall()
-        return [dict(r) for r in rows]
-
-
-def get_friend_requests(telegram_id: int) -> list:
-    """Получить входящие запросы в друзья"""
-    with get_db() as conn:
-        rows = conn.execute("""
-            SELECT u.telegram_id, u.username, u.first_name, u.wot_nickname, u.avatar
-            FROM friends f
-            JOIN users u ON u.telegram_id = f.user_telegram_id
-            WHERE f.friend_telegram_id = ? AND f.status = 'pending'
-            ORDER BY f.created_at DESC
-        """, (telegram_id,)).fetchall()
-        return [dict(r) for r in rows]
-
-
-# ============================================================
-# СООБЩЕНИЯ
-# ============================================================
-
-def send_message(sender_telegram_id: int, receiver_telegram_id: int, text: str) -> dict:
-    """Отправить сообщение другу"""
-    if len(text) > 500:
-        return {"success": False, "error": "Сообщение слишком длинное (макс. 500 символов)"}
-
-    with get_db() as conn:
-        # Проверяем что они друзья
-        friend = conn.execute(
-            "SELECT * FROM friends WHERE user_telegram_id = ? AND friend_telegram_id = ? AND status = 'accepted'",
-            (sender_telegram_id, receiver_telegram_id)
-        ).fetchone()
-
-        if not friend:
-            return {"success": False, "error": "Можно писать только друзьям"}
-
-        conn.execute(
-            "INSERT INTO messages (sender_telegram_id, receiver_telegram_id, text) VALUES (?, ?, ?)",
-            (sender_telegram_id, receiver_telegram_id, text)
-        )
-    return {"success": True}
-
-
-def get_messages(telegram_id: int, friend_telegram_id: int, limit: int = 50) -> list:
-    """Получить переписку с другом"""
-    with get_db() as conn:
-        rows = conn.execute("""
-            SELECT * FROM messages 
-            WHERE (sender_telegram_id = ? AND receiver_telegram_id = ?)
-               OR (sender_telegram_id = ? AND receiver_telegram_id = ?)
-            ORDER BY created_at DESC LIMIT ?
-        """, (telegram_id, friend_telegram_id, friend_telegram_id, telegram_id, limit)).fetchall()
-        return [dict(r) for r in reversed(rows)]
-
-
-def get_unread_count(telegram_id: int) -> int:
-    """Кол-во непрочитанных сообщений"""
-    with get_db() as conn:
-        row = conn.execute(
-            "SELECT COUNT(*) FROM messages WHERE receiver_telegram_id = ? AND is_read = 0",
-            (telegram_id,)
-        ).fetchone()
-        return row[0]
-
-
-def mark_messages_read(telegram_id: int, friend_telegram_id: int):
-    """Пометить сообщения от друга как прочитанные"""
-    with get_db() as conn:
-        conn.execute(
-            "UPDATE messages SET is_read = 1 WHERE sender_telegram_id = ? AND receiver_telegram_id = ?",
-            (friend_telegram_id, telegram_id)
-        )
 
 
 # ============================================================
@@ -1196,6 +1030,28 @@ def get_user_by_wot_account_id(account_id: int):
             "SELECT * FROM users WHERE wot_account_id = ?", (account_id,)
         ).fetchone()
         return dict(row) if row else None
+
+
+# ============================================================
+# ПОИСК ПОЛЬЗОВАТЕЛЕЙ В НАШЕЙ БАЗЕ
+# ============================================================
+
+def search_users(query: str, exclude_telegram_id: int = None, limit: int = 20) -> list:
+    """Поиск зарегистрированных пользователей по нику, имени или username"""
+    with get_db() as conn:
+        search_pattern = f"%{query}%"
+        rows = conn.execute("""
+            SELECT telegram_id, username, first_name, wot_nickname, wot_account_id, avatar
+            FROM users
+            WHERE (wot_nickname LIKE ? OR first_name LIKE ? OR username LIKE ?)
+              AND telegram_id != ?
+            ORDER BY 
+                CASE WHEN wot_nickname LIKE ? THEN 0 ELSE 1 END,
+                last_active DESC
+            LIMIT ?
+        """, (search_pattern, search_pattern, search_pattern,
+              exclude_telegram_id or 0, search_pattern, limit)).fetchall()
+        return [dict(r) for r in rows]
 
 
 # ============================================================
