@@ -260,8 +260,11 @@ window.showToast = showToast;
 window.openGame = openGame;
 window.claimDailyBonus = claimDailyBonus;
 
-// Проверяем админ-панель при загрузке
-setTimeout(checkAdmin, 300);
+// Проверяем админ-панель при загрузке (ждём загрузку Telegram SDK)
+setTimeout(() => {
+    console.log('[ADMIN] Checking admin...', window.Telegram?.WebApp?.initDataUnsafe?.user);
+    checkAdmin();
+}, 1000);
 
 // ==========================================
 // АДМИН-ПАНЕЛЬ (Промокоды)
@@ -270,10 +273,20 @@ const ADMIN_ID = 6507474079;
 let generatedPromos = JSON.parse(localStorage.getItem('admin_promos') || '[]');
 
 function checkAdmin() {
-    // ТОЛЬКО в Telegram и ТОЛЬКО для админа
     const tgApp = window.Telegram?.WebApp;
-    if (!tgApp || !tgApp.initDataUnsafe?.user) return;
-    if (tgApp.initDataUnsafe.user.id !== ADMIN_ID) return;
+    const tgUser = tgApp?.initDataUnsafe?.user;
+
+    console.log('[ADMIN] tgUser:', tgUser, 'ADMIN_ID:', ADMIN_ID);
+
+    // Способ 1: через Telegram initData
+    let isAdmin = tgUser && tgUser.id === ADMIN_ID;
+
+    // Способ 2: через localStorage (секретный режим)
+    if (!isAdmin && localStorage.getItem('admin_mode') === 'true') {
+        isAdmin = true;
+    }
+
+    if (!isAdmin) return;
 
     const container = document.getElementById('adminPanelContainer');
     if (!container) return;
@@ -370,3 +383,31 @@ function renderPromoHistory() {
 document.addEventListener('DOMContentLoaded', checkAdmin);
 window.generatePromo = generatePromo;
 window.copyPromo = copyPromo;
+
+// Секретный вход в админку: 5 быстрых тапов по заголовку страницы
+let adminTapCount = 0;
+let adminTapTimer = null;
+document.addEventListener('click', (e) => {
+    // Ищем клик по заголовку "Мой Клуб" или логотипу
+    const target = e.target.closest('.logo, .header-title, h1');
+    if (!target) { adminTapCount = 0; return; }
+
+    adminTapCount++;
+    clearTimeout(adminTapTimer);
+    adminTapTimer = setTimeout(() => { adminTapCount = 0; }, 2000);
+
+    if (adminTapCount >= 5) {
+        adminTapCount = 0;
+        const isAdmin = localStorage.getItem('admin_mode') === 'true';
+        if (isAdmin) {
+            localStorage.removeItem('admin_mode');
+            showToast('🔒', 'Админ-режим отключён');
+            const c = document.getElementById('adminPanelContainer');
+            if (c) c.innerHTML = '';
+        } else {
+            localStorage.setItem('admin_mode', 'true');
+            showToast('👑', 'Админ-режим активирован!');
+            checkAdmin();
+        }
+    }
+});
