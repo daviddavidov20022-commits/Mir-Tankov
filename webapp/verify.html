@@ -230,13 +230,12 @@
 
             if (status === 'ok' && nickname && accountId) {
                 // УСПЕХ — генерируем код верификации
-                // Код = первые 8 символов от hash(accountId + secret)
                 const verifyCode = generateCode(accountId);
 
                 card.className = 'card card--success';
                 title.className = 'title title--success';
                 title.innerHTML = '<div class="checkmark">✅</div> Авторизация успешна!';
-                desc.textContent = 'Скопируйте код и отправьте его боту в Telegram';
+                desc.textContent = 'Скопируйте код и вставьте его в приложении';
 
                 content.innerHTML = `
                     <div class="info-box">
@@ -260,13 +259,24 @@
                         📋 Скопировать код
                     </button>
 
-                    <div class="desc" style="font-size:0.7rem">
-                        Отправьте этот код боту командой:<br>
-                        <b>/verify ${verifyCode}</b>
+                    <div class="desc" style="font-size:0.7rem; line-height:1.6">
+                        <b>Как привязать аккаунт:</b><br>
+                        1. Вернитесь в приложение → <b>Профиль</b><br>
+                        2. Нажмите «У меня уже есть код»<br>
+                        3. Введите ник <b>${nickname}</b><br>
+                        4. Вставьте код <b>${verifyCode}</b><br>
+                        5. Нажмите «Привязать» ✅
                     </div>
                 `;
 
-                // Сохраняем данные для передачи боту через Telegram WebApp
+                // Сохраняем в localStorage (на случай общего контекста)
+                try {
+                    localStorage.setItem('wot_nickname', nickname);
+                    localStorage.setItem('wot_account_id', accountId);
+                    localStorage.setItem('wot_verified', 'true');
+                } catch (e) { }
+
+                // Передаём боту через Telegram WebApp (если внутри TG)
                 if (window.Telegram && window.Telegram.WebApp) {
                     window.Telegram.WebApp.sendData(JSON.stringify({
                         type: 'verify',
@@ -288,13 +298,12 @@
         }, 1000);
 
         function generateCode(accountId) {
-            // Простой но уникальный код: берём account_id и делаем из него short code
             let hash = 0;
             const str = accountId + '_MIRTANKOV_2026';
             for (let i = 0; i < str.length; i++) {
                 const char = str.charCodeAt(i);
                 hash = ((hash << 5) - hash) + char;
-                hash = hash & hash; // 32bit integer
+                hash = hash & hash;
             }
             const code = 'MT' + Math.abs(hash).toString(36).toUpperCase().slice(0, 6);
             return code;
@@ -302,9 +311,9 @@
 
         function copyCode() {
             const code = document.getElementById('verifyCode').textContent;
-            navigator.clipboard.writeText('/verify ' + code).then(() => {
+            navigator.clipboard.writeText(code).then(() => {
                 const btn = document.querySelector('.copy-btn');
-                btn.textContent = '✅ Скопировано!';
+                btn.textContent = '✅ Код скопирован!';
                 btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
                 btn.style.color = 'white';
                 setTimeout(() => {

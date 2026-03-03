@@ -42,10 +42,47 @@ function loadProfile() {
         // Старый ник без верификации — сбрасываем
         localStorage.removeItem('wot_nickname');
         localStorage.removeItem('wot_cached_stats');
+    } else {
+        // Пробуем восстановить из Telegram CloudStorage
+        restoreFromCloud();
     }
 
     // Уровень
     updateLevel();
+}
+
+// Сохраняем верифицированный аккаунт в Telegram CloudStorage (не сбрасывается!)
+function saveToCloud(nickname, accountId) {
+    const tg = window.Telegram?.WebApp;
+    if (tg?.CloudStorage) {
+        tg.CloudStorage.setItem('wot_nickname', nickname);
+        tg.CloudStorage.setItem('wot_account_id', String(accountId));
+        tg.CloudStorage.setItem('wot_verified', 'true');
+    }
+}
+
+// Восстанавливаем аккаунт из CloudStorage
+function restoreFromCloud() {
+    const tg = window.Telegram?.WebApp;
+    if (!tg?.CloudStorage) return;
+
+    tg.CloudStorage.getItems(['wot_nickname', 'wot_account_id', 'wot_verified'], (err, values) => {
+        if (err || !values) return;
+        const nick = values.wot_nickname;
+        const verified = values.wot_verified;
+        const accId = values.wot_account_id;
+
+        if (nick && verified === 'true') {
+            // Восстанавливаем в localStorage
+            localStorage.setItem('wot_nickname', nick);
+            localStorage.setItem('wot_account_id', accId);
+            localStorage.setItem('wot_verified', 'true');
+
+            showSavedNickname(nick);
+            loadQuickStats(nick);
+            showToast('✅', 'Аккаунт восстановлен');
+        }
+    });
 }
 
 // ============================================================
@@ -130,6 +167,7 @@ function checkVerifyParams() {
         localStorage.setItem('wot_nickname', nickname);
         localStorage.setItem('wot_account_id', accountId);
         localStorage.setItem('wot_verified', 'true');
+        saveToCloud(nickname, accountId);
 
         showSavedNickname(nickname);
         loadQuickStats(nickname);
@@ -206,6 +244,9 @@ async function verifyCode() {
             localStorage.setItem('wot_nickname', realNick);
             localStorage.setItem('wot_account_id', String(accountId));
             localStorage.setItem('wot_verified', 'true');
+
+            // Сохраняем в облако Telegram (навсегда!)
+            saveToCloud(realNick, accountId);
 
             showSavedNickname(realNick);
             loadQuickStats(realNick);
