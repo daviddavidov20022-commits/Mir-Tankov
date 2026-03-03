@@ -271,8 +271,9 @@ let generatedPromos = JSON.parse(localStorage.getItem('admin_promos') || '[]');
 
 function checkAdmin() {
     // ТОЛЬКО в Telegram и ТОЛЬКО для админа
-    if (!tg || !tg.initDataUnsafe?.user) return;
-    if (tg.initDataUnsafe.user.id !== ADMIN_ID) return;
+    const tgApp = window.Telegram?.WebApp;
+    if (!tgApp || !tgApp.initDataUnsafe?.user) return;
+    if (tgApp.initDataUnsafe.user.id !== ADMIN_ID) return;
 
     const container = document.getElementById('adminPanelContainer');
     if (!container) return;
@@ -323,11 +324,12 @@ function generatePromo() {
     localStorage.setItem('admin_promos', JSON.stringify(generatedPromos));
     renderPromoHistory();
 
-    if (tg) {
-        tg.sendData(JSON.stringify({ action: 'create_promo', code, days: 30, uses: 1 }));
+    const tgApp = window.Telegram?.WebApp;
+    if (tgApp) {
+        tgApp.sendData(JSON.stringify({ action: 'create_promo', code, days: 30, uses: 1 }));
     }
 
-    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    if (tgApp?.HapticFeedback) tgApp.HapticFeedback.notificationOccurred('success');
     showToast('🎟️', 'Промокод создан! ' + code);
 
     const btn = document.getElementById('generatePromoBtn');
