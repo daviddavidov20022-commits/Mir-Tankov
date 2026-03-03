@@ -5,410 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Подписка — Мир Танков</title>
-    <meta name="description" content="Подписка на клуб Мир Танков">
+    <meta name="description" content="Подписка на клуб Мир Танков — несколько способов оплаты">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .sub-page {
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 20px 16px 120px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: #9AA4B5;
-            text-decoration: none;
-            font-size: 0.8rem;
-            margin-bottom: 16px;
-            transition: color 0.2s;
-        }
-
-        .back-btn:hover {
-            color: #C8AA6E;
-        }
-
-        /* Header */
-        .sub-hero {
-            text-align: center;
-            margin-bottom: 28px;
-            animation: fadeInUp 0.4s ease;
-        }
-
-        .sub-hero__avatar {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            margin: 0 auto 14px;
-            box-shadow: 0 4px 20px rgba(200, 170, 110, 0.3);
-            animation: heroPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes heroPulse {
-
-            0%,
-            100% {
-                box-shadow: 0 4px 20px rgba(200, 170, 110, 0.3);
-            }
-
-            50% {
-                box-shadow: 0 4px 35px rgba(200, 170, 110, 0.5);
-            }
-        }
-
-        .sub-hero__title {
-            font-family: 'Russo One', sans-serif;
-            font-size: 1.3rem;
-            color: #E8E6E3;
-            margin-bottom: 6px;
-        }
-
-        .sub-hero__desc {
-            font-size: 0.8rem;
-            color: #9AA4B5;
-            line-height: 1.5;
-            max-width: 320px;
-            margin: 0 auto;
-        }
-
-        /* Section label */
-        .sub-section-label {
-            font-size: 0.7rem;
-            color: #5A6577;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            padding-left: 4px;
-        }
-
-        /* Period cards */
-        .periods-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 24px;
-        }
-
-        .period-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 18px;
-            border-radius: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.06);
-            background: linear-gradient(145deg, #1a2332, #161d28);
-            cursor: pointer;
-            transition: all 0.25s ease;
-            position: relative;
-            animation: fadeInUp 0.4s ease backwards;
-        }
-
-        .period-card:nth-child(1) {
-            animation-delay: 0.05s;
-        }
-
-        .period-card:nth-child(2) {
-            animation-delay: 0.1s;
-        }
-
-        .period-card:nth-child(3) {
-            animation-delay: 0.15s;
-        }
-
-        .period-card:nth-child(4) {
-            animation-delay: 0.2s;
-        }
-
-        .period-card:hover {
-            border-color: rgba(200, 170, 110, 0.2);
-            transform: translateX(4px);
-        }
-
-        .period-card--selected {
-            border-color: rgba(200, 170, 110, 0.5) !important;
-            background: linear-gradient(145deg, #25201a, #1d1810) !important;
-            box-shadow: 0 0 20px rgba(200, 170, 110, 0.1);
-        }
-
-        .period-card--selected::after {
-            content: '✓';
-            position: absolute;
-            right: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
-            color: #0a0e14;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 800;
-        }
-
-        .period-card__left {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .period-card__name {
-            font-family: 'Russo One', sans-serif;
-            font-size: 0.9rem;
-            color: #E8E6E3;
-        }
-
-        .period-card__monthly {
-            font-size: 0.65rem;
-            color: #5A6577;
-        }
-
-        .period-card--selected .period-card__monthly {
-            color: #9AA4B5;
-        }
-
-        .period-card__right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-right: 36px;
-        }
-
-        .period-card__price {
-            font-family: 'Russo One', sans-serif;
-            font-size: 1rem;
-            color: #C8AA6E;
-        }
-
-        .period-card__discount {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
-            font-size: 0.55rem;
-            font-weight: 800;
-            padding: 3px 7px;
-            border-radius: 6px;
-            letter-spacing: 0.5px;
-        }
-
-        .period-card__old-price {
-            font-size: 0.7rem;
-            color: #5A6577;
-            text-decoration: line-through;
-        }
-
-        /* Best value highlight */
-        .period-card--best {
-            border-color: rgba(74, 222, 128, 0.3);
-            background: linear-gradient(145deg, #1a2d1e, #162018);
-        }
-
-        .period-card--best .period-card__best-badge {
-            position: absolute;
-            top: -10px;
-            left: 18px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
-            font-size: 0.5rem;
-            font-weight: 800;
-            padding: 3px 10px;
-            border-radius: 6px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        /* Features */
-        .features-section {
-            margin-bottom: 28px;
-            animation: fadeInUp 0.4s ease 0.25s backwards;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .feature-item__icon {
-            font-size: 1.1rem;
-            flex-shrink: 0;
-        }
-
-        .feature-item__text {
-            font-size: 0.7rem;
-            color: #9AA4B5;
-            line-height: 1.3;
-        }
-
-        /* CTA Button */
-        .sub-cta {
-            margin-bottom: 20px;
-            animation: fadeInUp 0.4s ease 0.3s backwards;
-        }
-
-        .sub-cta__btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 14px;
-            font-family: 'Russo One', sans-serif;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 1px;
-            background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
-            color: #0a0e14;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .sub-cta__btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .sub-cta__btn:hover::before {
-            left: 100%;
-        }
-
-        .sub-cta__btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(200, 170, 110, 0.3);
-        }
-
-        .sub-cta__btn:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        .sub-cta__hint {
-            text-align: center;
-            font-size: 0.65rem;
-            color: #5A6577;
-            margin-top: 10px;
-        }
-
-        /* Payment methods */
-        .payment-methods {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            animation: fadeInUp 0.4s ease 0.35s backwards;
-        }
-
-        .payment-methods span {
-            font-size: 0.7rem;
-            color: #5A6577;
-        }
-
-        .payment-icons {
-            display: flex;
-            gap: 6px;
-        }
-
-        .payment-icon {
-            width: 28px;
-            height: 20px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.55rem;
-            font-weight: 700;
-        }
-
-        .payment-icon--stars {
-            background: linear-gradient(135deg, #f59e0b, #fbbf24);
-            color: #0a0e14;
-        }
-
-        .payment-icon--card {
-            background: linear-gradient(135deg, #3b82f6, #60a5fa);
-            color: white;
-        }
-
-        .payment-icon--sbp {
-            background: linear-gradient(135deg, #22c55e, #4ade80);
-            color: white;
-        }
-
-        /* Info */
-        .sub-info {
-            padding: 14px 16px;
-            background: rgba(66, 153, 225, 0.06);
-            border: 1px solid rgba(66, 153, 225, 0.1);
-            border-radius: 12px;
-            font-size: 0.7rem;
-            color: #5A6577;
-            line-height: 1.6;
-            text-align: center;
-            animation: fadeInUp 0.4s ease 0.4s backwards;
-        }
-
-        .sub-info strong {
-            color: #9AA4B5;
-        }
-
-        /* Summary */
-        .sub-summary {
-            background: linear-gradient(145deg, rgba(200, 170, 110, 0.08), rgba(200, 170, 110, 0.02));
-            border: 1px solid rgba(200, 170, 110, 0.12);
-            border-radius: 14px;
-            padding: 14px 18px;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: fadeInUp 0.4s ease 0.28s backwards;
-        }
-
-        .sub-summary__label {
-            font-size: 0.75rem;
-            color: #9AA4B5;
-        }
-
-        .sub-summary__price {
-            font-family: 'Russo One', sans-serif;
-            font-size: 1.2rem;
-            color: #C8AA6E;
-        }
-
-        .sub-summary__savings {
-            font-size: 0.65rem;
-            color: #4ade80;
-            margin-top: 2px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/subscribe.css">
 </head>
 
 <body>
@@ -420,6 +23,10 @@
         <!-- Hero -->
         <div class="sub-hero">
             <div class="sub-hero__avatar">🪖</div>
+            <div class="sub-hero__badges">
+                <span class="sub-badge sub-badge--gold">2026</span>
+                <span class="sub-badge sub-badge--fire">ТОП</span>
+            </div>
             <div class="sub-hero__title">Поддержите проект 🌟</div>
             <div class="sub-hero__desc">
                 Подпишитесь и получите доступ к эксклюзивному контенту,
@@ -431,7 +38,7 @@
         <div class="sub-section-label">Периоды подписки</div>
         <div class="periods-list" id="periodsList">
 
-            <!-- 12 months — Best value -->
+            <!-- 12 months -->
             <div class="period-card period-card--best" data-period="12" data-price="4410" data-stars="2250"
                 onclick="selectPeriod(this)">
                 <div class="period-card__best-badge">ВЫГОДНЕЕ ВСЕГО</div>
@@ -472,17 +79,27 @@
                 </div>
             </div>
 
-            <!-- 1 month — Selected by default -->
-            <div class="period-card period-card--selected" data-period="1" data-price="490" data-stars="250"
-                onclick="selectPeriod(this)">
+            <!-- 1 month — promo style like Tribute -->
+            <div class="period-card period-card--promo period-card--selected" data-period="1" data-price="490"
+                data-stars="250" onclick="selectPeriod(this)">
                 <div class="period-card__left">
-                    <div class="period-card__name">1 месяц</div>
-                    <div class="period-card__monthly">250 ⭐ · Без скидки</div>
+                    <div class="period-card__name">1 месяц <span class="period-card__promo-tag">Промо</span></div>
+                    <div class="period-card__monthly">Первый месяц — 490 ₽ · 250 ⭐</div>
                 </div>
                 <div class="period-card__right">
                     <div class="period-card__price">490 ₽</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Multi-currency hint -->
+        <div class="sub-multicurrency">
+            Оплачивайте в любой валюте
+            <span class="currency-icons">
+                <span class="ci ci--stars">⭐</span>
+                <span class="ci ci--rub">₽</span>
+                <span class="ci ci--wallet">👛</span>
+            </span>
         </div>
 
         <!-- Summary -->
@@ -497,22 +114,33 @@
             </div>
         </div>
 
+        <!-- Payment methods section (Tribute-style) -->
+        <div class="sub-section-label">Способ оплаты</div>
+        <div class="payment-tabs" id="paymentTabs">
+            <div class="pay-tab pay-tab--active" data-method="stars" onclick="selectPayMethod(this)">
+                <div class="pay-tab__icon">⭐</div>
+                <div class="pay-tab__label">Stars</div>
+            </div>
+            <div class="pay-tab" data-method="wallet" onclick="selectPayMethod(this)">
+                <div class="pay-tab__icon">👛</div>
+                <div class="pay-tab__label">Кошелёк</div>
+            </div>
+            <div class="pay-tab" data-method="donationalerts" onclick="selectPayMethod(this)">
+                <div class="pay-tab__icon">🔔</div>
+                <div class="pay-tab__label">DA</div>
+            </div>
+            <div class="pay-tab" data-method="donatepay" onclick="selectPayMethod(this)">
+                <div class="pay-tab__icon">💰</div>
+                <div class="pay-tab__label">DonatePay</div>
+            </div>
+        </div>
+
         <!-- CTA -->
         <div class="sub-cta">
             <button class="sub-cta__btn" id="ctaBtn" onclick="handleSubscribe()">
-                Подписаться — 490 ₽ / 250 ⭐
+                ⭐ Подписаться — 250 Stars
             </button>
-            <div class="sub-cta__hint">Оплата через Telegram Stars ⭐ или банковскую карту 💳</div>
-        </div>
-
-        <!-- Payment methods -->
-        <div class="payment-methods">
-            <span>Оплата:</span>
-            <div class="payment-icons">
-                <div class="payment-icon payment-icon--stars" title="Telegram Stars">⭐</div>
-                <div class="payment-icon payment-icon--card" title="Банковская карта">💳</div>
-                <div class="payment-icon payment-icon--sbp" title="СБП">₽</div>
-            </div>
+            <div class="sub-cta__hint" id="ctaHint">Оплата через Telegram Stars ⭐</div>
         </div>
 
         <!-- Features -->
@@ -548,8 +176,8 @@
 
         <!-- Info -->
         <div class="sub-info">
-            <strong>ℹ️ Как купить?</strong><br>
-            Отправьте <strong>/subscribe</strong> в бот → выберите период → оплатите.<br>
+            <strong>ℹ️ Несколько способов оплаты</strong><br>
+            Telegram Stars ⭐ · Кошелёк 👛 · DonationAlerts 🔔 · DonatePay 💰<br>
             Подписка активируется мгновенно!
         </div>
     </div>
@@ -573,65 +201,78 @@
         </div>
     </nav>
 
-    <script>
-        const plans = {
-            1: { price: 490, stars: 250, label: '490 ₽', starsLabel: '250 ⭐', savings: null },
-            3: { price: 1323, stars: 675, label: '1 323 ₽', starsLabel: '675 ⭐', savings: 'Экономия 147 ₽ / 75 ⭐' },
-            6: { price: 2499, stars: 1275, label: '2 499 ₽', starsLabel: '1 275 ⭐', savings: 'Экономия 441 ₽ / 225 ⭐' },
-            12: { price: 4410, stars: 2250, label: '4 410 ₽', starsLabel: '2 250 ⭐', savings: 'Экономия 1 470 ₽ / 750 ⭐' },
-        };
+    <!-- ====== PAYMENT MODAL (Tribute-style) ====== -->
+    <div class="pay-modal-overlay" id="payModal">
+        <div class="pay-modal">
+            <div class="pay-modal__header">
+                <div class="pay-modal__title">Оформление подписки</div>
+                <button class="pay-modal__close" onclick="closePayModal()">✕</button>
+            </div>
 
-        let selectedPeriod = 1;
+            <div class="pay-modal__plan" id="modalPlan">
+                <div class="pay-modal__plan-icon">💎</div>
+                <div>
+                    <div class="pay-modal__plan-name" id="modalPlanName">1 месяц</div>
+                    <div class="pay-modal__plan-price" id="modalPlanPrice">490 ₽ / 250 ⭐</div>
+                </div>
+            </div>
 
-        function selectPeriod(card) {
-            // Remove old selection
-            document.querySelectorAll('.period-card').forEach(c => c.classList.remove('period-card--selected'));
-            // Set new
-            card.classList.add('period-card--selected');
+            <div class="pay-modal__section-label">Выберите способ оплаты</div>
 
-            selectedPeriod = parseInt(card.dataset.period);
-            const plan = plans[selectedPeriod];
+            <div class="pay-modal__methods" id="modalMethods">
+                <!-- Stars -->
+                <div class="modal-method modal-method--active" data-method="stars" onclick="selectModalMethod(this)">
+                    <div class="modal-method__icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">⭐
+                    </div>
+                    <div class="modal-method__info">
+                        <div class="modal-method__name">Telegram Stars</div>
+                        <div class="modal-method__desc">Мгновенная оплата в Telegram</div>
+                    </div>
+                    <div class="modal-method__price" id="modalStarsPrice">250 ⭐</div>
+                </div>
+                <!-- Wallet -->
+                <div class="modal-method" data-method="wallet" onclick="selectModalMethod(this)">
+                    <div class="modal-method__icon" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">👛
+                    </div>
+                    <div class="modal-method__info">
+                        <div class="modal-method__name">Кошелёк</div>
+                        <div class="modal-method__desc">Telegram Wallet · TON</div>
+                    </div>
+                    <div class="modal-method__price" id="modalWalletPrice">490 ₽</div>
+                </div>
+                <!-- DonationAlerts -->
+                <div class="modal-method" data-method="donationalerts" onclick="selectModalMethod(this)">
+                    <div class="modal-method__icon" style="background: linear-gradient(135deg, #f97316, #fb923c);">🔔
+                    </div>
+                    <div class="modal-method__info">
+                        <div class="modal-method__name">DonationAlerts</div>
+                        <div class="modal-method__desc">Карта · Кошелёк · Крипто</div>
+                    </div>
+                    <div class="modal-method__price" id="modalDAPrice">490 ₽</div>
+                </div>
+                <!-- DonatePay -->
+                <div class="modal-method" data-method="donatepay" onclick="selectModalMethod(this)">
+                    <div class="modal-method__icon" style="background: linear-gradient(135deg, #22c55e, #4ade80);">💰
+                    </div>
+                    <div class="modal-method__info">
+                        <div class="modal-method__name">DonatePay</div>
+                        <div class="modal-method__desc">Карта · Qiwi · ЮMoney</div>
+                    </div>
+                    <div class="modal-method__price" id="modalDPPrice">490 ₽</div>
+                </div>
+            </div>
 
-            // Update summary
-            document.getElementById('totalPrice').textContent = plan.label;
-            document.getElementById('totalStars').textContent = `или ${plan.starsLabel}`;
-            document.getElementById('ctaBtn').textContent = `Подписаться — ${plan.label} / ${plan.starsLabel}`;
+            <button class="pay-modal__btn" id="modalPayBtn" onclick="processPayment()">
+                Оплатить — 250 ⭐
+            </button>
 
-            const savingsEl = document.getElementById('savingsText');
-            if (plan.savings) {
-                savingsEl.textContent = plan.savings;
-                savingsEl.style.display = 'block';
-            } else {
-                savingsEl.style.display = 'none';
-            }
-        }
+            <div class="pay-modal__secure">
+                🔒 Безопасная оплата · Мгновенная активация
+            </div>
+        </div>
+    </div>
 
-        function handleSubscribe() {
-            const plan = plans[selectedPeriod];
-            const periodName = { 1: '1 месяц', 3: '3 месяца', 6: '6 месяцев', 12: 'Год' }[selectedPeriod];
-
-            alert(
-                `Подписка: ${periodName}\n` +
-                `Стоимость: ${plan.label}\n\n` +
-                `Отправьте /subscribe в бот для покупки!`
-            );
-        }
-
-        // Particles
-        (function createParticles() {
-            const container = document.getElementById('bgParticles');
-            if (!container) return;
-            for (let i = 0; i < 20; i++) {
-                const p = document.createElement('div');
-                p.className = 'bg-particle';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.animationDuration = (8 + Math.random() * 12) + 's';
-                p.style.animationDelay = Math.random() * 10 + 's';
-                p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
-                container.appendChild(p);
-            }
-        })();
-    </script>
+    <script src="js/subscribe.js"></script>
 </body>
 
 </html>
