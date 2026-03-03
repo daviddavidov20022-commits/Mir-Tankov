@@ -71,7 +71,7 @@ function getRedirectUri() {
 function linkAccount() {
     // Открываем Lesta OAuth
     const redirectUri = getRedirectUri();
-    const authUrl = `${LESTA_AUTH_URL}?application_id=${LESTA_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&nofollow=1`;
+    const authUrl = `${LESTA_AUTH_URL}?application_id=${LESTA_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     // В Telegram WebApp открываем через openLink
     if (window.Telegram?.WebApp?.openLink) {
