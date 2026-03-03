@@ -384,30 +384,21 @@ document.addEventListener('DOMContentLoaded', checkAdmin);
 window.generatePromo = generatePromo;
 window.copyPromo = copyPromo;
 
-// Секретный вход в админку: 5 быстрых тапов по заголовку страницы
-let adminTapCount = 0;
-let adminTapTimer = null;
-document.addEventListener('click', (e) => {
-    // Ищем клик по заголовку "Мой Клуб" или логотипу
-    const target = e.target.closest('.logo, .header-title, h1');
-    if (!target) { adminTapCount = 0; return; }
-
-    adminTapCount++;
-    clearTimeout(adminTapTimer);
-    adminTapTimer = setTimeout(() => { adminTapCount = 0; }, 2000);
-
-    if (adminTapCount >= 5) {
-        adminTapCount = 0;
-        const isAdmin = localStorage.getItem('admin_mode') === 'true';
-        if (isAdmin) {
-            localStorage.removeItem('admin_mode');
-            showToast('🔒', 'Админ-режим отключён');
-            const c = document.getElementById('adminPanelContainer');
-            if (c) c.innerHTML = '';
-        } else {
+// Вход в админку по кнопке ⚙️ с паролем
+function toggleAdmin() {
+    const isAdmin = localStorage.getItem('admin_mode') === 'true';
+    if (isAdmin) {
+        localStorage.removeItem('admin_mode');
+        const c = document.getElementById('adminPanelContainer');
+        if (c) c.innerHTML = '';
+        showToast('🔒', 'Админ-режим отключён');
+    } else {
+        const pwd = prompt('Пароль:');
+        if (pwd === 'admin2026') {
             localStorage.setItem('admin_mode', 'true');
-            showToast('👑', 'Админ-режим активирован!');
             checkAdmin();
+            showToast('👑', 'Админ-режим активирован!');
         }
     }
-});
+}
+window.toggleAdmin = toggleAdmin;
