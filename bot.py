@@ -3461,20 +3461,312 @@ async def cb_decline_friend(callback: CallbackQuery):
     await callback.answer()
 # --- ARENA / CHALLENGES API ---
 
+LESTA_APP_ID = "95381c5db01a08e5796796c014ee89e8"
+
+# Cache for tank encyclopedia {tank_id: {tier, type, name}}
+_tank_encyclopedia = {}
+
+async def load_tank_encyclopedia():
+    """Load tank encyclopedia from Lesta API (cached)"""
+    global _tank_encyclopedia
+    if _tank_encyclopedia:
+        return _tank_encyclopedia
+
+    import aiohttp
+    try:
+        async with aiohttp.ClientSession() as session:
+            page = 1
+            while page <= 10:
+                url = (f"https://api.tanki.su/wot/encyclopedia/vehicles/"
+                       f"?application_id={LESTA_APP_ID}&fields=tank_id,tier,type,name&limit=100&page_no={page}")
+                async with session.get(url) as resp:
+                    data = await resp.json()
+                if data.get("status") != "ok":
+                    break
+                for tid, info in data["data"].items():
+                    _tank_encyclopedia[info["tank_id"]] = {
+                        "tier": info["tier"], "type": info["type"], "name": info["name"]
+                    }
+                if page >= data["meta"].get("page_total", 1):
+                    break
+                page += 1
+        logger.info(f"Tank encyclopedia loaded: {len(_tank_encyclopedia)} tanks")
+    except Exception as e:
+        logger.error(f"Failed to load tank encyclopedia: {e}")
+    return _tank_encyclopedia
+
+
+async def fetch_player_stats(user, ch):
+    """Fetch player's WoT stats filtered by challenge tier/type from Lesta API"""
+    import aiohttp
+    account_id = user.get("wot_account_id")
+    nickname = user.get("wot_nickname")
+
+    # If no account_id, try to find by nickname
+    if not account_id and nickname:
+        try:
+            async with aiohttp.ClientSession() as session:
+                url = f"https://api.tanki.su/wot/account/list/?application_id={LESTA_APP_ID}&search={nickname}&limit=1"
+                async with session.get(url) as resp:
+                    data = await resp.json()
+                    if data.get("status") == "ok" and data.get("data"):
+                        account_id = data["data"][0]["account_id"]
+        except Exception as e:
+            logger.warning(f"Failed to find account_id for {nickname}: {e}")
+
+    if not account_id:
+        return None
+
+    try:
+        # Load tank encyclopedia for tier/type mapping
+        encyclopedia = await load_tank_encyclopedia()
+
+        # Get challenge filters
+        challenge_tier = ch.get("tank_tier")
+        challenge_type = ch.get("tank_type")  # 'any' | 'heavyTank' | etc.
+        challenge_tank_id = ch.get("tank_id")  # specific tank or None
+
+        async with aiohttp.ClientSession() as session:
+            # Fetch per-tank stats for this player
+            url = (f"https://api.tanki.su/wot/tanks/stats/"
+                   f"?application_id={LESTA_APP_ID}&account_id={account_id}"
+                   f"&fields=tank_id,all.battles,all.damage_dealt,all.spotted,all.frags,"
+                   f"all.xp,all.wins,all.damage_received,all.shots,all.hits,all.survived_battles")
+            async with session.get(url) as resp:
+                data = await resp.json()
+
+        if data.get("status") != "ok":
+            return None
+
+        tank_stats_list = data["data"].get(str(account_id), [])
+        if not tank_stats_list:
+            return None
+
+        # Filter tanks by challenge criteria
+        totals = {
+            "battles": 0, "damage_dealt": 0, "spotted": 0, "frags": 0,
+            "xp": 0, "wins": 0, "damage_received": 0, "shots": 0,
+            "hits": 0, "survived_battles": 0
+        }
+
+        for ts in tank_stats_list:
+            tid = ts["tank_id"]
+            tank_info = encyclopedia.get(tid, {})
+
+            # Filter by specific tank
+            if challenge_tank_id and tid != challenge_tank_id:
+                continue
+
+            # Filter by tier
+            if challenge_tier and tank_info.get("tier") != challenge_tier:
+                continue
+
+            # Filter by type (skip if 'any')
+            if challenge_type and challenge_type != "any" and tank_info.get("type") != challenge_type:
+                continue
+
+            s = ts.get("all", {})
+            totals["battles"] += s.get("battles", 0)
+            totals["damage_dealt"] += s.get("damage_dealt", 0)
+            totals["spotted"] += s.get("spotted", 0)
+            totals["frags"] += s.get("frags", 0)
+            totals["xp"] += s.get("xp", 0)
+            totals["wins"] += s.get("wins", 0)
+            totals["damage_received"] += s.get("damage_received", 0)
+            totals["shots"] += s.get("shots", 0)
+            totals["hits"] += s.get("hits", 0)
+            totals["survived_battles"] += s.get("survived_battles", 0)
+
+        return {
+            "account_id": account_id,
+            "nickname": nickname,
+            **totals
+        }
+    except Exception as e:
+        logger.error(f"Failed to fetch stats for {nickname}: {e}")
+        return None
+
+
+async def api_check_challenge_results(request):
+    """POST /api/challenges/check {challenge_id, telegram_id} — check if challenge is done"""
+    try:
+        data = await request.json()
+        challenge_id = data.get("challenge_id")
+        tg_id = data.get("telegram_id")
+
+        from database import get_db
+        with get_db() as conn:
+            ch = conn.execute("SELECT * FROM arena_challenges WHERE id = ?", (challenge_id,)).fetchone()
+            if not ch:
+                return cors_response({"error": "Челлендж не найден"}, 404)
+            ch = dict(ch)
+
+        if ch["status"] != "active":
+            return cors_response({"error": "Челлендж не активен"}, 400)
+
+        # Fetch current stats for both players
+        from_user = get_user_by_telegram_id(ch["from_telegram_id"])
+        to_user = get_user_by_telegram_id(ch["to_telegram_id"])
+
+        from_current = await fetch_player_stats(from_user, ch) if from_user else None
+        to_current = await fetch_player_stats(to_user, ch) if to_user else None
+
+        from_start = json.loads(ch["from_start_stats"]) if ch.get("from_start_stats") else None
+        to_start = json.loads(ch["to_start_stats"]) if ch.get("to_start_stats") else None
+
+        if not from_current or not to_current or not from_start or not to_start:
+            return cors_response({"error": "Не удалось получить статистику. Убедитесь что WoT аккаунты привязаны."}, 400)
+
+        # Calculate deltas
+        required_battles = ch["battles"]
+        condition = ch["condition"]
+
+        STAT_KEY = {
+            "damage": "damage_dealt", "spotting": "spotted", "blocked": "damage_received",
+            "frags": "frags", "xp": "xp", "wins": "wins"
+        }
+        stat_key = STAT_KEY.get(condition, "damage_dealt")
+
+        from_battles_played = from_current["battles"] - from_start["battles"]
+        to_battles_played = to_current["battles"] - to_start["battles"]
+
+        from_delta = {
+            "battles_played": from_battles_played,
+            "damage": from_current["damage_dealt"] - from_start["damage_dealt"],
+            "spotted": from_current["spotted"] - from_start["spotted"],
+            "frags": from_current["frags"] - from_start["frags"],
+            "xp": from_current["xp"] - from_start["xp"],
+            "wins": from_current["wins"] - from_start["wins"],
+            "blocked": from_current["damage_received"] - from_start["damage_received"],
+            "shots": from_current["shots"] - from_start["shots"],
+            "hits": from_current["hits"] - from_start["hits"],
+        }
+
+        to_delta = {
+            "battles_played": to_battles_played,
+            "damage": to_current["damage_dealt"] - to_start["damage_dealt"],
+            "spotted": to_current["spotted"] - to_start["spotted"],
+            "frags": to_current["frags"] - to_start["frags"],
+            "xp": to_current["xp"] - to_start["xp"],
+            "wins": to_current["wins"] - to_start["wins"],
+            "blocked": to_current["damage_received"] - to_start["damage_received"],
+            "shots": to_current["shots"] - to_start["shots"],
+            "hits": to_current["hits"] - to_start["hits"],
+        }
+
+        # Calculate per-battle averages
+        for d in [from_delta, to_delta]:
+            bp = max(d["battles_played"], 1)
+            d["avg_damage"] = round(d["damage"] / bp)
+            d["avg_spotted"] = round(d["spotted"] / bp)
+            d["avg_frags"] = round(d["frags"] / bp, 1)
+            d["avg_xp"] = round(d["xp"] / bp)
+            d["winrate"] = round(d["wins"] / bp * 100, 1) if bp > 0 else 0
+            d["accuracy"] = round(d["hits"] / max(d["shots"], 1) * 100, 1)
+
+        both_ready = from_battles_played >= required_battles and to_battles_played >= required_battles
+
+        result = {
+            "challenge": ch,
+            "from_player": {
+                "nickname": from_start.get("nickname", "Игрок 1"),
+                "delta": from_delta,
+                "ready": from_battles_played >= required_battles,
+            },
+            "to_player": {
+                "nickname": to_start.get("nickname", "Игрок 2"),
+                "delta": to_delta,
+                "ready": to_battles_played >= required_battles,
+            },
+            "both_ready": both_ready,
+            "winner": None,
+        }
+
+        # If both ready, determine winner and complete
+        if both_ready:
+            DELTA_KEY = {
+                "damage": "avg_damage", "spotting": "avg_spotted",
+                "blocked": "blocked", "frags": "avg_frags",
+                "xp": "avg_xp", "wins": "winrate"
+            }
+            dk = DELTA_KEY.get(condition, "avg_damage")
+
+            from_score = from_delta[dk]
+            to_score = to_delta[dk]
+
+            if from_score >= to_score:
+                winner_tg = ch["from_telegram_id"]
+                winner_name = from_start.get("nickname", "Игрок 1")
+            else:
+                winner_tg = ch["to_telegram_id"]
+                winner_name = to_start.get("nickname", "Игрок 2")
+
+            result["winner"] = {"telegram_id": winner_tg, "nickname": winner_name}
+
+            # Award prize and update DB
+            prize = ch["wager"] * 2
+            with get_db() as conn:
+                conn.execute("""
+                    UPDATE arena_challenges 
+                    SET status = 'finished', winner_telegram_id = ?,
+                        from_end_stats = ?, to_end_stats = ?,
+                        finished_at = datetime('now')
+                    WHERE id = ? AND status = 'active'
+                """, (winner_tg,
+                      json.dumps(from_delta), json.dumps(to_delta),
+                      challenge_id))
+
+            # Award cheese to winner
+            with get_db() as conn:
+                conn.execute(
+                    "UPDATE users SET coins = coins + ? WHERE telegram_id = ?",
+                    (prize, winner_tg)
+                )
+
+            # Notify both players
+            try:
+                COND_NAMES = {"damage": "💥 Урон", "spotting": "👁 Засвет", "blocked": "🛡 Блок",
+                              "frags": "🎯 Фраги", "xp": "⭐ Опыт", "wins": "🏆 Победы"}
+                cond_name = COND_NAMES.get(condition, condition)
+
+                text = (
+                    f"🏆 <b>Челлендж завершён!</b>\n\n"
+                    f"📋 {ch['tank_name']} · {cond_name}\n"
+                    f"⚔️ {from_start.get('nickname')}: <b>{from_delta.get(dk, 0)}</b>\n"
+                    f"⚔️ {to_start.get('nickname')}: <b>{to_delta.get(dk, 0)}</b>\n\n"
+                    f"🏆 Победитель: <b>{winner_name}</b>\n"
+                    f"🧀 Приз: <b>{prize} 🧀</b>"
+                )
+                await bot.send_message(ch["from_telegram_id"], text, parse_mode="HTML")
+                await bot.send_message(ch["to_telegram_id"], text, parse_mode="HTML")
+            except Exception as e:
+                logger.warning(f"Notify challenge result failed: {e}")
+
+        return cors_response(result)
+    except Exception as e:
+        logger.error(f"API check_challenge error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 async def api_create_challenge(request):
     """POST /api/challenges/create — создать челлендж"""
     try:
         data = await request.json()
         from_tg_id = data.get("from_telegram_id")
         to_tg_id = data.get("to_telegram_id")
-        tank_id = data.get("tank_id")
+        tank_id = data.get("tank_id")  # Can be null in class+tier mode
+        tank_tier = data.get("tank_tier")
+        tank_type = data.get("tank_type")
         tank_name = data.get("tank_name", "")
         condition = data.get("condition", "damage")
         battles = data.get("battles", 5)
         wager = data.get("wager", 100)
 
-        if not from_tg_id or not to_tg_id or not tank_id:
-            return cors_response({"error": "Заполните все поля"}, 400)
+        if not from_tg_id or not to_tg_id:
+            return cors_response({"error": "Не указан игрок"}, 400)
+
+        if not condition:
+            return cors_response({"error": "Не выбрано условие"}, 400)
 
         if from_tg_id == to_tg_id:
             return cors_response({"error": "Нельзя вызвать самого себя"}, 400)
@@ -3482,10 +3774,10 @@ async def api_create_challenge(request):
         if wager < 10:
             return cors_response({"error": "Минимальная ставка: 10 🧀"}, 400)
 
-        # Проверяем баланс
+        # Проверяем баланс (cheese из БД)
         balance = get_cheese_balance(from_tg_id)
         if balance < wager:
-            return cors_response({"error": f"Недостаточно сыра! Баланс: {balance} 🧀"}, 400)
+            return cors_response({"error": f"Недостаточно сыра! Баланс: {balance} 🧀. Пополните через профиль."}, 400)
 
         # Списываем ставку у создателя
         spend_cheese(from_tg_id, wager, f"🎯 Ставка на челлендж: {tank_name}")
@@ -3495,9 +3787,9 @@ async def api_create_challenge(request):
         with get_db() as conn:
             conn.execute("""
                 INSERT INTO arena_challenges 
-                (from_telegram_id, to_telegram_id, tank_id, tank_name, condition, battles, wager, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
-            """, (from_tg_id, to_tg_id, tank_id, tank_name, condition, battles, wager))
+                (from_telegram_id, to_telegram_id, tank_id, tank_tier, tank_type, tank_name, condition, battles, wager, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
+            """, (from_tg_id, to_tg_id, tank_id, tank_tier, tank_type, tank_name, condition, battles, wager))
 
         # Уведомляем соперника через Telegram
         try:
@@ -3589,10 +3881,21 @@ async def api_accept_challenge(request):
 
             spend_cheese(tg_id, wager, f"🎯 Ставка принята: {ch['tank_name']}")
 
+            # Snapshot stats from Lesta API for both players
+            from_user = get_user_by_telegram_id(ch["from_telegram_id"])
+            to_user = get_user_by_telegram_id(tg_id)
+
+            from_stats = await fetch_player_stats(from_user, ch) if from_user else None
+            to_stats = await fetch_player_stats(to_user, ch) if to_user else None
+
             conn.execute("""
-                UPDATE arena_challenges SET status = 'active', accepted_at = datetime('now')
+                UPDATE arena_challenges 
+                SET status = 'active', accepted_at = datetime('now'),
+                    from_start_stats = ?, to_start_stats = ?
                 WHERE id = ?
-            """, (challenge_id,))
+            """, (json.dumps(from_stats) if from_stats else None,
+                  json.dumps(to_stats) if to_stats else None,
+                  challenge_id))
 
         # Notify creator
         try:
@@ -3694,6 +3997,7 @@ def create_api_app():
     app.router.add_get("/api/challenges", api_get_challenges)
     app.router.add_post("/api/challenges/accept", api_accept_challenge)
     app.router.add_post("/api/challenges/decline", api_decline_challenge)
+    app.router.add_post("/api/challenges/check", api_check_challenge_results)
 
     return app
 

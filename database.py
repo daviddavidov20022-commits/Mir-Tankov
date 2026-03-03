@@ -281,6 +281,8 @@ def init_db():
                 from_telegram_id INTEGER NOT NULL,
                 to_telegram_id INTEGER NOT NULL,
                 tank_id INTEGER,
+                tank_tier INTEGER,
+                tank_type TEXT,
                 tank_name TEXT,
                 condition TEXT DEFAULT 'damage',
                 battles INTEGER DEFAULT 5,

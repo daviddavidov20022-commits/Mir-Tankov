@@ -194,7 +194,7 @@ async function loadChallenges() {
             noActive.style.display = 'none';
             actEl.innerHTML = active.map(c => `
                 <div class="duel-card" style="animation:fadeInUp 0.3s ease;border-color:rgba(34,197,94,0.2)">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
                         <div>
                             <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">
                                 🔥 vs ${c.opponent_name}
@@ -208,6 +208,10 @@ async function loadChallenges() {
                             <div style="font-size:0.55rem;color:#5A6577">Приз</div>
                         </div>
                     </div>
+                    <button onclick="checkChallengeResults(${c.id})" class="check-results-btn">
+                        📊 Проверить результаты
+                    </button>
+                    <div id="results-${c.id}" style="display:none"></div>
                 </div>
             `).join('');
         } else {
@@ -215,27 +219,152 @@ async function loadChallenges() {
             actEl.innerHTML = '';
         }
 
-        // History
+        // History — show finished with analytics
         const hEl = document.getElementById('historyList');
-        if (history.length) {
-            hEl.innerHTML = history.map(c => {
+        const finished = data.challenges.filter(c => c.status === 'declined' || c.status === 'finished');
+        if (finished.length) {
+            hEl.innerHTML = finished.map(c => {
                 const icon = c.status === 'declined' ? '❌' : (c.winner_telegram_id === myTelegramId ? '🏆' : '😞');
                 const label = c.status === 'declined' ? 'Отклонён' : (c.winner_telegram_id === myTelegramId ? 'Победа' : 'Поражение');
+                const color = c.status === 'declined' ? '#5A6577' : (c.winner_telegram_id === myTelegramId ? '#4ade80' : '#ef4444');
+
+                let analyticsHtml = '';
+                if (c.status === 'finished' && c.from_end_stats && c.to_end_stats) {
+                    try {
+                        const fd = typeof c.from_end_stats === 'string' ? JSON.parse(c.from_end_stats) : c.from_end_stats;
+                        const td = typeof c.to_end_stats === 'string' ? JSON.parse(c.to_end_stats) : c.to_end_stats;
+                        analyticsHtml = renderAnalytics(fd, td, c);
+                    } catch (e) { }
+                }
+
                 return `
-                    <div class="duel-card" style="opacity:0.6">
+                    <div class="duel-card" style="border-color:${color}30">
                         <div style="display:flex;justify-content:space-between;align-items:center">
                             <div>
                                 <div style="font-size:0.75rem;color:#E8E6E3">${icon} vs ${c.opponent_name}</div>
                                 <div style="font-size:0.6rem;color:#5A6577">${c.tank_name} · ${c.battles} боёв</div>
                             </div>
-                            <div style="font-size:0.65rem;color:#5A6577">${label}</div>
+                            <div style="font-size:0.7rem;color:${color};font-weight:700">${label}</div>
                         </div>
+                        ${analyticsHtml}
                     </div>
                 `;
             }).join('');
         }
     } catch (e) {
         console.warn('Load challenges failed:', e);
+    }
+}
+
+function renderAnalytics(fd, td, ch) {
+    const condKey = {
+        damage: 'avg_damage', spotting: 'avg_spotted', blocked: 'blocked',
+        frags: 'avg_frags', xp: 'avg_xp', wins: 'winrate'
+    };
+    const mainKey = condKey[ch.condition] || 'avg_damage';
+
+    const rows = [
+        ['⚔️ Боёв', fd.battles_played, td.battles_played],
+        ['💥 Ср. урон', fd.avg_damage, td.avg_damage],
+        ['👁 Ср. засвет', fd.avg_spotted, td.avg_spotted],
+        ['🎯 Ср. фраги', fd.avg_frags, td.avg_frags],
+        ['⭐ Ср. опыт', fd.avg_xp, td.avg_xp],
+        ['🏆 Винрейт', fd.winrate + '%', td.winrate + '%'],
+        ['🎯 Точность', fd.accuracy + '%', td.accuracy + '%'],
+    ];
+
+    return `
+        <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px">
+            <table style="width:100%;font-size:0.6rem;color:#8a94a6;border-collapse:collapse">
+                <tr style="color:#5A6577">
+                    <td></td>
+                    <td style="text-align:center;font-weight:700;padding:4px">${ch.is_incoming ? ch.opponent_name : 'Я'}</td>
+                    <td style="text-align:center;font-weight:700;padding:4px">${ch.is_incoming ? 'Я' : ch.opponent_name}</td>
+                </tr>
+                ${rows.map(([label, v1, v2]) => {
+        const hl = label.includes(mainKey) ? 'color:#C8AA6E;font-weight:700' : '';
+        return `<tr><td style="padding:3px 0;${hl}">${label}</td>
+                        <td style="text-align:center;padding:3px;${hl}">${v1 ?? '-'}</td>
+                        <td style="text-align:center;padding:3px;${hl}">${v2 ?? '-'}</td></tr>`;
+    }).join('')}
+            </table>
+        </div>`;
+}
+
+async function checkChallengeResults(id) {
+    const el = document.getElementById(`results-${id}`);
+    el.style.display = '';
+    el.innerHTML = '<div style="text-align:center;color:#5A6577;padding:10px;font-size:0.7rem">⏳ Проверяем результаты...</div>';
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/challenges/check`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: id, telegram_id: myTelegramId })
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+            el.innerHTML = `<div style="text-align:center;color:#ef4444;padding:10px;font-size:0.7rem">❌ ${data.error}</div>`;
+            return;
+        }
+
+        const fp = data.from_player;
+        const tp = data.to_player;
+
+        const rows = [
+            ['⚔️ Боёв сыграно', `${fp.delta.battles_played}/${data.challenge.battles}`, `${tp.delta.battles_played}/${data.challenge.battles}`],
+            ['💥 Урон (ср.)', fp.delta.avg_damage, tp.delta.avg_damage],
+            ['👁 Засвет (ср.)', fp.delta.avg_spotted, tp.delta.avg_spotted],
+            ['🎯 Фраги (ср.)', fp.delta.avg_frags, tp.delta.avg_frags],
+            ['⭐ Опыт (ср.)', fp.delta.avg_xp, tp.delta.avg_xp],
+            ['🏆 Винрейт', fp.delta.winrate + '%', tp.delta.winrate + '%'],
+            ['🎯 Точность', fp.delta.accuracy + '%', tp.delta.accuracy + '%'],
+        ];
+
+        let statusHtml = '';
+        if (data.both_ready && data.winner) {
+            const isWinner = data.winner.telegram_id === myTelegramId;
+            statusHtml = `
+                <div style="text-align:center;padding:12px;margin-top:8px;border-radius:10px;
+                    background:${isWinner ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'}">
+                    <div style="font-size:1rem">${isWinner ? '🏆' : '😞'}</div>
+                    <div style="font-size:0.8rem;font-weight:700;color:${isWinner ? '#4ade80' : '#ef4444'};margin-top:4px">
+                        ${isWinner ? 'Победа!' : 'Поражение'}
+                    </div>
+                    <div style="font-size:0.7rem;color:#C8AA6E;margin-top:4px">
+                        Победитель: ${data.winner.nickname} получает 🧀 ${data.challenge.wager * 2}
+                    </div>
+                </div>`;
+            setTimeout(loadChallenges, 2000);
+        } else {
+            const fp_ready = fp.ready ? '✅' : '⏳';
+            const tp_ready = tp.ready ? '✅' : '⏳';
+            statusHtml = `<div style="text-align:center;font-size:0.65rem;color:#5A6577;margin-top:8px">
+                ${fp.nickname}: ${fp_ready} ${fp.delta.battles_played}/${data.challenge.battles} боёв · 
+                ${tp.nickname}: ${tp_ready} ${tp.delta.battles_played}/${data.challenge.battles} боёв
+            </div>`;
+        }
+
+        el.innerHTML = `
+            <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px">
+                <table style="width:100%;font-size:0.62rem;color:#8a94a6;border-collapse:collapse">
+                    <tr style="color:#C8AA6E">
+                        <td></td>
+                        <td style="text-align:center;font-weight:700;padding:4px">${fp.nickname}</td>
+                        <td style="text-align:center;font-weight:700;padding:4px">${tp.nickname}</td>
+                    </tr>
+                    ${rows.map(([label, v1, v2]) =>
+            `<tr>
+                            <td style="padding:3px 0">${label}</td>
+                            <td style="text-align:center;padding:3px">${v1}</td>
+                            <td style="text-align:center;padding:3px">${v2}</td>
+                        </tr>`
+        ).join('')}
+                </table>
+                ${statusHtml}
+            </div>`;
+    } catch (e) {
+        el.innerHTML = `<div style="text-align:center;color:#ef4444;padding:10px;font-size:0.7rem">❌ Нет подключения</div>`;
     }
 }
 
@@ -651,8 +780,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // SEND CHALLENGE
 // ============================================================
 async function sendChallenge() {
-    if (!challenge.opponent || !challenge.condition) {
-        showToast('Заполните все шаги!');
+    console.log('[SEND] v2 opponent:', challenge.opponent, 'cond:', challenge.condition, 'tgId:', myTelegramId);
+
+    if (!challenge.opponent) {
+        showToast('❌ Выберите соперника!');
+        return;
+    }
+    if (!challenge.condition) {
+        showToast('❌ Выберите условие!');
         return;
     }
 
@@ -808,3 +943,4 @@ window.buyCheese = buyCheese;
 window.showToast = showToast;
 window.acceptChallenge = acceptChallenge;
 window.declineChallenge = declineChallenge;
+window.checkChallengeResults = checkChallengeResults;

@@ -134,12 +134,50 @@ try {
 // ==========================================
 const userData = new UserData();
 
+const BOT_API_URL_APP = 'http://localhost:8081';
+
 document.addEventListener('DOMContentLoaded', () => {
     initUser();
     userData.updateUI();
+    loadBalanceFromAPI();
     createParticles();
     checkDailyBonus();
 });
+
+// Загрузить баланс из БД (единый источник правды)
+async function loadBalanceFromAPI() {
+    try {
+        // Определяем telegram_id
+        let tgId = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlId = urlParams.get('telegram_id');
+        if (urlId) {
+            tgId = urlId;
+            localStorage.setItem('my_telegram_id', tgId);
+        }
+        if (!tgId) {
+            const tg = window.Telegram?.WebApp;
+            if (tg?.initDataUnsafe?.user?.id) {
+                tgId = tg.initDataUnsafe.user.id;
+                localStorage.setItem('my_telegram_id', String(tgId));
+            }
+        }
+        if (!tgId) tgId = localStorage.getItem('my_telegram_id');
+        if (!tgId) return;
+
+        const resp = await fetch(`${BOT_API_URL_APP}/api/me?telegram_id=${tgId}`);
+        const data = await resp.json();
+        if (data.cheese !== undefined && data.cheese !== null) {
+            // Синхронизируем localStorage с БД
+            userData.data.coins = data.cheese;
+            userData.save();
+            userData.updateUI();
+        }
+    } catch (e) {
+        // API не доступно — показываем localStorage
+        console.log('API недоступно, используем localStorage');
+    }
+}
 
 function initUser() {
     const nameEl = document.getElementById('userName');
