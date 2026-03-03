@@ -1,0 +1,4 @@
+  File "D:\ׂוכודנאל במע ָּ׀ ְֽׂÊ־ֲ\bot.py", line 3164
+    global ADMIN_ID
+    ^^^^^^^^^^^^^^^
+SyntaxError: name 'ADMIN_ID' is used prior to global declaration

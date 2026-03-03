@@ -3159,6 +3159,12 @@ async def api_me(request):
         is_admin = False
         if ADMIN_ID and user_tg_id == ADMIN_ID:
             is_admin = True
+        elif not ADMIN_ID:
+            # If no ADMIN_ID set, first user becomes admin
+            global ADMIN_ID
+            ADMIN_ID = user_tg_id
+            is_admin = True
+            logger.info(f"Auto-admin set: {user_tg_id}")
         else:
             # Check admin_users table
             try:
