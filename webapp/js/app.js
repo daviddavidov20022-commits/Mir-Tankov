@@ -260,6 +260,9 @@ window.showToast = showToast;
 window.openGame = openGame;
 window.claimDailyBonus = claimDailyBonus;
 
+// Проверяем админ-панель при загрузке
+setTimeout(checkAdmin, 300);
+
 // ==========================================
 // АДМИН-ПАНЕЛЬ (Промокоды)
 // ==========================================
