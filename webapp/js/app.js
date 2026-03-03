@@ -7,7 +7,7 @@
 // ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
 // ==========================================
 const DEFAULT_USER_DATA = {
-    coins: 500,
+    coins: 500,  // СЫР (🧀)
     xp: 0,
     wins: 0,
     games: 0,
@@ -191,7 +191,7 @@ function checkDailyBonus() {
     } else {
         const streak = userData.get('dailyStreak') || 0;
         const bonus = 50 + streak * 10;
-        if (textEl) textEl.textContent = `+${bonus} монет (серия: ${streak + 1} дн.)`;
+        if (textEl) textEl.textContent = `+${bonus} сыр 🧀 (серия: ${streak + 1} дн.)`;
     }
 }
 
@@ -212,7 +212,7 @@ function claimDailyBonus() {
     userData.set('dailyStreak', streak);
     userData.addCoins(bonus);
 
-    showToast('🎁', `Бонус получен! +${bonus} монет (серия: ${streak} дн.)`);
+    showToast('🎁', `Бонус получен! +${bonus} сыр 🧀 (серия: ${streak} дн.)`);
     checkDailyBonus();
 
     // Haptic feedback

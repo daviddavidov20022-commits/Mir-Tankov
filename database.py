@@ -255,6 +255,25 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_duels_status ON arena_duels(status);
         """)
 
+        # ===== ПОКУПКИ ВАЛЮТЫ СЫР =====
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS cheese_purchases (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                telegram_id INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                rub_amount INTEGER NOT NULL,
+                payment_id TEXT,
+                payment_method TEXT DEFAULT 'stars',
+                status TEXT DEFAULT 'completed',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_cheese_user ON cheese_purchases(telegram_id);
+            CREATE INDEX IF NOT EXISTS idx_cheese_status ON cheese_purchases(status);
+        """)
+
         logger.info("База данных инициализирована")
 
 
@@ -856,6 +875,136 @@ def mark_messages_read(telegram_id: int, friend_telegram_id: int):
             "UPDATE messages SET is_read = 1 WHERE sender_telegram_id = ? AND receiver_telegram_id = ?",
             (friend_telegram_id, telegram_id)
         )
+
+
+# ============================================================
+# ПОКУПКА / ТРАТА ВАЛЮТЫ СЫР (🧀)
+# ============================================================
+
+def buy_cheese(telegram_id: int, amount: int, payment_id: str = None, method: str = "stars") -> dict:
+    """Купить сыр за реальные деньги. 1 ₽ = 1 🧀"""
+    if amount <= 0:
+        return {"success": False, "error": "Неверная сумма"}
+
+    user = get_user_by_telegram_id(telegram_id)
+    if not user:
+        return {"success": False, "error": "Пользователь не найден"}
+
+    with get_db() as conn:
+        # Зачисляем сыр (coins = cheese)
+        conn.execute(
+            "UPDATE users SET coins = coins + ? WHERE telegram_id = ?",
+            (amount, telegram_id)
+        )
+
+        # Записываем покупку
+        conn.execute(
+            "INSERT INTO cheese_purchases (user_id, telegram_id, amount, rub_amount, payment_id, payment_method) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (user["id"], telegram_id, amount, amount, payment_id, method)
+        )
+
+        # Записываем транзакцию
+        conn.execute(
+            "INSERT INTO transactions (user_id, amount, currency, type, description) "
+            "VALUES (?, ?, 'CHEESE', 'purchase', ?)",
+            (user["id"], amount, f"Покупка {amount} 🧀 ({method})")
+        )
+
+    new_balance = get_cheese_balance(telegram_id)
+    logger.info(f"Пользователь {telegram_id} купил {amount} 🧀 ({method}). Баланс: {new_balance}")
+
+    return {
+        "success": True,
+        "amount": amount,
+        "balance": new_balance,
+    }
+
+
+def spend_cheese(telegram_id: int, amount: int, description: str = "") -> dict:
+    """Потратить сыр (с проверкой баланса)"""
+    if amount <= 0:
+        return {"success": False, "error": "Неверная сумма"}
+
+    user = get_user_by_telegram_id(telegram_id)
+    if not user:
+        return {"success": False, "error": "Пользователь не найден"}
+
+    balance = user["coins"]
+    if balance < amount:
+        return {
+            "success": False,
+            "error": f"Недостаточно 🧀! Баланс: {balance}, нужно: {amount}",
+            "balance": balance,
+            "needed": amount,
+        }
+
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET coins = coins - ? WHERE telegram_id = ?",
+            (amount, telegram_id)
+        )
+
+        conn.execute(
+            "INSERT INTO transactions (user_id, amount, currency, type, description) "
+            "VALUES (?, ?, 'CHEESE', 'spend', ?)",
+            (user["id"], -amount, description)
+        )
+
+    new_balance = get_cheese_balance(telegram_id)
+    return {
+        "success": True,
+        "spent": amount,
+        "balance": new_balance,
+    }
+
+
+def get_cheese_balance(telegram_id: int) -> int:
+    """Получить баланс сыра"""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT coins FROM users WHERE telegram_id = ?", (telegram_id,)
+        ).fetchone()
+        return row["coins"] if row else 0
+
+
+def get_cheese_history(telegram_id: int, limit: int = 20) -> list:
+    """История покупок сыра"""
+    user = get_user_by_telegram_id(telegram_id)
+    if not user:
+        return []
+
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT amount, rub_amount, payment_method, status, created_at
+            FROM cheese_purchases
+            WHERE telegram_id = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (telegram_id, limit)).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_cheese_stats() -> dict:
+    """Статистика продаж сыра для админки"""
+    with get_db() as conn:
+        total_purchases = conn.execute(
+            "SELECT COUNT(*) FROM cheese_purchases WHERE status = 'completed'"
+        ).fetchone()[0]
+
+        total_cheese = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) FROM cheese_purchases WHERE status = 'completed'"
+        ).fetchone()[0]
+
+        total_rub = conn.execute(
+            "SELECT COALESCE(SUM(rub_amount), 0) FROM cheese_purchases WHERE status = 'completed'"
+        ).fetchone()[0]
+
+        return {
+            "total_purchases": total_purchases,
+            "total_cheese_sold": total_cheese,
+            "total_revenue_rub": total_rub,
+        }
 
 
 # ============================================================

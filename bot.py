@@ -35,6 +35,7 @@ from database import (
     bind_wot_nickname, get_wot_nickname,
     start_verification, confirm_verification, get_verify_snapshot, is_verified,
     SUBSCRIPTION_PLANS,
+    buy_cheese, spend_cheese, get_cheese_balance, get_cheese_history, get_cheese_stats,
 )
 from challenges import (
     create_challenge, create_from_template, get_active_challenges,
@@ -156,14 +157,14 @@ def save_config(config):
 def get_default_config():
     return {
         "prizes": [
-            {"name": "1000 монет", "icon": "💰", "coins": 1000, "xp": 50, "color": "#C8AA6E", "weight": 2, "tier": "legendary"},
-            {"name": "50 монет", "icon": "🪙", "coins": 50, "xp": 5, "color": "#2D5A27", "weight": 20, "tier": "common"},
-            {"name": "500 монет", "icon": "💎", "coins": 500, "xp": 30, "color": "#4A5568", "weight": 5, "tier": "epic"},
-            {"name": "25 монет", "icon": "🪙", "coins": 25, "xp": 3, "color": "#5C6B3C", "weight": 25, "tier": "common"},
-            {"name": "250 монет", "icon": "🏅", "coins": 250, "xp": 15, "color": "#8B7340", "weight": 10, "tier": "rare"},
-            {"name": "10 монет", "icon": "🔩", "coins": 10, "xp": 1, "color": "#1A3A15", "weight": 30, "tier": "common"},
-            {"name": "100 монет", "icon": "⭐", "coins": 100, "xp": 10, "color": "#3D5A80", "weight": 15, "tier": "uncommon"},
-            {"name": "75 монет", "icon": "🎖️", "coins": 75, "xp": 8, "color": "#6B5B3C", "weight": 18, "tier": "uncommon"},
+            {"name": "1000 сыр", "icon": "💰", "coins": 1000, "xp": 50, "color": "#C8AA6E", "weight": 2, "tier": "legendary"},
+            {"name": "50 сыр", "icon": "🧀", "coins": 50, "xp": 5, "color": "#2D5A27", "weight": 20, "tier": "common"},
+            {"name": "500 сыр", "icon": "💎", "coins": 500, "xp": 30, "color": "#4A5568", "weight": 5, "tier": "epic"},
+            {"name": "25 сыр", "icon": "🧀", "coins": 25, "xp": 3, "color": "#5C6B3C", "weight": 25, "tier": "common"},
+            {"name": "250 сыр", "icon": "🏅", "coins": 250, "xp": 15, "color": "#8B7340", "weight": 10, "tier": "rare"},
+            {"name": "10 сыр", "icon": "🔩", "coins": 10, "xp": 1, "color": "#1A3A15", "weight": 30, "tier": "common"},
+            {"name": "100 сыр", "icon": "⭐", "coins": 100, "xp": 10, "color": "#3D5A80", "weight": 15, "tier": "uncommon"},
+            {"name": "75 сыр", "icon": "🎖️", "coins": 75, "xp": 8, "color": "#6B5B3C", "weight": 18, "tier": "uncommon"},
         ],
         "settings": {
             "freeSpinsPerDay": 1,
@@ -2875,6 +2876,179 @@ async def _process_verify_code(message: types.Message, code: str):
         "Попробуйте ещё раз: /verify",
         parse_mode="HTML",
     )
+
+
+# ==========================================
+# КОМАНДА /cheese — Покупка СЫР (🧀)
+# ==========================================
+
+# Пакеты сыра: {amount: stars_price}
+# 1 Star ≈ 1.95₽ → 50 Stars ≈ 100₽
+CHEESE_PACKAGES = {
+    50: {"stars": 25, "label": "50 🧀"},
+    100: {"stars": 50, "label": "100 🧀"},
+    250: {"stars": 125, "label": "250 🧀"},
+    500: {"stars": 250, "label": "500 🧀"},
+    1000: {"stars": 500, "label": "1 000 🧀"},
+    2500: {"stars": 1250, "label": "2 500 🧀"},
+}
+
+
+@dp.message(Command("cheese"))
+async def cmd_cheese(message: types.Message):
+    """Меню покупки сыра"""
+    get_or_create_user(
+        telegram_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+    )
+
+    balance = get_cheese_balance(message.from_user.id)
+
+    text = (
+        "🧀 <b>ОБМЕННИК — КУПИТЬ СЫР</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"💰 Твой баланс: <b>{balance} 🧀</b>\n\n"
+        "🔄 Курс: <b>1 ₽ = 1 🧀</b>\n\n"
+        "🧀 СЫР — единая внутренняя валюта:\n"
+        "├ 🎰 Колесо Фортуны — 50 🧀 / вращение\n"
+        "├ ⚔️ Арена PvP — ставки от 10 🧀\n"
+        "└ 🎁 Будущие фишки\n\n"
+        "Выбери пакет 👇"
+    )
+
+    buttons = []
+    for amount, pkg in CHEESE_PACKAGES.items():
+        buttons.append([
+            InlineKeyboardButton(
+                text=f"🧀 {pkg['label']} — {pkg['stars']} ⭐",
+                callback_data=f"buy_cheese_{amount}"
+            )
+        ])
+
+    buttons.append([
+        InlineKeyboardButton(
+            text="🌐 Обменник в приложении",
+            web_app=WebAppInfo(url=WEBAPP_URL + "cheese.html")
+        )
+    ])
+
+    await message.answer(
+        text, parse_mode="HTML",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
+    )
+
+
+@dp.callback_query(F.data.startswith("buy_cheese_"))
+async def buy_cheese_callback(callback: CallbackQuery):
+    """Обработка покупки сыра через Stars"""
+    amount = int(callback.data.split("_")[-1])
+    pkg = CHEESE_PACKAGES.get(amount)
+
+    if not pkg:
+        await callback.answer("❌ Пакет не найден", show_alert=True)
+        return
+
+    await callback.answer()
+
+    # Создаём invoice через Telegram Stars
+    try:
+        await callback.message.answer_invoice(
+            title=f"🧀 {pkg['label']} СЫР",
+            description=f"Покупка {amount} единиц внутренней валюты 🧀 СЫР для Мир Танков Клуб",
+            payload=f"cheese_{amount}_{callback.from_user.id}",
+            currency="XTR",  # Telegram Stars
+            prices=[types.LabeledPrice(label=f"{pkg['label']}", amount=pkg["stars"])],
+        )
+    except Exception as e:
+        logger.error(f"Ошибка создания инвойса: {e}")
+        await callback.message.answer(
+            f"⚠️ Не удалось создать платёж.\n\n"
+            f"Попробуйте позже или напишите админу.",
+            parse_mode="HTML",
+        )
+
+
+@dp.pre_checkout_query()
+async def process_pre_checkout(pre_checkout_query: types.PreCheckoutQuery):
+    """Подтверждаем оплату"""
+    await pre_checkout_query.answer(ok=True)
+
+
+@dp.message(F.successful_payment)
+async def process_successful_payment(message: types.Message):
+    """Обработка успешной оплаты Stars"""
+    payment = message.successful_payment
+    payload = payment.invoice_payload
+
+    if payload.startswith("cheese_"):
+        parts = payload.split("_")
+        amount = int(parts[1])
+        user_id = int(parts[2])
+
+        # Зачисляем сыр
+        result = buy_cheese(
+            telegram_id=user_id,
+            amount=amount,
+            payment_id=payment.telegram_payment_charge_id,
+            method="stars"
+        )
+
+        if result["success"]:
+            await message.answer(
+                f"✅ <b>Оплата прошла!</b>\n\n"
+                f"🧀 Зачислено: <b>+{amount} СЫР</b>\n"
+                f"💰 Баланс: <b>{result['balance']} 🧀</b>\n\n"
+                f"Приятной игры! 🎮",
+                parse_mode="HTML",
+            )
+        else:
+            await message.answer(
+                f"⚠️ Оплата получена, но произошла ошибка зачисления.\n"
+                f"Обратитесь к админу. Код платежа: {payment.telegram_payment_charge_id}",
+            )
+
+    elif payload.startswith("sub_"):
+        # Существующая логика подписок (если есть)
+        pass
+
+    logger.info(f"Платёж: {payload} от {message.from_user.id}, сумма: {payment.total_amount} Stars")
+
+
+@dp.message(Command("balance"))
+async def cmd_balance(message: types.Message):
+    """Показать баланс сыра"""
+    get_or_create_user(
+        telegram_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+    )
+    balance = get_cheese_balance(message.from_user.id)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="🧀 Купить СЫР",
+            callback_data="show_cheese_menu"
+        )],
+    ])
+
+    await message.answer(
+        f"🧀 <b>Баланс СЫР</b>\n"
+        f"━━━━━━━━━━━━━━━━━\n\n"
+        f"💰 У тебя: <b>{balance} 🧀</b>\n"
+        f"≈ {balance} ₽\n\n"
+        f"💡 Купи СЫР для игр и ставок!",
+        parse_mode="HTML",
+        reply_markup=keyboard,
+    )
+
+
+@dp.callback_query(F.data == "show_cheese_menu")
+async def show_cheese_menu_callback(callback: CallbackQuery):
+    """Показать меню покупки сыра из колбэка"""
+    await callback.answer()
+    # Отправляем как новое сообщение, чтобы видно были кнопки
+    await cmd_cheese(callback.message)
 
 
 # ==========================================

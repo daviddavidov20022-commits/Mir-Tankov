@@ -233,7 +233,7 @@ function updateSummary() {
 // ============================================================
 function sendChallenge() {
     const wager = parseInt(document.getElementById('wagerAmount').value) || 0;
-    const balance = 1250;
+    const balance = (typeof userData !== 'undefined' && userData) ? userData.get('coins') : 0;
 
     if (wager > balance) {
         showToast('❌ Недостаточно СЫР! Баланс: ' + balance + ' 🧀', 'error');
@@ -318,7 +318,7 @@ function showToast(message, type = 'info') {
 // UTILITIES
 // ============================================================
 function buyCheese() {
-    showToast('🧀 Отправьте /cheese в бот для покупки!\n1 СЫР = 1 ₽', 'info');
+    window.location.href = 'cheese.html';
 }
 
 // Close modals on overlay click

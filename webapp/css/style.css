@@ -455,6 +455,58 @@ body {
     filter: grayscale(50%);
 }
 
+.cheese-mini {
+    font-size: 2.5rem;
+    animation: cheeseBounce 2s ease-in-out infinite;
+}
+
+@keyframes cheeseBounce {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateY(-4px) rotate(-5deg);
+    }
+
+    75% {
+        transform: translateY(-4px) rotate(5deg);
+    }
+}
+
+/* Cheese card — full width */
+.game-card--cheese {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    min-height: auto;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #1d1810, #2a2010);
+    border-color: rgba(255, 193, 7, 0.25);
+}
+
+.game-card--cheese:hover {
+    border-color: rgba(255, 193, 7, 0.5);
+    box-shadow: 0 0 24px rgba(255, 193, 7, 0.15);
+}
+
+.game-card--cheese::before {
+    background: linear-gradient(90deg, #FFC107, #FF9800, #FFC107);
+}
+
+.game-card--cheese .game-card__icon {
+    height: auto;
+    margin-bottom: 0;
+}
+
+.game-card--cheese .game-card__footer {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 4px;
+}
+
 .tank-mini {
     width: 56px;
     height: 56px;

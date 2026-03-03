@@ -48,9 +48,9 @@
     <!-- Stats bar -->
     <div class="stats-bar">
         <div class="stat-item">
-            <div class="stat-icon">🪙</div>
+            <div class="stat-icon">🧀</div>
             <div class="stat-value" id="coinsCount">0</div>
-            <div class="stat-label">Монеты</div>
+            <div class="stat-label">СЫР</div>
         </div>
         <div class="stat-item">
             <div class="stat-icon">⭐</div>
@@ -118,7 +118,7 @@
                     <p class="game-card__desc">Крути колесо и выигрывай ценные призы!</p>
                 </div>
                 <div class="game-card__footer">
-                    <span class="game-card__reward">🪙 До 1000</span>
+                    <span class="game-card__reward">🧀 До 1000</span>
                     <span class="game-card__play">Играть →</span>
                 </div>
             </div>
@@ -205,6 +205,30 @@
                 <div class="game-card__footer">
                     <span class="game-card__reward">🃏 Редкости</span>
                     <span class="game-card__play">Скоро</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cheese Exchange -->
+        <section class="section-header" style="margin-top: 24px;">
+            <h2>🧀 Обменник</h2>
+            <p>Обменяй рубли на внутреннюю валюту СЫР!</p>
+        </section>
+
+        <div class="games-grid" style="margin-bottom: 16px;">
+            <div class="game-card game-card--active game-card--cheese" id="gameCheese"
+                onclick="openGame('cheese.html')">
+                <div class="game-card__badge game-card__badge--hot">ПОКУПАЙ</div>
+                <div class="game-card__icon">
+                    <div class="cheese-mini">🧀</div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Купить СЫР</h3>
+                    <p class="game-card__desc">1 ₽ = 1 🧀 — покупай и трать на игры, арену и колесо!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">💰 1₽ = 1🧀</span>
+                    <span class="game-card__play">Купить →</span>
                 </div>
             </div>
         </div>
@@ -314,6 +338,10 @@
         <div class="nav-item" onclick="openGame('friends.html')">
             <span class="nav-icon">👥</span>
             <span class="nav-label">Друзья</span>
+        </div>
+        <div class="nav-item" onclick="openGame('cheese.html')">
+            <span class="nav-icon">🧀</span>
+            <span class="nav-label">Обменник</span>
         </div>
         <div class="nav-item" onclick="openGame('profile.html')">
             <span class="nav-icon">👤</span>

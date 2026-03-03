@@ -8,14 +8,14 @@
 // КОНФИГУРАЦИЯ ПРИЗОВ (по умолчанию)
 // ==========================================
 const DEFAULT_PRIZES = [
-    { name: '1000 монет', icon: '💰', coins: 1000, xp: 50, color: '#C8AA6E', weight: 2, tier: 'legendary' },
-    { name: '50 монет', icon: '🪙', coins: 50, xp: 5, color: '#2D5A27', weight: 20, tier: 'common' },
-    { name: '500 монет', icon: '💎', coins: 500, xp: 30, color: '#4A5568', weight: 5, tier: 'epic' },
-    { name: '25 монет', icon: '🪙', coins: 25, xp: 3, color: '#5C6B3C', weight: 25, tier: 'common' },
-    { name: '250 монет', icon: '🏅', coins: 250, xp: 15, color: '#8B7340', weight: 10, tier: 'rare' },
-    { name: '10 монет', icon: '🔩', coins: 10, xp: 1, color: '#1A3A15', weight: 30, tier: 'common' },
-    { name: '100 монет', icon: '⭐', coins: 100, xp: 10, color: '#3D5A80', weight: 15, tier: 'uncommon' },
-    { name: '75 монет', icon: '🎖️', coins: 75, xp: 8, color: '#6B5B3C', weight: 18, tier: 'uncommon' },
+    { name: '1000 сыр', icon: '💰', coins: 1000, xp: 50, color: '#C8AA6E', weight: 2, tier: 'legendary' },
+    { name: '50 сыр', icon: '🧀', coins: 50, xp: 5, color: '#2D5A27', weight: 20, tier: 'common' },
+    { name: '500 сыр', icon: '💎', coins: 500, xp: 30, color: '#4A5568', weight: 5, tier: 'epic' },
+    { name: '25 сыр', icon: '🧀', coins: 25, xp: 3, color: '#5C6B3C', weight: 25, tier: 'common' },
+    { name: '250 сыр', icon: '🏅', coins: 250, xp: 15, color: '#8B7340', weight: 10, tier: 'rare' },
+    { name: '10 сыр', icon: '🔩', coins: 10, xp: 1, color: '#1A3A15', weight: 30, tier: 'common' },
+    { name: '100 сыр', icon: '⭐', coins: 100, xp: 10, color: '#3D5A80', weight: 15, tier: 'uncommon' },
+    { name: '75 сыр', icon: '🎖️', coins: 75, xp: 8, color: '#6B5B3C', weight: 18, tier: 'uncommon' },
 ];
 
 // Активный список призов (загружается из конфига)
@@ -300,7 +300,7 @@ function spinWheelPaid() {
 
     const coins = userData.get('coins');
     if (coins < SPIN_COST_COINS) {
-        showToast('❌', `Недостаточно монет! Нужно ${SPIN_COST_COINS}`);
+        showToast('❌', `Недостаточно сыра! Нужно ${SPIN_COST_COINS} 🧀`);
         return;
     }
 
@@ -529,7 +529,7 @@ function renderHistory() {
                 <div class="history-item__name">${item.name}</div>
                 <div class="history-item__time">${item.time}</div>
             </div>
-            <div class="history-item__value">+${item.coins} 🪙</div>
+            <div class="history-item__value">+${item.coins} 🧀</div>
         </div>
     `).join('');
 }
