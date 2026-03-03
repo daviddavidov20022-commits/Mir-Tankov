@@ -303,6 +303,16 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_arena_status ON arena_challenges(status);
         """)
 
+        # Таблица администраторов
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS admin_users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                telegram_id INTEGER UNIQUE NOT NULL,
+                granted_by INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
         logger.info("База данных инициализирована")
 
 

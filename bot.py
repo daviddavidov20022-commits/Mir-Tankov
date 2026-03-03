@@ -3154,13 +3154,32 @@ async def api_me(request):
 
         cheese = get_cheese_balance(user["telegram_id"])
 
+        # Check admin status
+        user_tg_id = user["telegram_id"]
+        is_admin = False
+        if ADMIN_ID and user_tg_id == ADMIN_ID:
+            is_admin = True
+        else:
+            # Check admin_users table
+            try:
+                from database import get_db
+                with get_db() as conn:
+                    row = conn.execute(
+                        "SELECT 1 FROM admin_users WHERE telegram_id = ?", (user_tg_id,)
+                    ).fetchone()
+                    if row:
+                        is_admin = True
+            except:
+                pass
+
         return cors_response({
-            "telegram_id": user["telegram_id"],
+            "telegram_id": user_tg_id,
             "wot_nickname": user.get("wot_nickname"),
             "first_name": user.get("first_name"),
             "username": user.get("username"),
             "avatar": user.get("avatar"),
             "cheese": cheese,
+            "is_admin": is_admin,
         })
     except Exception as e:
         logger.error(f"API me error: {e}")
@@ -3459,9 +3478,119 @@ async def cb_decline_friend(callback: CallbackQuery):
     decline_friend_request(my_tg_id, from_tg_id)
     await callback.message.edit_text("❌ Запрос отклонён.")
     await callback.answer()
+
+# --- ADMIN API ---
+
+def is_admin_user(telegram_id):
+    """Check if user is admin (ADMIN_ID or in admin_users table)"""
+    if ADMIN_ID and telegram_id == ADMIN_ID:
+        return True
+    try:
+        from database import get_db
+        with get_db() as conn:
+            row = conn.execute("SELECT 1 FROM admin_users WHERE telegram_id = ?", (telegram_id,)).fetchone()
+            return bool(row)
+    except:
+        return False
+
+
+async def api_admin_users(request):
+    """GET /api/admin/users?telegram_id=xxx — list all users (admin only)"""
+    try:
+        tg_id = int(request.query.get("telegram_id", 0))
+        if not is_admin_user(tg_id):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        from database import get_db
+        with get_db() as conn:
+            users = conn.execute("""
+                SELECT u.telegram_id, u.first_name, u.username, u.wot_nickname, u.wot_account_id,
+                       u.coins, u.created_at
+                FROM users u
+                ORDER BY u.created_at DESC
+            """).fetchall()
+
+            # Get subscription info
+            subs = {}
+            try:
+                sub_rows = conn.execute("""
+                    SELECT telegram_id, 
+                           CASE WHEN end_date > datetime('now') THEN 1 ELSE 0 END as active,
+                           CAST(julianday(end_date) - julianday('now') AS INTEGER) as days_left,
+                           end_date, payment_method
+                    FROM subscriptions 
+                    WHERE id IN (SELECT MAX(id) FROM subscriptions GROUP BY telegram_id)
+                """).fetchall()
+                for s in sub_rows:
+                    subs[s["telegram_id"]] = dict(s)
+            except:
+                pass
+
+            admins = set()
+            try:
+                admin_rows = conn.execute("SELECT telegram_id FROM admin_users").fetchall()
+                for r in admin_rows:
+                    admins.add(r["telegram_id"])
+            except:
+                pass
+            if ADMIN_ID:
+                admins.add(ADMIN_ID)
+
+        result = []
+        for u in users:
+            sub = subs.get(u["telegram_id"])
+            result.append({
+                "telegram_id": u["telegram_id"],
+                "first_name": u["first_name"],
+                "username": u["username"],
+                "wot_nickname": u["wot_nickname"],
+                "cheese": u["coins"] or 0,
+                "created_at": u["created_at"],
+                "subscription": {
+                    "active": bool(sub["active"]),
+                    "days_left": max(sub["days_left"] or 0, 0),
+                    "end_date": sub["end_date"],
+                    "method": sub["payment_method"],
+                } if sub else None,
+                "is_admin": u["telegram_id"] in admins,
+                "is_super_admin": ADMIN_ID and u["telegram_id"] == ADMIN_ID,
+            })
+
+        return cors_response({"users": result, "total": len(result)})
+    except Exception as e:
+        logger.error(f"API admin_users error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_admin_toggle_admin(request):
+    """POST /api/admin/toggle-admin {admin_telegram_id, target_telegram_id}"""
+    try:
+        data = await request.json()
+        admin_tg = data.get("admin_telegram_id")
+        target_tg = data.get("target_telegram_id")
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        if ADMIN_ID and target_tg == ADMIN_ID:
+            return cors_response({"error": "Нельзя изменить главного админа"}, 400)
+
+        from database import get_db
+        with get_db() as conn:
+            existing = conn.execute("SELECT 1 FROM admin_users WHERE telegram_id = ?", (target_tg,)).fetchone()
+            if existing:
+                conn.execute("DELETE FROM admin_users WHERE telegram_id = ?", (target_tg,))
+                return cors_response({"success": True, "is_admin": False, "message": "Права админа сняты"})
+            else:
+                conn.execute("INSERT INTO admin_users (telegram_id, granted_by) VALUES (?, ?)", (target_tg, admin_tg))
+                return cors_response({"success": True, "is_admin": True, "message": "Права админа выданы"})
+    except Exception as e:
+        logger.error(f"API toggle_admin error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
 # --- ARENA / CHALLENGES API ---
 
-LESTA_APP_ID = "95381c5db01a08e5796796c014ee89e8"
+LESTA_APP_ID = "c984faa7dc529f4cb0139505d5e8043c"
 
 # Cache for tank encyclopedia {tank_id: {tier, type, name}}
 _tank_encyclopedia = {}
@@ -3601,7 +3730,7 @@ async def api_check_challenge_results(request):
                 return cors_response({"error": "Челлендж не найден"}, 404)
             ch = dict(ch)
 
-        if ch["status"] != "active":
+        if ch["status"] not in ("active", "finished"):
             return cors_response({"error": "Челлендж не активен"}, 400)
 
         # Fetch current stats for both players
@@ -3611,11 +3740,28 @@ async def api_check_challenge_results(request):
         from_current = await fetch_player_stats(from_user, ch) if from_user else None
         to_current = await fetch_player_stats(to_user, ch) if to_user else None
 
+        if not from_current:
+            return cors_response({"error": f"Не удалось получить статистику игрока {from_user.get('wot_nickname') if from_user else '???'}. Убедитесь что WoT аккаунт привязан."}, 400)
+        if not to_current:
+            return cors_response({"error": f"Не удалось получить статистику игрока {to_user.get('wot_nickname') if to_user else '???'}. Убедитесь что WoT аккаунт привязан."}, 400)
+
         from_start = json.loads(ch["from_start_stats"]) if ch.get("from_start_stats") else None
         to_start = json.loads(ch["to_start_stats"]) if ch.get("to_start_stats") else None
 
-        if not from_current or not to_current or not from_start or not to_start:
-            return cors_response({"error": "Не удалось получить статистику. Убедитесь что WoT аккаунты привязаны."}, 400)
+        # If start stats missing (old challenge), snapshot now
+        if not from_start or not to_start:
+            from_start = from_start or from_current
+            to_start = to_start or to_current
+            with get_db() as conn:
+                conn.execute("""
+                    UPDATE arena_challenges 
+                    SET from_start_stats = ?, to_start_stats = ?
+                    WHERE id = ?
+                """, (json.dumps(from_start), json.dumps(to_start), challenge_id))
+            return cors_response({
+                "message": "📸 Снимок статистики сохранён! Теперь идите играть и нажмите «Проверить» ещё раз после боя.",
+                "snapshot_saved": True
+            })
 
         # Calculate deltas
         required_battles = ch["battles"]
@@ -3998,6 +4144,10 @@ def create_api_app():
     app.router.add_post("/api/challenges/accept", api_accept_challenge)
     app.router.add_post("/api/challenges/decline", api_decline_challenge)
     app.router.add_post("/api/challenges/check", api_check_challenge_results)
+
+    # Admin API
+    app.router.add_get("/api/admin/users", api_admin_users)
+    app.router.add_post("/api/admin/toggle-admin", api_admin_toggle_admin)
 
     return app
 

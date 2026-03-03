@@ -16,6 +16,7 @@ const BOT_API_URL = localStorage.getItem('bot_api_url') || 'http://localhost:808
 const BOT_USERNAME = 'Mir_tankov_privat_bot';
 
 let myTelegramId = 0;
+let isAdmin = false;
 
 // Challenge builder state
 const challenge = {
@@ -76,6 +77,12 @@ async function loadMyProfile() {
         } else if (data.first_name) {
             badge.textContent = `👤 ${data.first_name}`;
         }
+        // Admin check
+        if (data.is_admin) {
+            isAdmin = true;
+            const adminTab = document.getElementById('adminTab');
+            if (adminTab) adminTab.style.display = '';
+        }
         // Cheese balance: API or localStorage fallback
         const cheeseEl = document.getElementById('cheeseBalance');
         if (data.cheese && data.cheese > 0) {
@@ -132,6 +139,7 @@ function switchTab(tabId, btn) {
 
     if (tabId === 'active') loadChallenges();
     if (tabId === 'history') loadChallenges();
+    if (tabId === 'admin') loadAdminUsers();
 }
 
 // ============================================================
@@ -208,14 +216,21 @@ async function loadChallenges() {
                             <div style="font-size:0.55rem;color:#5A6577">Приз</div>
                         </div>
                     </div>
-                    <button onclick="checkChallengeResults(${c.id})" class="check-results-btn">
-                        📊 Проверить результаты
-                    </button>
-                    <div id="results-${c.id}" style="display:none"></div>
+                    <div id="results-${c.id}">
+                        <div style="text-align:center;color:#5A6577;padding:8px;font-size:0.7rem">⏳ Загрузка...</div>
+                    </div>
                 </div>
             `).join('');
+            // Auto-load results for all active challenges
+            active.forEach(c => checkChallengeResults(c.id));
+            // Auto-refresh every 30 seconds
+            clearInterval(window._challengeRefresh);
+            window._challengeRefresh = setInterval(() => {
+                active.forEach(c => checkChallengeResults(c.id));
+            }, 30000);
         } else {
             noActive.style.display = '';
+            clearInterval(window._challengeRefresh);
             actEl.innerHTML = '';
         }
 
@@ -256,45 +271,49 @@ async function loadChallenges() {
     }
 }
 
-function renderAnalytics(fd, td, ch) {
-    const condKey = {
-        damage: 'avg_damage', spotting: 'avg_spotted', blocked: 'blocked',
-        frags: 'avg_frags', xp: 'avg_xp', wins: 'winrate'
-    };
-    const mainKey = condKey[ch.condition] || 'avg_damage';
+const COND_DISPLAY = {
+    damage: { icon: '💥', name: 'Урон', key: 'avg_damage', unit: '' },
+    spotting: { icon: '👁', name: 'Засвет', key: 'avg_spotted', unit: '' },
+    blocked: { icon: '🛡', name: 'Заблокировано', key: 'blocked', unit: '' },
+    frags: { icon: '🎯', name: 'Фраги', key: 'avg_frags', unit: '' },
+    xp: { icon: '⭐', name: 'Опыт', key: 'avg_xp', unit: '' },
+    wins: { icon: '🏆', name: 'Победы', key: 'winrate', unit: '%' },
+};
 
-    const rows = [
-        ['⚔️ Боёв', fd.battles_played, td.battles_played],
-        ['💥 Ср. урон', fd.avg_damage, td.avg_damage],
-        ['👁 Ср. засвет', fd.avg_spotted, td.avg_spotted],
-        ['🎯 Ср. фраги', fd.avg_frags, td.avg_frags],
-        ['⭐ Ср. опыт', fd.avg_xp, td.avg_xp],
-        ['🏆 Винрейт', fd.winrate + '%', td.winrate + '%'],
-        ['🎯 Точность', fd.accuracy + '%', td.accuracy + '%'],
-    ];
+function renderAnalytics(fd, td, ch) {
+    const cond = COND_DISPLAY[ch.condition] || COND_DISPLAY.damage;
+    const v1 = fd[cond.key] ?? 0;
+    const v2 = td[cond.key] ?? 0;
+    const c1 = v1 >= v2 ? '#4ade80' : '#ef4444';
+    const c2 = v2 >= v1 ? '#4ade80' : '#ef4444';
+    const name1 = ch.is_incoming ? ch.opponent_name : 'Я';
+    const name2 = ch.is_incoming ? 'Я' : ch.opponent_name;
 
     return `
-        <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px">
-            <table style="width:100%;font-size:0.6rem;color:#8a94a6;border-collapse:collapse">
-                <tr style="color:#5A6577">
-                    <td></td>
-                    <td style="text-align:center;font-weight:700;padding:4px">${ch.is_incoming ? ch.opponent_name : 'Я'}</td>
-                    <td style="text-align:center;font-weight:700;padding:4px">${ch.is_incoming ? 'Я' : ch.opponent_name}</td>
-                </tr>
-                ${rows.map(([label, v1, v2]) => {
-        const hl = label.includes(mainKey) ? 'color:#C8AA6E;font-weight:700' : '';
-        return `<tr><td style="padding:3px 0;${hl}">${label}</td>
-                        <td style="text-align:center;padding:3px;${hl}">${v1 ?? '-'}</td>
-                        <td style="text-align:center;padding:3px;${hl}">${v2 ?? '-'}</td></tr>`;
-    }).join('')}
-            </table>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
+            <div style="text-align:center;font-size:0.6rem;color:#5A6577;margin-bottom:8px">
+                ${cond.icon} ${cond.name} · ${ch.tank_name} · 🧀 ${ch.wager}
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <div style="flex:1;text-align:center;padding:10px;border-radius:10px;background:rgba(0,0,0,0.2)">
+                    <div style="font-size:0.6rem;color:#8a94a6;margin-bottom:4px">${name1}</div>
+                    <div style="font-size:1.2rem;font-family:'Russo One',sans-serif;color:${c1}">${v1}${cond.unit}</div>
+                    <div style="font-size:0.55rem;color:#5A6577">${fd.battles_played} боёв</div>
+                </div>
+                <div style="font-size:0.9rem;color:#5A6577">⚔️</div>
+                <div style="flex:1;text-align:center;padding:10px;border-radius:10px;background:rgba(0,0,0,0.2)">
+                    <div style="font-size:0.6rem;color:#8a94a6;margin-bottom:4px">${name2}</div>
+                    <div style="font-size:1.2rem;font-family:'Russo One',sans-serif;color:${c2}">${v2}${cond.unit}</div>
+                    <div style="font-size:0.55rem;color:#5A6577">${td.battles_played} боёв</div>
+                </div>
+            </div>
         </div>`;
 }
 
 async function checkChallengeResults(id) {
     const el = document.getElementById(`results-${id}`);
     el.style.display = '';
-    el.innerHTML = '<div style="text-align:center;color:#5A6577;padding:10px;font-size:0.7rem">⏳ Проверяем результаты...</div>';
+    el.innerHTML = '<div style="text-align:center;color:#5A6577;padding:14px;font-size:0.8rem">⏳ Загружаем результаты...</div>';
 
     try {
         const resp = await fetch(`${BOT_API_URL}/api/challenges/check`, {
@@ -304,68 +323,94 @@ async function checkChallengeResults(id) {
         const data = await resp.json();
 
         if (data.error) {
-            el.innerHTML = `<div style="text-align:center;color:#ef4444;padding:10px;font-size:0.7rem">❌ ${data.error}</div>`;
+            el.innerHTML = `<div style="text-align:center;color:#ef4444;padding:14px;font-size:0.8rem">❌ ${data.error}</div>`;
+            return;
+        }
+
+        if (data.snapshot_saved) {
+            el.innerHTML = `<div style="text-align:center;color:#4ade80;padding:14px;font-size:0.8rem">📸 ${data.message}</div>`;
             return;
         }
 
         const fp = data.from_player;
         const tp = data.to_player;
+        const ch = data.challenge;
+        const cond = COND_DISPLAY[ch.condition] || COND_DISPLAY.damage;
 
-        const rows = [
-            ['⚔️ Боёв сыграно', `${fp.delta.battles_played}/${data.challenge.battles}`, `${tp.delta.battles_played}/${data.challenge.battles}`],
-            ['💥 Урон (ср.)', fp.delta.avg_damage, tp.delta.avg_damage],
-            ['👁 Засвет (ср.)', fp.delta.avg_spotted, tp.delta.avg_spotted],
-            ['🎯 Фраги (ср.)', fp.delta.avg_frags, tp.delta.avg_frags],
-            ['⭐ Опыт (ср.)', fp.delta.avg_xp, tp.delta.avg_xp],
-            ['🏆 Винрейт', fp.delta.winrate + '%', tp.delta.winrate + '%'],
-            ['🎯 Точность', fp.delta.accuracy + '%', tp.delta.accuracy + '%'],
-        ];
+        const v1 = fp.delta[cond.key] ?? 0;
+        const v2 = tp.delta[cond.key] ?? 0;
+        const c1 = v1 >= v2 ? '#4ade80' : '#ef4444';
+        const c2 = v2 >= v1 ? '#4ade80' : '#ef4444';
 
         let statusHtml = '';
         if (data.both_ready && data.winner) {
             const isWinner = data.winner.telegram_id === myTelegramId;
             statusHtml = `
-                <div style="text-align:center;padding:12px;margin-top:8px;border-radius:10px;
-                    background:${isWinner ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'}">
-                    <div style="font-size:1rem">${isWinner ? '🏆' : '😞'}</div>
-                    <div style="font-size:0.8rem;font-weight:700;color:${isWinner ? '#4ade80' : '#ef4444'};margin-top:4px">
-                        ${isWinner ? 'Победа!' : 'Поражение'}
+                <div style="text-align:center;padding:16px;margin-top:12px;border-radius:12px;
+                    background:${isWinner ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'}; 
+                    border:1px solid ${isWinner ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}">
+                    <div style="font-size:1.5rem">${isWinner ? '🏆' : '😞'}</div>
+                    <div style="font-size:1rem;font-family:'Russo One',sans-serif;color:${isWinner ? '#4ade80' : '#ef4444'};margin-top:6px">
+                        ${isWinner ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ'}
                     </div>
-                    <div style="font-size:0.7rem;color:#C8AA6E;margin-top:4px">
-                        Победитель: ${data.winner.nickname} получает 🧀 ${data.challenge.wager * 2}
+                    <div style="font-size:0.85rem;color:#C8AA6E;margin-top:6px">
+                        ${data.winner.nickname} получает 🧀 ${ch.wager * 2}
                     </div>
                 </div>`;
             setTimeout(loadChallenges, 2000);
         } else {
-            const fp_ready = fp.ready ? '✅' : '⏳';
-            const tp_ready = tp.ready ? '✅' : '⏳';
-            statusHtml = `<div style="text-align:center;font-size:0.65rem;color:#5A6577;margin-top:8px">
-                ${fp.nickname}: ${fp_ready} ${fp.delta.battles_played}/${data.challenge.battles} боёв · 
-                ${tp.nickname}: ${tp_ready} ${tp.delta.battles_played}/${data.challenge.battles} боёв
-            </div>`;
+            statusHtml = `
+                <div style="text-align:center;margin-top:10px;padding:10px;border-radius:10px;background:rgba(200,170,110,0.05)">
+                    <div style="font-size:0.75rem;color:#C8AA6E;margin-bottom:4px">Прогресс боёв</div>
+                    <div style="display:flex;gap:12px;justify-content:center;font-size:0.75rem">
+                        <span style="color:${fp.ready ? '#4ade80' : '#8a94a6'}">${fp.nickname}: ${fp.delta.battles_played}/${ch.battles} ${fp.ready ? '✅' : '⏳'}</span>
+                        <span style="color:${tp.ready ? '#4ade80' : '#8a94a6'}">${tp.nickname}: ${tp.delta.battles_played}/${ch.battles} ${tp.ready ? '✅' : '⏳'}</span>
+                    </div>
+                </div>`;
         }
 
+        // OBS overlay link (admin only)
+        const overlayBtn = isAdmin ? `
+            <div style="margin-top:10px;text-align:center">
+                <button onclick="copyOverlayLink(${id})" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(200,170,110,0.2);
+                    background:rgba(200,170,110,0.05);color:#C8AA6E;font-size:0.7rem;font-weight:600;cursor:pointer">
+                    📋 Скопировать ссылку для OBS
+                </button>
+            </div>` : '';
+
         el.innerHTML = `
-            <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px">
-                <table style="width:100%;font-size:0.62rem;color:#8a94a6;border-collapse:collapse">
-                    <tr style="color:#C8AA6E">
-                        <td></td>
-                        <td style="text-align:center;font-weight:700;padding:4px">${fp.nickname}</td>
-                        <td style="text-align:center;font-weight:700;padding:4px">${tp.nickname}</td>
-                    </tr>
-                    ${rows.map(([label, v1, v2]) =>
-            `<tr>
-                            <td style="padding:3px 0">${label}</td>
-                            <td style="text-align:center;padding:3px">${v1}</td>
-                            <td style="text-align:center;padding:3px">${v2}</td>
-                        </tr>`
-        ).join('')}
-                </table>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
+                <div style="text-align:center;margin-bottom:10px">
+                    <div style="font-size:0.65rem;color:#5A6577">${ch.tank_name} · ${cond.icon} ${cond.name} · 🧀 ${ch.wager}</div>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div style="flex:1;text-align:center;padding:12px;border-radius:12px;background:rgba(0,0,0,0.3)">
+                        <div style="font-size:0.7rem;color:#8a94a6;margin-bottom:6px">${fp.nickname}</div>
+                        <div style="font-size:1.4rem;font-family:'Russo One',sans-serif;color:${c1}">${v1}${cond.unit}</div>
+                        <div style="font-size:0.6rem;color:#5A6577;margin-top:4px">${fp.delta.battles_played}/${ch.battles} боёв</div>
+                    </div>
+                    <div style="font-size:1.2rem;color:#5A6577">⚔️</div>
+                    <div style="flex:1;text-align:center;padding:12px;border-radius:12px;background:rgba(0,0,0,0.3)">
+                        <div style="font-size:0.7rem;color:#8a94a6;margin-bottom:6px">${tp.nickname}</div>
+                        <div style="font-size:1.4rem;font-family:'Russo One',sans-serif;color:${c2}">${v2}${cond.unit}</div>
+                        <div style="font-size:0.6rem;color:#5A6577;margin-top:4px">${tp.delta.battles_played}/${ch.battles} боёв</div>
+                    </div>
+                </div>
                 ${statusHtml}
+                ${overlayBtn}
             </div>`;
     } catch (e) {
-        el.innerHTML = `<div style="text-align:center;color:#ef4444;padding:10px;font-size:0.7rem">❌ Нет подключения</div>`;
+        el.innerHTML = `<div style="text-align:center;color:#ef4444;padding:14px;font-size:0.8rem">❌ Нет подключения</div>`;
     }
+}
+
+function copyOverlayLink(challengeId) {
+    const url = `${window.location.origin}/webapp/overlay.html?id=${challengeId}`;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('📋 Ссылка для OBS скопирована!', 'success');
+    }).catch(() => {
+        prompt('Скопируйте ссылку:', url);
+    });
 }
 
 async function acceptChallenge(id) {
@@ -944,3 +989,124 @@ window.showToast = showToast;
 window.acceptChallenge = acceptChallenge;
 window.declineChallenge = declineChallenge;
 window.checkChallengeResults = checkChallengeResults;
+window.copyOverlayLink = copyOverlayLink;
+window.filterAdminUsers = filterAdminUsers;
+window.toggleAdmin = toggleAdmin;
+
+// ============================================================
+// ADMIN PANEL
+// ============================================================
+
+let _adminUsersCache = [];
+
+async function loadAdminUsers() {
+    if (!isAdmin) return;
+    const countEl = document.getElementById('adminUserCount');
+    const listEl = document.getElementById('adminUsersList');
+    countEl.textContent = '⏳ Загрузка...';
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/admin/users?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        if (data.error) {
+            countEl.textContent = `❌ ${data.error}`;
+            return;
+        }
+        _adminUsersCache = data.users;
+        countEl.textContent = `👥 Всего пользователей: ${data.total}`;
+        renderAdminUsers(_adminUsersCache);
+    } catch (e) {
+        countEl.textContent = '❌ Нет подключения';
+    }
+}
+
+function renderAdminUsers(users) {
+    const listEl = document.getElementById('adminUsersList');
+    if (!users.length) {
+        listEl.innerHTML = '<div style="text-align:center;color:#5A6577;padding:20px;font-size:0.75rem">Нет пользователей</div>';
+        return;
+    }
+
+    listEl.innerHTML = users.map(u => {
+        const subInfo = u.subscription
+            ? (u.subscription.active
+                ? `<span style="color:#4ade80">✅ ${u.subscription.days_left} дн.</span>`
+                : `<span style="color:#ef4444">❌ Истекла</span>`)
+            : `<span style="color:#5A6577">Нет подписки</span>`;
+
+        const method = u.subscription?.method
+            ? `<span style="color:#8a94a6">${u.subscription.method}</span>`
+            : '';
+
+        const adminBadge = u.is_super_admin
+            ? '<span style="color:#C8AA6E;font-weight:700">👑 Гл. Админ</span>'
+            : (u.is_admin
+                ? '<span style="color:#4ade80">🛡 Админ</span>'
+                : '');
+
+        const toggleBtn = u.is_super_admin ? '' : `
+            <button onclick="toggleAdmin(${u.telegram_id})" 
+                style="padding:5px 10px;border-radius:6px;font-size:0.6rem;cursor:pointer;
+                border:1px solid ${u.is_admin ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)'};
+                background:${u.is_admin ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)'};
+                color:${u.is_admin ? '#ef4444' : '#4ade80'}">
+                ${u.is_admin ? '❌ Снять' : '✅ Дать админку'}
+            </button>`;
+
+        return `
+            <div class="duel-card" style="margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                    <div style="flex:1;min-width:0">
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                            <span style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">
+                                ${u.wot_nickname || u.first_name || 'Без имени'}
+                            </span>
+                            ${adminBadge}
+                        </div>
+                        <div style="font-size:0.6rem;color:#5A6577;margin-top:3px">
+                            TG: ${u.username ? '@' + u.username : '—'} · ID: ${u.telegram_id}
+                        </div>
+                        <div style="font-size:0.6rem;color:#5A6577;margin-top:2px">
+                            🎮 ${u.wot_nickname || '—'} · 🧀 ${u.cheese.toLocaleString('ru')} · ${subInfo} ${method}
+                        </div>
+                    </div>
+                    <div style="flex-shrink:0;margin-left:8px">
+                        ${toggleBtn}
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function filterAdminUsers() {
+    const q = (document.getElementById('adminSearchInput')?.value || '').toLowerCase();
+    if (!q) {
+        renderAdminUsers(_adminUsersCache);
+        return;
+    }
+    const filtered = _adminUsersCache.filter(u =>
+        (u.wot_nickname || '').toLowerCase().includes(q) ||
+        (u.username || '').toLowerCase().includes(q) ||
+        (u.first_name || '').toLowerCase().includes(q) ||
+        String(u.telegram_id).includes(q)
+    );
+    renderAdminUsers(filtered);
+}
+
+async function toggleAdmin(targetTgId) {
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/admin/toggle-admin`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin_telegram_id: myTelegramId, target_telegram_id: targetTgId })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast(`${data.message}`, 'success');
+            loadAdminUsers();
+        } else {
+            showToast(`❌ ${data.error}`, 'error');
+        }
+    } catch (e) {
+        showToast('❌ Нет подключения', 'error');
+    }
+}

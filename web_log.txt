@@ -1,9 +1,0 @@
-::1 - - [03/Mar/2026 16:34:15] "GET /webapp/challenges.html?telegram_id=6507474079 HTTP/1.1" 304 -
-::1 - - [03/Mar/2026 16:34:15] "GET /webapp/css/arena.css?v=2 HTTP/1.1" 304 -
-::1 - - [03/Mar/2026 16:34:15] "GET /webapp/js/arena.js?v=2 HTTP/1.1" 304 -
-::ffff:127.0.0.1 - - [03/Mar/2026 16:34:15] code 404, message File not found
-::ffff:127.0.0.1 - - [03/Mar/2026 16:34:15] "GET /favicon.ico HTTP/1.1" 404 -
-::1 - - [03/Mar/2026 16:34:15] "GET /webapp/challenges.html?telegram_id=1011431758 HTTP/1.1" 200 -
-::1 - - [03/Mar/2026 16:34:15] "GET /webapp/css/style.css?v=2 HTTP/1.1" 200 -
-::1 - - [03/Mar/2026 16:34:15] "GET /webapp/css/arena.css?v=2 HTTP/1.1" 200 -
-::1 - - [03/Mar/2026 16:34:15] "GET /webapp/js/arena.js?v=2 HTTP/1.1" 200 -
