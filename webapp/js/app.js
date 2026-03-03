@@ -145,12 +145,25 @@ function initUser() {
     const nameEl = document.getElementById('userName');
     const avatarEl = document.getElementById('userAvatar');
 
+    let telegramId = null;
+
     if (tg && tg.initDataUnsafe?.user) {
         const user = tg.initDataUnsafe.user;
         if (nameEl) nameEl.textContent = user.first_name || 'Танкист';
         if (avatarEl) avatarEl.textContent = '🪖';
-        // Сохраняем Telegram ID для друзей/чата
-        if (user.id) localStorage.setItem('my_telegram_id', String(user.id));
+        telegramId = user.id;
+    }
+
+    // Берём telegram_id из URL (?telegram_id=xxx)
+    if (!telegramId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const idFromUrl = urlParams.get('telegram_id');
+        if (idFromUrl) telegramId = parseInt(idFromUrl);
+    }
+
+    // Сохраняем Telegram ID для друзей/чата
+    if (telegramId) {
+        localStorage.setItem('my_telegram_id', String(telegramId));
     }
 }
 
@@ -227,6 +240,12 @@ function claimDailyBonus() {
 // НАВИГАЦИЯ
 // ==========================================
 function openGame(url) {
+    // Передаём telegram_id на все внутренние страницы
+    const myId = localStorage.getItem('my_telegram_id');
+    if (myId) {
+        const sep = url.includes('?') ? '&' : '?';
+        url += `${sep}telegram_id=${myId}`;
+    }
     window.location.href = url;
 }
 
