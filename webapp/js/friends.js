@@ -70,6 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (saved) myTelegramId = parseInt(saved);
     }
 
+    // Способ 5: спрашиваем у пользователя
+    if (!myTelegramId) {
+        promptForTelegramId();
+    }
+
     // Сохраняем для будущего использования
     if (myTelegramId) {
         localStorage.setItem('my_telegram_id', String(myTelegramId));
@@ -403,8 +408,8 @@ async function searchForFriend() {
 
 async function addFriend(name, accountId) {
     if (!myTelegramId) {
-        showToast('❌ Откройте через Telegram');
-        return;
+        promptForTelegramId();
+        if (!myTelegramId) return;
     }
 
     showToast('📩 Отправляю запрос...');
@@ -586,6 +591,26 @@ document.getElementById('avatarModal')?.addEventListener('click', function (e) {
     if (e.target === this) closeAvatarPicker();
 });
 
+// ============================================================
+// PROMPT TELEGRAM ID
+// ============================================================
+function promptForTelegramId() {
+    const input = prompt(
+        'Введите ваш Telegram ID.\n\n' +
+        'Чтобы узнать ID:\n' +
+        '1. Напишите боту команду /myid\n' +
+        '2. Скопируйте число\n' +
+        '3. Вставьте сюда\n\n' +
+        'ID сохранится и больше спрашивать не будет.'
+    );
+    if (input && /^\d+$/.test(input.trim())) {
+        myTelegramId = parseInt(input.trim());
+        localStorage.setItem('my_telegram_id', String(myTelegramId));
+        showToast('✅ Telegram ID сохранён!');
+        loadFriendsFromServer();
+    }
+}
+
 // Expose
 window.switchFriendsTab = switchFriendsTab;
 window.openAvatarPicker = openAvatarPicker;
@@ -602,3 +627,4 @@ window.closeChat = closeChat;
 window.sendMsg = sendMsg;
 window.challengeFriend = challengeFriend;
 window.challengeFriendById = challengeFriendById;
+window.promptForTelegramId = promptForTelegramId;
