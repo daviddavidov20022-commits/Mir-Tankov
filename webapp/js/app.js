@@ -392,13 +392,63 @@ function toggleAdmin() {
         const c = document.getElementById('adminPanelContainer');
         if (c) c.innerHTML = '';
         showToast('🔒', 'Админ-режим отключён');
+        return;
+    }
+
+    // Создаём модал ввода пароля (prompt не работает в Telegram)
+    const overlay = document.createElement('div');
+    overlay.id = 'adminPassOverlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+    overlay.innerHTML = `
+        <div style="background:#131a24;border:1px solid rgba(200,170,110,0.3);border-radius:20px;padding:24px;width:100%;max-width:320px;text-align:center;">
+            <div style="font-size:2rem;margin-bottom:8px;">🔐</div>
+            <div style="font-family:'Russo One',sans-serif;color:#C8AA6E;font-size:0.95rem;margin-bottom:16px;">Пароль администратора</div>
+            <input type="password" id="adminPassInput" placeholder="Введите пароль..." 
+                   style="width:100%;padding:14px;background:#0a0e14;border:2px solid rgba(200,170,110,0.3);border-radius:12px;color:#fff;font-size:1rem;text-align:center;outline:none;margin-bottom:12px;font-family:'Inter',sans-serif;">
+            <div style="display:flex;gap:8px;">
+                <button onclick="document.getElementById('adminPassOverlay').remove()" 
+                        style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#9AA4B5;font-size:0.85rem;cursor:pointer;">
+                    Отмена
+                </button>
+                <button onclick="submitAdminPass()" 
+                        style="flex:1;padding:12px;background:linear-gradient(135deg,#C8AA6E,#E8D5A3);border:none;border-radius:12px;color:#0a0e14;font-weight:700;font-size:0.85rem;cursor:pointer;">
+                    Войти
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Фокус на поле ввода
+    setTimeout(() => document.getElementById('adminPassInput').focus(), 100);
+
+    // Enter = submit
+    document.getElementById('adminPassInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitAdminPass();
+    });
+
+    // Клик по оверлею = закрыть
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+}
+
+function submitAdminPass() {
+    const input = document.getElementById('adminPassInput');
+    const overlay = document.getElementById('adminPassOverlay');
+    if (input.value === 'admin2026') {
+        localStorage.setItem('admin_mode', 'true');
+        if (overlay) overlay.remove();
+        checkAdmin();
+        showToast('👑', 'Админ-режим активирован!');
     } else {
-        const pwd = prompt('Пароль:');
-        if (pwd === 'admin2026') {
-            localStorage.setItem('admin_mode', 'true');
-            checkAdmin();
-            showToast('👑', 'Админ-режим активирован!');
-        }
+        input.style.borderColor = '#e74c3c';
+        input.value = '';
+        input.placeholder = 'Неверный пароль!';
+        showToast('❌', 'Неверный пароль');
     }
 }
+
 window.toggleAdmin = toggleAdmin;
+window.submitAdminPass = submitAdminPass;
