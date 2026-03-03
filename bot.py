@@ -3136,15 +3136,23 @@ async def handle_options(request):
 # --- USER IDENTIFICATION API ---
 
 async def api_me(request):
-    """GET /api/me?wot_account_id=123 — определить текущего пользователя"""
+    """GET /api/me?telegram_id=123 или ?wot_account_id=123 — определить текущего пользователя"""
     try:
-        account_id = request.query.get("wot_account_id")
-        if not account_id:
-            return cors_response({"error": "wot_account_id required"}, 400)
+        user = None
 
-        user = get_user_by_wot_account_id(int(account_id))
+        telegram_id = request.query.get("telegram_id")
+        if telegram_id:
+            user = get_user_by_telegram_id(int(telegram_id))
+
+        if not user:
+            account_id = request.query.get("wot_account_id")
+            if account_id:
+                user = get_user_by_wot_account_id(int(account_id))
+
         if not user:
             return cors_response({"error": "User not found"}, 404)
+
+        cheese = get_cheese_balance(user["telegram_id"])
 
         return cors_response({
             "telegram_id": user["telegram_id"],
@@ -3152,6 +3160,7 @@ async def api_me(request):
             "first_name": user.get("first_name"),
             "username": user.get("username"),
             "avatar": user.get("avatar"),
+            "cheese": cheese,
         })
     except Exception as e:
         logger.error(f"API me error: {e}")
@@ -3159,18 +3168,34 @@ async def api_me(request):
 
 
 async def api_check_users(request):
-    """POST /api/users/check  {account_ids: [123, 456, ...]}
-    Проверяет кто из игроков зарегистрирован в боте"""
+    """POST /api/users/check  {account_ids: [123, ...], nicknames: ["nick1", ...]}
+    Проверяет кто из игроков зарегистрирован в боте.
+    Ищет по account_id, а если не найден — по wot_nickname."""
     try:
         data = await request.json()
         account_ids = data.get("account_ids", [])
+        nicknames = data.get("nicknames", [])
 
-        if not account_ids or len(account_ids) > 50:
-            return cors_response({"error": "Provide 1-50 account_ids"}, 400)
+        if not account_ids and not nicknames:
+            return cors_response({"error": "Provide account_ids or nicknames"}, 400)
 
         registered = {}
-        for aid in account_ids:
+        from database import get_db
+
+        for i, aid in enumerate(account_ids):
+            # Сначала ищем по account_id
             user = get_user_by_wot_account_id(int(aid))
+
+            # Если не найден по ID — ищем по нику
+            if not user and i < len(nicknames) and nicknames[i]:
+                nick = nicknames[i]
+                with get_db() as conn:
+                    row = conn.execute(
+                        "SELECT * FROM users WHERE wot_nickname = ? COLLATE NOCASE", (nick,)
+                    ).fetchone()
+                    if row:
+                        user = dict(row)
+
             if user:
                 registered[str(aid)] = {
                     "telegram_id": user["telegram_id"],
@@ -3506,6 +3531,137 @@ async def api_create_challenge(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_get_challenges(request):
+    """GET /api/challenges?telegram_id=123 — получить челленджи пользователя"""
+    try:
+        tg_id = int(request.query.get("telegram_id", 0))
+        if not tg_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+
+        from database import get_db
+        with get_db() as conn:
+            rows = conn.execute("""
+                SELECT * FROM arena_challenges
+                WHERE from_telegram_id = ? OR to_telegram_id = ?
+                ORDER BY created_at DESC LIMIT 50
+            """, (tg_id, tg_id)).fetchall()
+
+        challenges = []
+        for r in rows:
+            row = dict(r)
+            # Get opponent info
+            opp_id = row["to_telegram_id"] if row["from_telegram_id"] == tg_id else row["from_telegram_id"]
+            opp = get_user_by_telegram_id(opp_id)
+            row["opponent_name"] = opp.get("wot_nickname") or opp.get("first_name", "???") if opp else "???"
+            row["is_incoming"] = row["to_telegram_id"] == tg_id
+            challenges.append(row)
+
+        return cors_response({"challenges": challenges})
+    except Exception as e:
+        logger.error(f"API get_challenges error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_accept_challenge(request):
+    """POST /api/challenges/accept {challenge_id, telegram_id}"""
+    try:
+        data = await request.json()
+        challenge_id = data.get("challenge_id")
+        tg_id = data.get("telegram_id")
+
+        from database import get_db
+        with get_db() as conn:
+            ch = conn.execute("SELECT * FROM arena_challenges WHERE id = ?", (challenge_id,)).fetchone()
+            if not ch:
+                return cors_response({"error": "Челлендж не найден"}, 404)
+
+            ch = dict(ch)
+            if ch["status"] != "pending":
+                return cors_response({"error": "Челлендж уже обработан"}, 400)
+            if ch["to_telegram_id"] != tg_id:
+                return cors_response({"error": "Это не ваш вызов"}, 403)
+
+            # Deduct wager from acceptor
+            wager = ch["wager"]
+            balance = get_cheese_balance(tg_id)
+            if balance < wager:
+                return cors_response({"error": f"Недостаточно сыра! Баланс: {balance} 🧀"}, 400)
+
+            spend_cheese(tg_id, wager, f"🎯 Ставка принята: {ch['tank_name']}")
+
+            conn.execute("""
+                UPDATE arena_challenges SET status = 'active', accepted_at = datetime('now')
+                WHERE id = ?
+            """, (challenge_id,))
+
+        # Notify creator
+        try:
+            opp = get_user_by_telegram_id(tg_id)
+            opp_name = opp.get("wot_nickname") or opp.get("first_name", "Соперник") if opp else "Соперник"
+            text = (
+                f"✅ <b>{opp_name}</b> принял вызов!\n\n"
+                f"🪖 {ch['tank_name']}\n"
+                f"⚔️ Боёв: {ch['battles']}\n"
+                f"🧀 Ставка: {ch['wager']}\n\n"
+                f"🏆 Вперёд! Играйте {ch['battles']} боёв и результаты будут учтены!"
+            )
+            await bot.send_message(ch["from_telegram_id"], text, parse_mode="HTML")
+        except Exception as e:
+            logger.warning(f"Notify creator failed: {e}")
+
+        return cors_response({"success": True})
+    except Exception as e:
+        logger.error(f"API accept_challenge error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_decline_challenge(request):
+    """POST /api/challenges/decline {challenge_id, telegram_id}"""
+    try:
+        data = await request.json()
+        challenge_id = data.get("challenge_id")
+        tg_id = data.get("telegram_id")
+
+        from database import get_db
+        with get_db() as conn:
+            ch = conn.execute("SELECT * FROM arena_challenges WHERE id = ?", (challenge_id,)).fetchone()
+            if not ch:
+                return cors_response({"error": "Челлендж не найден"}, 404)
+
+            ch = dict(ch)
+            if ch["status"] != "pending":
+                return cors_response({"error": "Челлендж уже обработан"}, 400)
+            if ch["to_telegram_id"] != tg_id:
+                return cors_response({"error": "Это не ваш вызов"}, 403)
+
+            # Refund wager to creator
+            add_coins(ch["from_telegram_id"], ch["wager"], f"↩️ Вызов отклонён — возврат ставки")
+            # Also add cheese
+            from database import get_db as gdb
+            with gdb() as conn2:
+                conn2.execute("""
+                    INSERT INTO cheese_purchases (user_id, telegram_id, amount, rub_amount, payment_method, status)
+                    VALUES ((SELECT id FROM users WHERE telegram_id = ?), ?, ?, 0, 'refund', 'completed')
+                """, (ch["from_telegram_id"], ch["from_telegram_id"], ch["wager"]))
+
+            conn.execute("UPDATE arena_challenges SET status = 'declined' WHERE id = ?", (challenge_id,))
+
+        # Notify creator
+        try:
+            opp = get_user_by_telegram_id(tg_id)
+            opp_name = opp.get("wot_nickname") or opp.get("first_name", "Соперник") if opp else "Соперник"
+            await bot.send_message(ch["from_telegram_id"],
+                f"❌ <b>{opp_name}</b> отклонил вызов.\n🧀 Ставка {ch['wager']} возвращена.",
+                parse_mode="HTML")
+        except Exception as e:
+            logger.warning(f"Notify decline failed: {e}")
+
+        return cors_response({"success": True})
+    except Exception as e:
+        logger.error(f"API decline_challenge error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 # ==========================================
 # ЗАПУСК
 # ==========================================
@@ -3535,6 +3691,9 @@ def create_api_app():
 
     # Arena / Challenges API
     app.router.add_post("/api/challenges/create", api_create_challenge)
+    app.router.add_get("/api/challenges", api_get_challenges)
+    app.router.add_post("/api/challenges/accept", api_accept_challenge)
+    app.router.add_post("/api/challenges/decline", api_decline_challenge)
 
     return app
 

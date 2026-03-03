@@ -394,8 +394,9 @@ async function searchForFriend() {
 
         // Шаг 2: Проверяем кто из них зарегистрирован у нас в боте
         const accountIds = data.data.map(p => p.account_id);
+        const nicknames = data.data.map(p => p.nickname);
         let registered = {};
-        const checkResult = await apiPost('/api/users/check', { account_ids: accountIds });
+        const checkResult = await apiPost('/api/users/check', { account_ids: accountIds, nicknames: nicknames });
         if (checkResult?.registered) {
             registered = checkResult.registered;
         }

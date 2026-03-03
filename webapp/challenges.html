@@ -26,7 +26,38 @@
             <div class="arena-hero__icon">⚔️</div>
             <h1 class="arena-hero__title">АРЕНА</h1>
             <p class="arena-hero__subtitle">Вызови соперника на дуэль!</p>
+            <div class="account-badge" id="accountBadge"
+                style="margin-top:8px;padding:4px 12px;background:rgba(200,170,110,0.15);border-radius:8px;display:inline-block;font-size:0.7rem;color:#C8AA6E;font-weight:700">
+                👤 Загрузка...
+            </div>
         </div>
+
+        <!-- How it works -->
+        <div class="arena-info" onclick="this.classList.toggle('arena-info--open')"
+            style="margin-bottom:10px;padding:10px 14px;background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.1);border-radius:12px;cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">❓ Как работают челленджи?</span>
+                <span style="font-size:0.6rem;color:#5A6577">▼</span>
+            </div>
+            <div class="arena-info__body"
+                style="display:none;margin-top:10px;font-size:0.65rem;color:#8a94a6;line-height:1.6">
+                <b style="color:#E8E6E3">1.</b> Выбери соперника, технику и условие<br>
+                <b style="color:#E8E6E3">2.</b> Поставь 🧀 Сыр — ставка замораживается<br>
+                <b style="color:#E8E6E3">3.</b> Соперник получает вызов и может принять или отклонить<br>
+                <b style="color:#E8E6E3">4.</b> При принятии — его ставка тоже замораживается<br>
+                <b style="color:#E8E6E3">5.</b> Оба играют нужное количество боёв на выбранной технике<br>
+                <b style="color:#E8E6E3">6.</b> Побеждает тот, у кого лучше результат по условию<br>
+                <b style="color:#E8E6E3">7.</b> Победитель забирает 🧀 обе ставки!<br>
+                <span style="color:#ef4444;margin-top:4px;display:inline-block">⚠️ При отклонении ставка возвращается
+                    создателю</span>
+            </div>
+        </div>
+        <script>
+            document.querySelector('.arena-info').addEventListener('click', function () {
+                const body = this.querySelector('.arena-info__body');
+                body.style.display = body.style.display === 'none' ? 'block' : 'none';
+            });
+        </script>
 
         <!-- Balance -->
         <div class="cheese-bar">
@@ -78,40 +109,86 @@
             <div class="create-step create-step--locked" id="step-tank">
                 <div class="step-header">
                     <div class="step-number">2</div>
-                    <div class="step-title">Выбери танк</div>
+                    <div class="step-title">Техника</div>
                 </div>
-                <div class="tank-filters" id="tankFilters">
-                    <div class="tank-class-filter">
-                        <button class="class-btn class-btn--active" data-type="all" onclick="filterTanks('all', this)">
-                            🔄 Все</button>
-                        <button class="class-btn" data-type="heavyTank" onclick="filterTanks('heavyTank', this)">🛡️
-                            ТТ</button>
-                        <button class="class-btn" data-type="mediumTank" onclick="filterTanks('mediumTank', this)">⚙️
-                            СТ</button>
-                        <button class="class-btn" data-type="lightTank" onclick="filterTanks('lightTank', this)">🏎️
-                            ЛТ</button>
-                        <button class="class-btn" data-type="AT-SPG" onclick="filterTanks('AT-SPG', this)">🎯
-                            ПТ</button>
-                        <button class="class-btn" data-type="SPG" onclick="filterTanks('SPG', this)">💣 САУ</button>
+
+                <!-- Mode toggle -->
+                <div class="tank-mode-toggle">
+                    <button class="mode-btn mode-btn--active" id="modeClass" onclick="setTankMode('class')">📋 Класс +
+                        Уровень</button>
+                    <button class="mode-btn" id="modeSpecific" onclick="setTankMode('specific')">🪖 Конкретный
+                        танк</button>
+                </div>
+
+                <!-- Mode: Class + Tier -->
+                <div id="tankModeClass">
+                    <div class="tank-filters">
+                        <label class="form-label">Класс техники</label>
+                        <div class="tank-class-filter">
+                            <button class="class-btn class-btn--active" data-type="any"
+                                onclick="selectClass('any', this)">🔄 Любой</button>
+                            <button class="class-btn" data-type="heavyTank" onclick="selectClass('heavyTank', this)">🛡️
+                                ТТ</button>
+                            <button class="class-btn" data-type="mediumTank"
+                                onclick="selectClass('mediumTank', this)">⚙️ СТ</button>
+                            <button class="class-btn" data-type="lightTank" onclick="selectClass('lightTank', this)">🏎️
+                                ЛТ</button>
+                            <button class="class-btn" data-type="AT-SPG" onclick="selectClass('AT-SPG', this)">🎯
+                                ПТ</button>
+                            <button class="class-btn" data-type="SPG" onclick="selectClass('SPG', this)">💣 САУ</button>
+                        </div>
+                        <label class="form-label" style="margin-top:12px">Уровень</label>
+                        <div class="tank-tier-filter">
+                            <button class="tier-btn" data-tier="6" onclick="selectTier(6, this)">VI</button>
+                            <button class="tier-btn" data-tier="7" onclick="selectTier(7, this)">VII</button>
+                            <button class="tier-btn" data-tier="8" onclick="selectTier(8, this)">VIII</button>
+                            <button class="tier-btn" data-tier="9" onclick="selectTier(9, this)">IX</button>
+                            <button class="tier-btn tier-btn--active" data-tier="10"
+                                onclick="selectTier(10, this)">X</button>
+                        </div>
+                        <div class="selected-tank-summary" id="selectedTankSummary"
+                            style="margin-top:12px;text-align:center;font-size:0.8rem;color:#C8AA6E;font-family:'Russo One',sans-serif">
+                            🔄 Любой танк · X уровень
+                        </div>
                     </div>
-                    <div class="tank-tier-filter">
-                        <button class="tier-btn" data-tier="6" onclick="filterTier(6, this)">VI</button>
-                        <button class="tier-btn" data-tier="7" onclick="filterTier(7, this)">VII</button>
-                        <button class="tier-btn" data-tier="8" onclick="filterTier(8, this)">VIII</button>
-                        <button class="tier-btn" data-tier="9" onclick="filterTier(9, this)">IX</button>
-                        <button class="tier-btn tier-btn--active" data-tier="10" onclick="filterTier(10, this)">X
-                        </button>
+                </div>
+
+                <!-- Mode: Specific tank -->
+                <div id="tankModeSpecific" style="display:none">
+                    <div class="tank-filters">
+                        <div class="tank-class-filter">
+                            <button class="class-btn2 class-btn2--active" data-type="all"
+                                onclick="filterTanks('all', this)">🔄 Все</button>
+                            <button class="class-btn2" data-type="heavyTank"
+                                onclick="filterTanks('heavyTank', this)">🛡️ ТТ</button>
+                            <button class="class-btn2" data-type="mediumTank"
+                                onclick="filterTanks('mediumTank', this)">⚙️ СТ</button>
+                            <button class="class-btn2" data-type="lightTank"
+                                onclick="filterTanks('lightTank', this)">🏎️ ЛТ</button>
+                            <button class="class-btn2" data-type="AT-SPG" onclick="filterTanks('AT-SPG', this)">🎯
+                                ПТ</button>
+                            <button class="class-btn2" data-type="SPG" onclick="filterTanks('SPG', this)">💣
+                                САУ</button>
+                        </div>
+                        <div class="tank-tier-filter">
+                            <button class="tier-btn2" data-tier="6" onclick="filterTier(6, this)">VI</button>
+                            <button class="tier-btn2" data-tier="7" onclick="filterTier(7, this)">VII</button>
+                            <button class="tier-btn2" data-tier="8" onclick="filterTier(8, this)">VIII</button>
+                            <button class="tier-btn2" data-tier="9" onclick="filterTier(9, this)">IX</button>
+                            <button class="tier-btn2 tier-btn2--active" data-tier="10"
+                                onclick="filterTier(10, this)">X</button>
+                        </div>
+                        <input type="text" class="tank-search-input" id="tankSearchInput"
+                            placeholder="🔍 Поиск танка..." oninput="filterTanksByName(this.value)">
                     </div>
-                    <input type="text" class="tank-search-input" id="tankSearchInput" placeholder="🔍 Поиск танка..."
-                        oninput="filterTanksByName(this.value)">
-                </div>
-                <div class="tank-list" id="tankList">
-                    <div class="tank-loading" id="tankLoading">Загружаем танки...</div>
-                </div>
-                <div class="selected-tank" id="selectedTank" style="display:none">
-                    <img id="selectedTankIcon" src="" alt="" class="selected-tank__icon">
-                    <div class="selected-tank__name" id="selectedTankName"></div>
-                    <button class="selected-tank__change" onclick="changeTank()">✏️</button>
+                    <div class="tank-list" id="tankList">
+                        <div class="tank-loading" id="tankLoading">Загружаем танки...</div>
+                    </div>
+                    <div class="selected-tank" id="selectedTank" style="display:none">
+                        <img id="selectedTankIcon" src="" alt="" class="selected-tank__icon">
+                        <div class="selected-tank__name" id="selectedTankName"></div>
+                        <button class="selected-tank__change" onclick="changeTank()">✏️</button>
+                    </div>
                 </div>
             </div>
 

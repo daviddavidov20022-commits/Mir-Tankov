@@ -20,17 +20,13 @@ let myTelegramId = 0;
 // Challenge builder state
 const challenge = {
     opponent: null,        // { nickname, telegram_id, account_id }
-    tank: null,            // { tank_id, name, tier, type, icon }
+    tankTier: 10,          // 6-10
+    tankType: 'any',       // 'any' | 'heavyTank' | 'mediumTank' | 'lightTank' | 'AT-SPG' | 'SPG'
+    tank: null,            // specific tank { tank_id, name, tier, type, icon } — or null for class mode
     condition: null,       // 'damage' | 'spotting' | 'blocked' | 'frags' | 'xp' | 'wins'
     battles: 5,
     wager: 100,
 };
-
-// Tanks cache
-let allTanks = [];
-let filteredTanks = [];
-let currentTankType = 'all';
-let currentTier = 10;
 
 const CONDITION_LABELS = {
     damage: { icon: '💥', name: 'Урон', desc: 'Средний урон' },
@@ -52,7 +48,7 @@ const TIER_ROMAN = { 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     identifyMe();
-    loadTanks();
+    loadMyProfile();
     createParticles();
 
     // Auto-fill from friends page
@@ -64,21 +60,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+async function loadMyProfile() {
+    const badge = document.getElementById('accountBadge');
+    if (!myTelegramId) {
+        badge.textContent = '⚠️ ID не определён';
+        return;
+    }
+    badge.textContent = `👤 ID: ${myTelegramId}`;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        if (data.wot_nickname) {
+            badge.textContent = `👤 ${data.wot_nickname}`;
+            document.title = `Арена — ${data.wot_nickname}`;
+        } else if (data.first_name) {
+            badge.textContent = `👤 ${data.first_name}`;
+        }
+        // Cheese balance: API or localStorage fallback
+        const cheeseEl = document.getElementById('cheeseBalance');
+        if (data.cheese && data.cheese > 0) {
+            cheeseEl.textContent = data.cheese.toLocaleString('ru');
+        } else {
+            // Fallback: take from localStorage (same as index.html)
+            try {
+                const localData = JSON.parse(localStorage.getItem('wot_user_data') || '{}');
+                if (localData.coins) cheeseEl.textContent = localData.coins.toLocaleString('ru');
+            } catch (e2) { }
+        }
+    } catch (e) {
+        // API offline — take from localStorage
+        try {
+            const localData = JSON.parse(localStorage.getItem('wot_user_data') || '{}');
+            const cheeseEl = document.getElementById('cheeseBalance');
+            if (localData.coins) cheeseEl.textContent = localData.coins.toLocaleString('ru');
+        } catch (e2) { }
+    }
+}
+
+
 function identifyMe() {
+    // 1. URL param — приоритет (for testing with ?telegram_id=xxx)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlId = urlParams.get('telegram_id');
+    if (urlId) {
+        myTelegramId = parseInt(urlId);
+        localStorage.setItem('my_telegram_id', String(myTelegramId));
+        return;
+    }
+
+    // 2. Telegram WebApp
     const tg = window.Telegram?.WebApp;
     if (tg?.initDataUnsafe?.user) {
         myTelegramId = tg.initDataUnsafe.user.id;
         localStorage.setItem('my_telegram_id', String(myTelegramId));
+        return;
     }
-    if (!myTelegramId) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('telegram_id');
-        if (id) myTelegramId = parseInt(id);
-    }
-    if (!myTelegramId) {
-        const saved = localStorage.getItem('my_telegram_id');
-        if (saved) myTelegramId = parseInt(saved);
-    }
+
+    // 3. localStorage fallback
+    const saved = localStorage.getItem('my_telegram_id');
+    if (saved) myTelegramId = parseInt(saved);
 }
 
 // ============================================================
@@ -89,6 +129,146 @@ function switchTab(tabId, btn) {
     document.querySelectorAll('.arena-tab').forEach(t => t.classList.remove('arena-tab--active'));
     document.getElementById('tab-' + tabId).classList.add('tab-content--active');
     btn.classList.add('arena-tab--active');
+
+    if (tabId === 'active') loadChallenges();
+    if (tabId === 'history') loadChallenges();
+}
+
+// ============================================================
+// LOAD CHALLENGES
+// ============================================================
+const COND_LABELS_SHORT = {
+    damage: '💥 Урон', spotting: '👁 Засвет', blocked: '🛡 Блок',
+    frags: '🎯 Фраги', xp: '⭐ Опыт', wins: '🏆 Победы'
+};
+
+async function loadChallenges() {
+    if (!myTelegramId) return;
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/challenges?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        if (!data.challenges) return;
+
+        const incoming = data.challenges.filter(c => c.is_incoming && c.status === 'pending');
+        const active = data.challenges.filter(c => c.status === 'active');
+        const history = data.challenges.filter(c => c.status === 'declined' || c.status === 'finished');
+
+        // Incoming
+        const inEl = document.getElementById('incomingDuels');
+        if (incoming.length) {
+            inEl.innerHTML = incoming.map(c => `
+                <div class="duel-card" style="animation:fadeInUp 0.3s ease">
+                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+                        <div>
+                            <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">
+                                ⚔️ ${c.opponent_name}
+                            </div>
+                            <div style="font-size:0.65rem;color:#5A6577;margin-top:2px">
+                                ${c.tank_name} · ${COND_LABELS_SHORT[c.condition] || c.condition}
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:0.75rem;color:#C8AA6E;font-weight:700">🧀 ${c.wager}</div>
+                            <div style="font-size:0.55rem;color:#5A6577">${c.battles} боёв</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button onclick="acceptChallenge(${c.id})" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;font-size:0.75rem;cursor:pointer">
+                            ✅ Принять
+                        </button>
+                        <button onclick="declineChallenge(${c.id})" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-weight:700;font-size:0.75rem;cursor:pointer">
+                            ❌ Отклонить
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            inEl.innerHTML = '<div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:12px">Нет входящих вызовов</div>';
+        }
+
+        // Active
+        const actEl = document.getElementById('activeDuels');
+        const noActive = document.getElementById('noActiveDuels');
+        if (active.length) {
+            noActive.style.display = 'none';
+            actEl.innerHTML = active.map(c => `
+                <div class="duel-card" style="animation:fadeInUp 0.3s ease;border-color:rgba(34,197,94,0.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">
+                                🔥 vs ${c.opponent_name}
+                            </div>
+                            <div style="font-size:0.65rem;color:#5A6577;margin-top:2px">
+                                ${c.tank_name} · ${COND_LABELS_SHORT[c.condition] || c.condition} · ${c.battles} боёв
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:0.85rem;color:#4ade80;font-weight:700">🏆 🧀 ${c.wager * 2}</div>
+                            <div style="font-size:0.55rem;color:#5A6577">Приз</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            noActive.style.display = '';
+            actEl.innerHTML = '';
+        }
+
+        // History
+        const hEl = document.getElementById('historyList');
+        if (history.length) {
+            hEl.innerHTML = history.map(c => {
+                const icon = c.status === 'declined' ? '❌' : (c.winner_telegram_id === myTelegramId ? '🏆' : '😞');
+                const label = c.status === 'declined' ? 'Отклонён' : (c.winner_telegram_id === myTelegramId ? 'Победа' : 'Поражение');
+                return `
+                    <div class="duel-card" style="opacity:0.6">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <div>
+                                <div style="font-size:0.75rem;color:#E8E6E3">${icon} vs ${c.opponent_name}</div>
+                                <div style="font-size:0.6rem;color:#5A6577">${c.tank_name} · ${c.battles} боёв</div>
+                            </div>
+                            <div style="font-size:0.65rem;color:#5A6577">${label}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch (e) {
+        console.warn('Load challenges failed:', e);
+    }
+}
+
+async function acceptChallenge(id) {
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/challenges/accept`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: id, telegram_id: myTelegramId })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast('✅ Челлендж принят! Удачи!', 'success');
+            loadChallenges();
+        } else {
+            showToast(`❌ ${data.error}`, 'error');
+        }
+    } catch (e) { showToast('❌ Нет подключения к серверу', 'error'); }
+}
+
+async function declineChallenge(id) {
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/challenges/decline`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: id, telegram_id: myTelegramId })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast('❌ Вызов отклонён', 'info');
+            loadChallenges();
+        } else {
+            showToast(`❌ ${data.error}`, 'error');
+        }
+    } catch (e) { showToast('❌ Нет подключения к серверу', 'error'); }
 }
 
 // ============================================================
@@ -115,15 +295,16 @@ async function searchOpponent() {
 
         // Check who's registered in our bot
         const accountIds = data.data.map(p => p.account_id);
+        const nicknames = data.data.map(p => p.nickname);
         let registered = {};
         try {
             const checkResp = await fetch(`${BOT_API_URL}/api/users/check`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ account_ids: accountIds })
+                body: JSON.stringify({ account_ids: accountIds, nicknames: nicknames })
             });
             const checkData = await checkResp.json();
             registered = checkData.registered || {};
-        } catch (e) { /* API not available */ }
+        } catch (e) { console.warn('API check failed:', e); }
 
         results.innerHTML = data.data.map((p, i) => {
             const reg = registered[String(p.account_id)];
@@ -203,11 +384,73 @@ function invitePlayer(nickname) {
 }
 
 // ============================================================
-// STEP 2: TANK SELECTION
+// STEP 2: TANK MODE TOGGLE + SELECTION
 // ============================================================
+let tankMode = 'class'; // 'class' | 'specific'
+let allTanks = [];
+let filteredTanks = [];
+let filterType = 'all';
+let filterTierVal = 10;
+
+const CLASS_ICONS = {
+    'any': '🔄', 'heavyTank': '🛡️', 'mediumTank': '⚙️',
+    'lightTank': '🏎️', 'AT-SPG': '🎯', 'SPG': '💣'
+};
+const CLASS_NAMES = {
+    'any': 'Любой', 'heavyTank': 'ТТ', 'mediumTank': 'СТ',
+    'lightTank': 'ЛТ', 'AT-SPG': 'ПТ', 'SPG': 'САУ'
+};
+
+function setTankMode(mode) {
+    tankMode = mode;
+    document.getElementById('modeClass').classList.toggle('mode-btn--active', mode === 'class');
+    document.getElementById('modeSpecific').classList.toggle('mode-btn--active', mode === 'specific');
+    document.getElementById('tankModeClass').style.display = mode === 'class' ? '' : 'none';
+    document.getElementById('tankModeSpecific').style.display = mode === 'specific' ? '' : 'none';
+
+    if (mode === 'specific' && !allTanks.length) {
+        loadTanks();
+    }
+
+    // Reset specific tank if switching to class mode
+    if (mode === 'class') {
+        challenge.tank = null;
+        document.getElementById('selectedTank').style.display = 'none';
+    }
+    updateSummary();
+}
+
+// --- Class + Tier mode ---
+function selectClass(type, btn) {
+    challenge.tankType = type;
+    document.querySelectorAll('#tankModeClass .class-btn').forEach(b => b.classList.remove('class-btn--active'));
+    btn.classList.add('class-btn--active');
+    updateTankSummary();
+    unlockStep('step-condition');
+    updateSummary();
+}
+
+function selectTier(tier, btn) {
+    challenge.tankTier = tier;
+    document.querySelectorAll('#tankModeClass .tier-btn').forEach(b => b.classList.remove('tier-btn--active'));
+    btn.classList.add('tier-btn--active');
+    updateTankSummary();
+    unlockStep('step-condition');
+    updateSummary();
+}
+
+function updateTankSummary() {
+    const el = document.getElementById('selectedTankSummary');
+    if (!el) return;
+    const classIcon = CLASS_ICONS[challenge.tankType] || '🔄';
+    const className = CLASS_NAMES[challenge.tankType] || 'Любой';
+    const tierName = TIER_ROMAN[challenge.tankTier] || challenge.tankTier;
+    el.textContent = `${classIcon} ${className} · ${tierName} уровень`;
+}
+
+// --- Specific tank mode ---
 async function loadTanks() {
     try {
-        // Load all tanks tier 6-10
         const fields = 'name,tank_id,tier,type,nation,images.contour_icon';
         const url = `${LESTA_API}/encyclopedia/vehicles/?application_id=${LESTA_APP}&tier=6,7,8,9,10&fields=${fields}&limit=100&page_no=`;
 
@@ -233,64 +476,48 @@ async function loadTanks() {
             page++;
         }
 
-        // Sort: by tier DESC, then name ASC
         allTanks.sort((a, b) => b.tier - a.tier || a.name.localeCompare(b.name));
-
         console.log(`[Arena] Loaded ${allTanks.length} tanks`);
         applyTankFilters();
     } catch (e) {
         console.error('Failed to load tanks:', e);
-        document.getElementById('tankLoading').textContent = 'Ошибка загрузки танков';
+        const el = document.getElementById('tankLoading');
+        if (el) el.textContent = 'Ошибка загрузки танков';
     }
 }
 
 function filterTanks(type, btn) {
-    currentTankType = type;
-    document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('class-btn--active'));
-    btn.classList.add('class-btn--active');
+    filterType = type;
+    document.querySelectorAll('.class-btn2').forEach(b => b.classList.remove('class-btn2--active'));
+    btn.classList.add('class-btn2--active');
     applyTankFilters();
 }
 
 function filterTier(tier, btn) {
-    currentTier = tier;
-    document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('tier-btn--active'));
-    btn.classList.add('tier-btn--active');
+    filterTierVal = tier;
+    document.querySelectorAll('.tier-btn2').forEach(b => b.classList.remove('tier-btn2--active'));
+    btn.classList.add('tier-btn2--active');
     applyTankFilters();
 }
 
-function filterTanksByName(query) {
-    applyTankFilters(query);
-}
+function filterTanksByName(query) { applyTankFilters(query); }
 
 function applyTankFilters(nameQuery = '') {
     const q = (nameQuery || document.getElementById('tankSearchInput')?.value || '').toLowerCase();
-
     filteredTanks = allTanks.filter(t => {
-        if (currentTier && t.tier !== currentTier) return false;
-        if (currentTankType !== 'all' && t.type !== currentTankType) return false;
+        if (filterTierVal && t.tier !== filterTierVal) return false;
+        if (filterType !== 'all' && t.type !== filterType) return false;
         if (q && !t.name.toLowerCase().includes(q)) return false;
         return true;
     });
-
     renderTankList();
 }
 
 function renderTankList() {
     const container = document.getElementById('tankList');
-
-    if (!allTanks.length) {
-        container.innerHTML = `<div class="tank-loading">Загружаем танки...</div>`;
-        return;
-    }
-
-    if (!filteredTanks.length) {
-        container.innerHTML = `<div class="tank-loading">Нет танков с такими фильтрами</div>`;
-        return;
-    }
-
-    // Show max 30 tanks to keep performance
+    if (!allTanks.length) { container.innerHTML = `<div class="tank-loading">Загружаем танки...</div>`; return; }
+    if (!filteredTanks.length) { container.innerHTML = `<div class="tank-loading">Нет танков с такими фильтрами</div>`; return; }
     const toShow = filteredTanks.slice(0, 30);
-
     container.innerHTML = toShow.map((t, i) => `
         <div class="tank-item" onclick="selectTank(${t.tank_id})" style="animation-delay:${i * 0.02}s">
             <img class="tank-item__icon" src="${t.icon}" alt="" onerror="this.style.display='none'">
@@ -305,17 +532,12 @@ function renderTankList() {
 function selectTank(tankId) {
     const tank = allTanks.find(t => t.tank_id === tankId);
     if (!tank) return;
-
     challenge.tank = tank;
-
-    document.getElementById('tankFilters').style.display = 'none';
     document.getElementById('tankList').style.display = 'none';
-
     const sel = document.getElementById('selectedTank');
     sel.style.display = 'flex';
     document.getElementById('selectedTankIcon').src = tank.icon;
     document.getElementById('selectedTankName').textContent = `${tank.name} (${TIER_ROMAN[tank.tier]} ${TYPE_LABELS[tank.type] || ''})`;
-
     unlockStep('step-condition');
     updateSummary();
 }
@@ -323,9 +545,7 @@ function selectTank(tankId) {
 function changeTank() {
     challenge.tank = null;
     document.getElementById('selectedTank').style.display = 'none';
-    document.getElementById('tankFilters').style.display = '';
     document.getElementById('tankList').style.display = '';
-    lockStepsFrom('step-condition');
     updateSummary();
 }
 
@@ -384,13 +604,24 @@ function lockStepsFrom(stepId) {
     document.getElementById('challengeSummaryFull').style.display = 'none';
 }
 
+// Get display name for selected tank/class
+function getTankDisplayName() {
+    if (tankMode === 'specific' && challenge.tank) {
+        return `${challenge.tank.name} (${TIER_ROMAN[challenge.tank.tier]})`;
+    }
+    const classIcon = CLASS_ICONS[challenge.tankType] || '🔄';
+    const className = CLASS_NAMES[challenge.tankType] || 'Любой';
+    const tierName = TIER_ROMAN[challenge.tankTier] || challenge.tankTier;
+    return `${classIcon} ${className} · ${tierName}`;
+}
+
 // ============================================================
 // SUMMARY
 // ============================================================
 function updateSummary() {
     challenge.wager = parseInt(document.getElementById('wagerAmount')?.value) || 100;
 
-    const ready = challenge.opponent && challenge.tank && challenge.condition;
+    const ready = challenge.opponent && challenge.condition;
     const summaryEl = document.getElementById('challengeSummaryFull');
 
     if (!ready) {
@@ -401,7 +632,7 @@ function updateSummary() {
     summaryEl.style.display = 'block';
 
     document.getElementById('sumOpponent').textContent = challenge.opponent.nickname;
-    document.getElementById('sumTank').textContent = challenge.tank.name;
+    document.getElementById('sumTank').textContent = getTankDisplayName();
     document.getElementById('sumCondition').textContent = `${CONDITION_LABELS[challenge.condition].icon} ${CONDITION_LABELS[challenge.condition].name}`;
     document.getElementById('sumBattles').textContent = challenge.battles;
     document.getElementById('sumWager').textContent = `🧀 ${challenge.wager}`;
@@ -420,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // SEND CHALLENGE
 // ============================================================
 async function sendChallenge() {
-    if (!challenge.opponent || !challenge.tank || !challenge.condition) {
+    if (!challenge.opponent || !challenge.condition) {
         showToast('Заполните все шаги!');
         return;
     }
@@ -429,6 +660,8 @@ async function sendChallenge() {
         showToast('⚠️ Откройте через Telegram-бот');
         return;
     }
+
+    const tankName = getTankDisplayName();
 
     const btn = document.getElementById('sendChallengeBtn');
     btn.disabled = true;
@@ -441,8 +674,10 @@ async function sendChallenge() {
             body: JSON.stringify({
                 from_telegram_id: myTelegramId,
                 to_telegram_id: challenge.opponent.telegram_id,
-                tank_id: challenge.tank.tank_id,
-                tank_name: challenge.tank.name,
+                tank_id: challenge.tank?.tank_id || null,
+                tank_tier: challenge.tankTier,
+                tank_type: challenge.tankType,
+                tank_name: tankName,
                 condition: challenge.condition,
                 battles: challenge.battles,
                 wager: challenge.wager,
@@ -478,7 +713,8 @@ async function sendChallenge() {
 
 function resetChallengeBuilder() {
     challenge.opponent = null;
-    challenge.tank = null;
+    challenge.tankTier = 10;
+    challenge.tankType = 'any';
     challenge.condition = null;
     challenge.battles = 5;
     challenge.wager = 100;
@@ -489,7 +725,6 @@ function resetChallengeBuilder() {
     document.getElementById('opponentSearch').value = '';
     document.getElementById('opponentResults').innerHTML = '';
 
-    changeTank();
     document.querySelectorAll('.condition-card').forEach(c => c.classList.remove('condition-card--selected'));
     document.getElementById('wagerAmount').value = 100;
 
@@ -557,6 +792,9 @@ window.searchOpponent = searchOpponent;
 window.selectOpponent = selectOpponent;
 window.changeOpponent = changeOpponent;
 window.invitePlayer = invitePlayer;
+window.setTankMode = setTankMode;
+window.selectClass = selectClass;
+window.selectTier = selectTier;
 window.filterTanks = filterTanks;
 window.filterTier = filterTier;
 window.filterTanksByName = filterTanksByName;
@@ -568,3 +806,5 @@ window.setWager = setWager;
 window.sendChallenge = sendChallenge;
 window.buyCheese = buyCheese;
 window.showToast = showToast;
+window.acceptChallenge = acceptChallenge;
+window.declineChallenge = declineChallenge;
