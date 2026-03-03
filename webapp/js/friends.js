@@ -33,12 +33,46 @@ const AVATAR_EMOJIS = [
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Получаем Telegram ID
+    // Получаем Telegram ID (несколько способов)
     const tg = window.Telegram?.WebApp;
+
+    // Способ 1: из initDataUnsafe
     if (tg?.initDataUnsafe?.user) {
         myTelegramId = tg.initDataUnsafe.user.id;
         const nameEl = document.getElementById('myName');
         if (nameEl) nameEl.textContent = tg.initDataUnsafe.user.first_name || 'Танкист';
+    }
+
+    // Способ 2: парсим initData (query string)
+    if (!myTelegramId && tg?.initData) {
+        try {
+            const params = new URLSearchParams(tg.initData);
+            const userJson = params.get('user');
+            if (userJson) {
+                const user = JSON.parse(userJson);
+                myTelegramId = user.id;
+                const nameEl = document.getElementById('myName');
+                if (nameEl) nameEl.textContent = user.first_name || 'Танкист';
+            }
+        } catch (e) { }
+    }
+
+    // Способ 3: из URL параметров (?telegram_id=xxx)
+    if (!myTelegramId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const idFromUrl = urlParams.get('telegram_id');
+        if (idFromUrl) myTelegramId = parseInt(idFromUrl);
+    }
+
+    // Способ 4: из localStorage (сохранённый ранее)
+    if (!myTelegramId) {
+        const saved = localStorage.getItem('my_telegram_id');
+        if (saved) myTelegramId = parseInt(saved);
+    }
+
+    // Сохраняем для будущего использования
+    if (myTelegramId) {
+        localStorage.setItem('my_telegram_id', String(myTelegramId));
     }
 
     loadAvatar();

@@ -149,6 +149,8 @@ function initUser() {
         const user = tg.initDataUnsafe.user;
         if (nameEl) nameEl.textContent = user.first_name || 'Танкист';
         if (avatarEl) avatarEl.textContent = '🪖';
+        // Сохраняем Telegram ID для друзей/чата
+        if (user.id) localStorage.setItem('my_telegram_id', String(user.id));
     }
 }
 
