@@ -1,6 +1,8 @@
 /**
  * Global Challenge Tab JS — встроенный в challenges.html
  * Все функции имеют префикс gc чтобы не конфликтовать с arena.js
+ * 
+ * Автоматическое отслеживание статистики через Lesta API
  */
 
 const GC_CONDITION_MAP = {
@@ -14,7 +16,6 @@ const GC_CONDITION_MAP = {
 
 let gcCurrentChallenge = null;
 let gcTimerInterval = null;
-let gcRefreshInterval = null;
 let gcAdminCondition = 'damage';
 let gcAllSubscribers = [];
 
@@ -23,6 +24,11 @@ let gcAllSubscribers = [];
 // ============================================================
 async function gcLoadChallenge() {
     try {
+        // Сначала обновляем стату через API
+        try {
+            await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
+        } catch (e) { /* ignore */ }
+
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
         const data = await resp.json();
 
@@ -39,15 +45,11 @@ async function gcLoadChallenge() {
         // Show admin panel if admin
         if (isAdmin) {
             document.getElementById('gcAdminPanel').style.display = '';
-            gcLoadSubscribers();
         }
     } catch (e) {
         console.error('GC load error:', e);
         document.getElementById('gcLoading').style.display = 'none';
         gcShowEmpty();
-        if (isAdmin) {
-            document.getElementById('gcAdminPanel').style.display = '';
-        }
     }
 }
 
@@ -88,23 +90,32 @@ function gcShowActive(ch) {
 
     // Join button
     const joinBtn = document.getElementById('gcJoinBtn');
-    const submitArea = document.getElementById('gcSubmit');
     const isParticipant = (ch.leaderboard || []).some(p => p.telegram_id === myTelegramId);
 
     if (isParticipant) {
         joinBtn.disabled = true;
-        joinBtn.textContent = '✅ ВЫ УЧАСТВУЕТЕ';
-        submitArea.style.display = '';
+        joinBtn.textContent = '✅ ВЫ УЧАСТВУЕТЕ — статистика обновляется автоматически';
     } else {
         joinBtn.disabled = false;
         joinBtn.textContent = '⚔️ ВСТУПИТЬ В ЧЕЛЛЕНДЖ';
-        submitArea.style.display = 'none';
+    }
+
+    // Widget link
+    const linkEl = document.getElementById('gcWidgetLink');
+    if (linkEl) {
+        linkEl.style.display = '';
     }
 
     // Admin controls
     if (isAdmin) {
-        document.getElementById('adminGcStopBtn').style.display = '';
-        document.getElementById('adminGcStopBtn').setAttribute('data-id', ch.id);
+        const stopBtn = document.getElementById('adminGcStopBtn');
+        const deleteBtn = document.getElementById('adminGcDeleteBtn');
+        stopBtn.style.display = '';
+        stopBtn.setAttribute('data-id', ch.id);
+        if (deleteBtn) {
+            deleteBtn.style.display = '';
+            deleteBtn.setAttribute('data-id', ch.id);
+        }
         document.getElementById('adminGcLaunchBtn').style.display = 'none';
     }
 }
@@ -136,6 +147,7 @@ function gcShowFinished(ch) {
                     <div class="gc-lb-rank gc-lb-rank--${i < 3 ? ['1st', '2nd', '3rd'][i] : 'other'}">${medal}</div>
                     <div class="gc-lb-info">
                         <div class="gc-lb-name">${p.nickname}</div>
+                        <div class="gc-lb-battles">${p.battles_played || 0} боёв</div>
                     </div>
                     <div class="gc-lb-value">${(p.current_value || 0).toLocaleString('ru')}</div>
                 </div>`;
@@ -143,10 +155,19 @@ function gcShowFinished(ch) {
     }
     document.getElementById('gcFinalLb').innerHTML = html;
 
+    // Widget link hide
+    const linkEl = document.getElementById('gcWidgetLink');
+    if (linkEl) linkEl.style.display = 'none';
+
     // Admin: show launch again
     if (isAdmin) {
         document.getElementById('adminGcLaunchBtn').style.display = '';
         document.getElementById('adminGcStopBtn').style.display = 'none';
+        const deleteBtn = document.getElementById('adminGcDeleteBtn');
+        if (deleteBtn) {
+            deleteBtn.style.display = '';
+            deleteBtn.setAttribute('data-id', ch.id);
+        }
     }
 
     // Confetti!
@@ -247,7 +268,7 @@ function gcRenderLeaderboard(leaders) {
 }
 
 // ============================================================
-// JOIN
+// JOIN — вступление + сообщение
 // ============================================================
 async function gcJoinChallenge() {
     if (!myTelegramId) {
@@ -272,9 +293,8 @@ async function gcJoinChallenge() {
         const data = await resp.json();
 
         if (data.success) {
-            showToast(`⚔️ Вы вступили как ${data.nickname}!`);
-            btn.textContent = '✅ ВЫ УЧАСТВУЕТЕ';
-            document.getElementById('gcSubmit').style.display = '';
+            showToast(data.message || `🎯 Вы вступили! Условия приняты — вперёд!`);
+            btn.textContent = '✅ ВЫ УЧАСТВУЕТЕ — статистика обновляется автоматически';
             gcLoadChallenge();
         } else {
             showToast(`❌ ${data.error}`);
@@ -289,40 +309,22 @@ async function gcJoinChallenge() {
 }
 
 // ============================================================
-// SUBMIT RESULT
+// WIDGET LINK — копирование ссылки
 // ============================================================
-async function gcSubmitResult() {
-    if (!myTelegramId || !gcCurrentChallenge) return;
-
-    const input = document.getElementById('gcSubmitValue');
-    const value = parseInt(input.value);
-    if (!value || value <= 0) {
-        showToast('❌ Введите результат');
-        return;
-    }
-
-    try {
-        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/submit`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                telegram_id: myTelegramId,
-                challenge_id: gcCurrentChallenge.id,
-                value: value
-            })
-        });
-        const data = await resp.json();
-
-        if (data.success) {
-            showToast(`✅ Результат: ${data.current_value}`);
-            input.value = '';
-            gcLoadChallenge();
-        } else {
-            showToast(`❌ ${data.error}`);
-        }
-    } catch (e) {
-        showToast('❌ Нет подключения');
-    }
+function gcCopyWidgetLink() {
+    const url = `${window.location.origin}${window.location.pathname}?tab=global`;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('📋 Ссылка скопирована!');
+    }).catch(() => {
+        // Fallback
+        const input = document.createElement('input');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast('📋 Ссылка скопирована!');
+    });
 }
 
 // ============================================================
@@ -394,7 +396,7 @@ function gcFilterSubscribers() {
 }
 
 // ============================================================
-// ADMIN: CREATE / STOP CHALLENGE
+// ADMIN: CREATE / STOP / DELETE
 // ============================================================
 function gcSelectCond(cond, btn) {
     gcAdminCondition = cond;
@@ -438,7 +440,7 @@ async function gcLaunchChallenge() {
         const data = await resp.json();
 
         if (data.success) {
-            showToast('🚀 Челлендж запущен!');
+            showToast('🚀 Челлендж запущен! Вы автоматически вступили.');
             gcLoadChallenge();
         } else {
             showToast(`❌ ${data.error}`);
@@ -452,7 +454,7 @@ async function gcLaunchChallenge() {
 }
 
 async function gcStopChallenge() {
-    if (!confirm('Завершить челлендж досрочно?')) return;
+    if (!confirm('Завершить челлендж досрочно? Победитель будет определён по текущим результатам.')) return;
 
     const btn = document.getElementById('adminGcStopBtn');
     const challengeId = btn.getAttribute('data-id');
@@ -470,6 +472,40 @@ async function gcStopChallenge() {
 
         if (data.success) {
             showToast('✅ Челлендж завершён!');
+            gcLoadChallenge();
+        } else {
+            showToast(`❌ ${data.error}`);
+        }
+    } catch (e) {
+        showToast('❌ Нет подключения');
+    }
+}
+
+async function gcDeleteChallenge() {
+    if (!confirm('🗑 Удалить челлендж полностью? Все результаты будут утеряны!')) return;
+
+    const deleteBtn = document.getElementById('adminGcDeleteBtn');
+    const challengeId = deleteBtn.getAttribute('data-id') ||
+        (document.getElementById('adminGcStopBtn').getAttribute('data-id'));
+
+    if (!challengeId) {
+        showToast('❌ Не найден ID челленджа');
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                admin_telegram_id: myTelegramId,
+                challenge_id: parseInt(challengeId)
+            })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            showToast('🗑 Челлендж удалён');
             gcLoadChallenge();
         } else {
             showToast(`❌ ${data.error}`);
@@ -542,10 +578,26 @@ function gcLaunchConfetti() {
     animate();
 }
 
-// Auto-refresh global tab every 10 seconds
+// ============================================================
+// AUTO-REFRESH & URL TAB SWITCHING
+// ============================================================
+
+// Auto-refresh stats every 15 seconds when on global tab
 setInterval(() => {
     const globalTab = document.getElementById('tab-global');
     if (globalTab && globalTab.classList.contains('tab-content--active')) {
         gcLoadChallenge();
     }
-}, 10000);
+}, 15000);
+
+// Check URL for ?tab=global on load
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'global') {
+        // Auto-switch to global tab
+        const globalBtn = document.querySelector('.arena-tab[onclick*="global"]');
+        if (globalBtn) {
+            switchTab('global', globalBtn);
+        }
+    }
+});

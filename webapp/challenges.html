@@ -416,13 +416,17 @@
                         </div>
                     </div>
 
-                    <div class="gc-submit" id="gcSubmit" style="display:none">
-                        <div class="gc-submit__title">📊 Отправить результат</div>
-                        <div class="gc-submit__row">
-                            <input type="number" class="gc-submit__input" id="gcSubmitValue"
-                                placeholder="Введите ваш урон...">
-                            <button class="gc-submit__btn" onclick="gcSubmitResult()">Отправить</button>
-                        </div>
+                    <!-- Widget link -->
+                    <div class="gc-widget-link" id="gcWidgetLink" style="display:none">
+                        <button class="gc-widget-link__btn" onclick="gcCopyWidgetLink()">
+                            🔗 Скопировать ссылку на челлендж
+                        </button>
+                    </div>
+
+                    <div class="gc-auto-info">
+                        <div class="gc-auto-info__icon">🤖</div>
+                        <div class="gc-auto-info__text">Статистика обновляется автоматически через API Мир Танков каждые
+                            15 сек</div>
                     </div>
                 </div>
 
@@ -514,6 +518,11 @@
 
                     <button class="gc-admin__stop" id="adminGcStopBtn" onclick="gcStopChallenge()" style="display:none">
                         ⛔ ЗАВЕРШИТЬ ДОСРОЧНО
+                    </button>
+
+                    <button class="gc-admin__delete" id="adminGcDeleteBtn" onclick="gcDeleteChallenge()"
+                        style="display:none">
+                        🗑 УДАЛИТЬ ЧЕЛЛЕНДЖ
                     </button>
                 </div>
             </div>

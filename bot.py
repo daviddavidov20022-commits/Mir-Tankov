@@ -4436,6 +4436,47 @@ async def api_decline_challenge(request):
 # GLOBAL CHALLENGES API
 # ==========================================
 
+# Маппинг условий к полям статистики
+GC_CONDITION_TO_STAT = {
+    "damage": "damage_dealt",
+    "frags": "frags",
+    "xp": "xp",
+    "spotting": "spotted",
+    "blocked": "damage_received",  # blocked damage
+    "wins": "wins",
+}
+
+
+async def gc_fetch_player_stat(account_id, condition):
+    """Получить текущий суммарный стат игрока из Lesta API"""
+    import aiohttp
+    stat_field = GC_CONDITION_TO_STAT.get(condition, "damage_dealt")
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            url = (f"https://api.tanki.su/wot/account/info/"
+                   f"?application_id={LESTA_APP_ID}&account_id={account_id}"
+                   f"&fields=statistics.all.{stat_field},statistics.all.battles")
+            async with session.get(url) as resp:
+                data = await resp.json()
+
+            if data.get("status") != "ok":
+                return None
+
+            player_data = data["data"].get(str(account_id))
+            if not player_data:
+                return None
+
+            stats = player_data.get("statistics", {}).get("all", {})
+            return {
+                "value": stats.get(stat_field, 0),
+                "battles": stats.get("battles", 0),
+            }
+    except Exception as e:
+        logger.error(f"GC fetch stat error for {account_id}: {e}")
+        return None
+
+
 async def api_global_challenge_create(request):
     """POST /api/global-challenge/create — админ создаёт общий челлендж"""
     try:
@@ -4472,6 +4513,31 @@ async def api_global_challenge_create(request):
                   reward_coins, reward_description, admin_tg, ends_at))
             challenge_id = cursor.lastrowid
 
+        # Админ автоматически вступает
+        admin_user = get_user_by_telegram_id(admin_tg)
+        if admin_user:
+            admin_nick = admin_user.get("wot_nickname") or admin_user.get("first_name") or "Админ"
+            admin_account_id = admin_user.get("wot_account_id")
+            baseline_value = 0
+            baseline_battles = 0
+
+            if admin_account_id:
+                stat = await gc_fetch_player_stat(admin_account_id, condition)
+                if stat:
+                    baseline_value = stat["value"]
+                    baseline_battles = stat["battles"]
+
+            with get_db() as conn:
+                import sqlite3
+                try:
+                    conn.execute("""
+                        INSERT INTO global_challenge_participants 
+                        (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, current_value, battles_played)
+                        VALUES (?, ?, ?, ?, ?, 0, 0)
+                    """, (challenge_id, admin_tg, admin_nick, baseline_value, baseline_battles))
+                except sqlite3.IntegrityError:
+                    pass
+
         return cors_response({
             "success": True, 
             "challenge_id": challenge_id,
@@ -4497,12 +4563,35 @@ async def api_global_challenge_active(request):
 
             if not ch:
                 # Проверяем и закрываем просроченные
-                conn.execute(
-                    "UPDATE global_challenges SET status = 'finished', finished_at = datetime('now') "
-                    "WHERE status = 'active' AND ends_at <= ?",
+                expired = conn.execute(
+                    "SELECT id FROM global_challenges WHERE status = 'active' AND ends_at <= ?",
                     (datetime.now(),)
-                )
-                # Может есть только что закончившийся (для показа победителя)
+                ).fetchall()
+                for ex in expired:
+                    # Автоматически завершаем
+                    winner = conn.execute("""
+                        SELECT * FROM global_challenge_participants 
+                        WHERE challenge_id = ? ORDER BY current_value DESC LIMIT 1
+                    """, (ex["id"],)).fetchone()
+                    
+                    winner_tg = winner["telegram_id"] if winner else None
+                    winner_nick = winner["nickname"] if winner else None
+                    winner_val = winner["current_value"] if winner else 0
+                    
+                    conn.execute("""
+                        UPDATE global_challenges 
+                        SET status = 'finished', finished_at = datetime('now'),
+                            winner_telegram_id = ?, winner_nickname = ?, winner_value = ?
+                        WHERE id = ?
+                    """, (winner_tg, winner_nick, winner_val, ex["id"]))
+                    
+                    # Приз
+                    ch_data = conn.execute("SELECT reward_coins FROM global_challenges WHERE id = ?", (ex["id"],)).fetchone()
+                    if winner_tg and ch_data and ch_data["reward_coins"] > 0:
+                        from database import buy_cheese
+                        buy_cheese(winner_tg, ch_data["reward_coins"], method="challenge_reward")
+
+                # Показать последний завершённый
                 last = conn.execute("""
                     SELECT * FROM global_challenges 
                     WHERE status = 'finished'
@@ -4510,11 +4599,9 @@ async def api_global_challenge_active(request):
                 """).fetchone()
                 if last:
                     last = dict(last)
-                    # Получаем топ-3 последнего
                     top = conn.execute("""
                         SELECT * FROM global_challenge_participants 
-                        WHERE challenge_id = ?
-                        ORDER BY current_value DESC LIMIT 3
+                        WHERE challenge_id = ? ORDER BY current_value DESC LIMIT 10
                     """, (last["id"],)).fetchall()
                     last["leaderboard"] = [dict(r) for r in top]
                     last["participants_count"] = conn.execute(
@@ -4525,7 +4612,6 @@ async def api_global_challenge_active(request):
                 return cors_response({"challenge": None, "status": "none"})
 
             ch = dict(ch)
-            # Получить участников и топ-3
             participants = conn.execute(
                 "SELECT COUNT(*) FROM global_challenge_participants WHERE challenge_id = ?",
                 (ch["id"],)
@@ -4561,6 +4647,7 @@ async def api_global_challenge_join(request):
             return cors_response({"error": "Пользователь не найден"}, 404)
 
         nickname = user.get("wot_nickname") or user.get("first_name") or user.get("username") or "Танкист"
+        account_id = user.get("wot_account_id")
 
         from database import get_db
         from datetime import datetime
@@ -4574,69 +4661,90 @@ async def api_global_challenge_join(request):
             if not ch:
                 return cors_response({"error": "Челлендж не найден или завершён"}, 404)
 
+            # Запоминаем базовую статистику на момент вступления
+            baseline_value = 0
+            baseline_battles = 0
+
+            if account_id:
+                stat = await gc_fetch_player_stat(account_id, ch["condition"])
+                if stat:
+                    baseline_value = stat["value"]
+                    baseline_battles = stat["battles"]
+
             try:
                 conn.execute("""
                     INSERT INTO global_challenge_participants 
-                    (challenge_id, telegram_id, nickname)
-                    VALUES (?, ?, ?)
-                """, (challenge_id, tg_id, nickname))
+                    (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, current_value, battles_played)
+                    VALUES (?, ?, ?, ?, ?, 0, 0)
+                """, (challenge_id, tg_id, nickname, baseline_value, baseline_battles))
             except sqlite3.IntegrityError:
                 return cors_response({"error": "Вы уже участвуете!"}, 400)
 
-        return cors_response({"success": True, "nickname": nickname})
+        return cors_response({
+            "success": True, 
+            "nickname": nickname,
+            "message": f"🎯 {nickname}, вы вступили в челлендж! Условия приняты — вперёд!"
+        })
     except Exception as e:
         logger.error(f"API global_challenge_join error: {e}")
         return cors_response({"error": str(e)}, 500)
 
 
-async def api_global_challenge_submit(request):
-    """POST /api/global-challenge/submit — обновить результат участника"""
+async def api_global_challenge_refresh_stats(request):
+    """POST /api/global-challenge/refresh-stats — обновить стату всех участников через Lesta API"""
     try:
-        data = await request.json()
-        tg_id = data.get("telegram_id")
-        challenge_id = data.get("challenge_id")
-        value = int(data.get("value", 0))
-
-        if not tg_id or not challenge_id:
-            return cors_response({"error": "Не указаны параметры"}, 400)
-
-        if value < 0:
-            return cors_response({"error": "Неверное значение"}, 400)
-
         from database import get_db
         from datetime import datetime
 
         with get_db() as conn:
             ch = conn.execute(
-                "SELECT * FROM global_challenges WHERE id = ? AND status = 'active'",
-                (challenge_id,)
+                "SELECT * FROM global_challenges WHERE status = 'active' ORDER BY created_at DESC LIMIT 1",
             ).fetchone()
             if not ch:
-                return cors_response({"error": "Челлендж не активен"}, 400)
+                return cors_response({"error": "Нет активного челленджа"}, 400)
 
-            participant = conn.execute(
-                "SELECT * FROM global_challenge_participants WHERE challenge_id = ? AND telegram_id = ?",
-                (challenge_id, tg_id)
-            ).fetchone()
-            if not participant:
-                return cors_response({"error": "Вы не участвуете в этом челлендже"}, 400)
+            ch = dict(ch)
+            participants = conn.execute(
+                "SELECT * FROM global_challenge_participants WHERE challenge_id = ?",
+                (ch["id"],)
+            ).fetchall()
 
-            # Обновляем если новое значение больше
-            new_value = max(participant["current_value"], value)
-            conn.execute("""
-                UPDATE global_challenge_participants 
-                SET current_value = ?, last_updated = ?, battles_played = battles_played + 1
-                WHERE challenge_id = ? AND telegram_id = ?
-            """, (new_value, datetime.now(), challenge_id, tg_id))
+        # Обновляем стату каждого участника
+        updated = 0
+        for p in participants:
+            p = dict(p)
+            user = get_user_by_telegram_id(p["telegram_id"])
+            if not user:
+                continue
 
-        return cors_response({"success": True, "current_value": new_value})
+            account_id = user.get("wot_account_id")
+            if not account_id:
+                continue
+
+            stat = await gc_fetch_player_stat(account_id, ch["condition"])
+            if not stat:
+                continue
+
+            # Считаем дельту от базового уровня
+            new_value = max(0, stat["value"] - p["baseline_value"])
+            new_battles = max(0, stat["battles"] - p["baseline_battles"])
+
+            with get_db() as conn:
+                conn.execute("""
+                    UPDATE global_challenge_participants 
+                    SET current_value = ?, battles_played = ?, last_updated = ?
+                    WHERE challenge_id = ? AND telegram_id = ?
+                """, (new_value, new_battles, datetime.now(), ch["id"], p["telegram_id"]))
+                updated += 1
+
+        return cors_response({"success": True, "updated": updated})
     except Exception as e:
-        logger.error(f"API global_challenge_submit error: {e}")
+        logger.error(f"API global_challenge_refresh error: {e}")
         return cors_response({"error": str(e)}, 500)
 
 
 async def api_global_challenge_finish(request):
-    """POST /api/global-challenge/finish — завершить челлендж (админ или автоматически)"""
+    """POST /api/global-challenge/finish — завершить челлендж (админ)"""
     try:
         data = await request.json()
         admin_tg = data.get("admin_telegram_id")
@@ -4688,6 +4796,28 @@ async def api_global_challenge_finish(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_global_challenge_delete(request):
+    """POST /api/global-challenge/delete — удалить челлендж (админ)"""
+    try:
+        data = await request.json()
+        admin_tg = data.get("admin_telegram_id")
+        challenge_id = data.get("challenge_id")
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        from database import get_db
+
+        with get_db() as conn:
+            conn.execute("DELETE FROM global_challenge_participants WHERE challenge_id = ?", (challenge_id,))
+            conn.execute("DELETE FROM global_challenges WHERE id = ?", (challenge_id,))
+
+        return cors_response({"success": True})
+    except Exception as e:
+        logger.error(f"API global_challenge_delete error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 # ==========================================
 # ЗАПУСК
 # ==========================================
@@ -4734,8 +4864,9 @@ def create_api_app():
     app.router.add_post("/api/global-challenge/create", api_global_challenge_create)
     app.router.add_get("/api/global-challenge/active", api_global_challenge_active)
     app.router.add_post("/api/global-challenge/join", api_global_challenge_join)
-    app.router.add_post("/api/global-challenge/submit", api_global_challenge_submit)
+    app.router.add_post("/api/global-challenge/refresh-stats", api_global_challenge_refresh_stats)
     app.router.add_post("/api/global-challenge/finish", api_global_challenge_finish)
+    app.router.add_post("/api/global-challenge/delete", api_global_challenge_delete)
 
     return app
 

@@ -859,6 +859,72 @@
 }
 
 /* ==========================================
+   WIDGET LINK & AUTO-INFO
+   ========================================== */
+.gc-widget-link {
+    padding: 0 20px 12px;
+}
+
+.gc-widget-link__btn {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px dashed rgba(200, 170, 110, 0.2);
+    background: rgba(200, 170, 110, 0.04);
+    color: #C8AA6E;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gc-widget-link__btn:hover {
+    background: rgba(200, 170, 110, 0.1);
+    border-color: rgba(200, 170, 110, 0.3);
+}
+
+.gc-auto-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px 16px;
+    font-size: 0.58rem;
+    color: #5A6577;
+}
+
+.gc-auto-info__icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.gc-auto-info__text {
+    line-height: 1.4;
+}
+
+/* Delete button */
+.gc-admin__delete {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 12px;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.65rem;
+    cursor: pointer;
+    background: rgba(239, 68, 68, 0.04);
+    color: #ef4444;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+    opacity: 0.7;
+}
+
+.gc-admin__delete:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.4);
+    opacity: 1;
+}
+
+/* ==========================================
    SUBSCRIBERS LIST (ADMIN)
    ========================================== */
 .gc-subs {
