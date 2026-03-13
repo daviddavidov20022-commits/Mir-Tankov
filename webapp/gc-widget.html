@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Челлендж Виджет — Мир Танков</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            color: #E8E6E3;
+            overflow: hidden;
+        }
+
+        .widget {
+            width: 340px;
+            background: rgba(10, 14, 20, 0.85);
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            border-radius: 16px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f5be0b, #C8AA6E, #f5be0b);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Header */
+        .w-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .w-header__icon {
+            font-size: 1.4rem;
+            filter: drop-shadow(0 0 6px rgba(245, 190, 11, 0.4));
+        }
+
+        .w-header__info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .w-header__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.75rem;
+            color: #C8AA6E;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .w-header__desc {
+            font-size: 0.55rem;
+            color: #8a94a6;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .w-header__cond {
+            font-size: 1.4rem;
+            opacity: 0.7;
+        }
+
+        /* Timer row */
+        .w-timer-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            background: rgba(200, 170, 110, 0.05);
+            border: 1px solid rgba(200, 170, 110, 0.08);
+            border-radius: 10px;
+        }
+
+        .w-timer__label {
+            font-size: 0.55rem;
+            color: #5A6577;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .w-timer__value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            color: #f5be0b;
+            text-shadow: 0 0 12px rgba(245, 190, 11, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .w-timer__value--danger {
+            color: #ef4444;
+            text-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+            animation: pulse-danger 1s infinite;
+        }
+
+        @keyframes pulse-danger {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .w-stats {
+            display: flex;
+            gap: 8px;
+        }
+
+        .w-stat {
+            flex: 1;
+            text-align: center;
+            font-size: 0.5rem;
+            color: #5A6577;
+        }
+
+        .w-stat__val {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #E8E6E3;
+        }
+
+        .w-stat--reward .w-stat__val {
+            color: #f5be0b;
+        }
+
+        /* My Stats */
+        .w-me {
+            margin-bottom: 10px;
+            padding: 10px 12px;
+            background: linear-gradient(135deg, rgba(200, 170, 110, 0.1), rgba(200, 170, 110, 0.03));
+            border: 1px solid rgba(200, 170, 110, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .w-me__avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #C8AA6E, #f5be0b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.65rem;
+            color: #0A0E14;
+            flex-shrink: 0;
+        }
+
+        .w-me__info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .w-me__nick {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #C8AA6E;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .w-me__label {
+            font-size: 0.5rem;
+            color: #5A6577;
+        }
+
+        .w-me__value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.1rem;
+            color: #f5be0b;
+            text-shadow: 0 0 10px rgba(245, 190, 11, 0.2);
+        }
+
+        .w-me__unit {
+            font-size: 0.45rem;
+            color: #5A6577;
+            display: block;
+        }
+
+        /* Leaderboard */
+        .w-lb {
+            margin-top: 10px;
+        }
+
+        .w-lb__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.55rem;
+            color: #5A6577;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .w-lb-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            margin-bottom: 3px;
+            transition: all 0.3s;
+        }
+
+        .w-lb-item--1 {
+            background: linear-gradient(135deg, rgba(245, 190, 11, 0.12), rgba(245, 190, 11, 0.03));
+            border: 1px solid rgba(245, 190, 11, 0.15);
+        }
+
+        .w-lb-item--2 {
+            background: rgba(192, 192, 192, 0.06);
+            border: 1px solid rgba(192, 192, 192, 0.1);
+        }
+
+        .w-lb-item--3 {
+            background: rgba(205, 127, 50, 0.06);
+            border: 1px solid rgba(205, 127, 50, 0.1);
+        }
+
+        .w-lb-rank {
+            font-size: 0.85rem;
+            width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .w-lb-nick {
+            flex: 1;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #E8E6E3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .w-lb-val {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.7rem;
+            color: #C8AA6E;
+        }
+
+        /* Empty state */
+        .w-empty {
+            text-align: center;
+            padding: 30px 10px;
+            font-size: 0.65rem;
+            color: #5A6577;
+        }
+
+        .w-empty__icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        /* LIVE badge */
+        .w-live {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.45rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            animation: live-blink 2s infinite;
+        }
+
+        @keyframes live-blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="widget" id="widget">
+        <div class="w-live" id="wLive">● LIVE</div>
+
+        <!-- Empty state -->
+        <div class="w-empty" id="wEmpty">
+            <div class="w-empty__icon">⚔️</div>
+            <div>Нет активных челленджей</div>
+        </div>
+
+        <!-- Active content -->
+        <div id="wContent" class="hidden">
+            <!-- Header -->
+            <div class="w-header">
+                <div class="w-header__icon" id="wIcon">🔥</div>
+                <div class="w-header__info">
+                    <div class="w-header__title" id="wTitle">Челлендж</div>
+                    <div class="w-header__desc" id="wDesc">Описание</div>
+                </div>
+                <div class="w-header__cond" id="wCond">💥</div>
+            </div>
+
+            <!-- Timer + stats -->
+            <div class="w-timer-row">
+                <div>
+                    <div class="w-timer__label">осталось</div>
+                    <div class="w-timer__value" id="wTimer">59:59</div>
+                </div>
+                <div class="w-stats">
+                    <div class="w-stat">
+                        <div class="w-stat__val" id="wPlayers">0</div>
+                        <div>игроков</div>
+                    </div>
+                    <div class="w-stat w-stat--reward">
+                        <div class="w-stat__val" id="wReward">🧀 500</div>
+                        <div>приз</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My stats -->
+            <div class="w-me" id="wMe" style="display:none">
+                <div class="w-me__avatar" id="wMeAvatar">FA</div>
+                <div class="w-me__info">
+                    <div class="w-me__nick" id="wMeNick">Ник</div>
+                    <div class="w-me__label">моя статистика</div>
+                </div>
+                <div style="text-align:right">
+                    <div class="w-me__value" id="wMeValue">0</div>
+                    <div class="w-me__unit" id="wMeUnit">урона</div>
+                </div>
+            </div>
+
+            <!-- Top 3 -->
+            <div class="w-lb" id="wLb">
+                <div class="w-lb__title">🏆 ТОП 3</div>
+                <div id="wLbList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Config
+        const BOT_API_URL = localStorage.getItem('bot_api_url') || 'http://localhost:8081';
+        const urlParams = new URLSearchParams(window.location.search);
+        const myTelegramId = urlParams.get('telegram_id') ? parseInt(urlParams.get('telegram_id')) : null;
+
+        const COND_MAP = {
+            damage: { icon: '💥', name: 'Урон', unit: 'урона' },
+            frags: { icon: '🎯', name: 'Фраги', unit: 'фрагов' },
+            xp: { icon: '⭐', name: 'Опыт', unit: 'опыта' },
+            spotting: { icon: '👁', name: 'Засвет', unit: 'засвета' },
+            blocked: { icon: '🛡', name: 'Блок', unit: 'блока' },
+            wins: { icon: '🏆', name: 'Победы', unit: 'побед' },
+        };
+
+        let timerInterval = null;
+
+        async function loadWidget() {
+            try {
+                // Refresh stats
+                try {
+                    await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
+                } catch (e) { }
+
+                const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
+                const data = await resp.json();
+
+                if (data.status === 'active' && data.challenge) {
+                    showChallenge(data.challenge);
+                } else {
+                    showEmpty();
+                }
+            } catch (e) {
+                showEmpty();
+            }
+        }
+
+        function showEmpty() {
+            document.getElementById('wEmpty').classList.remove('hidden');
+            document.getElementById('wContent').classList.add('hidden');
+            document.getElementById('wLive').classList.add('hidden');
+        }
+
+        function showChallenge(ch) {
+            document.getElementById('wEmpty').classList.add('hidden');
+            document.getElementById('wContent').classList.remove('hidden');
+            document.getElementById('wLive').classList.remove('hidden');
+
+            const cond = COND_MAP[ch.condition] || COND_MAP.damage;
+
+            // Header
+            document.getElementById('wIcon').textContent = ch.icon || '🔥';
+            document.getElementById('wTitle').textContent = ch.title;
+            document.getElementById('wDesc').textContent = ch.description || '';
+            document.getElementById('wCond').textContent = cond.icon;
+
+            // Stats
+            document.getElementById('wPlayers').textContent = ch.participants_count || 0;
+            document.getElementById('wReward').textContent = `🧀 ${ch.reward_coins || 0}`;
+
+            // Timer
+            startTimer(ch.ends_at, ch.duration_minutes);
+
+            // My stats
+            const lb = ch.leaderboard || [];
+            const me = lb.find(p => p.telegram_id === myTelegramId);
+            const meSection = document.getElementById('wMe');
+
+            if (me) {
+                meSection.style.display = '';
+                const nick = me.nickname || 'Танкист';
+                document.getElementById('wMeAvatar').textContent = nick.substring(0, 2).toUpperCase();
+                document.getElementById('wMeNick').textContent = nick;
+                document.getElementById('wMeValue').textContent = (me.current_value || 0).toLocaleString('ru');
+                document.getElementById('wMeUnit').textContent = cond.unit;
+            } else {
+                meSection.style.display = 'none';
+            }
+
+            // Top 3
+            renderTop3(lb, cond);
+        }
+
+        function startTimer(endsAtStr, durationMinutes) {
+            if (timerInterval) clearInterval(timerInterval);
+            const endsAt = new Date(endsAtStr);
+            const el = document.getElementById('wTimer');
+
+            function tick() {
+                const diff = Math.max(0, Math.floor((endsAt - new Date()) / 1000));
+                if (diff <= 0) {
+                    el.textContent = '00:00';
+                    clearInterval(timerInterval);
+                    setTimeout(loadWidget, 3000);
+                    return;
+                }
+
+                const h = Math.floor(diff / 3600);
+                const m = Math.floor((diff % 3600) / 60);
+                const s = diff % 60;
+
+                el.textContent = h > 0
+                    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+                    : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+                if (diff < 60) {
+                    el.classList.add('w-timer__value--danger');
+                } else {
+                    el.classList.remove('w-timer__value--danger');
+                }
+            }
+
+            tick();
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        function renderTop3(leaders, cond) {
+            const list = document.getElementById('wLbList');
+            const top3 = leaders.slice(0, 3);
+
+            if (top3.length === 0) {
+                list.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;text-align:center;padding:6px">Пока нет участников</div>';
+                return;
+            }
+
+            const medals = ['🥇', '🥈', '🥉'];
+
+            list.innerHTML = top3.map((p, i) => `
+                <div class="w-lb-item w-lb-item--${i + 1}">
+                    <div class="w-lb-rank">${medals[i]}</div>
+                    <div class="w-lb-nick">${p.telegram_id === myTelegramId ? '⭐ ' : ''}${p.nickname || 'Танкист'}</div>
+                    <div class="w-lb-val">${(p.current_value || 0).toLocaleString('ru')}</div>
+                </div>
+            `).join('');
+        }
+
+        // Initial load
+        loadWidget();
+
+        // Auto-refresh every 10 seconds
+        setInterval(loadWidget, 10000);
+    </script>
+</body>
+
+</html>

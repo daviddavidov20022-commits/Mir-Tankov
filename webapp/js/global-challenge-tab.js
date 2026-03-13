@@ -312,18 +312,18 @@ async function gcJoinChallenge() {
 // WIDGET LINK — копирование ссылки
 // ============================================================
 function gcCopyWidgetLink() {
-    const url = `${window.location.origin}${window.location.pathname}?tab=global`;
+    const base = window.location.origin + window.location.pathname.replace('challenges.html', 'gc-widget.html');
+    const url = myTelegramId ? `${base}?telegram_id=${myTelegramId}` : base;
     navigator.clipboard.writeText(url).then(() => {
-        showToast('📋 Ссылка скопирована!');
+        showToast('📋 Ссылка на виджет скопирована!');
     }).catch(() => {
-        // Fallback
         const input = document.createElement('input');
         input.value = url;
         document.body.appendChild(input);
         input.select();
         document.execCommand('copy');
         document.body.removeChild(input);
-        showToast('📋 Ссылка скопирована!');
+        showToast('📋 Ссылка на виджет скопирована!');
     });
 }
 

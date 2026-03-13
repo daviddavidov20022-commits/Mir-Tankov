@@ -359,6 +359,16 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_gcp_tg ON global_challenge_participants(telegram_id);
         """)
 
+        # Миграция: добавить новые колонки если их нет
+        try:
+            conn.execute("ALTER TABLE global_challenge_participants ADD COLUMN baseline_value INTEGER DEFAULT 0")
+        except Exception:
+            pass  # колонка уже существует
+        try:
+            conn.execute("ALTER TABLE global_challenge_participants ADD COLUMN baseline_battles INTEGER DEFAULT 0")
+        except Exception:
+            pass
+
         logger.info("База данных инициализирована")
 
 
