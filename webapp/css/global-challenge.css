@@ -1317,6 +1317,32 @@
     background: rgba(34, 197, 94, 0.2);
 }
 
+.wc-theme__preview--fire {
+    background: linear-gradient(180deg, #1a0800, #0d0200);
+}
+
+.wc-theme__preview--fire .wc-theme__timer {
+    color: #ff6b35;
+    text-shadow: 0 0 8px rgba(255, 107, 53, 0.5);
+}
+
+.wc-theme__preview--fire .wc-theme__bar {
+    background: rgba(255, 107, 53, 0.2);
+}
+
+.wc-theme__preview--ice {
+    background: linear-gradient(180deg, #040a14, #020610);
+}
+
+.wc-theme__preview--ice .wc-theme__timer {
+    color: #38bdf8;
+    text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.wc-theme__preview--ice .wc-theme__bar {
+    background: rgba(56, 189, 248, 0.2);
+}
+
 .wc-theme__name {
     text-align: center;
     padding: 6px 4px;
@@ -1324,6 +1350,11 @@
     font-weight: 700;
     color: #8a94a6;
     background: rgba(0, 0, 0, 0.3);
+}
+
+/* Make themes grid wrap for 5 items */
+.wc-themes {
+    flex-wrap: wrap;
 }
 
 /* Settings rows */
