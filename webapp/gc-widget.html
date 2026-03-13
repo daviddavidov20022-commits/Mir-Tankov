@@ -610,6 +610,82 @@
             }).join('');
         }
 
+        // ===== URL THEME PARAMS =====
+        const THEMES = {
+            gold: { bg: 'rgba(26,21,8,{o})', accent: '#f5d36e', titleColor: '#ffeeb0', timerShadow: '0 0 20px rgba(245,211,110,0.4), 0 2px 0 #c89b30, 0 4px 0 #a07c2a, 0 6px 12px rgba(0,0,0,0.8)' },
+            neon: { bg: 'rgba(15,5,32,{o})', accent: '#a855f7', titleColor: '#d8b4fe', timerShadow: '0 0 20px rgba(168,85,247,0.5), 0 2px 0 #6d28d9, 0 4px 12px rgba(0,0,0,0.8)' },
+            military: { bg: 'rgba(15,26,10,{o})', accent: '#22c55e', titleColor: '#bbf7d0', timerShadow: '0 0 20px rgba(34,197,94,0.4), 0 2px 0 #14532d, 0 4px 12px rgba(0,0,0,0.8)' },
+        };
+
+        function applyThemeFromURL() {
+            const t = urlParams.get('theme') || 'gold';
+            const accent = urlParams.get('accent') ? '#' + urlParams.get('accent') : null;
+            const border = urlParams.get('border') || 'gold';
+            const bgOp = (parseInt(urlParams.get('bg')) || 90) / 100;
+            const fontScale = (parseInt(urlParams.get('font')) || 100) / 100;
+            const showTimer = urlParams.get('timer') !== '0';
+            const showMe = urlParams.get('me') !== '0';
+            const showTop = urlParams.get('top') !== '0';
+            const showLive = urlParams.get('live') !== '0';
+
+            const theme = THEMES[t] || THEMES.gold;
+            const ac = accent || theme.accent;
+            const widget = document.querySelector('.widget');
+
+            // Background
+            widget.style.background = theme.bg.replace('{o}', bgOp.toFixed(2));
+
+            // Font size
+            if (fontScale !== 1) widget.style.fontSize = (fontScale * 16) + 'px';
+
+            // Border
+            const before = widget.querySelector('.w-inner');
+            switch (border) {
+                case 'gold':
+                    widget.style.border = `2px solid ${ac}`;
+                    break;
+                case 'glow':
+                    widget.style.border = `1px solid ${ac}44`;
+                    widget.style.boxShadow = `0 0 20px ${ac}33, inset 0 0 20px ${ac}11`;
+                    // hide pseudo-elements
+                    const style = document.createElement('style');
+                    style.textContent = '.widget::before,.widget::after{display:none!important}';
+                    document.head.appendChild(style);
+                    break;
+                case 'minimal':
+                    widget.style.border = `1px solid ${ac}22`;
+                    widget.style.boxShadow = 'none';
+                    { const s = document.createElement('style'); s.textContent = '.widget::before,.widget::after{display:none!important}'; document.head.appendChild(s); }
+                    break;
+                case 'none':
+                    widget.style.border = 'none';
+                    widget.style.boxShadow = 'none';
+                    { const s = document.createElement('style'); s.textContent = '.widget::before,.widget::after{display:none!important}'; document.head.appendChild(s); }
+                    break;
+            }
+
+            // Colors
+            const dynStyle = document.createElement('style');
+            dynStyle.textContent = `
+                .w-header__title { color: ${theme.titleColor} !important; text-shadow: 0 0 10px ${ac}44, 0 2px 0 ${ac}88, 0 3px 0 ${ac}66, 0 4px 8px rgba(0,0,0,0.6) !important; }
+                .w-timer__value { color: ${theme.titleColor} !important; text-shadow: ${theme.timerShadow} !important; }
+                .w-stat__val { color: ${ac} !important; }
+                .w-me__nick { color: ${ac} !important; }
+                .w-me__avatar { border-color: ${ac} !important; }
+                .w-me__value { color: ${theme.titleColor} !important; }
+                .w-lb-val { color: ${ac} !important; }
+                .w-lb-rank--1 { color: ${theme.titleColor} !important; }
+            `;
+            document.head.appendChild(dynStyle);
+
+            // Visibility
+            if (!showTimer) { const s = document.createElement('style'); s.textContent = '.w-timer{display:none!important}'; document.head.appendChild(s); }
+            if (!showMe) { const s = document.createElement('style'); s.textContent = '.w-me{display:none!important}'; document.head.appendChild(s); }
+            if (!showTop) { const s = document.createElement('style'); s.textContent = '.w-lb{display:none!important}'; document.head.appendChild(s); }
+            if (!showLive) { const s = document.createElement('style'); s.textContent = '.w-live{display:none!important}'; document.head.appendChild(s); }
+        }
+
+        applyThemeFromURL();
         loadWidget();
         setInterval(loadWidget, 10000);
     </script>

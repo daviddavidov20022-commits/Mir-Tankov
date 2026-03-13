@@ -1177,3 +1177,442 @@
         min-width: calc(50% - 4px);
     }
 }
+
+/* ==========================================
+   WIDGET CONSTRUCTOR
+   ========================================== */
+.wc-section {
+    margin-top: 16px;
+    border: 1px solid rgba(200, 170, 110, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(200, 170, 110, 0.02);
+}
+
+.wc-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    cursor: pointer;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.7rem;
+    color: #C8AA6E;
+    transition: background 0.2s;
+}
+
+.wc-section__header:hover {
+    background: rgba(200, 170, 110, 0.05);
+}
+
+.wc-section__arrow {
+    transition: transform 0.3s;
+    font-size: 0.6rem;
+}
+
+.wc-section__arrow--open {
+    transform: rotate(180deg);
+}
+
+.wc-body {
+    padding: 0 14px 14px;
+}
+
+.wc-label {
+    font-size: 0.6rem;
+    color: #5A6577;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 10px 0 8px;
+    font-weight: 700;
+}
+
+/* Theme cards */
+.wc-themes {
+    display: flex;
+    gap: 8px;
+}
+
+.wc-theme {
+    flex: 1;
+    cursor: pointer;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    transition: all 0.3s;
+    opacity: 0.6;
+}
+
+.wc-theme:hover {
+    opacity: 0.85;
+}
+
+.wc-theme--active {
+    opacity: 1;
+    border-color: #C8AA6E;
+    box-shadow: 0 0 12px rgba(200, 170, 110, 0.2);
+}
+
+.wc-theme__preview {
+    height: 80px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.wc-theme__preview--gold {
+    background: linear-gradient(180deg, #1a1508, #0f0d06);
+}
+
+.wc-theme__preview--neon {
+    background: linear-gradient(180deg, #0f0520, #080218);
+}
+
+.wc-theme__preview--military {
+    background: linear-gradient(180deg, #0f1a0a, #081208);
+}
+
+.wc-theme__timer {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1rem;
+}
+
+.wc-theme__preview--gold .wc-theme__timer {
+    color: #f5d36e;
+    text-shadow: 0 1px 0 #8B6914;
+}
+
+.wc-theme__preview--neon .wc-theme__timer {
+    color: #a855f7;
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+}
+
+.wc-theme__preview--military .wc-theme__timer {
+    color: #22c55e;
+    text-shadow: 0 1px 0 #14532d;
+}
+
+.wc-theme__bar {
+    width: 80%;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.wc-theme__bar--short {
+    width: 50%;
+}
+
+.wc-theme__preview--gold .wc-theme__bar {
+    background: rgba(245, 211, 110, 0.2);
+}
+
+.wc-theme__preview--neon .wc-theme__bar {
+    background: rgba(168, 85, 247, 0.2);
+}
+
+.wc-theme__preview--military .wc-theme__bar {
+    background: rgba(34, 197, 94, 0.2);
+}
+
+.wc-theme__name {
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: #8a94a6;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Settings rows */
+.wc-settings {
+    margin-top: 4px;
+}
+
+.wc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.wc-row__label {
+    font-size: 0.6rem;
+    color: #8a94a6;
+    min-width: 65px;
+    flex-shrink: 0;
+}
+
+.wc-row__val {
+    font-size: 0.55rem;
+    color: #C8AA6E;
+    font-weight: 700;
+    min-width: 30px;
+    text-align: right;
+}
+
+/* Color palette */
+.wc-colors {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.wc-color {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.wc-color:hover {
+    transform: scale(1.2);
+}
+
+.wc-color--active {
+    border-color: #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    transform: scale(1.15);
+}
+
+/* Slider */
+.wc-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(200, 170, 110, 0.15);
+    outline: none;
+}
+
+.wc-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #C8AA6E;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(200, 170, 110, 0.3);
+}
+
+/* Toggle buttons */
+.wc-toggles {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.wc-toggle {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(200, 170, 110, 0.1);
+    background: transparent;
+    color: #5A6577;
+    font-size: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+}
+
+.wc-toggle:hover {
+    border-color: rgba(200, 170, 110, 0.2);
+    color: #8a94a6;
+}
+
+.wc-toggle--active {
+    background: rgba(200, 170, 110, 0.1);
+    border-color: #C8AA6E;
+    color: #C8AA6E;
+}
+
+/* Checkboxes */
+.wc-checks {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.wc-check {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.55rem;
+    color: #8a94a6;
+    cursor: pointer;
+}
+
+.wc-check input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: #C8AA6E;
+}
+
+/* ==========================================
+   LIVE MINI-PREVIEW
+   ========================================== */
+.wc-preview-wrap {
+    background: repeating-conic-gradient(rgba(255, 255, 255, 0.02) 0% 25%, transparent 0% 50%) 0 0 / 16px 16px;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.wc-preview {
+    width: 200px;
+    padding: 12px;
+    border-radius: 10px;
+    position: relative;
+    transition: all 0.4s;
+    /* Default: Gold theme */
+    background: rgba(26, 21, 8, 0.92);
+    border: 2px solid #d4a745;
+    box-shadow: 0 0 15px rgba(212, 167, 69, 0.1);
+}
+
+.wcp-live {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.35rem;
+    font-weight: 900;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+
+.wcp-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.55rem;
+    text-align: center;
+    margin-bottom: 6px;
+    color: #ffeeb0;
+}
+
+.wcp-timer {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.5rem;
+    text-align: center;
+    color: #f5d36e;
+    text-shadow: 0 1px 0 #8B6914, 0 2px 4px rgba(0, 0, 0, 0.5);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.wcp-stats {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.38rem;
+    color: #8a7a5a;
+    margin-bottom: 8px;
+}
+
+.wcp-me {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border: 1px solid rgba(245, 211, 110, 0.25);
+    background: rgba(245, 211, 110, 0.05);
+    margin-bottom: 6px;
+}
+
+.wcp-me__avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d4a745, #8B6914);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.3rem;
+    font-weight: 900;
+    color: #1a1408;
+    flex-shrink: 0;
+}
+
+.wcp-me__nick {
+    flex: 1;
+    font-size: 0.4rem;
+    font-weight: 700;
+    color: #f5d36e;
+}
+
+.wcp-me__val {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.55rem;
+    color: #ffeeb0;
+}
+
+.wcp-lb__item {
+    display: flex;
+    gap: 5px;
+    padding: 3px 6px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    align-items: center;
+}
+
+.wcp-lb__item--1 {
+    background: rgba(245, 211, 110, 0.08);
+    border-left: 2px solid #f5d36e;
+}
+
+.wcp-lb__item--2 {
+    background: rgba(192, 192, 192, 0.05);
+    border-left: 2px solid #c0c0c0;
+}
+
+.wcp-lb__item--3 {
+    background: rgba(205, 127, 50, 0.05);
+    border-left: 2px solid #cd7f32;
+}
+
+.wcp-lb__rank {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.4rem;
+    width: 12px;
+    color: #d4a745;
+}
+
+.wcp-lb__nick {
+    flex: 1;
+    font-size: 0.38rem;
+    font-weight: 700;
+    color: #ccc;
+}
+
+.wcp-lb__val {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.4rem;
+    color: #d4a745;
+}
+
+/* Copy link button */
+.wc-copy-link {
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 12px;
+    border-radius: 10px;
+    border: 1px dashed rgba(200, 170, 110, 0.2);
+    background: rgba(200, 170, 110, 0.04);
+    color: #C8AA6E;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wc-copy-link:hover {
+    background: rgba(200, 170, 110, 0.1);
+    border-color: rgba(200, 170, 110, 0.3);
+}

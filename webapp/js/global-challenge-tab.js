@@ -601,3 +601,229 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// ============================================================
+// WIDGET CONSTRUCTOR
+// ============================================================
+
+// Theme definitions
+const WC_THEMES = {
+    gold: {
+        bg: 'rgba(26,21,8,{opacity})',
+        accent: '#f5d36e',
+        accentDark: '#8B6914',
+        timerColor: '#f5d36e',
+        timerShadow: '0 1px 0 #8B6914, 0 2px 4px rgba(0,0,0,0.5)',
+        titleColor: '#ffeeb0',
+        border: '#d4a745',
+        meNick: '#f5d36e',
+        meVal: '#ffeeb0',
+        lbVal: '#d4a745',
+        avatarBg: 'linear-gradient(135deg, #d4a745, #8B6914)',
+        avatarText: '#1a1408',
+    },
+    neon: {
+        bg: 'rgba(15,5,32,{opacity})',
+        accent: '#a855f7',
+        accentDark: '#6d28d9',
+        timerColor: '#a855f7',
+        timerShadow: '0 0 12px rgba(168,85,247,0.5)',
+        titleColor: '#d8b4fe',
+        border: '#7c3aed',
+        meNick: '#c084fc',
+        meVal: '#d8b4fe',
+        lbVal: '#a855f7',
+        avatarBg: 'linear-gradient(135deg, #a855f7, #6d28d9)',
+        avatarText: '#1a0530',
+    },
+    military: {
+        bg: 'rgba(15,26,10,{opacity})',
+        accent: '#22c55e',
+        accentDark: '#14532d',
+        timerColor: '#22c55e',
+        timerShadow: '0 1px 0 #14532d, 0 2px 4px rgba(0,0,0,0.5)',
+        titleColor: '#bbf7d0',
+        border: '#16a34a',
+        meNick: '#4ade80',
+        meVal: '#bbf7d0',
+        lbVal: '#22c55e',
+        avatarBg: 'linear-gradient(135deg, #22c55e, #14532d)',
+        avatarText: '#052e16',
+    }
+};
+
+let wcCurrentTheme = 'gold';
+let wcCurrentAccent = '#f5d36e';
+let wcCurrentBorder = 'gold';
+
+function gcToggleWidgetConstructor() {
+    const body = document.getElementById('wcBody');
+    const arrow = document.getElementById('wcArrow');
+    if (body.style.display === 'none') {
+        body.style.display = '';
+        arrow.classList.add('wc-section__arrow--open');
+    } else {
+        body.style.display = 'none';
+        arrow.classList.remove('wc-section__arrow--open');
+    }
+}
+
+function gcSelectTheme(theme) {
+    wcCurrentTheme = theme;
+    // Update theme card states
+    document.querySelectorAll('.wc-theme').forEach(el => el.classList.remove('wc-theme--active'));
+    const themeEl = document.getElementById(`wcTheme-${theme}`);
+    if (themeEl) themeEl.classList.add('wc-theme--active');
+
+    // Set accent from theme
+    const t = WC_THEMES[theme];
+    wcCurrentAccent = t.accent;
+
+    // Update accent color active state
+    document.querySelectorAll('.wc-color').forEach(el => {
+        el.classList.toggle('wc-color--active', el.dataset.color === wcCurrentAccent);
+    });
+
+    gcUpdatePreview();
+}
+
+function gcSetAccent(el) {
+    wcCurrentAccent = el.dataset.color;
+    document.querySelectorAll('.wc-color').forEach(c => c.classList.remove('wc-color--active'));
+    el.classList.add('wc-color--active');
+    gcUpdatePreview();
+}
+
+function gcSetBorder(el) {
+    wcCurrentBorder = el.dataset.border;
+    document.querySelectorAll('.wc-toggle').forEach(b => b.classList.remove('wc-toggle--active'));
+    el.classList.add('wc-toggle--active');
+    gcUpdatePreview();
+}
+
+function gcUpdatePreview() {
+    const preview = document.getElementById('wcPreview');
+    if (!preview) return;
+
+    const theme = WC_THEMES[wcCurrentTheme] || WC_THEMES.gold;
+    const opacity = (document.getElementById('wcBgOpacity')?.value || 90) / 100;
+    const fontScale = (document.getElementById('wcFontSize')?.value || 100) / 100;
+    const showTimer = document.getElementById('wcShowTimer')?.checked !== false;
+    const showMe = document.getElementById('wcShowMyStats')?.checked !== false;
+    const showTop = document.getElementById('wcShowTop3')?.checked !== false;
+    const showLive = document.getElementById('wcShowLive')?.checked !== false;
+
+    // Update value displays
+    const bgVal = document.getElementById('wcBgVal');
+    if (bgVal) bgVal.textContent = Math.round(opacity * 100) + '%';
+    const fontVal = document.getElementById('wcFontVal');
+    if (fontVal) fontVal.textContent = Math.round(fontScale * 100) + '%';
+
+    // Background
+    preview.style.background = theme.bg.replace('{opacity}', opacity.toFixed(2));
+    preview.style.fontSize = (12 * fontScale) + 'px';
+
+    // Border
+    switch (wcCurrentBorder) {
+        case 'gold':
+            preview.style.border = `2px solid ${wcCurrentAccent}`;
+            preview.style.boxShadow = `0 0 15px ${wcCurrentAccent}22`;
+            break;
+        case 'glow':
+            preview.style.border = `1px solid ${wcCurrentAccent}44`;
+            preview.style.boxShadow = `0 0 20px ${wcCurrentAccent}33, inset 0 0 20px ${wcCurrentAccent}11`;
+            break;
+        case 'minimal':
+            preview.style.border = `1px solid ${wcCurrentAccent}22`;
+            preview.style.boxShadow = 'none';
+            break;
+        case 'none':
+            preview.style.border = 'none';
+            preview.style.boxShadow = 'none';
+            break;
+    }
+
+    // Title
+    const title = document.getElementById('wcpTitle');
+    if (title) title.style.color = theme.titleColor;
+
+    // Timer
+    const timer = document.getElementById('wcpTimer');
+    if (timer) {
+        timer.style.color = theme.timerColor;
+        timer.style.textShadow = theme.timerShadow;
+        timer.style.display = showTimer ? '' : 'none';
+    }
+
+    // Me section
+    const me = document.getElementById('wcpMe');
+    if (me) {
+        me.style.display = showMe ? '' : 'none';
+        me.style.borderColor = wcCurrentAccent + '40';
+        me.style.background = wcCurrentAccent + '0d';
+        const nick = me.querySelector('.wcp-me__nick');
+        if (nick) nick.style.color = theme.meNick;
+        const val = me.querySelector('.wcp-me__val');
+        if (val) val.style.color = theme.meVal;
+        const avatar = me.querySelector('.wcp-me__avatar');
+        if (avatar) avatar.style.background = theme.avatarBg;
+    }
+
+    // Top 3 
+    const lb = document.getElementById('wcpLb');
+    if (lb) {
+        lb.style.display = showTop ? '' : 'none';
+        lb.querySelectorAll('.wcp-lb__val').forEach(v => v.style.color = theme.lbVal);
+        lb.querySelectorAll('.wcp-lb__item--1').forEach(item => {
+            item.style.borderLeftColor = theme.accent;
+            item.style.background = wcCurrentAccent + '14';
+        });
+    }
+
+    // LIVE badge
+    const live = document.getElementById('wcpLive');
+    if (live) live.style.display = showLive ? '' : 'none';
+}
+
+function gcGetWidgetConfig() {
+    return {
+        theme: wcCurrentTheme,
+        accent: wcCurrentAccent,
+        border: wcCurrentBorder,
+        bgOpacity: parseInt(document.getElementById('wcBgOpacity')?.value || 90),
+        fontSize: parseInt(document.getElementById('wcFontSize')?.value || 100),
+        showTimer: document.getElementById('wcShowTimer')?.checked !== false,
+        showMyStats: document.getElementById('wcShowMyStats')?.checked !== false,
+        showTop3: document.getElementById('wcShowTop3')?.checked !== false,
+        showLive: document.getElementById('wcShowLive')?.checked !== false,
+    };
+}
+
+function gcCopyCustomWidgetLink() {
+    const config = gcGetWidgetConfig();
+    const base = window.location.origin + window.location.pathname.replace('challenges.html', 'gc-widget.html');
+    const params = new URLSearchParams();
+    if (myTelegramId) params.set('telegram_id', myTelegramId);
+    params.set('theme', config.theme);
+    params.set('accent', config.accent.replace('#', ''));
+    params.set('border', config.border);
+    params.set('bg', config.bgOpacity);
+    params.set('font', config.fontSize);
+    if (!config.showTimer) params.set('timer', '0');
+    if (!config.showMyStats) params.set('me', '0');
+    if (!config.showTop3) params.set('top', '0');
+    if (!config.showLive) params.set('live', '0');
+
+    const url = `${base}?${params.toString()}`;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('📋 Ссылка на виджет скопирована!');
+    }).catch(() => {
+        const input = document.createElement('input');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast('📋 Ссылка на виджет скопирована!');
+    });
+}

@@ -508,6 +508,171 @@
                         <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 часа</button>
                     </div>
 
+                    <!-- ====== WIDGET CONSTRUCTOR ====== -->
+                    <div class="wc-section">
+                        <div class="wc-section__header" onclick="gcToggleWidgetConstructor()">
+                            <span>🎨 Конструктор виджета</span>
+                            <span class="wc-section__arrow" id="wcArrow">▼</span>
+                        </div>
+
+                        <div class="wc-body" id="wcBody" style="display:none">
+                            <!-- Theme presets -->
+                            <div class="wc-label">Выберите тему</div>
+                            <div class="wc-themes">
+                                <div class="wc-theme wc-theme--active" id="wcTheme-gold"
+                                    onclick="gcSelectTheme('gold')">
+                                    <div class="wc-theme__preview wc-theme__preview--gold">
+                                        <div class="wc-theme__timer">52:30</div>
+                                        <div class="wc-theme__bar"></div>
+                                        <div class="wc-theme__bar wc-theme__bar--short"></div>
+                                    </div>
+                                    <div class="wc-theme__name">⚜️ Золото</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-neon" onclick="gcSelectTheme('neon')">
+                                    <div class="wc-theme__preview wc-theme__preview--neon">
+                                        <div class="wc-theme__timer">52:30</div>
+                                        <div class="wc-theme__bar"></div>
+                                        <div class="wc-theme__bar wc-theme__bar--short"></div>
+                                    </div>
+                                    <div class="wc-theme__name">💜 Неон</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-military" onclick="gcSelectTheme('military')">
+                                    <div class="wc-theme__preview wc-theme__preview--military">
+                                        <div class="wc-theme__timer">52:30</div>
+                                        <div class="wc-theme__bar"></div>
+                                        <div class="wc-theme__bar wc-theme__bar--short"></div>
+                                    </div>
+                                    <div class="wc-theme__name">🪖 Военный</div>
+                                </div>
+                            </div>
+
+                            <!-- Custom settings -->
+                            <div class="wc-settings">
+                                <div class="wc-label">Настройки</div>
+
+                                <!-- Accent color -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">🎨 Акцент</span>
+                                    <div class="wc-colors" id="wcColors">
+                                        <div class="wc-color wc-color--active" data-color="#f5d36e"
+                                            style="background:#f5d36e" onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#a855f7" style="background:#a855f7"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#22c55e" style="background:#22c55e"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#3b82f6" style="background:#3b82f6"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#ef4444" style="background:#ef4444"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#f97316" style="background:#f97316"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#ec4899" style="background:#ec4899"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#14b8a6" style="background:#14b8a6"
+                                            onclick="gcSetAccent(this)"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Background opacity -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">🌑 Фон</span>
+                                    <input type="range" class="wc-slider" id="wcBgOpacity" min="50" max="100" value="90"
+                                        oninput="gcUpdatePreview()">
+                                    <span class="wc-row__val" id="wcBgVal">90%</span>
+                                </div>
+
+                                <!-- Font size -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">🔤 Размер</span>
+                                    <input type="range" class="wc-slider" id="wcFontSize" min="80" max="130" value="100"
+                                        oninput="gcUpdatePreview()">
+                                    <span class="wc-row__val" id="wcFontVal">100%</span>
+                                </div>
+
+                                <!-- Border style -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">🖼 Рамка</span>
+                                    <div class="wc-toggles">
+                                        <button class="wc-toggle wc-toggle--active" data-border="gold"
+                                            onclick="gcSetBorder(this)">Золото</button>
+                                        <button class="wc-toggle" data-border="glow"
+                                            onclick="gcSetBorder(this)">Свечение</button>
+                                        <button class="wc-toggle" data-border="minimal"
+                                            onclick="gcSetBorder(this)">Минимум</button>
+                                        <button class="wc-toggle" data-border="none"
+                                            onclick="gcSetBorder(this)">Нет</button>
+                                    </div>
+                                </div>
+
+                                <!-- Show/hide toggles -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">👁 Элементы</span>
+                                    <div class="wc-checks">
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowTimer"
+                                                onchange="gcUpdatePreview()">
+                                            <span>Таймер</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowMyStats"
+                                                onchange="gcUpdatePreview()">
+                                            <span>Мой счёт</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowTop3" onchange="gcUpdatePreview()">
+                                            <span>Топ 3</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowLive" onchange="gcUpdatePreview()">
+                                            <span>LIVE</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- LIVE PREVIEW -->
+                            <div class="wc-label" style="margin-top:12px">👀 Предпросмотр</div>
+                            <div class="wc-preview-wrap">
+                                <div class="wc-preview" id="wcPreview">
+                                    <div class="wcp-live" id="wcpLive">● LIVE</div>
+                                    <div class="wcp-title" id="wcpTitle">🔥 Челлендж</div>
+                                    <div class="wcp-timer" id="wcpTimer">52:30</div>
+                                    <div class="wcp-stats">
+                                        <span>👥 3 игроков</span>
+                                        <span>🧀 500 приз</span>
+                                    </div>
+                                    <div class="wcp-me" id="wcpMe">
+                                        <div class="wcp-me__avatar">FA</div>
+                                        <div class="wcp-me__nick">Fara777_2016</div>
+                                        <div class="wcp-me__val">15,230</div>
+                                    </div>
+                                    <div class="wcp-lb" id="wcpLb">
+                                        <div class="wcp-lb__item wcp-lb__item--1">
+                                            <span class="wcp-lb__rank">1</span>
+                                            <span class="wcp-lb__nick">TankAce</span>
+                                            <span class="wcp-lb__val">18,500</span>
+                                        </div>
+                                        <div class="wcp-lb__item wcp-lb__item--2">
+                                            <span class="wcp-lb__rank">2</span>
+                                            <span class="wcp-lb__nick">Fara777_2016</span>
+                                            <span class="wcp-lb__val">15,230</span>
+                                        </div>
+                                        <div class="wcp-lb__item wcp-lb__item--3">
+                                            <span class="wcp-lb__rank">3</span>
+                                            <span class="wcp-lb__nick">SteelWolf</span>
+                                            <span class="wcp-lb__val">12,100</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Copy widget link -->
+                            <button class="wc-copy-link" onclick="gcCopyCustomWidgetLink()">
+                                🔗 Скопировать ссылку на виджет
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="gc-admin__hint">
                         💡 Подписчики увидят челлендж и сами вступят — выбирать никого не нужно!
                     </div>
