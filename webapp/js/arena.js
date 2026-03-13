@@ -140,6 +140,7 @@ function switchTab(tabId, btn) {
     if (tabId === 'active') loadChallenges();
     if (tabId === 'history') loadChallenges();
     if (tabId === 'admin') loadAdminUsers();
+    if (tabId === 'global' && typeof gcLoadChallenge === 'function') gcLoadChallenge();
 }
 
 // ============================================================

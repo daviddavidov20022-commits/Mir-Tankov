@@ -13,6 +13,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="css/style.css?v=2">
     <link rel="stylesheet" href="css/arena.css?v=2">
+    <link rel="stylesheet" href="css/global-challenge.css?v=2">
 </head>
 
 <body>
@@ -74,7 +75,8 @@
         <!-- Tabs -->
         <div class="arena-tabs">
             <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">⚔️ Создать</button>
-            <button class="arena-tab" onclick="switchTab('active', this)">🔥 Мои <span class="arena-badge"
+            <button class="arena-tab" onclick="switchTab('global', this)">🔥 Общий</button>
+            <button class="arena-tab" onclick="switchTab('active', this)">📋 Мои <span class="arena-badge"
                     id="activeBadge" style="display:none">0</span></button>
             <button class="arena-tab" onclick="switchTab('history', this)">📜 История</button>
             <button class="arena-tab" onclick="switchTab('admin', this)" id="adminTab" style="display:none">🛡
@@ -343,6 +345,181 @@
             <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px" id="adminUserCount">Загрузка...</div>
             <div id="adminUsersList"></div>
         </div>
+
+        <!-- ============================== -->
+        <!-- TAB: GLOBAL CHALLENGE          -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-global">
+
+            <!-- Main Widget -->
+            <div class="gc-widget" id="gcWidget">
+                <!-- Loading state -->
+                <div class="gc-loading" id="gcLoading">
+                    <div class="gc-loading__spinner"></div>
+                    <div class="gc-loading__text">Загрузка челленджа...</div>
+                </div>
+
+                <!-- No challenge state -->
+                <div class="gc-empty" id="gcEmpty" style="display:none">
+                    <div class="gc-empty__icon">⚔️</div>
+                    <div class="gc-empty__title">Нет активных челленджей</div>
+                    <div class="gc-empty__desc">Админ пока не запустил общий челлендж.<br>Следи за обновлениями!</div>
+                </div>
+
+                <!-- Active challenge -->
+                <div class="gc-active" id="gcActive" style="display:none">
+                    <div class="gc-header">
+                        <div class="gc-header__icon" id="gcIcon">🔥</div>
+                        <div class="gc-header__info">
+                            <h1 class="gc-header__title" id="gcTitle">Челлендж</h1>
+                            <p class="gc-header__desc" id="gcDesc">Описание челленджа</p>
+                        </div>
+                        <div class="gc-header__condition" id="gcCondition">💥</div>
+                    </div>
+
+                    <div class="gc-timer-section">
+                        <div class="gc-timer-ring">
+                            <svg class="gc-timer-svg" viewBox="0 0 200 200">
+                                <circle class="gc-timer-track" cx="100" cy="100" r="90" />
+                                <circle class="gc-timer-progress" id="gcTimerProgress" cx="100" cy="100" r="90" />
+                            </svg>
+                            <div class="gc-timer-inner">
+                                <div class="gc-timer-value" id="gcTimerValue">59:59</div>
+                                <div class="gc-timer-label">осталось</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gc-stats">
+                        <div class="gc-stat">
+                            <div class="gc-stat__value" id="gcParticipants">0</div>
+                            <div class="gc-stat__label">Участников</div>
+                        </div>
+                        <div class="gc-stat gc-stat--reward">
+                            <div class="gc-stat__value" id="gcReward">🧀 500</div>
+                            <div class="gc-stat__label">Приз</div>
+                        </div>
+                        <div class="gc-stat">
+                            <div class="gc-stat__value" id="gcCondLabel">Урон</div>
+                            <div class="gc-stat__label">Условие</div>
+                        </div>
+                    </div>
+
+                    <button class="gc-join-btn" id="gcJoinBtn" onclick="gcJoinChallenge()">
+                        ⚔️ ВСТУПИТЬ В ЧЕЛЛЕНДЖ
+                    </button>
+
+                    <div class="gc-leaderboard" id="gcLeaderboard">
+                        <div class="gc-lb-title">🏆 ТОП ЛИДЕРЫ</div>
+                        <div class="gc-lb-list" id="gcLbList">
+                            <div class="gc-lb-empty">Пока нет участников</div>
+                        </div>
+                    </div>
+
+                    <div class="gc-submit" id="gcSubmit" style="display:none">
+                        <div class="gc-submit__title">📊 Отправить результат</div>
+                        <div class="gc-submit__row">
+                            <input type="number" class="gc-submit__input" id="gcSubmitValue"
+                                placeholder="Введите ваш урон...">
+                            <button class="gc-submit__btn" onclick="gcSubmitResult()">Отправить</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Finished state -->
+                <div class="gc-finished" id="gcFinished" style="display:none">
+                    <div class="gc-winner-crown">👑</div>
+                    <div class="gc-winner-title">ЧЕЛЛЕНДЖ ЗАВЕРШЁН!</div>
+                    <div class="gc-winner-card" id="gcWinnerCard">
+                        <div class="gc-winner-medal">🥇</div>
+                        <div class="gc-winner-name" id="gcWinnerName">—</div>
+                        <div class="gc-winner-value" id="gcWinnerValue">0</div>
+                        <div class="gc-winner-label" id="gcWinnerLabel">урона</div>
+                    </div>
+                    <div class="gc-final-lb" id="gcFinalLb"></div>
+                </div>
+            </div>
+
+            <!-- Admin Panel for Global Challenge -->
+            <div class="gc-admin" id="gcAdminPanel" style="display:none">
+                <div class="gc-admin__title">🛡 Управление Челленджем</div>
+
+                <div class="gc-subs">
+                    <div class="gc-subs__header">
+                        <div class="gc-subs__title">👥 Подписчики <span class="gc-subs__count" id="subsCount">0</span>
+                        </div>
+                        <button class="gc-subs__refresh" onclick="gcLoadSubscribers()">🔄</button>
+                    </div>
+                    <div class="gc-subs__search">
+                        <input type="text" class="gc-admin__input" id="subsSearch" placeholder="🔍 Поиск по нику..."
+                            oninput="gcFilterSubscribers()">
+                    </div>
+                    <div class="gc-subs__list" id="subsList">
+                        <div class="gc-subs__loading">⏳ Загрузка подписчиков...</div>
+                    </div>
+                </div>
+
+                <div class="gc-admin__divider"></div>
+
+                <div class="gc-admin__form">
+                    <div class="gc-admin__form-title">⚙️ Настройки челленджа</div>
+
+                    <label class="gc-admin__label">Название</label>
+                    <input type="text" class="gc-admin__input" id="adminGcTitle" value="Кто нанесёт больше урона?"
+                        placeholder="Название">
+
+                    <label class="gc-admin__label">Описание</label>
+                    <input type="text" class="gc-admin__input" id="adminGcDesc"
+                        value="Нанеси максимум урона за один бой!" placeholder="Описание">
+
+                    <label class="gc-admin__label">Условие</label>
+                    <div class="gc-admin__conditions">
+                        <button class="gc-cond-btn gc-cond-btn--active" data-cond="damage"
+                            onclick="gcSelectCond('damage', this)">💥 Урон</button>
+                        <button class="gc-cond-btn" data-cond="frags" onclick="gcSelectCond('frags', this)">🎯
+                            Фраги</button>
+                        <button class="gc-cond-btn" data-cond="xp" onclick="gcSelectCond('xp', this)">⭐ Опыт</button>
+                        <button class="gc-cond-btn" data-cond="spotting" onclick="gcSelectCond('spotting', this)">👁
+                            Засвет</button>
+                        <button class="gc-cond-btn" data-cond="blocked" onclick="gcSelectCond('blocked', this)">🛡
+                            Блок</button>
+                    </div>
+
+                    <div class="gc-admin__row">
+                        <div>
+                            <label class="gc-admin__label">⏱ Таймер (мин)</label>
+                            <input type="number" class="gc-admin__input" id="adminGcDuration" value="60" min="5"
+                                max="1440">
+                        </div>
+                        <div>
+                            <label class="gc-admin__label">🧀 Приз</label>
+                            <input type="number" class="gc-admin__input" id="adminGcReward" value="500" min="0">
+                        </div>
+                    </div>
+
+                    <div class="gc-admin__presets">
+                        <button class="gc-preset-btn" onclick="gcSetDuration(15)">15 мин</button>
+                        <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 мин</button>
+                        <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 час</button>
+                        <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 часа</button>
+                    </div>
+
+                    <div class="gc-admin__hint">
+                        💡 Подписчики увидят челлендж и сами вступят — выбирать никого не нужно!
+                    </div>
+
+                    <button class="gc-admin__launch" id="adminGcLaunchBtn" onclick="gcLaunchChallenge()">
+                        🚀 ЗАПУСТИТЬ ЧЕЛЛЕНДЖ
+                    </button>
+
+                    <button class="gc-admin__stop" id="adminGcStopBtn" onclick="gcStopChallenge()" style="display:none">
+                        ⛔ ЗАВЕРШИТЬ ДОСРОЧНО
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 
     <!-- Bottom nav -->
@@ -365,7 +542,12 @@
         </div>
     </nav>
 
-    <script src="js/arena.js?v=9"></script>
+    <!-- Confetti canvas -->
+    <canvas id="confettiCanvas"
+        style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999"></canvas>
+
+    <script src="js/arena.js?v=10"></script>
+    <script src="js/global-challenge-tab.js?v=1"></script>
 </body>
 
 </html>
