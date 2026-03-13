@@ -3137,6 +3137,7 @@ async def handle_options(request):
 
 async def api_me(request):
     """GET /api/me?telegram_id=123 или ?wot_account_id=123 — определить текущего пользователя"""
+    global ADMIN_ID
     try:
         user = None
 
@@ -3161,7 +3162,6 @@ async def api_me(request):
             is_admin = True
         elif not ADMIN_ID:
             # If no ADMIN_ID set, first user becomes admin
-            global ADMIN_ID
             ADMIN_ID = user_tg_id
             is_admin = True
             logger.info(f"Auto-admin set: {user_tg_id}")
@@ -3511,9 +3511,9 @@ async def api_admin_users(request):
         with get_db() as conn:
             users = conn.execute("""
                 SELECT u.telegram_id, u.first_name, u.username, u.wot_nickname, u.wot_account_id,
-                       u.coins, u.created_at
+                       u.coins, u.joined_at
                 FROM users u
-                ORDER BY u.created_at DESC
+                ORDER BY u.joined_at DESC
             """).fetchall()
 
             # Get subscription info
@@ -3551,7 +3551,7 @@ async def api_admin_users(request):
                 "username": u["username"],
                 "wot_nickname": u["wot_nickname"],
                 "cheese": u["coins"] or 0,
-                "created_at": u["created_at"],
+                "created_at": u["joined_at"],
                 "subscription": {
                     "active": bool(sub["active"]),
                     "days_left": max(sub["days_left"] or 0, 0),
@@ -3593,6 +3593,248 @@ async def api_admin_toggle_admin(request):
     except Exception as e:
         logger.error(f"API toggle_admin error: {e}")
         return cors_response({"error": str(e)}, 500)
+
+
+async def api_admin_cancel_challenge(request):
+    """POST /api/admin/cancel-challenge {admin_telegram_id, challenge_id}"""
+    try:
+        data = await request.json()
+        admin_tg = data.get("admin_telegram_id")
+        challenge_id = data.get("challenge_id")
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        from database import get_db
+        with get_db() as conn:
+            ch = conn.execute("SELECT * FROM arena_challenges WHERE id = ?", (challenge_id,)).fetchone()
+            if not ch:
+                return cors_response({"error": "Челлендж не найден"}, 404)
+            ch = dict(ch)
+
+            if ch["status"] not in ("active", "pending"):
+                return cors_response({"error": "Можно отменить только активный или ожидающий челлендж"}, 400)
+
+            wager = ch["wager"]
+
+            # Refund both players
+            conn.execute("UPDATE users SET coins = coins + ? WHERE telegram_id = ?",
+                        (wager, ch["from_telegram_id"]))
+            if ch["status"] == "active":
+                conn.execute("UPDATE users SET coins = coins + ? WHERE telegram_id = ?",
+                            (wager, ch["to_telegram_id"]))
+
+            # Mark as cancelled
+            conn.execute("""
+                UPDATE arena_challenges 
+                SET status = 'cancelled', finished_at = datetime('now')
+                WHERE id = ?
+            """, (challenge_id,))
+
+        logger.info(f"Challenge {challenge_id} cancelled by admin {admin_tg}, refunded {wager} each")
+        return cors_response({"success": True, "message": f"Челлендж отменён. Возврат 🧀 {wager} каждому игроку."})
+    except Exception as e:
+        logger.error(f"API cancel_challenge error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+# --- STREAMS STATUS API ---
+
+_streams_cache = {"data": None, "ts": 0}
+
+
+async def _check_youtube_api(session, yt_key, yt_channel):
+    """Check YouTube live status via Data API v3 (costs quota)"""
+    url = (f"https://www.googleapis.com/youtube/v3/search?"
+           f"part=snippet&channelId={yt_channel}&type=video&eventType=live&key={yt_key}")
+    async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+        data = await resp.json()
+        logger.info(f"YouTube API response (status={resp.status}): {data}")
+
+        # Check for API errors (quota exceeded, key invalid, etc.)
+        if data.get("error"):
+            err_msg = data["error"].get("message", "unknown")
+            err_code = data["error"].get("code", 0)
+            logger.warning(f"YouTube API error {err_code}: {err_msg}")
+            return None  # Signal to try fallback
+
+        if data.get("items") and len(data["items"]) > 0:
+            video_id = data["items"][0]["id"]["videoId"]
+            stats_url = (f"https://www.googleapis.com/youtube/v3/videos?"
+                        f"part=liveStreamingDetails,statistics&id={video_id}&key={yt_key}")
+            async with session.get(stats_url, timeout=aiohttp.ClientTimeout(total=10)) as sr:
+                sd = await sr.json()
+                viewers = int(sd.get("items", [{}])[0].get("liveStreamingDetails", {}).get("concurrentViewers", 0))
+                return {"live": True, "viewers": viewers}
+        return {"live": False, "viewers": 0}
+
+
+async def _check_youtube_scrape(session, channel_handle):
+    """Fallback: Check YouTube live status by scraping the channel page.
+    Looks for live stream indicators in the page HTML.
+    No API key or quota needed."""
+    import re
+    url = f"https://www.youtube.com/@{channel_handle}/live"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    try:
+        async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            if resp.status != 200:
+                logger.warning(f"YouTube scrape: status {resp.status}")
+                return {"live": False, "viewers": 0}
+            html = await resp.text()
+
+            # Check for live indicators in the page
+            is_live = False
+            viewers = 0
+
+            # Method 1: look for isLiveBroadcast in JSON-LD
+            if '"isLiveBroadcast":true' in html or '"isLiveBroadcast": true' in html:
+                is_live = True
+
+            # Method 2: look for {"text":" watching now"} or similar viewer count patterns
+            if not is_live:
+                # Check for live badge text in initial data
+                live_patterns = [
+                    '"style":"BADGE_STYLE_TYPE_LIVE_NOW"',
+                    '"iconType":"LIVE"',
+                    '"LIVE_NOW"',
+                    '"liveBroadcastDetails"',
+                ]
+                for pat in live_patterns:
+                    if pat in html:
+                        is_live = True
+                        break
+
+            if is_live:
+                # Try to extract viewer count
+                viewer_patterns = [
+                    r'"viewCount"\s*:\s*"(\d+)"',
+                    r'"concurrentViewers"\s*:\s*"(\d+)"',
+                    r'(\d[\d,. ]*)\s*(?:watching now|watching|смотрят|зрител)',
+                    r'"viewCountText"\s*:\s*\{"runs"\s*:\s*\[\{"text"\s*:\s*"([\d,. ]+)"',
+                ]
+                for pat in viewer_patterns:
+                    m = re.search(pat, html)
+                    if m:
+                        raw = m.group(1).replace(',', '').replace('.', '').replace(' ', '').strip()
+                        if raw.isdigit():
+                            viewers = int(raw)
+                            break
+
+                logger.info(f"YouTube scrape: LIVE with {viewers} viewers")
+                return {"live": True, "viewers": viewers}
+            else:
+                logger.info(f"YouTube scrape: OFFLINE")
+                return {"live": False, "viewers": 0}
+    except Exception as e:
+        logger.warning(f"YouTube scrape error: {e}")
+        return {"live": False, "viewers": 0}
+
+
+async def api_streams_status(request):
+    """GET /api/streams/status — check all stream platforms"""
+    import time
+    now = time.time()
+
+    # Cache for 60 seconds
+    if _streams_cache["data"] and now - _streams_cache["ts"] < 60:
+        return cors_response(_streams_cache["data"])
+
+    result = {
+        "youtube": {"live": False, "viewers": 0},
+        "vkplay": {"live": False, "viewers": 0},
+        "trovo": {"live": False, "viewers": 0},
+        "twitch": {"live": False, "viewers": 0},
+    }
+
+    async with aiohttp.ClientSession() as session:
+        # ============ YouTube ============
+        try:
+            yt_key = "AIzaSyAT7aSehc7wNkebqwXWrwAwIauUw7TUMAc"
+            yt_channel = "UClMCysoDnCFN2oQUu9fcQRg"  # @ISERVERI channel ID
+            yt_handle = "ISERVERI"
+
+            # Try official API first
+            yt_result = None
+            try:
+                yt_result = await _check_youtube_api(session, yt_key, yt_channel)
+            except Exception as e:
+                logger.warning(f"YouTube API request failed: {e}")
+
+            # If API failed (returned None = error), use scraping fallback
+            if yt_result is None:
+                logger.info("YouTube API unavailable, trying scrape fallback...")
+                yt_result = await _check_youtube_scrape(session, yt_handle)
+
+            if yt_result:
+                result["youtube"] = yt_result
+        except Exception as e:
+            logger.warning(f"YouTube check error: {e}")
+
+        # ============ VK Play ============
+        try:
+            async with session.get("https://api.vkplay.live/v1/blog/iserveri/public_video_stream",
+                                   timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data and data.get("category"):
+                        viewers = data.get("count", {}).get("viewers", 0) if isinstance(data.get("count"), dict) else 0
+                        result["vkplay"] = {"live": True, "viewers": viewers}
+        except Exception as e:
+            logger.warning(f"VK Play check error: {e}")
+
+        # ============ Trovo ============
+        try:
+            async with session.post("https://open-api.trovo.live/openplatform/channels/id",
+                headers={"Accept": "application/json", "Client-ID": ""},
+                json={"username": "ISERVERI"},
+                timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("is_live"):
+                        result["trovo"] = {"live": True, "viewers": data.get("current_viewers", 0)}
+        except Exception as e:
+            logger.warning(f"Trovo check error: {e}")
+
+        # ============ Twitch ============
+        try:
+            # Twitch requires OAuth app token. Try unauthenticated GQL endpoint.
+            twitch_gql_url = "https://gql.twitch.tv/gql"
+            twitch_headers = {
+                "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",  # public web client-id
+                "Content-Type": "application/json",
+            }
+            twitch_payload = [{
+                "operationName": "UseLive",
+                "variables": {"channelLogin": "serverenok"},
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "639d5f11bfb8bf3053b424d9ef650d04c4ebb7d94711d644afb08fe9a0571571"
+                    }
+                }
+            }]
+            async with session.post(twitch_gql_url, headers=twitch_headers,
+                                    json=twitch_payload,
+                                    timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if isinstance(data, list) and len(data) > 0:
+                        user_data = data[0].get("data", {}).get("user", {})
+                        stream = user_data.get("stream") if user_data else None
+                        if stream:
+                            viewers = stream.get("viewersCount", 0)
+                            result["twitch"] = {"live": True, "viewers": viewers}
+                            logger.info(f"Twitch: LIVE with {viewers} viewers")
+        except Exception as e:
+            logger.warning(f"Twitch check error: {e}")
+
+    _streams_cache["data"] = result
+    _streams_cache["ts"] = now
+    logger.info(f"Streams status result: {result}")
+    return cors_response(result)
 
 # --- ARENA / CHALLENGES API ---
 
@@ -3779,42 +4021,114 @@ async def api_check_challenge_results(request):
         }
         stat_key = STAT_KEY.get(condition, "damage_dealt")
 
+        # Load last known stats (for per-battle tracking)
+        from_last = json.loads(ch["from_last_stats"]) if ch.get("from_last_stats") else from_start
+        to_last = json.loads(ch["to_last_stats"]) if ch.get("to_last_stats") else to_start
+
+        # Load existing battle history
+        battle_history = json.loads(ch.get("battle_history") or "[]")
+
+        # Detect new battles for each player by comparing current vs last
+        from_new_battles = from_current["battles"] - from_last["battles"]
+        to_new_battles = to_current["battles"] - to_last["battles"]
+
+        updated = False
+        # From player new battles
+        if from_new_battles > 0:
+            for i in range(from_new_battles):
+                battle_entry = {
+                    "player": "from",
+                    "nickname": from_start.get("nickname", "Игрок 1"),
+                    "battle_num": len([b for b in battle_history if b["player"] == "from"]) + 1,
+                    "damage": round((from_current["damage_dealt"] - from_last["damage_dealt"]) / from_new_battles) if from_new_battles else 0,
+                    "spotted": round((from_current["spotted"] - from_last["spotted"]) / from_new_battles) if from_new_battles else 0,
+                    "frags": round((from_current["frags"] - from_last["frags"]) / from_new_battles, 1) if from_new_battles else 0,
+                    "xp": round((from_current["xp"] - from_last["xp"]) / from_new_battles) if from_new_battles else 0,
+                    "blocked": round((from_current["damage_received"] - from_last["damage_received"]) / from_new_battles) if from_new_battles else 0,
+                    "won": True if (from_current["wins"] - from_last["wins"]) > 0 else False,
+                }
+                battle_history.append(battle_entry)
+            updated = True
+
+        # To player new battles
+        if to_new_battles > 0:
+            for i in range(to_new_battles):
+                battle_entry = {
+                    "player": "to",
+                    "nickname": to_start.get("nickname", "Игрок 2"),
+                    "battle_num": len([b for b in battle_history if b["player"] == "to"]) + 1,
+                    "damage": round((to_current["damage_dealt"] - to_last["damage_dealt"]) / to_new_battles) if to_new_battles else 0,
+                    "spotted": round((to_current["spotted"] - to_last["spotted"]) / to_new_battles) if to_new_battles else 0,
+                    "frags": round((to_current["frags"] - to_last["frags"]) / to_new_battles, 1) if to_new_battles else 0,
+                    "xp": round((to_current["xp"] - to_last["xp"]) / to_new_battles) if to_new_battles else 0,
+                    "blocked": round((to_current["damage_received"] - to_last["damage_received"]) / to_new_battles) if to_new_battles else 0,
+                    "won": True if (to_current["wins"] - to_last["wins"]) > 0 else False,
+                }
+                battle_history.append(battle_entry)
+            updated = True
+
+        # Save updated last stats and battle history
+        if updated:
+            with get_db() as conn:
+                conn.execute("""
+                    UPDATE arena_challenges 
+                    SET from_last_stats = ?, to_last_stats = ?, battle_history = ?
+                    WHERE id = ?
+                """, (json.dumps(from_current), json.dumps(to_current),
+                      json.dumps(battle_history), challenge_id))
+
         from_battles_played = from_current["battles"] - from_start["battles"]
         to_battles_played = to_current["battles"] - to_start["battles"]
 
-        from_delta = {
-            "battles_played": from_battles_played,
-            "damage": from_current["damage_dealt"] - from_start["damage_dealt"],
-            "spotted": from_current["spotted"] - from_start["spotted"],
-            "frags": from_current["frags"] - from_start["frags"],
-            "xp": from_current["xp"] - from_start["xp"],
-            "wins": from_current["wins"] - from_start["wins"],
-            "blocked": from_current["damage_received"] - from_start["damage_received"],
-            "shots": from_current["shots"] - from_start["shots"],
-            "hits": from_current["hits"] - from_start["hits"],
-        }
+        # FREEZE stats when player reaches required battles
+        from_end = json.loads(ch["from_end_stats"]) if ch.get("from_end_stats") else None
+        to_end = json.loads(ch["to_end_stats"]) if ch.get("to_end_stats") else None
 
-        to_delta = {
-            "battles_played": to_battles_played,
-            "damage": to_current["damage_dealt"] - to_start["damage_dealt"],
-            "spotted": to_current["spotted"] - to_start["spotted"],
-            "frags": to_current["frags"] - to_start["frags"],
-            "xp": to_current["xp"] - to_start["xp"],
-            "wins": to_current["wins"] - to_start["wins"],
-            "blocked": to_current["damage_received"] - to_start["damage_received"],
-            "shots": to_current["shots"] - to_start["shots"],
-            "hits": to_current["hits"] - to_start["hits"],
-        }
+        freeze_updates = {}
+        if from_battles_played >= required_battles and not from_end:
+            from_end = from_current
+            freeze_updates["from_end_stats"] = json.dumps(from_current)
+        if to_battles_played >= required_battles and not to_end:
+            to_end = to_current
+            freeze_updates["to_end_stats"] = json.dumps(to_current)
 
-        # Calculate per-battle averages
-        for d in [from_delta, to_delta]:
-            bp = max(d["battles_played"], 1)
+        if freeze_updates:
+            sets = ", ".join(f"{k} = ?" for k in freeze_updates)
+            vals = list(freeze_updates.values()) + [challenge_id]
+            with get_db() as conn:
+                conn.execute(f"UPDATE arena_challenges SET {sets} WHERE id = ?", vals)
+
+        # Use frozen stats if available, otherwise current
+        from_final = from_end if from_end else from_current
+        to_final = to_end if to_end else to_current
+
+        from_battles_capped = min(from_battles_played, required_battles)
+        to_battles_capped = min(to_battles_played, required_battles)
+
+        def calc_delta(final, start, battles_capped, battles_total):
+            d = {
+                "battles_played": battles_capped,
+                "battles_total": battles_total,
+                "damage": final["damage_dealt"] - start["damage_dealt"],
+                "spotted": final["spotted"] - start["spotted"],
+                "frags": final["frags"] - start["frags"],
+                "xp": final["xp"] - start["xp"],
+                "wins": final["wins"] - start["wins"],
+                "blocked": final["damage_received"] - start["damage_received"],
+                "shots": final["shots"] - start["shots"],
+                "hits": final["hits"] - start["hits"],
+            }
+            bp = max(battles_capped, 1)
             d["avg_damage"] = round(d["damage"] / bp)
             d["avg_spotted"] = round(d["spotted"] / bp)
             d["avg_frags"] = round(d["frags"] / bp, 1)
             d["avg_xp"] = round(d["xp"] / bp)
-            d["winrate"] = round(d["wins"] / bp * 100, 1) if bp > 0 else 0
+            d["winrate"] = round(d["wins"] / bp * 100, 1)
             d["accuracy"] = round(d["hits"] / max(d["shots"], 1) * 100, 1)
+            return d
+
+        from_delta = calc_delta(from_final, from_start, from_battles_capped, from_battles_played)
+        to_delta = calc_delta(to_final, to_start, to_battles_capped, to_battles_played)
 
         both_ready = from_battles_played >= required_battles and to_battles_played >= required_battles
 
@@ -3830,6 +4144,7 @@ async def api_check_challenge_results(request):
                 "delta": to_delta,
                 "ready": to_battles_played >= required_battles,
             },
+            "battle_history": battle_history,
             "both_ready": both_ready,
             "winner": None,
         }
@@ -3837,11 +4152,11 @@ async def api_check_challenge_results(request):
         # If both ready, determine winner and complete
         if both_ready:
             DELTA_KEY = {
-                "damage": "avg_damage", "spotting": "avg_spotted",
-                "blocked": "blocked", "frags": "avg_frags",
-                "xp": "avg_xp", "wins": "winrate"
+                "damage": "damage", "spotting": "spotted",
+                "blocked": "blocked", "frags": "frags",
+                "xp": "xp", "wins": "wins"
             }
-            dk = DELTA_KEY.get(condition, "avg_damage")
+            dk = DELTA_KEY.get(condition, "damage")
 
             from_score = from_delta[dk]
             to_score = to_delta[dk]
@@ -4118,6 +4433,262 @@ async def api_decline_challenge(request):
 
 
 # ==========================================
+# GLOBAL CHALLENGES API
+# ==========================================
+
+async def api_global_challenge_create(request):
+    """POST /api/global-challenge/create — админ создаёт общий челлендж"""
+    try:
+        data = await request.json()
+        admin_tg = data.get("admin_telegram_id")
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        title = data.get("title", "Общий Челлендж")
+        description = data.get("description", "")
+        icon = data.get("icon", "🔥")
+        condition = data.get("condition", "damage")
+        duration_minutes = int(data.get("duration_minutes", 60))
+        reward_coins = int(data.get("reward_coins", 500))
+        reward_description = data.get("reward_description", f"{reward_coins} 🧀")
+
+        from database import get_db
+        from datetime import datetime, timedelta
+        ends_at = datetime.now() + timedelta(minutes=duration_minutes)
+
+        with get_db() as conn:
+            # Закрываем старые активные
+            conn.execute(
+                "UPDATE global_challenges SET status = 'finished', finished_at = datetime('now') "
+                "WHERE status = 'active'"
+            )
+            cursor = conn.execute("""
+                INSERT INTO global_challenges 
+                (title, description, icon, condition, duration_minutes, 
+                 reward_coins, reward_description, status, created_by, ends_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)
+            """, (title, description, icon, condition, duration_minutes,
+                  reward_coins, reward_description, admin_tg, ends_at))
+            challenge_id = cursor.lastrowid
+
+        return cors_response({
+            "success": True, 
+            "challenge_id": challenge_id,
+            "ends_at": ends_at.isoformat()
+        })
+    except Exception as e:
+        logger.error(f"API global_challenge_create error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_global_challenge_active(request):
+    """GET /api/global-challenge/active — получить активный общий челлендж"""
+    try:
+        from database import get_db
+        from datetime import datetime
+
+        with get_db() as conn:
+            ch = conn.execute("""
+                SELECT * FROM global_challenges 
+                WHERE status = 'active' AND ends_at > ?
+                ORDER BY created_at DESC LIMIT 1
+            """, (datetime.now(),)).fetchone()
+
+            if not ch:
+                # Проверяем и закрываем просроченные
+                conn.execute(
+                    "UPDATE global_challenges SET status = 'finished', finished_at = datetime('now') "
+                    "WHERE status = 'active' AND ends_at <= ?",
+                    (datetime.now(),)
+                )
+                # Может есть только что закончившийся (для показа победителя)
+                last = conn.execute("""
+                    SELECT * FROM global_challenges 
+                    WHERE status = 'finished'
+                    ORDER BY finished_at DESC LIMIT 1
+                """).fetchone()
+                if last:
+                    last = dict(last)
+                    # Получаем топ-3 последнего
+                    top = conn.execute("""
+                        SELECT * FROM global_challenge_participants 
+                        WHERE challenge_id = ?
+                        ORDER BY current_value DESC LIMIT 3
+                    """, (last["id"],)).fetchall()
+                    last["leaderboard"] = [dict(r) for r in top]
+                    last["participants_count"] = conn.execute(
+                        "SELECT COUNT(*) FROM global_challenge_participants WHERE challenge_id = ?",
+                        (last["id"],)
+                    ).fetchone()[0]
+                    return cors_response({"challenge": last, "status": "finished"})
+                return cors_response({"challenge": None, "status": "none"})
+
+            ch = dict(ch)
+            # Получить участников и топ-3
+            participants = conn.execute(
+                "SELECT COUNT(*) FROM global_challenge_participants WHERE challenge_id = ?",
+                (ch["id"],)
+            ).fetchone()[0]
+            
+            top = conn.execute("""
+                SELECT * FROM global_challenge_participants 
+                WHERE challenge_id = ?
+                ORDER BY current_value DESC LIMIT 10
+            """, (ch["id"],)).fetchall()
+
+            ch["participants_count"] = participants
+            ch["leaderboard"] = [dict(r) for r in top]
+
+        return cors_response({"challenge": ch, "status": "active"})
+    except Exception as e:
+        logger.error(f"API global_challenge_active error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_global_challenge_join(request):
+    """POST /api/global-challenge/join — присоединиться к общему челленджу"""
+    try:
+        data = await request.json()
+        tg_id = data.get("telegram_id")
+        challenge_id = data.get("challenge_id")
+
+        if not tg_id or not challenge_id:
+            return cors_response({"error": "Не указаны параметры"}, 400)
+
+        user = get_user_by_telegram_id(tg_id)
+        if not user:
+            return cors_response({"error": "Пользователь не найден"}, 404)
+
+        nickname = user.get("wot_nickname") or user.get("first_name") or user.get("username") or "Танкист"
+
+        from database import get_db
+        from datetime import datetime
+        import sqlite3
+
+        with get_db() as conn:
+            ch = conn.execute(
+                "SELECT * FROM global_challenges WHERE id = ? AND status = 'active'",
+                (challenge_id,)
+            ).fetchone()
+            if not ch:
+                return cors_response({"error": "Челлендж не найден или завершён"}, 404)
+
+            try:
+                conn.execute("""
+                    INSERT INTO global_challenge_participants 
+                    (challenge_id, telegram_id, nickname)
+                    VALUES (?, ?, ?)
+                """, (challenge_id, tg_id, nickname))
+            except sqlite3.IntegrityError:
+                return cors_response({"error": "Вы уже участвуете!"}, 400)
+
+        return cors_response({"success": True, "nickname": nickname})
+    except Exception as e:
+        logger.error(f"API global_challenge_join error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_global_challenge_submit(request):
+    """POST /api/global-challenge/submit — обновить результат участника"""
+    try:
+        data = await request.json()
+        tg_id = data.get("telegram_id")
+        challenge_id = data.get("challenge_id")
+        value = int(data.get("value", 0))
+
+        if not tg_id or not challenge_id:
+            return cors_response({"error": "Не указаны параметры"}, 400)
+
+        if value < 0:
+            return cors_response({"error": "Неверное значение"}, 400)
+
+        from database import get_db
+        from datetime import datetime
+
+        with get_db() as conn:
+            ch = conn.execute(
+                "SELECT * FROM global_challenges WHERE id = ? AND status = 'active'",
+                (challenge_id,)
+            ).fetchone()
+            if not ch:
+                return cors_response({"error": "Челлендж не активен"}, 400)
+
+            participant = conn.execute(
+                "SELECT * FROM global_challenge_participants WHERE challenge_id = ? AND telegram_id = ?",
+                (challenge_id, tg_id)
+            ).fetchone()
+            if not participant:
+                return cors_response({"error": "Вы не участвуете в этом челлендже"}, 400)
+
+            # Обновляем если новое значение больше
+            new_value = max(participant["current_value"], value)
+            conn.execute("""
+                UPDATE global_challenge_participants 
+                SET current_value = ?, last_updated = ?, battles_played = battles_played + 1
+                WHERE challenge_id = ? AND telegram_id = ?
+            """, (new_value, datetime.now(), challenge_id, tg_id))
+
+        return cors_response({"success": True, "current_value": new_value})
+    except Exception as e:
+        logger.error(f"API global_challenge_submit error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_global_challenge_finish(request):
+    """POST /api/global-challenge/finish — завершить челлендж (админ или автоматически)"""
+    try:
+        data = await request.json()
+        admin_tg = data.get("admin_telegram_id")
+        challenge_id = data.get("challenge_id")
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        from database import get_db
+        from datetime import datetime
+
+        with get_db() as conn:
+            ch = conn.execute(
+                "SELECT * FROM global_challenges WHERE id = ?",
+                (challenge_id,)
+            ).fetchone()
+            if not ch:
+                return cors_response({"error": "Челлендж не найден"}, 404)
+
+            # Определяем победителя
+            winner = conn.execute("""
+                SELECT * FROM global_challenge_participants 
+                WHERE challenge_id = ?
+                ORDER BY current_value DESC LIMIT 1
+            """, (challenge_id,)).fetchone()
+
+            winner_tg = winner["telegram_id"] if winner else None
+            winner_nick = winner["nickname"] if winner else None
+            winner_val = winner["current_value"] if winner else 0
+
+            conn.execute("""
+                UPDATE global_challenges 
+                SET status = 'finished', finished_at = ?, 
+                    winner_telegram_id = ?, winner_nickname = ?, winner_value = ?
+                WHERE id = ?
+            """, (datetime.now(), winner_tg, winner_nick, winner_val, challenge_id))
+
+            # Выдать приз победителю
+            if winner_tg and ch["reward_coins"] > 0:
+                from database import buy_cheese
+                buy_cheese(winner_tg, ch["reward_coins"], method="challenge_reward")
+
+        return cors_response({
+            "success": True,
+            "winner": {"nickname": winner_nick, "value": winner_val} if winner_nick else None
+        })
+    except Exception as e:
+        logger.error(f"API global_challenge_finish error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+# ==========================================
 # ЗАПУСК
 # ==========================================
 
@@ -4154,6 +4725,17 @@ def create_api_app():
     # Admin API
     app.router.add_get("/api/admin/users", api_admin_users)
     app.router.add_post("/api/admin/toggle-admin", api_admin_toggle_admin)
+    app.router.add_post("/api/admin/cancel-challenge", api_admin_cancel_challenge)
+
+    # Streams API
+    app.router.add_get("/api/streams/status", api_streams_status)
+
+    # Global Challenges API
+    app.router.add_post("/api/global-challenge/create", api_global_challenge_create)
+    app.router.add_get("/api/global-challenge/active", api_global_challenge_active)
+    app.router.add_post("/api/global-challenge/join", api_global_challenge_join)
+    app.router.add_post("/api/global-challenge/submit", api_global_challenge_submit)
+    app.router.add_post("/api/global-challenge/finish", api_global_challenge_finish)
 
     return app
 

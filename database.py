@@ -292,6 +292,9 @@ def init_db():
                 to_start_stats TEXT,
                 from_end_stats TEXT,
                 to_end_stats TEXT,
+                from_last_stats TEXT,
+                to_last_stats TEXT,
+                battle_history TEXT DEFAULT '[]',
                 winner_telegram_id INTEGER,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accepted_at TIMESTAMP,
@@ -311,6 +314,48 @@ def init_db():
                 granted_by INTEGER,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
+
+        # ===== ОБЩИЕ ЧЕЛЛЕНДЖИ (GLOBAL) =====
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS global_challenges (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT,
+                icon TEXT DEFAULT '🔥',
+                condition TEXT DEFAULT 'damage',
+                duration_minutes INTEGER DEFAULT 60,
+                reward_coins INTEGER DEFAULT 500,
+                reward_description TEXT,
+                status TEXT DEFAULT 'active',
+                subscribers_only INTEGER DEFAULT 1,
+                created_by INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ends_at TIMESTAMP NOT NULL,
+                finished_at TIMESTAMP,
+                winner_telegram_id INTEGER,
+                winner_nickname TEXT,
+                winner_value INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS global_challenge_participants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                challenge_id INTEGER NOT NULL,
+                telegram_id INTEGER NOT NULL,
+                nickname TEXT,
+                current_value INTEGER DEFAULT 0,
+                start_stats TEXT,
+                last_stats TEXT,
+                battles_played INTEGER DEFAULT 0,
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_updated TIMESTAMP,
+                FOREIGN KEY (challenge_id) REFERENCES global_challenges(id),
+                UNIQUE(challenge_id, telegram_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_gc_status ON global_challenges(status);
+            CREATE INDEX IF NOT EXISTS idx_gcp_challenge ON global_challenge_participants(challenge_id);
+            CREATE INDEX IF NOT EXISTS idx_gcp_tg ON global_challenge_participants(telegram_id);
         """)
 
         logger.info("База данных инициализирована")

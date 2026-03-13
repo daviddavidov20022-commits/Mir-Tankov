@@ -1,4 +1,5 @@
-  File "D:\Телеграм бот МИР ТАНКОВ\bot.py", line 3164
-    global ADMIN_ID
-    ^^^^^^^^^^^^^^^
-SyntaxError: name 'ADMIN_ID' is used prior to global declaration
+INFO:__main__:Бот запускается...
+INFO:__main__:Меню по умолчанию установлено
+INFO:__main__:API сервер запущен на порту 8081
+INFO:aiogram.dispatcher:Start polling
+INFO:aiogram.dispatcher:Run polling for bot @Mir_tankov_privat_bot id=8246917841 - 'Mir_tankov_bot'

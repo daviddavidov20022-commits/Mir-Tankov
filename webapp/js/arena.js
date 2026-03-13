@@ -106,12 +106,12 @@ async function loadMyProfile() {
 
 
 function identifyMe() {
-    // 1. URL param — приоритет (for testing with ?telegram_id=xxx)
+    // 1. URL param — absolute priority (for testing with ?telegram_id=xxx)
     const urlParams = new URLSearchParams(window.location.search);
     const urlId = urlParams.get('telegram_id');
     if (urlId) {
         myTelegramId = parseInt(urlId);
-        localStorage.setItem('my_telegram_id', String(myTelegramId));
+        // Don't save to localStorage — prevents cross-tab overwriting
         return;
     }
 
@@ -123,7 +123,7 @@ function identifyMe() {
         return;
     }
 
-    // 3. localStorage fallback
+    // 3. localStorage fallback (only when no URL param)
     const saved = localStorage.getItem('my_telegram_id');
     if (saved) myTelegramId = parseInt(saved);
 }
@@ -272,12 +272,12 @@ async function loadChallenges() {
 }
 
 const COND_DISPLAY = {
-    damage: { icon: '💥', name: 'Урон', key: 'avg_damage', unit: '' },
-    spotting: { icon: '👁', name: 'Засвет', key: 'avg_spotted', unit: '' },
+    damage: { icon: '💥', name: 'Урон', key: 'damage', unit: '' },
+    spotting: { icon: '👁', name: 'Засвет', key: 'spotted', unit: '' },
     blocked: { icon: '🛡', name: 'Заблокировано', key: 'blocked', unit: '' },
-    frags: { icon: '🎯', name: 'Фраги', key: 'avg_frags', unit: '' },
-    xp: { icon: '⭐', name: 'Опыт', key: 'avg_xp', unit: '' },
-    wins: { icon: '🏆', name: 'Победы', key: 'winrate', unit: '%' },
+    frags: { icon: '🎯', name: 'Фраги', key: 'frags', unit: '' },
+    xp: { icon: '⭐', name: 'Опыт', key: 'xp', unit: '' },
+    wins: { icon: '🏆', name: 'Победы', key: 'wins', unit: '' },
 };
 
 function renderAnalytics(fd, td, ch) {
@@ -371,12 +371,54 @@ async function checkChallengeResults(id) {
 
         // OBS overlay link (admin only)
         const overlayBtn = isAdmin ? `
-            <div style="margin-top:10px;text-align:center">
+            <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
                 <button onclick="copyOverlayLink(${id})" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(200,170,110,0.2);
                     background:rgba(200,170,110,0.05);color:#C8AA6E;font-size:0.7rem;font-weight:600;cursor:pointer">
-                    📋 Скопировать ссылку для OBS
+                    📋 Ссылка OBS
+                </button>
+                <button onclick="cancelChallenge(${id})" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);
+                    background:rgba(239,68,68,0.05);color:#ef4444;font-size:0.7rem;font-weight:600;cursor:pointer">
+                    ❌ Отменить
                 </button>
             </div>` : '';
+
+        // Build per-battle history
+        const history = data.battle_history || [];
+        const condKey = cond.key; // damage, spotted, etc.
+        let historyHtml = '';
+        if (history.length > 0) {
+            // Group by player
+            const fromBattles = history.filter(b => b.player === 'from');
+            const toBattles = history.filter(b => b.player === 'to');
+
+            const renderBattleRows = (battles, nickname) => battles.map(b => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;
+                    border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.65rem">
+                    <span style="color:#5A6577">Бой #${b.battle_num}</span>
+                    <span style="color:#E8E6E3;font-weight:600">${cond.icon} ${b[condKey] ?? 0}</span>
+                    <span style="color:${b.won ? '#4ade80' : '#ef4444'}">${b.won ? '🏆 Победа' : '💀 Поражение'}</span>
+                </div>
+            `).join('');
+
+            historyHtml = `
+                <div style="margin-top:10px">
+                    <div onclick="toggleBattleHistory(${id})" style="cursor:pointer;text-align:center;
+                        font-size:0.65rem;color:#C8AA6E;padding:6px;border-radius:8px;
+                        background:rgba(200,170,110,0.05);border:1px solid rgba(200,170,110,0.1)">
+                        📋 Побойная разбивка <span id="historyArrow-${id}">▼</span>
+                    </div>
+                    <div id="battleHistory-${id}" style="display:none;margin-top:8px">
+                        ${fromBattles.length ? `
+                            <div style="font-size:0.6rem;color:#C8AA6E;padding:4px 0;font-weight:700">${fp.nickname}</div>
+                            ${renderBattleRows(fromBattles, fp.nickname)}
+                        ` : ''}
+                        ${toBattles.length ? `
+                            <div style="font-size:0.6rem;color:#C8AA6E;padding:4px 0;margin-top:6px;font-weight:700">${tp.nickname}</div>
+                            ${renderBattleRows(toBattles, tp.nickname)}
+                        ` : ''}
+                    </div>
+                </div>`;
+        }
 
         el.innerHTML = `
             <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
@@ -396,6 +438,7 @@ async function checkChallengeResults(id) {
                         <div style="font-size:0.6rem;color:#5A6577;margin-top:4px">${tp.delta.battles_played}/${ch.battles} боёв</div>
                     </div>
                 </div>
+                ${historyHtml}
                 ${statusHtml}
                 ${overlayBtn}
             </div>`;
@@ -992,6 +1035,39 @@ window.checkChallengeResults = checkChallengeResults;
 window.copyOverlayLink = copyOverlayLink;
 window.filterAdminUsers = filterAdminUsers;
 window.toggleAdmin = toggleAdmin;
+window.toggleBattleHistory = toggleBattleHistory;
+window.cancelChallenge = cancelChallenge;
+
+function toggleBattleHistory(id) {
+    const el = document.getElementById(`battleHistory-${id}`);
+    const arrow = document.getElementById(`historyArrow-${id}`);
+    if (el.style.display === 'none') {
+        el.style.display = '';
+        if (arrow) arrow.textContent = '▲';
+    } else {
+        el.style.display = 'none';
+        if (arrow) arrow.textContent = '▼';
+    }
+}
+
+async function cancelChallenge(id) {
+    if (!confirm('Отменить челлендж? Сыр вернётся обоим игрокам.')) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/admin/cancel-challenge`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin_telegram_id: myTelegramId, challenge_id: id })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            loadChallenges();
+        } else {
+            showToast(`❌ ${data.error}`, 'error');
+        }
+    } catch (e) {
+        showToast('❌ Нет подключения', 'error');
+    }
+}
 
 // ============================================================
 // ADMIN PANEL

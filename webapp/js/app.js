@@ -3,6 +3,8 @@
  * Управление данными пользователя, навигация, бонусы
  */
 
+const BOT_API_URL = window.location.origin;
+
 // ==========================================
 // ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
 // ==========================================
@@ -585,105 +587,24 @@ function updateTotalViewers() {
     }
 }
 
-// === YouTube: проверка через Data API v3 ===
-async function checkYouTubeLive() {
-    if (!STREAM_CONFIG.YOUTUBE_API_KEY || !STREAM_CONFIG.YOUTUBE_CHANNEL_ID) return;
-
-    try {
-        const url = `https://www.googleapis.com/youtube/v3/search?` +
-            `part=snippet&channelId=${STREAM_CONFIG.YOUTUBE_CHANNEL_ID}` +
-            `&type=video&eventType=live&key=${STREAM_CONFIG.YOUTUBE_API_KEY}`;
-
-        const resp = await fetch(url);
-        const data = await resp.json();
-
-        if (data.items && data.items.length > 0) {
-            // Стрим идёт! Получаем зрителей
-            const videoId = data.items[0].id.videoId;
-            const statsUrl = `https://www.googleapis.com/youtube/v3/videos?` +
-                `part=liveStreamingDetails,statistics&id=${videoId}&key=${STREAM_CONFIG.YOUTUBE_API_KEY}`;
-            const statsResp = await fetch(statsUrl);
-            const statsData = await statsResp.json();
-
-            const viewers = parseInt(statsData.items?.[0]?.liveStreamingDetails?.concurrentViewers || '0');
-            updateStreamCard('youtube', true, viewers);
-        } else {
-            updateStreamCard('youtube', false, 0);
-        }
-    } catch (e) {
-        console.warn('YouTube API error:', e);
-    }
-}
-
-// === Twitch: проверка через Helix API ===
-async function checkTwitchLive() {
-    if (!STREAM_CONFIG.TWITCH_CLIENT_ID) return;
-
-    try {
-        const resp = await fetch(
-            `https://api.twitch.tv/helix/streams?user_login=serverenok`,
-            {
-                headers: {
-                    'Client-ID': STREAM_CONFIG.TWITCH_CLIENT_ID,
-                    'Authorization': `Bearer ${STREAM_CONFIG.TWITCH_CLIENT_ID}`,
-                }
-            }
-        );
-        const data = await resp.json();
-
-        if (data.data && data.data.length > 0) {
-            const stream = data.data[0];
-            updateStreamCard('twitch', true, stream.viewer_count || 0);
-        } else {
-            updateStreamCard('twitch', false, 0);
-        }
-    } catch (e) {
-        console.warn('Twitch API error:', e);
-    }
-}
-
-// === VK Play Live: проверка ===
-async function checkVKPlayLive() {
-    // VK Play не имеет публичного CORS-совместимого API
-    // Статус можно получить через бэкенд бота
-    // Пока оставляем offline, можно подключить через бот позже
-    try {
-        // Попытка через неофициальный API
-        const resp = await fetch(`https://api.vkplay.live/v1/blog/iserveri/public_video_stream`);
-        if (resp.ok) {
-            const data = await resp.json();
-            if (data && data.category && data.count) {
-                updateStreamCard('vkplay', true, data.count?.viewers || 0);
-                return;
-            }
-        }
-    } catch (e) { /* CORS или нет стрима */ }
-    // Если не удалось — не меняем статус (оставляем offline)
-}
-
-// === Trovo: проверка ===
-async function checkTrovoLive() {
-    // Trovo API требует серверный вызов
-    // Можно проверить через бот бэкенд
-    // Пока заглушка
-}
-
-// === Запуск всех проверок ===
+// === Запуск всех проверок через бэкенд ===
 async function checkAllStreams() {
-    // Запускаем все проверки параллельно
-    await Promise.allSettled([
-        checkYouTubeLive(),
-        checkTwitchLive(),
-        checkVKPlayLive(),
-        checkTrovoLive(),
-    ]);
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/streams/status`);
+        const data = await resp.json();
+
+        for (const platform of ['youtube', 'vkplay', 'trovo', 'twitch']) {
+            if (data[platform]) {
+                updateStreamCard(platform, data[platform].live, data[platform].viewers || 0);
+            }
+        }
+    } catch (e) {
+        console.warn('Streams check error:', e);
+    }
 }
 
 // Запуск при загрузке + автообновление
 document.addEventListener('DOMContentLoaded', () => {
-    // Подождём секунду после загрузки
     setTimeout(checkAllStreams, 1500);
-
-    // Автообновление каждые N минут
     setInterval(checkAllStreams, STREAM_CONFIG.REFRESH_INTERVAL);
 });
