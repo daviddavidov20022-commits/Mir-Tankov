@@ -7,7 +7,7 @@
     <title>Челлендж Виджет — Мир Танков</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800;900&display=swap"
         rel="stylesheet">
     <style>
         * {
@@ -24,115 +24,123 @@
         }
 
         .widget {
-            width: 340px;
-            background: rgba(10, 14, 20, 0.85);
-            border: 1px solid rgba(200, 170, 110, 0.2);
-            border-radius: 16px;
-            padding: 16px;
-            backdrop-filter: blur(10px);
+            width: 380px;
+            min-height: 420px;
+            border-radius: 18px;
             position: relative;
             overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(15, 12, 8, 0.92) 0%, rgba(25, 20, 12, 0.95) 50%, rgba(10, 8, 5, 0.97) 100%);
+            border: 2px solid;
+            border-image: linear-gradient(180deg, #d4a745 0%, #8B6914 40%, #d4a745 60%, #8B6914 100%) 1;
+            box-shadow:
+                0 0 30px rgba(212, 167, 69, 0.15),
+                inset 0 1px 0 rgba(212, 167, 69, 0.2),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5);
         }
 
+        /* Top gold accent line */
         .widget::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #f5be0b, #C8AA6E, #f5be0b);
-            animation: shimmer 3s infinite;
+            height: 4px;
+            background: linear-gradient(90deg, #8B6914, #f5d36e, #d4a745, #f5d36e, #8B6914);
+            z-index: 10;
         }
 
-        @keyframes shimmer {
-
-            0%,
-            100% {
-                opacity: 0.5;
-            }
-
-            50% {
-                opacity: 1;
-            }
+        /* Background glow */
+        .widget::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 50% 30%, rgba(212, 167, 69, 0.06) 0%, transparent 60%);
+            pointer-events: none;
         }
 
-        /* Header */
+        .w-content {
+            position: relative;
+            z-index: 5;
+            padding: 20px 18px;
+        }
+
+        /* === HEADER === */
         .w-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
+            text-align: center;
+            margin-bottom: 10px;
         }
 
         .w-header__icon {
-            font-size: 1.4rem;
-            filter: drop-shadow(0 0 6px rgba(245, 190, 11, 0.4));
-        }
-
-        .w-header__info {
-            flex: 1;
-            min-width: 0;
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 8px rgba(245, 190, 11, 0.5));
+            display: inline-block;
+            margin-bottom: 4px;
         }
 
         .w-header__title {
             font-family: 'Russo One', sans-serif;
-            font-size: 0.75rem;
-            color: #C8AA6E;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 1.3rem;
+            background: linear-gradient(180deg, #ffeeb0 0%, #d4a745 50%, #a07c2a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+            line-height: 1.2;
         }
 
         .w-header__desc {
-            font-size: 0.55rem;
-            color: #8a94a6;
-            margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.6rem;
+            color: #8a7a5a;
+            margin-top: 4px;
         }
 
-        .w-header__cond {
-            font-size: 1.4rem;
-            opacity: 0.7;
-        }
-
-        /* Timer row */
-        .w-timer-row {
+        /* LIVE badge */
+        .w-live {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: linear-gradient(135deg, #ff3b3b, #cc0000);
+            color: white;
+            font-size: 0.5rem;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 1.5px;
+            box-shadow: 0 0 12px rgba(255, 59, 59, 0.4);
+            animation: live-pulse 2s infinite;
+            z-index: 10;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 14px;
-            padding: 8px 12px;
-            background: rgba(200, 170, 110, 0.05);
-            border: 1px solid rgba(200, 170, 110, 0.08);
-            border-radius: 10px;
+            gap: 4px;
         }
 
-        .w-timer__label {
-            font-size: 0.55rem;
-            color: #5A6577;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .w-live::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #fff;
+            animation: live-dot 1.5s infinite;
         }
 
-        .w-timer__value {
-            font-family: 'Russo One', sans-serif;
-            font-size: 1.3rem;
-            color: #f5be0b;
-            text-shadow: 0 0 12px rgba(245, 190, 11, 0.3);
-            letter-spacing: 2px;
+        @keyframes live-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 12px rgba(255, 59, 59, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(255, 59, 59, 0.7);
+            }
         }
 
-        .w-timer__value--danger {
-            color: #ef4444;
-            text-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
-            animation: pulse-danger 1s infinite;
-        }
-
-        @keyframes pulse-danger {
+        @keyframes live-dot {
 
             0%,
             100% {
@@ -140,56 +148,106 @@
             }
 
             50% {
-                opacity: 0.6;
+                opacity: 0.3;
             }
         }
 
+        /* === TIMER === */
+        .w-timer {
+            text-align: center;
+            margin: 12px 0;
+        }
+
+        .w-timer__value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 3.8rem;
+            letter-spacing: 4px;
+            background: linear-gradient(180deg, #fff8e0 0%, #f5d36e 30%, #d4a745 60%, #a07c2a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7));
+            line-height: 1;
+        }
+
+        .w-timer__value--danger {
+            background: linear-gradient(180deg, #ff8a8a 0%, #ef4444 50%, #cc0000 100%);
+            -webkit-background-clip: text;
+            animation: timer-danger 0.8s infinite;
+        }
+
+        @keyframes timer-danger {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 3px 6px rgba(239, 68, 68, 0.7));
+            }
+
+            50% {
+                filter: drop-shadow(0 3px 12px rgba(239, 68, 68, 1));
+            }
+        }
+
+        /* === STATS ROW === */
         .w-stats {
             display: flex;
-            gap: 8px;
+            justify-content: center;
+            gap: 24px;
+            margin: 8px 0 16px;
+            font-size: 0.7rem;
         }
 
         .w-stat {
-            flex: 1;
-            text-align: center;
-            font-size: 0.5rem;
-            color: #5A6577;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #c0b080;
+        }
+
+        .w-stat__icon {
+            font-size: 0.9rem;
         }
 
         .w-stat__val {
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: #E8E6E3;
+            font-weight: 900;
+            color: #f5d36e;
         }
 
-        .w-stat--reward .w-stat__val {
-            color: #f5be0b;
-        }
-
-        /* My Stats */
+        /* === MY CARD === */
         .w-me {
-            margin-bottom: 10px;
-            padding: 10px 12px;
-            background: linear-gradient(135deg, rgba(200, 170, 110, 0.1), rgba(200, 170, 110, 0.03));
-            border: 1px solid rgba(200, 170, 110, 0.15);
-            border-radius: 10px;
+            margin: 0 0 14px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(212, 167, 69, 0.1) 0%, rgba(212, 167, 69, 0.03) 100%);
+            border: 2px solid;
+            border-image: linear-gradient(135deg, #d4a745, #8B6914, #d4a745) 1;
+            border-radius: 0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            position: relative;
+        }
+
+        .w-me::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(212, 167, 69, 0.05), transparent);
+            pointer-events: none;
         }
 
         .w-me__avatar {
-            width: 36px;
-            height: 36px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #C8AA6E, #f5be0b);
+            background: linear-gradient(135deg, #d4a745, #8B6914);
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Russo One', sans-serif;
-            font-size: 0.65rem;
-            color: #0A0E14;
+            font-size: 0.7rem;
+            color: #1a1408;
             flex-shrink: 0;
+            border: 2px solid #f5d36e;
+            box-shadow: 0 0 10px rgba(212, 167, 69, 0.3);
         }
 
         .w-me__info {
@@ -198,82 +256,130 @@
         }
 
         .w-me__nick {
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: #C8AA6E;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.85rem;
+            color: #f5d36e;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .w-me__label {
-            font-size: 0.5rem;
-            color: #5A6577;
+        .w-me__right {
+            text-align: right;
         }
 
         .w-me__value {
             font-family: 'Russo One', sans-serif;
-            font-size: 1.1rem;
-            color: #f5be0b;
-            text-shadow: 0 0 10px rgba(245, 190, 11, 0.2);
+            font-size: 1.8rem;
+            line-height: 1;
+            background: linear-gradient(180deg, #fff8e0, #f5d36e, #d4a745);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
         }
 
         .w-me__unit {
-            font-size: 0.45rem;
-            color: #5A6577;
-            display: block;
+            font-size: 0.5rem;
+            color: #8a7a5a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* Leaderboard */
+        /* === LEADERBOARD === */
         .w-lb {
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .w-lb__title {
             font-family: 'Russo One', sans-serif;
-            font-size: 0.55rem;
-            color: #5A6577;
+            font-size: 0.6rem;
+            color: #8a7a5a;
+            text-align: center;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
         }
 
         .w-lb-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 8px;
-            border-radius: 8px;
-            margin-bottom: 3px;
+            gap: 10px;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            border-radius: 2px;
             transition: all 0.3s;
+            position: relative;
         }
 
         .w-lb-item--1 {
-            background: linear-gradient(135deg, rgba(245, 190, 11, 0.12), rgba(245, 190, 11, 0.03));
-            border: 1px solid rgba(245, 190, 11, 0.15);
+            background: linear-gradient(90deg, rgba(245, 211, 110, 0.15), rgba(245, 211, 110, 0.03));
+            border-left: 3px solid #f5d36e;
         }
 
         .w-lb-item--2 {
-            background: rgba(192, 192, 192, 0.06);
-            border: 1px solid rgba(192, 192, 192, 0.1);
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.1), rgba(192, 192, 192, 0.02));
+            border-left: 3px solid #c0c0c0;
         }
 
         .w-lb-item--3 {
-            background: rgba(205, 127, 50, 0.06);
-            border: 1px solid rgba(205, 127, 50, 0.1);
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.1), rgba(205, 127, 50, 0.02));
+            border-left: 3px solid #cd7f32;
         }
 
         .w-lb-rank {
-            font-size: 0.85rem;
-            width: 22px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+            width: 28px;
             text-align: center;
             flex-shrink: 0;
         }
 
+        .w-lb-rank--1 {
+            color: #f5d36e;
+        }
+
+        .w-lb-rank--2 {
+            color: #c0c0c0;
+        }
+
+        .w-lb-rank--3 {
+            color: #cd7f32;
+        }
+
+        .w-lb-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.45rem;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .w-lb-avatar--1 {
+            background: linear-gradient(135deg, #d4a745, #8B6914);
+            color: #1a1408;
+            border: 1.5px solid #f5d36e;
+        }
+
+        .w-lb-avatar--2 {
+            background: linear-gradient(135deg, #a0a0a0, #707070);
+            color: #1a1408;
+            border: 1.5px solid #c0c0c0;
+        }
+
+        .w-lb-avatar--3 {
+            background: linear-gradient(135deg, #cd7f32, #8B5A2B);
+            color: #1a1408;
+            border: 1.5px solid #cd7f32;
+        }
+
         .w-lb-nick {
             flex: 1;
-            font-size: 0.65rem;
-            font-weight: 700;
+            font-size: 0.72rem;
+            font-weight: 800;
             color: #E8E6E3;
             white-space: nowrap;
             overflow: hidden;
@@ -282,121 +388,109 @@
 
         .w-lb-val {
             font-family: 'Russo One', sans-serif;
-            font-size: 0.7rem;
-            color: #C8AA6E;
+            font-size: 0.8rem;
+            color: #d4a745;
         }
 
         /* Empty state */
         .w-empty {
             text-align: center;
-            padding: 30px 10px;
-            font-size: 0.65rem;
-            color: #5A6577;
+            padding: 60px 20px;
         }
 
         .w-empty__icon {
-            font-size: 2rem;
-            margin-bottom: 8px;
-            opacity: 0.5;
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.4;
         }
 
-        /* LIVE badge */
-        .w-live {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: #ef4444;
-            color: white;
-            font-size: 0.45rem;
-            font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 4px;
-            letter-spacing: 1px;
-            animation: live-blink 2s infinite;
+        .w-empty__text {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.8rem;
+            color: #5a5040;
         }
 
-        @keyframes live-blink {
+        .hidden {
+            display: none !important;
+        }
+
+        /* Subtle shimmer animation on border */
+        @keyframes border-glow {
 
             0%,
             100% {
-                opacity: 1;
+                box-shadow: 0 0 15px rgba(212, 167, 69, 0.1);
             }
 
             50% {
-                opacity: 0.5;
+                box-shadow: 0 0 25px rgba(212, 167, 69, 0.2);
             }
         }
 
-        /* Hidden */
-        .hidden {
-            display: none !important;
+        .widget {
+            animation: border-glow 4s ease-in-out infinite;
         }
     </style>
 </head>
 
 <body>
-    <div class="widget" id="widget">
-        <div class="w-live" id="wLive">● LIVE</div>
+    <div class="widget">
+        <div class="w-live" id="wLive">LIVE</div>
 
-        <!-- Empty state -->
-        <div class="w-empty" id="wEmpty">
-            <div class="w-empty__icon">⚔️</div>
-            <div>Нет активных челленджей</div>
-        </div>
+        <div class="w-content">
+            <!-- Empty state -->
+            <div class="w-empty" id="wEmpty">
+                <div class="w-empty__icon">⚔️</div>
+                <div class="w-empty__text">Нет активных челленджей</div>
+            </div>
 
-        <!-- Active content -->
-        <div id="wContent" class="hidden">
-            <!-- Header -->
-            <div class="w-header">
-                <div class="w-header__icon" id="wIcon">🔥</div>
-                <div class="w-header__info">
-                    <div class="w-header__title" id="wTitle">Челлендж</div>
+            <!-- Active content -->
+            <div id="wContent" class="hidden">
+                <div class="w-header">
+                    <div class="w-header__icon" id="wIcon">🔥</div>
+                    <div class="w-header__title" id="wTitle">Кто нанесёт<br>больше урона?</div>
                     <div class="w-header__desc" id="wDesc">Описание</div>
                 </div>
-                <div class="w-header__cond" id="wCond">💥</div>
-            </div>
 
-            <!-- Timer + stats -->
-            <div class="w-timer-row">
-                <div>
-                    <div class="w-timer__label">осталось</div>
-                    <div class="w-timer__value" id="wTimer">59:59</div>
+                <div class="w-timer">
+                    <div class="w-timer__value" id="wTimer">52:30</div>
                 </div>
+
                 <div class="w-stats">
                     <div class="w-stat">
-                        <div class="w-stat__val" id="wPlayers">0</div>
-                        <div>игроков</div>
+                        <span class="w-stat__icon">👥</span>
+                        <span class="w-stat__val" id="wPlayers">0</span>
+                        <span>игроков</span>
                     </div>
-                    <div class="w-stat w-stat--reward">
-                        <div class="w-stat__val" id="wReward">🧀 500</div>
-                        <div>приз</div>
+                    <div class="w-stat">
+                        <span class="w-stat__icon">🧀</span>
+                        <span class="w-stat__val" id="wReward">500</span>
+                        <span>приз</span>
                     </div>
                 </div>
-            </div>
 
-            <!-- My stats -->
-            <div class="w-me" id="wMe" style="display:none">
-                <div class="w-me__avatar" id="wMeAvatar">FA</div>
-                <div class="w-me__info">
-                    <div class="w-me__nick" id="wMeNick">Ник</div>
-                    <div class="w-me__label">моя статистика</div>
+                <!-- My stats card -->
+                <div class="w-me" id="wMe" style="display:none">
+                    <div class="w-me__avatar" id="wMeAvatar">FA</div>
+                    <div class="w-me__info">
+                        <div class="w-me__nick" id="wMeNick">Ник</div>
+                    </div>
+                    <div class="w-me__right">
+                        <div class="w-me__value" id="wMeValue">0</div>
+                        <div class="w-me__unit" id="wMeUnit">урона</div>
+                    </div>
                 </div>
-                <div style="text-align:right">
-                    <div class="w-me__value" id="wMeValue">0</div>
-                    <div class="w-me__unit" id="wMeUnit">урона</div>
-                </div>
-            </div>
 
-            <!-- Top 3 -->
-            <div class="w-lb" id="wLb">
-                <div class="w-lb__title">🏆 ТОП 3</div>
-                <div id="wLbList"></div>
+                <!-- Top 3 Leaderboard -->
+                <div class="w-lb" id="wLb">
+                    <div class="w-lb__title">Top 3 Leaderboard</div>
+                    <div id="wLbList"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Config
         const BOT_API_URL = localStorage.getItem('bot_api_url') || 'http://localhost:8081';
         const urlParams = new URLSearchParams(window.location.search);
         const myTelegramId = urlParams.get('telegram_id') ? parseInt(urlParams.get('telegram_id')) : null;
@@ -414,7 +508,6 @@
 
         async function loadWidget() {
             try {
-                // Refresh stats
                 try {
                     await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
                 } catch (e) { }
@@ -445,17 +538,13 @@
 
             const cond = COND_MAP[ch.condition] || COND_MAP.damage;
 
-            // Header
             document.getElementById('wIcon').textContent = ch.icon || '🔥';
-            document.getElementById('wTitle').textContent = ch.title;
+            document.getElementById('wTitle').innerHTML = ch.title ? ch.title.replace('?', '?<br>').replace('!', '!') : 'Челлендж';
             document.getElementById('wDesc').textContent = ch.description || '';
-            document.getElementById('wCond').textContent = cond.icon;
 
-            // Stats
             document.getElementById('wPlayers').textContent = ch.participants_count || 0;
-            document.getElementById('wReward').textContent = `🧀 ${ch.reward_coins || 0}`;
+            document.getElementById('wReward').textContent = ch.reward_coins || 0;
 
-            // Timer
             startTimer(ch.ends_at, ch.duration_minutes);
 
             // My stats
@@ -474,11 +563,10 @@
                 meSection.style.display = 'none';
             }
 
-            // Top 3
             renderTop3(lb, cond);
         }
 
-        function startTimer(endsAtStr, durationMinutes) {
+        function startTimer(endsAtStr, durationMin) {
             if (timerInterval) clearInterval(timerInterval);
             const endsAt = new Date(endsAtStr);
             const el = document.getElementById('wTimer');
@@ -516,25 +604,26 @@
             const top3 = leaders.slice(0, 3);
 
             if (top3.length === 0) {
-                list.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;text-align:center;padding:6px">Пока нет участников</div>';
+                list.innerHTML = '<div style="text-align:center;padding:12px;font-size:0.6rem;color:#5a5040">Ожидание участников...</div>';
                 return;
             }
 
-            const medals = ['🥇', '🥈', '🥉'];
+            list.innerHTML = top3.map((p, i) => {
+                const nick = p.nickname || 'Танкист';
+                const initials = nick.substring(0, 2).toUpperCase();
+                const isMe = p.telegram_id === myTelegramId;
 
-            list.innerHTML = top3.map((p, i) => `
-                <div class="w-lb-item w-lb-item--${i + 1}">
-                    <div class="w-lb-rank">${medals[i]}</div>
-                    <div class="w-lb-nick">${p.telegram_id === myTelegramId ? '⭐ ' : ''}${p.nickname || 'Танкист'}</div>
-                    <div class="w-lb-val">${(p.current_value || 0).toLocaleString('ru')}</div>
-                </div>
-            `).join('');
+                return `
+                    <div class="w-lb-item w-lb-item--${i + 1}">
+                        <div class="w-lb-rank w-lb-rank--${i + 1}">${i + 1}</div>
+                        <div class="w-lb-avatar w-lb-avatar--${i + 1}">${initials}</div>
+                        <div class="w-lb-nick">${isMe ? '⭐ ' : ''}${nick}</div>
+                        <div class="w-lb-val">${(p.current_value || 0).toLocaleString('ru')}</div>
+                    </div>`;
+            }).join('');
         }
 
-        // Initial load
         loadWidget();
-
-        // Auto-refresh every 10 seconds
         setInterval(loadWidget, 10000);
     </script>
 </body>
