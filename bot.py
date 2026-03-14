@@ -4850,6 +4850,24 @@ async def api_profile_save(request):
             wot_account_id = data.get("wot_account_id")
             avatar = data.get("avatar")
 
+            # Если есть ник но нет account_id — ищем через Lesta API
+            if wot_nickname and not wot_account_id:
+                try:
+                    import aiohttp as _aiohttp
+                    async with _aiohttp.ClientSession() as session:
+                        url = (
+                            f"https://api.tanki.su/wot/account/list/"
+                            f"?application_id={LESTA_APP_ID}"
+                            f"&search={wot_nickname}&limit=1&type=exact"
+                        )
+                        async with session.get(url, timeout=_aiohttp.ClientTimeout(total=10)) as resp:
+                            result = await resp.json()
+                            if result.get("status") == "ok" and result.get("data"):
+                                wot_account_id = result["data"][0]["account_id"]
+                                logger.info(f"Auto-found account_id={wot_account_id} for {wot_nickname}")
+                except Exception as le:
+                    logger.warning(f"Lesta API lookup failed for {wot_nickname}: {le}")
+
             updates = []
             params = []
 
@@ -4877,7 +4895,7 @@ async def api_profile_save(request):
                 )
 
         logger.info(f"Profile saved for TG:{telegram_id} WoT:{wot_nickname} AccID:{wot_account_id}")
-        return cors_response({"ok": True})
+        return cors_response({"ok": True, "wot_account_id": wot_account_id})
     except Exception as e:
         logger.error(f"API profile_save error: {e}")
         return cors_response({"error": str(e)}, 500)
