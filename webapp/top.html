@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Мир Танков — Топ Игроков</title>
+    <meta name="description" content="Мир Танков — Лучшие игроки. Рейтинги по WN8, урону, боям и многому другому!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/top.css">
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <!-- Header -->
+    <header class="top-header">
+        <button class="back-btn" onclick="goBack()">
+            <span>←</span>
+        </button>
+        <div class="header-title">
+            <h1>🏆 Топ Игроков</h1>
+            <span class="header-sub">Мир Танков</span>
+        </div>
+    </header>
+
+    <!-- Category Tabs -->
+    <div class="category-tabs-wrap">
+        <div class="category-tabs" id="categoryTabs">
+            <button class="cat-tab cat-tab--active" data-cat="wn8" onclick="switchCategory('wn8')">
+                <span class="cat-tab__icon">🎖</span>
+                <span class="cat-tab__label">WN8</span>
+            </button>
+            <button class="cat-tab" data-cat="damage" onclick="switchCategory('damage')">
+                <span class="cat-tab__icon">💥</span>
+                <span class="cat-tab__label">Ср. Урон</span>
+            </button>
+            <button class="cat-tab" data-cat="veteran" onclick="switchCategory('veteran')">
+                <span class="cat-tab__icon">📅</span>
+                <span class="cat-tab__label">Ветеран</span>
+            </button>
+            <button class="cat-tab" data-cat="battles" onclick="switchCategory('battles')">
+                <span class="cat-tab__icon">⚔️</span>
+                <span class="cat-tab__label">Бои</span>
+            </button>
+            <button class="cat-tab" data-cat="playtime" onclick="switchCategory('playtime')">
+                <span class="cat-tab__icon">⏱</span>
+                <span class="cat-tab__label">Часы</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Category Description -->
+    <div class="category-desc" id="categoryDesc">
+        <div class="category-desc__icon">🎖</div>
+        <div class="category-desc__text">
+            <h3 id="catTitle">Топ по WN8 рейтингу</h3>
+            <p id="catSubtitle">Лучшие игроки по личному рейтингу</p>
+        </div>
+    </div>
+
+    <!-- Add Player Section -->
+    <div class="add-player-section">
+        <div class="add-player-card">
+            <div class="add-input-wrap">
+                <input type="text" id="addPlayerInput" class="add-input" placeholder="Добавить игрока по нику..."
+                    autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="24">
+                <button class="add-btn" id="addBtn" onclick="addPlayerToTop()">
+                    <span>➕</span>
+                </button>
+            </div>
+            <div class="add-hint">Найдите и добавьте игроков в рейтинг</div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="top-loading" id="topLoading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <span>Загрузка...</span>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="leaderboard" id="leaderboard">
+        <!-- Podium (Top 3) -->
+        <div class="podium" id="podium" style="display: none;">
+            <div class="podium-slot podium-slot--2" id="podium2">
+                <div class="podium-medal">🥈</div>
+                <div class="podium-avatar">🪖</div>
+                <div class="podium-name">—</div>
+                <div class="podium-value">—</div>
+                <div class="podium-bar">
+                    <div class="podium-bar__fill"></div>
+                </div>
+            </div>
+            <div class="podium-slot podium-slot--1" id="podium1">
+                <div class="podium-crown">👑</div>
+                <div class="podium-medal">🥇</div>
+                <div class="podium-avatar podium-avatar--gold">🪖</div>
+                <div class="podium-name">—</div>
+                <div class="podium-value">—</div>
+                <div class="podium-bar">
+                    <div class="podium-bar__fill"></div>
+                </div>
+            </div>
+            <div class="podium-slot podium-slot--3" id="podium3">
+                <div class="podium-medal">🥉</div>
+                <div class="podium-avatar">🪖</div>
+                <div class="podium-name">—</div>
+                <div class="podium-value">—</div>
+                <div class="podium-bar">
+                    <div class="podium-bar__fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Players list (rest) -->
+        <div class="players-list" id="playersList"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🔍</div>
+        <h3>Топ пока пуст</h3>
+        <p>Добавьте игроков по нику, чтобы сравнить их рейтинги!</p>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/top-page.js"></script>
+</body>
+
+</html>

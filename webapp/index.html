@@ -98,6 +98,31 @@
             </div>
         </div>
 
+        <!-- Top Players Section -->
+        <section class="section-header" style="margin-top: 8px;">
+            <h2>🏆 Рейтинги</h2>
+            <p>Лучшие игроки Мир Танков!</p>
+        </section>
+
+        <div class="games-grid" style="margin-bottom: 16px;">
+            <div class="game-card game-card--active game-card--top" id="gameTop" onclick="openGame('top.html')">
+                <div class="game-card__badge game-card__badge--hot">НОВИНКА</div>
+                <div class="game-card__icon">
+                    <div class="tank-mini">
+                        <div class="tank-mini__body">🏆</div>
+                    </div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Топ Игроков</h3>
+                    <p class="game-card__desc">Сравни игроков по WN8, урону, боям и стажу!</p>
+                </div>
+                <div class="game-card__footer">
+                    <span class="game-card__reward">🎖 5 категорий</span>
+                    <span class="game-card__play">Открыть →</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Games Section -->
         <section class="section-header">
             <h2>🎮 Игры</h2>
@@ -379,6 +404,10 @@
         <div class="nav-item nav-item--active">
             <span class="nav-icon">🏠</span>
             <span class="nav-label">Главная</span>
+        </div>
+        <div class="nav-item" onclick="openGame('top.html')">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-label">Топ</span>
         </div>
         <div class="nav-item" onclick="openGame('challenges.html')">
             <span class="nav-icon">⚔️</span>
