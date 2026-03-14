@@ -35,6 +35,14 @@ let sortAscending = false;
 let filterText = '';
 let isLoading = false;
 
+// Текущий пользователь
+function getMyTelegramId() {
+    const tg = window.Telegram?.WebApp;
+    if (tg?.initDataUnsafe?.user?.id) return tg.initDataUnsafe.user.id;
+    const params = new URLSearchParams(window.location.search);
+    return params.get('telegram_id') || localStorage.getItem('my_telegram_id');
+}
+
 // Category config
 const CATEGORIES = {
     wn8: {
@@ -427,13 +435,18 @@ function showPlayerModal(accountId) {
     overlay.id = 'playerModal';
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
+    const myTgId = getMyTelegramId();
+    const isMe = myTgId && String(player.telegram_id) === String(myTgId);
+    const nick = stats.nickname || player.wot_nickname;
+
     overlay.innerHTML = `
         <div class="player-modal">
             <div class="modal-header">
-                <div class="modal-avatar">🪖</div>
+                <div class="modal-avatar">${player.avatar && !player.avatar.startsWith('data:') ? player.avatar : '🪖'}</div>
                 <div class="modal-info">
-                    <h3>${stats.nickname || player.wot_nickname}</h3>
+                    <h3>${nick}</h3>
                     <div class="modal-rating" style="color:${ratingColor}">${ratingText} • ${rating.toLocaleString('ru-RU')}</div>
+                    ${player.first_name ? `<div style="font-size:0.65rem;color:#8b9bb4;margin-top:2px;">👤 ${player.first_name}</div>` : ''}
                 </div>
             </div>
             <div class="modal-stats">
@@ -470,8 +483,19 @@ function showPlayerModal(accountId) {
                     <div class="modal-stat__label">🔥 Макс. урон</div>
                 </div>
             </div>
+            ${!isMe ? `
+            <div class="modal-actions" style="margin-bottom:8px;">
+                <button class="modal-btn modal-btn--friend" onclick="sendFriendRequest(${player.telegram_id}, '${nick}')">
+                    👥 В друзья
+                </button>
+                <button class="modal-btn modal-btn--challenge" onclick="sendChallenge(${player.telegram_id}, '${nick}')">
+                    ⚔️ Вызов
+                </button>
+            </div>` : `
+            <div style="text-align:center;padding:8px;font-size:0.75rem;color:#C8AA6E;margin-bottom:8px;">✨ Это ваш аккаунт</div>
+            `}
             <div class="modal-actions">
-                <button class="modal-btn modal-btn--primary" onclick="openStatsPage('${stats.nickname || player.wot_nickname}')">📊 Подробнее</button>
+                <button class="modal-btn modal-btn--primary" onclick="openStatsPage('${nick}')">📊 Подробнее</button>
                 <button class="modal-btn modal-btn--secondary" onclick="document.getElementById('playerModal').remove()">Закрыть</button>
             </div>
         </div>
@@ -505,6 +529,58 @@ if (window.Telegram?.WebApp?.BackButton) {
 }
 
 // ============================================================
+// FRIEND REQUEST & CHALLENGE
+// ============================================================
+async function sendFriendRequest(targetTgId, nickname) {
+    const myTgId = getMyTelegramId();
+    if (!myTgId) {
+        showToast('❌', 'Войдите через Telegram');
+        return;
+    }
+    if (String(myTgId) === String(targetTgId)) {
+        showToast('😅', 'Нельзя добавить себя');
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/friends/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                telegram_id: parseInt(myTgId),
+                friend_telegram_id: parseInt(targetTgId),
+            }),
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+            showToast('⚠️', data.error);
+        } else {
+            showToast('✅', `Заявка отправлена ${nickname}!`);
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }
+        }
+    } catch (e) {
+        showToast('❌', 'Ошибка сети');
+    }
+}
+
+async function sendChallenge(targetTgId, nickname) {
+    const myTgId = getMyTelegramId();
+    if (!myTgId) {
+        showToast('❌', 'Войдите через Telegram');
+        return;
+    }
+
+    // Закрываем модалку и переходим на арену с предзаполненным оппонентом
+    const modal = document.getElementById('playerModal');
+    if (modal) modal.remove();
+
+    window.location.href = `challenges.html?opponent_id=${targetTgId}&opponent_nick=${encodeURIComponent(nickname)}`;
+}
+
+// ============================================================
 // EXPOSE
 // ============================================================
 window.switchCategory = switchCategory;
@@ -514,3 +590,5 @@ window.showPlayerModal = showPlayerModal;
 window.openStatsPage = openStatsPage;
 window.loadAllPlayers = loadAllPlayers;
 window.goBack = goBack;
+window.sendFriendRequest = sendFriendRequest;
+window.sendChallenge = sendChallenge;

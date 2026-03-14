@@ -683,6 +683,18 @@ body {
     color: var(--text-secondary);
 }
 
+.modal-btn--friend {
+    background: linear-gradient(135deg, #2d5a27, #1e7a1e);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #fff;
+}
+
+.modal-btn--challenge {
+    background: linear-gradient(135deg, #8b3a2e, #c0392b);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    color: #fff;
+}
+
 .modal-btn:active {
     transform: scale(0.96);
 }
