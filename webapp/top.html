@@ -23,8 +23,8 @@
             <span>←</span>
         </button>
         <div class="header-title">
-            <h1>🏆 Топ Игроков</h1>
-            <span class="header-sub">Мир Танков</span>
+            <h1>🏆 Игроки и Рейтинги</h1>
+            <span class="header-sub">Все участники клуба</span>
         </div>
         <div class="header-count" id="headerCount">
             <span class="count-num" id="totalCount">—</span>
@@ -35,7 +35,11 @@
     <!-- Category Tabs -->
     <div class="category-tabs-wrap">
         <div class="category-tabs" id="categoryTabs">
-            <button class="cat-tab cat-tab--active" data-cat="wn8" onclick="switchCategory('wn8')">
+            <button class="cat-tab cat-tab--active" data-cat="all" onclick="switchCategory('all')">
+                <span class="cat-tab__icon">👥</span>
+                <span class="cat-tab__label">Все</span>
+            </button>
+            <button class="cat-tab" data-cat="wn8" onclick="switchCategory('wn8')">
                 <span class="cat-tab__icon">🎖</span>
                 <span class="cat-tab__label">WN8</span>
             </button>

@@ -30,7 +30,7 @@ const API_BASE = (() => {
 // ============================================================
 let allPlayers = [];        // Players from DB (with wot_account_ids)
 let playersStats = {};      // account_id -> stats from Lesta API
-let currentCategory = 'wn8';
+let currentCategory = 'all';
 let sortAscending = false;
 let filterText = '';
 let isLoading = false;
@@ -45,6 +45,13 @@ function getMyTelegramId() {
 
 // Category config
 const CATEGORIES = {
+    all: {
+        label: 'Ник',
+        getValue: (s) => (s?.nickname || '').toLowerCase(),
+        format: (v) => '',
+        sortDesc: false,
+        sortAlpha: true,
+    },
     wn8: {
         label: 'WN8',
         getValue: (s) => s.global_rating || 0,
@@ -295,6 +302,13 @@ function getSortedPlayers() {
     const desc = sortAscending ? !cfg.sortDesc : cfg.sortDesc;
 
     return [...allPlayers].sort((a, b) => {
+        // Для вкладки "Все" — алфавитно по нику
+        if (cfg.sortAlpha) {
+            const na = (a.wot_nickname || '').toLowerCase();
+            const nb = (b.wot_nickname || '').toLowerCase();
+            return desc ? nb.localeCompare(na) : na.localeCompare(nb);
+        }
+
         const sa = playersStats[String(a.wot_account_id)];
         const sb = playersStats[String(b.wot_account_id)];
         if (!sa && !sb) return 0;
@@ -315,7 +329,12 @@ function createRowHTML(player, stats, rank, cfg) {
     const winrate = battles > 0 ? ((wins / battles) * 100).toFixed(1) : '—';
 
     const value = stats ? cfg.getValue(stats) : 0;
-    const formatted = stats ? cfg.format(value) : '—';
+    let formatted = stats ? cfg.format(value) : '—';
+
+    // Для вкладки "Все" — показываем WN8 рейтинг
+    if (cfg.sortAlpha && stats) {
+        formatted = (stats.global_rating || 0).toLocaleString('ru-RU');
+    }
 
     // WN8 color
     let wn8Class = 'wn8-dot--gray';
