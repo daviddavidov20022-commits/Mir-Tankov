@@ -1647,3 +1647,19 @@
     background: rgba(200, 170, 110, 0.1);
     border-color: rgba(200, 170, 110, 0.3);
 }
+
+/* Make themes grid wrap for 5 items */
+.wc-themes {
+    flex-wrap: wrap;
+}
+
+/* Layout mini-previews */
+.wc-lp {
+    padding: 4px;
+}
+
+.wc-lp__r {
+    background: currentColor;
+    border-radius: 2px;
+    opacity: .25;
+}

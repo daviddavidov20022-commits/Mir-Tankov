@@ -683,6 +683,15 @@ const WC_THEMES = {
 let wcCurrentTheme = 'gold';
 let wcCurrentAccent = '#f5d36e';
 let wcCurrentBorder = 'gold';
+let wcCurrentLayout = 1;
+
+function gcSelectLayout(num) {
+    wcCurrentLayout = num;
+    for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`wcLayout-${i}`);
+        if (el) el.classList.toggle('wc-theme--active', i === num);
+    }
+}
 
 function gcToggleWidgetConstructor() {
     const body = document.getElementById('wcBody');
@@ -815,6 +824,7 @@ function gcUpdatePreview() {
 
 function gcGetWidgetConfig() {
     return {
+        layout: wcCurrentLayout,
         theme: wcCurrentTheme,
         accent: wcCurrentAccent,
         border: wcCurrentBorder,
@@ -832,6 +842,7 @@ function gcCopyCustomWidgetLink() {
     const base = window.location.origin + window.location.pathname.replace('challenges.html', 'gc-widget.html');
     const params = new URLSearchParams();
     if (myTelegramId) params.set('telegram_id', myTelegramId);
+    params.set('layout', config.layout);
     params.set('theme', config.theme);
     params.set('accent', config.accent.replace('#', ''));
     params.set('border', config.border);

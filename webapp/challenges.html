@@ -516,42 +516,123 @@
                         </div>
 
                         <div class="wc-body" id="wcBody" style="display:none">
-                            <!-- Theme presets -->
-                            <div class="wc-label">Выберите тему</div>
+                            <!-- Layout presets -->
+                            <div class="wc-label">📐 Макет расстановки</div>
+                            <div class="wc-themes">
+                                <div class="wc-theme wc-theme--active" id="wcLayout-1" onclick="gcSelectLayout(1)">
+                                    <div class="wc-theme__preview wc-theme__preview--gold">
+                                        <div class="wc-lp">
+                                            <div class="wc-lp__r" style="width:60%;height:3px;margin:0 auto"></div>
+                                            <div class="wc-lp__r" style="width:40%;height:8px;margin:2px auto"></div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                            <div class="wc-lp__r"
+                                                style="width:70%;height:10px;margin:2px auto;border:1px solid;opacity:.5">
+                                            </div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">📱 Классика</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-2" onclick="gcSelectLayout(2)">
+                                    <div class="wc-theme__preview wc-theme__preview--neon">
+                                        <div class="wc-lp">
+                                            <div style="display:flex;gap:4px;align-items:center">
+                                                <div class="wc-lp__r" style="width:35%;height:14px"></div>
+                                                <div style="flex:1">
+                                                    <div class="wc-lp__r" style="height:3px;margin-bottom:2px"></div>
+                                                    <div class="wc-lp__r"
+                                                        style="height:6px;border:1px solid;opacity:.5"></div>
+                                                </div>
+                                            </div>
+                                            <div style="display:flex;gap:2px;margin-top:3px">
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">📊 Компакт</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-3" onclick="gcSelectLayout(3)">
+                                    <div class="wc-theme__preview wc-theme__preview--military">
+                                        <div class="wc-lp"
+                                            style="display:flex;align-items:center;gap:3px;justify-content:center">
+                                            <div class="wc-lp__r" style="width:8px;height:8px;border-radius:50%"></div>
+                                            <div class="wc-lp__r" style="width:30px;height:3px"></div>
+                                            <div class="wc-lp__r" style="width:20px;height:6px"></div>
+                                            <div class="wc-lp__r" style="width:25px;height:3px"></div>
+                                            <div class="wc-lp__r" style="width:20px;height:3px"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">📏 Полоска</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-4" onclick="gcSelectLayout(4)">
+                                    <div class="wc-theme__preview wc-theme__preview--fire">
+                                        <div class="wc-lp">
+                                            <div class="wc-lp__r" style="width:50%;height:3px;margin:0 auto"></div>
+                                            <div class="wc-lp__r" style="width:40%;height:8px;margin:2px auto"></div>
+                                            <div style="border-top:1px solid rgba(255,255,255,.1);margin:3px 0"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">🏆 Табло</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-5" onclick="gcSelectLayout(5)">
+                                    <div class="wc-theme__preview wc-theme__preview--ice">
+                                        <div class="wc-lp">
+                                            <div style="display:flex;gap:3px">
+                                                <div class="wc-lp__r"
+                                                    style="flex:1;height:20px;border:1px solid;opacity:.4;border-radius:3px">
+                                                </div>
+                                                <div class="wc-lp__r"
+                                                    style="flex:1;height:20px;border:1px solid;opacity:.4;border-radius:3px">
+                                                </div>
+                                            </div>
+                                            <div style="display:flex;gap:2px;margin-top:3px">
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">🎮 HUD</div>
+                                </div>
+                            </div>
+
+                            <!-- Color Theme -->
+                            <div class="wc-label">🎨 Цветовая тема</div>
                             <div class="wc-themes">
                                 <div class="wc-theme wc-theme--active" id="wcTheme-gold"
                                     onclick="gcSelectTheme('gold')">
-                                    <div class="wc-theme__preview wc-theme__preview--gold">
-                                        <div class="wc-theme__timer">52:30</div>
-                                        <div class="wc-theme__bar"></div>
+                                    <div class="wc-theme__preview wc-theme__preview--gold" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
                                     <div class="wc-theme__name">⚜️ Золото</div>
                                 </div>
                                 <div class="wc-theme" id="wcTheme-neon" onclick="gcSelectTheme('neon')">
-                                    <div class="wc-theme__preview wc-theme__preview--neon">
-                                        <div class="wc-theme__timer">52:30</div>
-                                        <div class="wc-theme__bar"></div>
+                                    <div class="wc-theme__preview wc-theme__preview--neon" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
                                     <div class="wc-theme__name">💜 Неон</div>
                                 </div>
                                 <div class="wc-theme" id="wcTheme-military" onclick="gcSelectTheme('military')">
-                                    <div class="wc-theme__preview wc-theme__preview--military">
-                                        <div class="wc-theme__timer">52:30</div>
-                                        <div class="wc-theme__bar"></div>
+                                    <div class="wc-theme__preview wc-theme__preview--military" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
                                     <div class="wc-theme__name">🪖 Военный</div>
                                 </div>
                                 <div class="wc-theme" id="wcTheme-fire" onclick="gcSelectTheme('fire')">
-                                    <div class="wc-theme__preview wc-theme__preview--fire">
-                                        <div class="wc-theme__timer">52:30</div>
-                                        <div class="wc-theme__bar"></div>
+                                    <div class="wc-theme__preview wc-theme__preview--fire" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
                                     <div class="wc-theme__name">🔥 Инферно</div>
                                 </div>
                                 <div class="wc-theme" id="wcTheme-ice" onclick="gcSelectTheme('ice')">
-                                    <div class="wc-theme__preview wc-theme__preview--ice">
-                                        <div class="wc-theme__timer">52:30</div>
-                                        <div class="wc-theme__bar"></div>
+                                    <div class="wc-theme__preview wc-theme__preview--ice" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
                                     <div class="wc-theme__name">❄️ Арктика</div>
                                 </div>
