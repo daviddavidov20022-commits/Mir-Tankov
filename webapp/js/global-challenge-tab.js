@@ -691,6 +691,7 @@ function gcSelectLayout(num) {
         const el = document.getElementById(`wcLayout-${i}`);
         if (el) el.classList.toggle('wc-theme--active', i === num);
     }
+    gcUpdatePreview();
 }
 
 function gcToggleWidgetConstructor() {
@@ -739,8 +740,8 @@ function gcSetBorder(el) {
 }
 
 function gcUpdatePreview() {
-    const preview = document.getElementById('wcPreview');
-    if (!preview) return;
+    const wrap = document.getElementById('wcPreview');
+    if (!wrap) return;
 
     const theme = WC_THEMES[wcCurrentTheme] || WC_THEMES.gold;
     const opacity = (document.getElementById('wcBgOpacity')?.value || 90) / 100;
@@ -750,76 +751,114 @@ function gcUpdatePreview() {
     const showTop = document.getElementById('wcShowTop3')?.checked !== false;
     const showLive = document.getElementById('wcShowLive')?.checked !== false;
 
-    // Update value displays
     const bgVal = document.getElementById('wcBgVal');
     if (bgVal) bgVal.textContent = Math.round(opacity * 100) + '%';
     const fontVal = document.getElementById('wcFontVal');
     if (fontVal) fontVal.textContent = Math.round(fontScale * 100) + '%';
 
-    // Background
-    preview.style.background = theme.bg.replace('{opacity}', opacity.toFixed(2));
-    preview.style.fontSize = (12 * fontScale) + 'px';
+    const ac = wcCurrentAccent;
+    const bg = theme.bg.replace('{opacity}', opacity.toFixed(2));
+    const tc = theme.titleColor;
+    const live = showLive ? `<div style="position:absolute;top:4px;right:4px;background:#e00;color:#fff;font-size:.3rem;padding:1px 4px;border-radius:3px;font-weight:900">● LIVE</div>` : '';
+    const timerHtml = showTimer ? `<div style="font-family:'Russo One',sans-serif;font-size:1.3rem;color:${theme.timerColor};text-shadow:${theme.timerShadow};line-height:1">52:30</div>` : '';
+    const meHtml = showMe ? `<div style="display:flex;align-items:center;gap:4px;padding:4px 6px;border:1px solid ${ac}33;background:${ac}0d">
+        <div style="width:16px;height:16px;border-radius:50%;background:${theme.avatarBg};display:flex;align-items:center;justify-content:center;font-size:.25rem;font-weight:900">FA</div>
+        <div style="flex:1;font-size:.35rem;font-weight:700;color:${theme.meNick}">Fara777</div>
+        <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${theme.meVal}">15,230</div></div>` : '';
+    const topHtml = showTop ? `<div style="font-size:.25rem">
+        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}10;border-left:2px solid ${ac};margin-bottom:1px"><span style="color:${tc};font-weight:900">1</span><span style="flex:1">TankAce</span><span style="color:${theme.lbVal};font-weight:700">18,500</span></div>
+        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}08;border-left:2px solid #aaa;margin-bottom:1px"><span style="color:#aaa;font-weight:900">2</span><span style="flex:1">Fara777</span><span style="color:${theme.lbVal};font-weight:700">15,230</span></div>
+        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}06;border-left:2px solid #cd7f32"><span style="color:#cd7f32;font-weight:900">3</span><span style="flex:1">Wolf</span><span style="color:${theme.lbVal};font-weight:700">12,100</span></div></div>` : '';
 
     // Border
-    switch (wcCurrentBorder) {
-        case 'gold':
-            preview.style.border = `2px solid ${wcCurrentAccent}`;
-            preview.style.boxShadow = `0 0 15px ${wcCurrentAccent}22`;
+    let border = `2px solid ${ac}`;
+    let shadow = `0 0 10px ${ac}15`;
+    if (wcCurrentBorder === 'glow') { border = `1px solid ${ac}44`; shadow = `0 0 15px ${ac}33`; }
+    else if (wcCurrentBorder === 'minimal') { border = `1px solid ${ac}22`; shadow = 'none'; }
+    else if (wcCurrentBorder === 'none') { border = 'none'; shadow = 'none'; }
+
+    let html = '';
+    const baseStyle = `background:${bg};border:${border};box-shadow:${shadow};border-radius:8px;position:relative;font-size:${(10 * fontScale)}px;overflow:hidden`;
+
+    switch (wcCurrentLayout) {
+        case 1: // Classic vertical
+            html = `<div style="${baseStyle};width:180px;padding:10px;text-align:center">
+                ${live}
+                <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${tc};margin-bottom:4px">🔥 Челлендж</div>
+                ${timerHtml}
+                <div style="font-size:.28rem;opacity:.4;margin:3px 0 6px">👥 3 · 🧀 500</div>
+                ${meHtml}
+                <div style="margin-top:4px">${topHtml}</div>
+            </div>`;
             break;
-        case 'glow':
-            preview.style.border = `1px solid ${wcCurrentAccent}44`;
-            preview.style.boxShadow = `0 0 20px ${wcCurrentAccent}33, inset 0 0 20px ${wcCurrentAccent}11`;
+
+        case 2: // Compact horizontal
+            html = `<div style="${baseStyle};width:240px;padding:8px">
+                ${live}
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+                    <div style="text-align:center">${timerHtml}<div style="font-size:.2rem;color:${ac};opacity:.5">ОСТАЛОСЬ</div></div>
+                    <div style="flex:1"><div style="font-family:'Russo One',sans-serif;font-size:.4rem;color:${tc};margin-bottom:3px">🔥 Челлендж</div>${meHtml}</div>
+                </div>
+                <div style="display:flex;gap:2px">${showTop ? `
+                    <div style="flex:1;font-size:.25rem;padding:3px 4px;background:${ac}10;border-radius:2px"><span style="color:${tc};font-weight:900">1</span> Ace <span style="color:${theme.lbVal}">18k</span></div>
+                    <div style="flex:1;font-size:.25rem;padding:3px 4px;background:${ac}08;border-radius:2px"><span style="color:#aaa;font-weight:900">2</span> Fara <span style="color:${theme.lbVal}">15k</span></div>
+                    <div style="flex:1;font-size:.25rem;padding:3px 4px;background:${ac}06;border-radius:2px"><span style="color:#cd7f32;font-weight:900">3</span> Wolf <span style="color:${theme.lbVal}">12k</span></div>
+                ` : ''}</div>
+            </div>`;
             break;
-        case 'minimal':
-            preview.style.border = `1px solid ${wcCurrentAccent}22`;
-            preview.style.boxShadow = 'none';
+
+        case 3: // Strip
+            html = `<div style="${baseStyle};width:280px;padding:6px 10px;display:flex;align-items:center;gap:6px;border-radius:5px">
+                ${showLive ? `<div style="background:#e00;color:#fff;font-size:.25rem;padding:1px 3px;border-radius:2px;font-weight:900">LIVE</div>` : ''}
+                <div style="width:1px;height:14px;background:${ac};opacity:.15"></div>
+                <div style="font-family:'Russo One',sans-serif;font-size:.35rem;color:${tc}">🔥 Челлендж</div>
+                <div style="width:1px;height:14px;background:${ac};opacity:.15"></div>
+                ${showTimer ? `<div style="font-family:'Russo One',sans-serif;font-size:.5rem;color:${theme.timerColor}">52:30</div>` : ''}
+                ${showMe ? `<div style="width:1px;height:14px;background:${ac};opacity:.15"></div><div style="font-size:.3rem;color:${ac}">Fara: <span style="color:${tc}">15,230</span></div>` : ''}
+            </div>`;
             break;
-        case 'none':
-            preview.style.border = 'none';
-            preview.style.boxShadow = 'none';
+
+        case 4: // Scoreboard
+            html = `<div style="${baseStyle};width:180px;border-radius:3px">
+                ${live}
+                <div style="padding:6px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)">
+                    <div style="font-size:.3rem;color:${ac};letter-spacing:1px;opacity:.5">ЧЕЛЛЕНДЖ</div>
+                    ${timerHtml}
+                </div>
+                <div style="padding:2px 4px;font-size:.2rem;opacity:.3;display:flex;border-bottom:1px solid rgba(255,255,255,.04)"><span style="width:14px">#</span><span style="flex:1">Игрок</span><span>Урона</span></div>
+                ${showTop ? `
+                <div style="padding:3px 4px;font-size:.25rem;display:flex;border-bottom:1px solid rgba(255,255,255,.03)"><span style="width:14px;color:gold;font-weight:900">1</span><span style="flex:1">TankAce</span><span style="color:${theme.lbVal}">18,500</span></div>
+                <div style="padding:3px 4px;font-size:.25rem;display:flex;background:${ac}10;border-left:2px solid ${ac};border-bottom:1px solid rgba(255,255,255,.03)"><span style="width:14px;color:silver;font-weight:900">2</span><span style="flex:1">⭐ Fara777</span><span style="color:${theme.lbVal}">15,230</span></div>
+                <div style="padding:3px 4px;font-size:.25rem;display:flex"><span style="width:14px;color:#cd7f32;font-weight:900">3</span><span style="flex:1">Wolf</span><span style="color:${theme.lbVal}">12,100</span></div>
+                ` : ''}
+            </div>`;
+            break;
+
+        case 5: // HUD corners
+            html = `<div style="width:200px;position:relative">
+                ${showLive ? `<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);background:${ac};color:#000;font-size:.25rem;padding:1px 6px;border-radius:0 0 3px 3px;font-weight:900;z-index:5">LIVE</div>` : ''}
+                <div style="display:flex;gap:3px;margin-bottom:3px">
+                    <div style="${baseStyle};flex:1;padding:6px;text-align:center;border-radius:5px">
+                        <div style="font-size:.2rem;color:${ac};letter-spacing:1px;opacity:.5">⏱ ОСТАЛОСЬ</div>
+                        ${timerHtml}
+                        <div style="font-size:.25rem;color:${ac};margin-top:1px">🔥 Челлендж</div>
+                    </div>
+                    ${showMe ? `<div style="${baseStyle};flex:1;padding:6px;text-align:center;border-radius:5px">
+                        <div style="font-size:.2rem;color:${ac};letter-spacing:1px;opacity:.5">👤 УРОНА</div>
+                        <div style="font-size:.3rem;color:${ac};margin:2px 0">Fara777</div>
+                        <div style="font-family:'Russo One',sans-serif;font-size:.7rem;color:${tc}">15,230</div>
+                    </div>`: ''}
+                </div>
+                ${showTop ? `<div style="${baseStyle};display:flex;gap:2px;padding:3px;border-radius:4px">
+                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}10;border-radius:3px"><span style="color:gold;font-weight:900">1</span> Ace <span style="color:${theme.lbVal}">18k</span></div>
+                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}08;border-radius:3px"><span style="color:silver;font-weight:900">2</span> Fara <span style="color:${theme.lbVal}">15k</span></div>
+                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}06;border-radius:3px"><span style="color:#cd7f32;font-weight:900">3</span> Wolf <span style="color:${theme.lbVal}">12k</span></div>
+                </div>`: ''}
+            </div>`;
             break;
     }
 
-    // Title
-    const title = document.getElementById('wcpTitle');
-    if (title) title.style.color = theme.titleColor;
-
-    // Timer
-    const timer = document.getElementById('wcpTimer');
-    if (timer) {
-        timer.style.color = theme.timerColor;
-        timer.style.textShadow = theme.timerShadow;
-        timer.style.display = showTimer ? '' : 'none';
-    }
-
-    // Me section
-    const me = document.getElementById('wcpMe');
-    if (me) {
-        me.style.display = showMe ? '' : 'none';
-        me.style.borderColor = wcCurrentAccent + '40';
-        me.style.background = wcCurrentAccent + '0d';
-        const nick = me.querySelector('.wcp-me__nick');
-        if (nick) nick.style.color = theme.meNick;
-        const val = me.querySelector('.wcp-me__val');
-        if (val) val.style.color = theme.meVal;
-        const avatar = me.querySelector('.wcp-me__avatar');
-        if (avatar) avatar.style.background = theme.avatarBg;
-    }
-
-    // Top 3 
-    const lb = document.getElementById('wcpLb');
-    if (lb) {
-        lb.style.display = showTop ? '' : 'none';
-        lb.querySelectorAll('.wcp-lb__val').forEach(v => v.style.color = theme.lbVal);
-        lb.querySelectorAll('.wcp-lb__item--1').forEach(item => {
-            item.style.borderLeftColor = theme.accent;
-            item.style.background = wcCurrentAccent + '14';
-        });
-    }
-
-    // LIVE badge
-    const live = document.getElementById('wcpLive');
-    if (live) live.style.display = showLive ? '' : 'none';
+    wrap.innerHTML = html;
 }
 
 function gcGetWidgetConfig() {
