@@ -36,27 +36,25 @@ let filterText = '';
 let isLoading = false;
 let onlineOnly = false;
 
-// Онлайн-определение:
-// 1) logout_at < updated_at → ещё в клиенте (не вышел)
-// 2) last_battle_time < 30 минут → недавно играл
-// 3) logout_at < 5 минут → только что вышел
+// Онлайн-определение (надёжный метод):
+// - last_battle_time < 5 мин → активно играет (бой был только что)
+// - logout_at < 5 мин → только что был в клиенте
+// Lesta API обновляет logout_at при КАЖДОМ выходе, поэтому
+// logout_at < updated_at — НЕ показатель онлайна!
 function isPlayerOnline(accountId) {
     const stats = playersStats[String(accountId)];
     if (!stats) return false;
     const now = Math.floor(Date.now() / 1000);
+    const THRESHOLD = 5 * 60; // 5 минут
 
     const lastBattle = stats.last_battle_time || 0;
     const logoutAt = stats.logout_at || 0;
-    const updatedAt = stats.updated_at || 0;
 
-    // Если logout_at < updated_at → игрок в клиенте (не разлогинился)
-    if (logoutAt > 0 && updatedAt > 0 && logoutAt < updatedAt) return true;
+    // Был в бою менее 5 минут назад
+    if (lastBattle > 0 && (now - lastBattle) < THRESHOLD) return true;
 
-    // Последний бой менее 30 минут назад
-    if (lastBattle > 0 && (now - lastBattle) < 30 * 60) return true;
-
-    // Вышел менее 5 минут назад
-    if (logoutAt > 0 && (now - logoutAt) < 5 * 60) return true;
+    // Вышел из клиента менее 5 минут назад
+    if (logoutAt > 0 && (now - logoutAt) < THRESHOLD) return true;
 
     return false;
 }
