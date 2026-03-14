@@ -11,7 +11,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="css/top.css">
+    <link rel="stylesheet" href="css/top.css?v=20260314">
+    <style>
+        /* Fix: thead не должен быть sticky — перекрывает строки */
+        .top-table thead {
+            position: static !important;
+            top: auto !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -109,8 +116,8 @@
             Привяжите ник в профиле через /start → Профиль</p>
     </div>
 
-    <script src="js/app.js"></script>
-    <script src="js/top-page.js"></script>
+    <script src="js/app.js?v=20260314"></script>
+    <script src="js/top-page.js?v=20260314"></script>
 </body>
 
 </html>
