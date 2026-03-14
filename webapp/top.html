@@ -4,21 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Мир Танков — Топ Игроков</title>
-    <meta name="description" content="Мир Танков — Лучшие игроки. Рейтинги по WN8, урону, боям и многому другому!">
+    <title>Мир Танков — Игроки</title>
+    <meta name="description" content="Мир Танков — Все игроки клуба. Рейтинги, онлайн-статус и вызовы!">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="css/top.css?v=20260314">
-    <style>
-        /* Fix: thead не должен быть sticky — перекрывает строки */
-        .top-table thead {
-            position: static !important;
-            top: auto !important;
-        }
-    </style>
+    <link rel="stylesheet" href="css/top.css?v=20260314b">
 </head>
 
 <body>
@@ -30,8 +23,8 @@
             <span>←</span>
         </button>
         <div class="header-title">
-            <h1>🏆 Игроки и Рейтинги</h1>
-            <span class="header-sub">Все участники клуба</span>
+            <h1>🏆 Игроки Клуба</h1>
+            <span class="header-sub" id="headerSub">Все участники</span>
         </div>
         <div class="header-count" id="headerCount">
             <span class="count-num" id="totalCount">—</span>
@@ -52,7 +45,7 @@
             </button>
             <button class="cat-tab" data-cat="damage" onclick="switchCategory('damage')">
                 <span class="cat-tab__icon">💥</span>
-                <span class="cat-tab__label">Ср. Урон</span>
+                <span class="cat-tab__label">Урон</span>
             </button>
             <button class="cat-tab" data-cat="veteran" onclick="switchCategory('veteran')">
                 <span class="cat-tab__icon">📅</span>
@@ -77,8 +70,8 @@
                 oninput="filterTable()">
         </div>
         <button class="online-toggle" id="onlineToggle" onclick="toggleOnlineFilter()" title="Только онлайн">
-            <span class="online-dot-btn"></span>
-            <span class="online-label">ON</span>
+            <span class="online-dot-filter"></span>
+            <span class="online-label">ОНЛАЙН</span>
         </button>
         <button class="refresh-btn" id="refreshBtn" onclick="loadAllPlayers()" title="Обновить">
             <span class="refresh-icon">🔄</span>
@@ -92,24 +85,11 @@
         <p class="loading-sub" id="loadingStatus">Получаем данные из базы</p>
     </div>
 
-    <!-- Table -->
-    <div class="table-wrap" id="tableWrap" style="display: none;">
-        <table class="top-table" id="topTable">
-            <thead>
-                <tr>
-                    <th class="th-rank">#</th>
-                    <th class="th-player">Игрок</th>
-                    <th class="th-value sortable" id="thValue" onclick="toggleSortDir()">
-                        <span id="thValueLabel">WN8</span>
-                        <span class="sort-arrow" id="sortArrow">▼</span>
-                    </th>
-                    <th class="th-battles">Боёв</th>
-                    <th class="th-winrate">Побед</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-            </tbody>
-        </table>
+    <!-- Player Cards List -->
+    <div class="players-list" id="playersList" style="display: none;">
+        <div class="players-list__inner" id="playersListInner">
+            <!-- Генерируется JS -->
+        </div>
     </div>
 
     <!-- Empty State -->
@@ -120,8 +100,8 @@
             Привяжите ник в профиле через /start → Профиль</p>
     </div>
 
-    <script src="js/app.js?v=20260314"></script>
-    <script src="js/top-page.js?v=20260314"></script>
+    <script src="js/app.js?v=20260314b"></script>
+    <script src="js/top-page.js?v=20260314b"></script>
 </body>
 
 </html>

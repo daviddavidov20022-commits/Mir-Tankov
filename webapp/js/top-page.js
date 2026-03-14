@@ -144,14 +144,14 @@ async function loadAllPlayers() {
     refreshBtn?.classList.add('spinning');
 
     const loadingEl = document.getElementById('loadingFull');
-    const tableWrap = document.getElementById('tableWrap');
+    const playersList = document.getElementById('playersList');
     const emptyState = document.getElementById('emptyState');
     const statusEl = document.getElementById('loadingStatus');
 
     // Only show full loading if no cached data
     if (allPlayers.length === 0) {
         loadingEl.style.display = 'flex';
-        tableWrap.style.display = 'none';
+        if (playersList) playersList.style.display = 'none';
         emptyState.style.display = 'none';
     }
 
@@ -163,7 +163,7 @@ async function loadAllPlayers() {
         if (!dbPlayers || dbPlayers.length === 0) {
             loadingEl.style.display = 'none';
             emptyState.style.display = 'block';
-            tableWrap.style.display = 'none';
+            if (playersList) playersList.style.display = 'none';
             isLoading = false;
             refreshBtn?.classList.remove('spinning');
             return;
@@ -181,7 +181,7 @@ async function loadAllPlayers() {
         // Step 3: Cache and render
         cacheData();
         loadingEl.style.display = 'none';
-        tableWrap.style.display = 'block';
+        if (playersList) playersList.style.display = 'block';
         emptyState.style.display = 'none';
         renderTable();
 
@@ -192,7 +192,7 @@ async function loadAllPlayers() {
         // If we have cached data, still show it
         if (allPlayers.length > 0) {
             loadingEl.style.display = 'none';
-            tableWrap.style.display = 'block';
+            if (playersList) playersList.style.display = 'block';
             renderTable();
             showToast('⚠️', 'Показаны кэшированные данные');
         } else {
@@ -289,14 +289,12 @@ function cacheData() {
 }
 
 // ============================================================
-// RENDER TABLE
+// RENDER CARDS
 // ============================================================
 function renderTable() {
-    const tbody = document.getElementById('tableBody');
+    const container = document.getElementById('playersListInner');
+    if (!container) return;
     const cfg = CATEGORIES[currentCategory];
-
-    // Update header label
-    document.getElementById('thValueLabel').textContent = cfg.label;
 
     // Sort players
     const sorted = getSortedPlayers();
@@ -309,31 +307,34 @@ function renderTable() {
         filtered = filtered.filter(p => isPlayerOnline(p.wot_account_id));
     }
 
-    // Считаем онлайн
+    // Обновляем счётчик
     const onlineCount = sorted.filter(p => isPlayerOnline(p.wot_account_id)).length;
     document.getElementById('totalCount').textContent = onlineOnly
-        ? `${filtered.length} 🟢`
+        ? `${filtered.length}`
         : filtered.length;
 
+    // Подзаголовок
+    const headerSub = document.getElementById('headerSub');
+    if (headerSub) {
+        if (onlineOnly) {
+            headerSub.textContent = `🟢 Сейчас в игре`;
+        } else if (currentCategory === 'all') {
+            headerSub.textContent = `Все участники • ${onlineCount} онлайн`;
+        } else {
+            headerSub.textContent = `Рейтинг: ${cfg.label}`;
+        }
+    }
+
     if (filtered.length === 0) {
-        tbody.innerHTML = `
-            <tr class="loading-row">
-                <td colspan="5">Нет результатов по запросу "${filterText}"</td>
-            </tr>
-        `;
+        container.innerHTML = `<div class="no-results">🔍 Нет результатов ${onlineOnly ? '(никто не в игре)' : ''}</div>`;
         return;
     }
 
-    // Build HTML efficiently (no DOM thrashing)
-    const rows = [];
+    const cards = [];
     for (let i = 0; i < filtered.length; i++) {
-        const p = filtered[i];
-        const rank = i + 1;
-        const stats = playersStats[String(p.wot_account_id)];
-        rows.push(createRowHTML(p, stats, rank, cfg));
+        cards.push(createCardHTML(filtered[i], playersStats[String(filtered[i].wot_account_id)], i + 1, cfg));
     }
-
-    tbody.innerHTML = rows.join('');
+    container.innerHTML = cards.join('');
 }
 
 function getSortedPlayers() {
@@ -341,54 +342,63 @@ function getSortedPlayers() {
     const desc = sortAscending ? !cfg.sortDesc : cfg.sortDesc;
 
     return [...allPlayers].sort((a, b) => {
-        // Для вкладки "Все" — алфавитно по нику
         if (cfg.sortAlpha) {
             const na = (a.wot_nickname || '').toLowerCase();
             const nb = (b.wot_nickname || '').toLowerCase();
             return desc ? nb.localeCompare(na) : na.localeCompare(nb);
         }
-
         const sa = playersStats[String(a.wot_account_id)];
         const sb = playersStats[String(b.wot_account_id)];
         if (!sa && !sb) return 0;
         if (!sa) return 1;
         if (!sb) return -1;
-
         const va = cfg.getValue(sa);
         const vb = cfg.getValue(sb);
         return desc ? (vb - va) : (va - vb);
     });
 }
 
-function createRowHTML(player, stats, rank, cfg) {
+function createCardHTML(player, stats, rank, cfg) {
     const rating = stats?.global_rating || 0;
-    const allStats = stats?.statistics?.all || {};
-    const battles = allStats.battles || 0;
-    const wins = allStats.wins || 0;
+    const allS = stats?.statistics?.all || {};
+    const battles = allS.battles || 0;
+    const wins = allS.wins || 0;
     const winrate = battles > 0 ? ((wins / battles) * 100).toFixed(1) : '—';
+    const accountId = player.wot_account_id;
+    const online = isPlayerOnline(accountId);
+    const tgName = player.first_name || player.username || '';
 
-    const value = stats ? cfg.getValue(stats) : 0;
-    let formatted = stats ? cfg.format(value) : '—';
-
-    // Для вкладки "Все" — показываем WN8 рейтинг
+    // Main stat value
+    let mainStat = stats ? cfg.format(cfg.getValue(stats)) : '—';
     if (cfg.sortAlpha && stats) {
-        formatted = (stats.global_rating || 0).toLocaleString('ru-RU');
+        mainStat = rating > 0 ? rating.toLocaleString('ru-RU') : '—';
     }
 
-    // WN8 color
-    let wn8Class = 'wn8-dot--gray';
-    if (rating >= 10000) wn8Class = 'wn8-dot--purple';
-    else if (rating >= 8000) wn8Class = 'wn8-dot--blue';
-    else if (rating >= 6000) wn8Class = 'wn8-dot--green';
-    else if (rating >= 4000) wn8Class = 'wn8-dot--yellow';
-    else if (rating > 0) wn8Class = 'wn8-dot--red';
+    // WN8 color bar
+    let wn8Color = 'wn8-gray';
+    if (rating >= 10000) wn8Color = 'wn8-purple';
+    else if (rating >= 8000) wn8Color = 'wn8-blue';
+    else if (rating >= 6000) wn8Color = 'wn8-green';
+    else if (rating >= 4000) wn8Color = 'wn8-yellow';
+    else if (rating > 0) wn8Color = 'wn8-red';
 
-    // Rank display
-    let rankClass = '';
-    let rankContent = rank;
-    if (rank === 1) { rankClass = 'rank-1'; rankContent = '<span class="rank-medal">🥇</span>'; }
-    else if (rank === 2) { rankClass = 'rank-2'; rankContent = '<span class="rank-medal">🥈</span>'; }
-    else if (rank === 3) { rankClass = 'rank-3'; rankContent = '<span class="rank-medal">🥉</span>'; }
+    // Rank badge
+    let rankBadge = `<div class="rank-badge">${rank}</div>`;
+    if (rank === 1) rankBadge = `<div class="rank-badge rank-badge--gold">🥇</div>`;
+    else if (rank === 2) rankBadge = `<div class="rank-badge rank-badge--silver">🥈</div>`;
+    else if (rank === 3) rankBadge = `<div class="rank-badge rank-badge--bronze">🥉</div>`;
+
+    // Card class
+    let cardClass = 'player-card';
+    if (rank === 1) cardClass += ' rank-1';
+    else if (rank === 2) cardClass += ' rank-2';
+    else if (rank === 3) cardClass += ' rank-3';
+    if (online) cardClass += ' player-card--online';
+
+    // Avatar (first letter or emoji)
+    const avatarContent = player.avatar && !player.avatar.startsWith('data:')
+        ? player.avatar
+        : (player.wot_nickname || '?')[0].toUpperCase();
 
     // Winrate color
     let wrClass = '';
@@ -399,30 +409,34 @@ function createRowHTML(player, stats, rank, cfg) {
         else wrClass = 'wr-bad';
     }
 
-    const tgName = player.first_name || player.username || '';
-    const accountId = player.wot_account_id;
-    const online = isPlayerOnline(accountId);
-    const onlineBadge = online
-        ? '<span class="online-badge"><span class="online-dot"></span>В игре</span>'
-        : '';
+    // Online dot & subtitle
+    const onlineDot = online ? '<div class="player-avatar__online"></div>' : '';
+    const subLine = online
+        ? '<span class="player-online-text"><span class="dot"></span>В игре</span>'
+        : (tgName ? `<span class="player-tg-name">${tgName}</span>` : '');
 
     return `
-        <tr class="${rankClass}" onclick="showPlayerModal(${accountId})">
-            <td class="td-rank ${rank === 1 ? 'td-rank--gold' : rank === 2 ? 'td-rank--silver' : rank === 3 ? 'td-rank--bronze' : ''}">${rankContent}</td>
-            <td>
-                <div class="td-player">
-                    <span class="wn8-dot ${wn8Class}"></span>
-                    <div>
-                        <div class="player-nick">${player.wot_nickname}</div>
-                        ${onlineBadge || (tgName ? `<div class="player-tg">${tgName}</div>` : '')}
-                    </div>
-                </div>
-            </td>
-            <td class="td-value">${formatted}</td>
-            <td class="td-battles">${battles > 0 ? battles.toLocaleString('ru-RU') : '—'}</td>
-            <td class="td-winrate ${wrClass}">${winrate}${winrate !== '—' ? '%' : ''}</td>
-        </tr>
-    `;
+    <div class="${cardClass}" onclick="showPlayerModal(${accountId})">
+        ${rankBadge}
+        <div class="player-avatar">
+            ${avatarContent}
+            ${onlineDot}
+        </div>
+        <div class="wn8-indicator ${wn8Color}"></div>
+        <div class="player-info">
+            <div class="player-name">${player.wot_nickname}</div>
+            <div class="player-sub">
+                ${subLine}
+            </div>
+        </div>
+        <div class="player-stats">
+            <div class="player-main-stat">${mainStat}</div>
+            <div class="player-secondary">
+                <span>${battles > 0 ? battles.toLocaleString('ru-RU') + ' боёв' : ''}</span>
+                <span class="${wrClass}">${winrate !== '—' ? winrate + '%' : ''}</span>
+            </div>
+        </div>
+    </div>`;
 }
 
 // ============================================================

@@ -1,14 +1,15 @@
 /* ==========================================
-   TOP PLAYERS TABLE — Мир Танков
-   Compact table design for thousands of players
+   PLAYERS LIST — Мир Танков
+   Premium card design
    ========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
     --bg-primary: #0a0e14;
     --bg-secondary: #0d1117;
     --bg-card: #151b24;
     --bg-card-hover: #1a2332;
-    --bg-row-even: rgba(255, 255, 255, 0.015);
     --border-subtle: rgba(200, 170, 110, 0.1);
     --border-gold: rgba(200, 170, 110, 0.3);
     --text-primary: #e0e0e0;
@@ -59,8 +60,8 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 16px;
-    background: rgba(10, 14, 20, 0.95);
+    padding: 12px 16px;
+    background: linear-gradient(180deg, rgba(10, 14, 20, 0.98) 0%, rgba(10, 14, 20, 0.92) 100%);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border-subtle);
 }
@@ -123,7 +124,7 @@ body {
    ========================================== */
 .category-tabs-wrap {
     position: sticky;
-    top: 57px;
+    top: 61px;
     z-index: 99;
     background: rgba(10, 14, 20, 0.95);
     backdrop-filter: blur(20px);
@@ -157,7 +158,7 @@ body {
     transition: all 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
-    min-width: 58px;
+    min-width: 52px;
 }
 
 .cat-tab--active {
@@ -187,11 +188,11 @@ body {
    ========================================== */
 .filter-bar {
     position: sticky;
-    top: 109px;
+    top: 113px;
     z-index: 98;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     padding: 8px 12px;
     background: rgba(10, 14, 20, 0.95);
     backdrop-filter: blur(20px);
@@ -234,6 +235,53 @@ body {
     color: rgba(255, 255, 255, 0.2);
 }
 
+/* Online toggle */
+.online-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.25s;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+}
+
+.online-toggle:active {
+    transform: scale(0.92);
+}
+
+.online-toggle.active {
+    border-color: rgba(46, 204, 113, 0.5);
+    background: rgba(46, 204, 113, 0.12);
+    color: #2ecc71;
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.15);
+}
+
+.online-dot-filter {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #5A6577;
+    transition: all 0.25s;
+}
+
+.online-toggle.active .online-dot-filter {
+    background: #2ecc71;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.7);
+    animation: onlinePulse 2s ease-in-out infinite;
+}
+
+.online-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Refresh */
 .refresh-btn {
     background: rgba(200, 170, 110, 0.1);
     border: 1px solid var(--border-gold);
@@ -254,96 +302,6 @@ body {
 
 .refresh-btn.spinning .refresh-icon {
     animation: spin 0.8s linear infinite;
-}
-
-/* Online toggle button */
-.online-toggle {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    padding: 8px 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex-shrink: 0;
-    color: var(--text-secondary);
-}
-
-.online-toggle:active {
-    transform: scale(0.9);
-}
-
-.online-toggle.active {
-    border-color: rgba(46, 204, 113, 0.5);
-    background: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
-}
-
-.online-dot-btn {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #5A6577;
-    transition: all 0.2s;
-}
-
-.online-toggle.active .online-dot-btn {
-    background: #2ecc71;
-    box-shadow: 0 0 6px rgba(46, 204, 113, 0.6);
-}
-
-.online-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-/* Online indicator in player row */
-.online-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 0.55rem;
-    color: #2ecc71;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.online-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #2ecc71;
-    box-shadow: 0 0 6px rgba(46, 204, 113, 0.6);
-    animation: onlinePulse 2s ease-in-out infinite;
-}
-
-.offline-badge {
-    font-size: 0.55rem;
-    color: #5A6577;
-}
-
-@keyframes onlinePulse {
-
-    0%,
-    100% {
-        opacity: 1;
-        box-shadow: 0 0 4px rgba(46, 204, 113, 0.4);
-    }
-
-    50% {
-        opacity: 0.6;
-        box-shadow: 0 0 8px rgba(46, 204, 113, 0.8);
-    }
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 /* ==========================================
@@ -381,241 +339,274 @@ body {
 }
 
 /* ==========================================
-   TABLE
+   PLAYER CARDS LIST
    ========================================== */
-.table-wrap {
+.players-list {
     position: relative;
     z-index: 1;
-    overflow-x: auto;
+    padding: 8px 10px 20px;
 }
 
-.top-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem;
+.players-list__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.top-table thead {
-    background: rgba(13, 17, 23, 0.98);
-}
-
-.top-table th {
-    padding: 8px 10px;
-    text-align: left;
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-secondary);
-    border-bottom: 2px solid var(--border-gold);
-    white-space: nowrap;
-    user-select: none;
-}
-
-.th-rank {
-    width: 40px;
-    text-align: center;
-}
-
-.th-player {
-    min-width: 120px;
-}
-
-.th-value {
-    width: 80px;
-    text-align: right;
+/* Player Card */
+.player-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
     cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
 }
 
-.th-battles {
-    width: 70px;
-    text-align: right;
+.player-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 3px 0 0 3px;
+    background: transparent;
+    transition: background 0.2s;
 }
 
-.th-winrate {
-    width: 55px;
-    text-align: right;
-}
-
-.sortable:hover {
-    color: var(--text-gold);
-}
-
-.sort-arrow {
-    font-size: 0.6rem;
-    margin-left: 2px;
-    transition: transform 0.2s;
-    display: inline-block;
-}
-
-.sort-arrow.asc {
-    transform: rotate(180deg);
-}
-
-.top-table tbody tr {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    transition: background 0.15s;
-    cursor: pointer;
-}
-
-.top-table tbody tr:nth-child(even) {
-    background: var(--bg-row-even);
-}
-
-.top-table tbody tr:hover {
+.player-card:active {
+    transform: scale(0.98);
     background: rgba(200, 170, 110, 0.06);
 }
 
-.top-table tbody tr:active {
-    background: rgba(200, 170, 110, 0.1);
+/* Top 3 rank glow */
+.player-card.rank-1 {
+    background: rgba(255, 215, 0, 0.05);
+    border-color: rgba(255, 215, 0, 0.15);
 }
 
-/* Top 3 rows highlight */
-.top-table tbody tr.rank-1 {
-    background: rgba(255, 215, 0, 0.06);
+.player-card.rank-1::before {
+    background: #FFD700;
 }
 
-.top-table tbody tr.rank-2 {
+.player-card.rank-2 {
     background: rgba(192, 192, 192, 0.04);
+    border-color: rgba(192, 192, 192, 0.12);
 }
 
-.top-table tbody tr.rank-3 {
+.player-card.rank-2::before {
+    background: #C0C0C0;
+}
+
+.player-card.rank-3 {
     background: rgba(205, 127, 50, 0.04);
+    border-color: rgba(205, 127, 50, 0.12);
 }
 
-.top-table td {
-    padding: 10px 10px;
-    vertical-align: middle;
+.player-card.rank-3::before {
+    background: #CD7F32;
 }
 
-/* Rank cell */
-.td-rank {
-    text-align: center;
-    font-family: 'Russo One', sans-serif;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+.player-card--online {
+    border-color: rgba(46, 204, 113, 0.2);
 }
 
-.td-rank--gold {
-    color: #FFD700;
-}
-
-.td-rank--silver {
-    color: #C0C0C0;
-}
-
-.td-rank--bronze {
-    color: #CD7F32;
-}
-
-.rank-medal {
-    font-size: 1rem;
-}
-
-/* Player cell */
-.td-player {
+/* Rank badge */
+.rank-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
 }
 
-.player-nick {
+.rank-badge--gold {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.08));
+    color: #FFD700;
+    font-size: 0.9rem;
+}
+
+.rank-badge--silver {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), rgba(192, 192, 192, 0.08));
+    color: #C0C0C0;
+    font-size: 0.9rem;
+}
+
+.rank-badge--bronze {
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), rgba(205, 127, 50, 0.08));
+    color: #CD7F32;
+    font-size: 0.9rem;
+}
+
+/* Avatar */
+.player-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(200, 170, 110, 0.1);
+    border: 2px solid rgba(200, 170, 110, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.player-avatar__online {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2ecc71;
+    border: 2px solid var(--bg-primary);
+    box-shadow: 0 0 6px rgba(46, 204, 113, 0.6);
+    animation: onlinePulse 2s ease-in-out infinite;
+}
+
+/* Player info */
+.player-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.player-name {
     font-weight: 700;
     color: #fff;
+    font-size: 0.85rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 160px;
-    font-size: 0.82rem;
 }
 
-.player-tg {
+.player-sub {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 1px;
+}
+
+.player-tg-name {
     font-size: 0.65rem;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 120px;
 }
 
-/* WN8 dot */
-.wn8-dot {
-    width: 8px;
-    height: 8px;
+.player-online-text {
+    font-size: 0.6rem;
+    color: #2ecc71;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.player-online-text .dot {
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
-    flex-shrink: 0;
-    display: inline-block;
-}
-
-.wn8-dot--red {
-    background: #e74c3c;
-    box-shadow: 0 0 4px rgba(231, 76, 60, 0.4);
-}
-
-.wn8-dot--yellow {
-    background: #f1c40f;
-    box-shadow: 0 0 4px rgba(241, 196, 15, 0.4);
-}
-
-.wn8-dot--green {
     background: #2ecc71;
-    box-shadow: 0 0 4px rgba(46, 204, 113, 0.4);
+    animation: onlinePulse 2s ease-in-out infinite;
 }
 
-.wn8-dot--blue {
-    background: #3498db;
-    box-shadow: 0 0 4px rgba(52, 152, 219, 0.4);
+/* Stats right side */
+.player-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
 }
 
-.wn8-dot--purple {
-    background: #9b59b6;
-    box-shadow: 0 0 4px rgba(155, 89, 182, 0.4);
-}
-
-.wn8-dot--gray {
-    background: #5A6577;
-}
-
-/* Value cells */
-.td-value {
-    text-align: right;
+.player-main-stat {
     font-family: 'Russo One', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     color: var(--text-gold);
     white-space: nowrap;
 }
 
-.td-battles {
-    text-align: right;
-    font-size: 0.8rem;
-    color: var(--text-primary);
-    white-space: nowrap;
+.player-secondary {
+    display: flex;
+    gap: 8px;
+    font-size: 0.65rem;
 }
 
-.td-winrate {
-    text-align: right;
-    font-size: 0.8rem;
+.player-secondary span {
+    color: var(--text-secondary);
     white-space: nowrap;
 }
 
 .wr-good {
-    color: var(--green);
+    color: var(--green) !important;
 }
 
 .wr-avg {
-    color: var(--yellow);
+    color: var(--yellow) !important;
 }
 
 .wr-bad {
-    color: var(--red);
+    color: var(--red) !important;
 }
 
-/* Loading row */
-.loading-row td {
+/* WN8 color indicator */
+.wn8-indicator {
+    width: 4px;
+    height: 22px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.wn8-red {
+    background: #e74c3c;
+    box-shadow: 0 0 4px rgba(231, 76, 60, 0.3);
+}
+
+.wn8-yellow {
+    background: #f1c40f;
+    box-shadow: 0 0 4px rgba(241, 196, 15, 0.3);
+}
+
+.wn8-green {
+    background: #2ecc71;
+    box-shadow: 0 0 4px rgba(46, 204, 113, 0.3);
+}
+
+.wn8-blue {
+    background: #3498db;
+    box-shadow: 0 0 4px rgba(52, 152, 219, 0.3);
+}
+
+.wn8-purple {
+    background: #9b59b6;
+    box-shadow: 0 0 4px rgba(155, 89, 182, 0.3);
+}
+
+.wn8-gray {
+    background: #5A6577;
+}
+
+/* No results in list */
+.no-results {
     text-align: center;
+    padding: 32px 16px;
     color: var(--text-secondary);
-    padding: 16px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
 }
 
 /* ==========================================
@@ -840,7 +831,27 @@ body {
     }
 }
 
-/* Progress bar for batch loading */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes onlinePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 4px rgba(46, 204, 113, 0.4);
+    }
+
+    50% {
+        opacity: 0.6;
+        box-shadow: 0 0 8px rgba(46, 204, 113, 0.8);
+    }
+}
+
+/* Progress bar */
 .progress-wrap {
     width: 200px;
     height: 4px;
@@ -858,28 +869,9 @@ body {
     width: 0%;
 }
 
-
 /* ==========================================
-   MOBILE
+   SCROLLBAR
    ========================================== */
-@media (max-width: 400px) {
-
-    .th-battles,
-    .td-battles {
-        display: none;
-    }
-
-    .player-nick {
-        max-width: 110px;
-    }
-
-    .top-table th,
-    .top-table td {
-        padding: 8px 6px;
-    }
-}
-
-/* Scrollbar */
 ::-webkit-scrollbar {
     width: 4px;
 }
@@ -890,5 +882,5 @@ body {
 
 ::-webkit-scrollbar-thumb {
     background: rgba(200, 170, 110, 0.2);
-    border-radius: 4px;
+    border-radius: 2px;
 }
