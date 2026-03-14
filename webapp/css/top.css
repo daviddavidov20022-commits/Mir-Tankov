@@ -256,6 +256,90 @@ body {
     animation: spin 0.8s linear infinite;
 }
 
+/* Online toggle button */
+.online-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+}
+
+.online-toggle:active {
+    transform: scale(0.9);
+}
+
+.online-toggle.active {
+    border-color: rgba(46, 204, 113, 0.5);
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.online-dot-btn {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #5A6577;
+    transition: all 0.2s;
+}
+
+.online-toggle.active .online-dot-btn {
+    background: #2ecc71;
+    box-shadow: 0 0 6px rgba(46, 204, 113, 0.6);
+}
+
+.online-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Online indicator in player row */
+.online-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.55rem;
+    color: #2ecc71;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.online-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2ecc71;
+    box-shadow: 0 0 6px rgba(46, 204, 113, 0.6);
+    animation: onlinePulse 2s ease-in-out infinite;
+}
+
+.offline-badge {
+    font-size: 0.55rem;
+    color: #5A6577;
+}
+
+@keyframes onlinePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 4px rgba(46, 204, 113, 0.4);
+    }
+
+    50% {
+        opacity: 0.6;
+        box-shadow: 0 0 8px rgba(46, 204, 113, 0.8);
+    }
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);

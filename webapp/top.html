@@ -76,6 +76,10 @@
             <input type="text" id="filterInput" class="filter-input" placeholder="Поиск по нику..."
                 oninput="filterTable()">
         </div>
+        <button class="online-toggle" id="onlineToggle" onclick="toggleOnlineFilter()" title="Только онлайн">
+            <span class="online-dot-btn"></span>
+            <span class="online-label">ON</span>
+        </button>
         <button class="refresh-btn" id="refreshBtn" onclick="loadAllPlayers()" title="Обновить">
             <span class="refresh-icon">🔄</span>
         </button>

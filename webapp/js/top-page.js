@@ -34,6 +34,17 @@ let currentCategory = 'all';
 let sortAscending = false;
 let filterText = '';
 let isLoading = false;
+let onlineOnly = false;
+
+// Онлайн = последний бой менее 15 минут назад
+const ONLINE_THRESHOLD_SEC = 15 * 60;
+
+function isPlayerOnline(accountId) {
+    const stats = playersStats[String(accountId)];
+    if (!stats || !stats.last_battle_time) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return (now - stats.last_battle_time) < ONLINE_THRESHOLD_SEC;
+}
 
 // Текущий пользователь
 function getMyTelegramId() {
@@ -289,11 +300,20 @@ function renderTable() {
 
     // Sort players
     const sorted = getSortedPlayers();
-    const filtered = filterText
+    let filtered = filterText
         ? sorted.filter(p => p.wot_nickname.toLowerCase().includes(filterText))
         : sorted;
 
-    document.getElementById('totalCount').textContent = filtered.length;
+    // Онлайн фильтр
+    if (onlineOnly) {
+        filtered = filtered.filter(p => isPlayerOnline(p.wot_account_id));
+    }
+
+    // Считаем онлайн
+    const onlineCount = sorted.filter(p => isPlayerOnline(p.wot_account_id)).length;
+    document.getElementById('totalCount').textContent = onlineOnly
+        ? `${filtered.length} 🟢`
+        : filtered.length;
 
     if (filtered.length === 0) {
         tbody.innerHTML = `
@@ -380,8 +400,11 @@ function createRowHTML(player, stats, rank, cfg) {
     }
 
     const tgName = player.first_name || player.username || '';
-
     const accountId = player.wot_account_id;
+    const online = isPlayerOnline(accountId);
+    const onlineBadge = online
+        ? '<span class="online-badge"><span class="online-dot"></span>В игре</span>'
+        : '';
 
     return `
         <tr class="${rankClass}" onclick="showPlayerModal(${accountId})">
@@ -391,7 +414,7 @@ function createRowHTML(player, stats, rank, cfg) {
                     <span class="wn8-dot ${wn8Class}"></span>
                     <div>
                         <div class="player-nick">${player.wot_nickname}</div>
-                        ${tgName ? `<div class="player-tg">${tgName}</div>` : ''}
+                        ${onlineBadge || (tgName ? `<div class="player-tg">${tgName}</div>` : '')}
                     </div>
                 </div>
             </td>
@@ -438,6 +461,17 @@ function toggleSortDir() {
 function filterTable() {
     filterText = document.getElementById('filterInput').value.trim().toLowerCase();
     renderTable();
+}
+
+function toggleOnlineFilter() {
+    onlineOnly = !onlineOnly;
+    const btn = document.getElementById('onlineToggle');
+    btn.classList.toggle('active', onlineOnly);
+    renderTable();
+
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.selectionChanged();
+    }
 }
 
 // ============================================================
@@ -624,6 +658,7 @@ async function sendChallenge(targetTgId, nickname) {
 window.switchCategory = switchCategory;
 window.toggleSortDir = toggleSortDir;
 window.filterTable = filterTable;
+window.toggleOnlineFilter = toggleOnlineFilter;
 window.showPlayerModal = showPlayerModal;
 window.openStatsPage = openStatsPage;
 window.loadAllPlayers = loadAllPlayers;
