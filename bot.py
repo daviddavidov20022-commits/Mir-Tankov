@@ -4818,6 +4818,38 @@ async def api_global_challenge_delete(request):
         return cors_response({"error": str(e)}, 500)
 
 
+
+# --- TOP PLAYERS API ---
+
+async def api_top_players(request):
+    """GET /api/top/players — получить всех пользователей с привязанным WoT аккаунтом"""
+    try:
+        from database import get_db
+        with get_db() as conn:
+            rows = conn.execute("""
+                SELECT telegram_id, first_name, username, wot_nickname, wot_account_id, avatar
+                FROM users
+                WHERE wot_account_id IS NOT NULL AND wot_nickname IS NOT NULL
+                ORDER BY wot_nickname ASC
+            """).fetchall()
+
+        players = []
+        for r in rows:
+            players.append({
+                "telegram_id": r["telegram_id"],
+                "first_name": r["first_name"],
+                "username": r["username"],
+                "wot_nickname": r["wot_nickname"],
+                "wot_account_id": r["wot_account_id"],
+                "avatar": r["avatar"],
+            })
+
+        return cors_response({"players": players, "total": len(players)})
+    except Exception as e:
+        logger.error(f"API top_players error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 # ==========================================
 # ЗАПУСК
 # ==========================================
@@ -4856,6 +4888,9 @@ def create_api_app():
     app.router.add_get("/api/admin/users", api_admin_users)
     app.router.add_post("/api/admin/toggle-admin", api_admin_toggle_admin)
     app.router.add_post("/api/admin/cancel-challenge", api_admin_cancel_challenge)
+
+    # Top Players API
+    app.router.add_get("/api/top/players", api_top_players)
 
     # Streams API
     app.router.add_get("/api/streams/status", api_streams_status)

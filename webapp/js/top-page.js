@@ -1,89 +1,85 @@
 /**
  * Топ Игроков — Мир Танков
- * Добавляй игроков по нику и сравнивай по разным категориям:
- * WN8, Средний урон, Ветеран (дата регистрации), Количество боёв, Время в игре
+ * Автоматическая загрузка всех подписчиков из БД + стата Lesta API
+ * Табличный формат на тысячи игроков
  */
 
 // ============================================================
-// API CONFIG
+// CONFIG
 // ============================================================
 const LESTA_APP_ID = "c984faa7dc529f4cb0139505d5e8043c";
 const LESTA_API_URL = "https://api.tanki.su/wot";
 
+// API URL — определяем автоматически
+const API_BASE = (() => {
+    const params = new URLSearchParams(window.location.search);
+    const host = params.get('api') || localStorage.getItem('api_host');
+    if (host) return host;
+    // Default: same origin or stored
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return `http://${window.location.hostname}:8081`;
+    }
+    // GitHub Pages — нужен внешний API
+    const savedApi = localStorage.getItem('api_url');
+    if (savedApi) return savedApi;
+    return 'https://mir-tankov-api.onrender.com'; // fallback
+})();
+
 // ============================================================
 // STATE
 // ============================================================
-let topPlayers = JSON.parse(localStorage.getItem('top_players_data') || '[]');
+let allPlayers = [];        // Players from DB (with wot_account_ids)
+let playersStats = {};      // account_id -> stats from Lesta API
 let currentCategory = 'wn8';
-let isSearching = false;
-let searchDebounceTimer = null;
+let sortAscending = false;
+let filterText = '';
+let isLoading = false;
 
 // Category config
 const CATEGORIES = {
     wn8: {
-        icon: '🎖',
-        title: 'Топ по WN8 рейтингу',
-        subtitle: 'Лучшие игроки по личному рейтингу',
-        getValue: (p) => p.global_rating || 0,
-        format: (v) => v.toLocaleString(),
-        unit: 'WN8',
+        label: 'WN8',
+        getValue: (s) => s.global_rating || 0,
+        format: (v) => v.toLocaleString('ru-RU'),
         sortDesc: true,
     },
     damage: {
-        icon: '💥',
-        title: 'Топ по среднему урону',
-        subtitle: 'Кто наносит больше всего урона за бой',
-        getValue: (p) => {
-            const s = p.statistics?.all || {};
-            return s.battles > 0 ? Math.round(s.damage_dealt / s.battles) : 0;
+        label: 'Ср. урон',
+        getValue: (s) => {
+            const a = s.statistics?.all || {};
+            return a.battles > 0 ? Math.round(a.damage_dealt / a.battles) : 0;
         },
-        format: (v) => v.toLocaleString(),
-        unit: 'Ср. урон',
+        format: (v) => v.toLocaleString('ru-RU'),
         sortDesc: true,
     },
     veteran: {
-        icon: '📅',
-        title: 'Старейшие игроки',
-        subtitle: 'Кто раньше всех зарегистрировался в Мир Танков',
-        getValue: (p) => p.created_at || Infinity,
+        label: 'Регистрация',
+        getValue: (s) => s.created_at || Infinity,
         format: (v) => {
             if (!v || v === Infinity) return '—';
             return new Date(v * 1000).toLocaleDateString('ru-RU', {
                 day: '2-digit', month: '2-digit', year: 'numeric'
             });
         },
-        unit: 'Регистрация',
-        sortDesc: false, // Ascending — oldest first
+        sortDesc: false,
     },
     battles: {
-        icon: '⚔️',
-        title: 'Топ по количеству боёв',
-        subtitle: 'Самые активные танкисты по числу боёв',
-        getValue: (p) => {
-            const s = p.statistics?.all || {};
-            return s.battles || 0;
-        },
-        format: (v) => v.toLocaleString(),
-        unit: 'Боёв',
+        label: 'Боёв',
+        getValue: (s) => (s.statistics?.all?.battles) || 0,
+        format: (v) => v.toLocaleString('ru-RU'),
         sortDesc: true,
     },
     playtime: {
-        icon: '⏱',
-        title: 'Топ по времени в игре',
-        subtitle: 'Кто проводит больше всего времени в танках',
-        getValue: (p) => {
-            // Estimate playtime: battles × avg ~7 min per battle
-            const s = p.statistics?.all || {};
-            const battles = s.battles || 0;
-            // Better estimate: use actual battle time if available, otherwise ~7 min per battle
-            return Math.round(battles * 7); // minutes
+        label: 'Время',
+        getValue: (s) => {
+            const b = s.statistics?.all?.battles || 0;
+            return Math.round(b * 7); // минуты (~7 мин/бой)
         },
         format: (v) => {
-            const hours = Math.floor(v / 60);
-            if (hours >= 1000) return (hours / 1000).toFixed(1) + 'K ч';
-            return hours.toLocaleString() + ' ч';
+            const h = Math.floor(v / 60);
+            if (h >= 1000) return (h / 1000).toFixed(1) + 'K ч';
+            return h.toLocaleString('ru-RU') + ' ч';
         },
-        unit: 'Время',
         sortDesc: true,
     },
 };
@@ -92,223 +88,272 @@ const CATEGORIES = {
 // INITIALIZATION
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    renderLeaderboard();
-
-    const input = document.getElementById('addPlayerInput');
-    if (input) {
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') addPlayerToTop();
-        });
-
-        // Live search suggestions
-        input.addEventListener('input', () => {
-            clearTimeout(searchDebounceTimer);
-            const val = input.value.trim();
-            if (val.length >= 2) {
-                searchDebounceTimer = setTimeout(() => showSearchSuggestions(val), 400);
-            } else {
-                removeSuggestions();
+    // Try to load cached data first for instant display
+    const cached = localStorage.getItem('top_players_cache');
+    if (cached) {
+        try {
+            const data = JSON.parse(cached);
+            playersStats = data.stats || {};
+            allPlayers = data.players || [];
+            if (allPlayers.length > 0) {
+                renderTable();
+                document.getElementById('loadingFull').style.display = 'none';
+                document.getElementById('tableWrap').style.display = 'block';
             }
-        });
-
-        // Close suggestions on outside click
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.add-player-card')) {
-                removeSuggestions();
-            }
-        });
+        } catch (e) { /* ignore */ }
     }
+
+    // Then refresh from API
+    loadAllPlayers();
 });
 
 // ============================================================
-// SEARCH & ADD PLAYERS
+// LOAD ALL PLAYERS FROM BOT API + LESTA STATS
 // ============================================================
-async function addPlayerToTop() {
-    const input = document.getElementById('addPlayerInput');
-    const nickname = input.value.trim();
+async function loadAllPlayers() {
+    if (isLoading) return;
+    isLoading = true;
 
-    if (nickname.length < 2) {
-        shakeInput(input);
-        return;
-    }
+    const refreshBtn = document.getElementById('refreshBtn');
+    refreshBtn?.classList.add('spinning');
 
-    // Check if already added
-    if (topPlayers.some(p => p.nickname.toLowerCase() === nickname.toLowerCase())) {
-        showToast('⚠️', 'Игрок уже в списке!');
-        return;
-    }
+    const loadingEl = document.getElementById('loadingFull');
+    const tableWrap = document.getElementById('tableWrap');
+    const emptyState = document.getElementById('emptyState');
+    const statusEl = document.getElementById('loadingStatus');
 
-    showLoading(true);
-    removeSuggestions();
-
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    // Only show full loading if no cached data
+    if (allPlayers.length === 0) {
+        loadingEl.style.display = 'flex';
+        tableWrap.style.display = 'none';
+        emptyState.style.display = 'none';
     }
 
     try {
-        const playerData = await fetchPlayerData(nickname);
-        if (playerData) {
-            topPlayers.push(playerData);
-            saveTopPlayers();
-            input.value = '';
-            renderLeaderboard();
-            showToast('✅', `${playerData.nickname} добавлен в топ!`);
+        // Step 1: Get all players with WoT accounts from our bot DB
+        if (statusEl) statusEl.textContent = 'Получаем список игроков...';
+        const dbPlayers = await fetchBotPlayers();
 
-            if (window.Telegram?.WebApp?.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-            }
-        } else {
-            showToast('❌', 'Игрок не найден');
-            if (window.Telegram?.WebApp?.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-            }
-        }
-    } catch (e) {
-        console.error('Error adding player:', e);
-        showToast('❌', 'Ошибка загрузки');
-    }
-
-    showLoading(false);
-}
-
-async function fetchPlayerData(nickname) {
-    // Step 1: Search for player by nickname
-    const searchUrl = `${LESTA_API_URL}/account/list/?application_id=${LESTA_APP_ID}&search=${encodeURIComponent(nickname)}&limit=1&type=exact`;
-    let searchResp = await fetch(searchUrl);
-    let searchData = await searchResp.json();
-
-    // If exact match fails, try startswith
-    if (searchData.status !== 'ok' || !searchData.data || searchData.data.length === 0) {
-        const searchUrl2 = `${LESTA_API_URL}/account/list/?application_id=${LESTA_APP_ID}&search=${encodeURIComponent(nickname)}&limit=1`;
-        searchResp = await fetch(searchUrl2);
-        searchData = await searchResp.json();
-    }
-
-    if (searchData.status !== 'ok' || !searchData.data || searchData.data.length === 0) {
-        return null;
-    }
-
-    const accountId = searchData.data[0].account_id;
-
-    // Step 2: Get full stats
-    const infoUrl = `${LESTA_API_URL}/account/info/?application_id=${LESTA_APP_ID}&account_id=${accountId}`;
-    const infoResp = await fetch(infoUrl);
-    const infoData = await infoResp.json();
-
-    if (infoData.status !== 'ok' || !infoData.data) {
-        return null;
-    }
-
-    const data = infoData.data[String(accountId)];
-    if (!data) return null;
-
-    // Add fetch timestamp
-    data._fetchedAt = Date.now();
-
-    return data;
-}
-
-async function fetchPlayerByAccountId(accountId) {
-    const infoUrl = `${LESTA_API_URL}/account/info/?application_id=${LESTA_APP_ID}&account_id=${accountId}`;
-    const infoResp = await fetch(infoUrl);
-    const infoData = await infoResp.json();
-
-    if (infoData.status !== 'ok' || !infoData.data) return null;
-
-    const data = infoData.data[String(accountId)];
-    if (!data) return null;
-    data._fetchedAt = Date.now();
-    return data;
-}
-
-// ============================================================
-// SEARCH SUGGESTIONS
-// ============================================================
-async function showSearchSuggestions(query) {
-    try {
-        const url = `${LESTA_API_URL}/account/list/?application_id=${LESTA_APP_ID}&search=${encodeURIComponent(query)}&limit=5`;
-        const resp = await fetch(url);
-        const data = await resp.json();
-
-        if (data.status !== 'ok' || !data.data || data.data.length === 0) {
-            removeSuggestions();
+        if (!dbPlayers || dbPlayers.length === 0) {
+            loadingEl.style.display = 'none';
+            emptyState.style.display = 'block';
+            tableWrap.style.display = 'none';
+            isLoading = false;
+            refreshBtn?.classList.remove('spinning');
             return;
         }
 
-        renderSuggestions(data.data);
+        allPlayers = dbPlayers;
+        document.getElementById('totalCount').textContent = dbPlayers.length;
+
+        // Step 2: Batch fetch stats from Lesta API
+        if (statusEl) statusEl.textContent = `Загружаем статистику ${dbPlayers.length} игроков...`;
+
+        const accountIds = dbPlayers.map(p => p.wot_account_id);
+        await batchFetchLestaStats(accountIds);
+
+        // Step 3: Cache and render
+        cacheData();
+        loadingEl.style.display = 'none';
+        tableWrap.style.display = 'block';
+        emptyState.style.display = 'none';
+        renderTable();
+
+        showToast('✅', `Загружено ${dbPlayers.length} игроков`);
+
     } catch (e) {
-        console.warn('Search suggestions error:', e);
-    }
-}
-
-function renderSuggestions(players) {
-    removeSuggestions();
-
-    const addCard = document.querySelector('.add-player-card');
-    if (!addCard) return;
-
-    addCard.style.position = 'relative';
-
-    const box = document.createElement('div');
-    box.className = 'search-suggestions';
-    box.id = 'searchSuggestions';
-
-    players.forEach(p => {
-        // Skip if already in list
-        const alreadyAdded = topPlayers.some(tp => tp.account_id === p.account_id);
-
-        const item = document.createElement('div');
-        item.className = 'suggestion-item';
-        item.innerHTML = `
-            <span class="suggestion-avatar">🪖</span>
-            <div>
-                <div class="suggestion-name">${p.nickname}</div>
-                <div class="suggestion-id">ID: ${p.account_id}${alreadyAdded ? ' • ✅ В списке' : ''}</div>
-            </div>
-        `;
-
-        if (!alreadyAdded) {
-            item.onclick = () => selectSuggestion(p);
+        console.error('Load error:', e);
+        // If we have cached data, still show it
+        if (allPlayers.length > 0) {
+            loadingEl.style.display = 'none';
+            tableWrap.style.display = 'block';
+            renderTable();
+            showToast('⚠️', 'Показаны кэшированные данные');
         } else {
-            item.style.opacity = '0.5';
+            loadingEl.style.display = 'none';
+            emptyState.style.display = 'block';
+            showToast('❌', 'Ошибка загрузки');
         }
+    }
 
-        box.appendChild(item);
-    });
-
-    addCard.appendChild(box);
+    isLoading = false;
+    refreshBtn?.classList.remove('spinning');
 }
 
-function removeSuggestions() {
-    const existing = document.getElementById('searchSuggestions');
-    if (existing) existing.remove();
-}
-
-async function selectSuggestion(player) {
-    removeSuggestions();
-    showLoading(true);
-
+async function fetchBotPlayers() {
     try {
-        const data = await fetchPlayerByAccountId(player.account_id);
-        if (data) {
-            if (topPlayers.some(p => p.account_id === data.account_id)) {
-                showToast('⚠️', 'Уже в списке!');
-            } else {
-                topPlayers.push(data);
-                saveTopPlayers();
-                renderLeaderboard();
-                showToast('✅', `${data.nickname} добавлен!`);
-            }
-        } else {
-            showToast('❌', 'Не удалось загрузить');
-        }
+        const resp = await fetch(`${API_BASE}/api/top/players`);
+        const data = await resp.json();
+        if (data.players) return data.players;
     } catch (e) {
-        showToast('❌', 'Ошибка');
+        console.warn('Bot API unavailable, using fallback...');
     }
 
-    const input = document.getElementById('addPlayerInput');
-    if (input) input.value = '';
-    showLoading(false);
+    // Fallback: if API not accessible, try local cache
+    return allPlayers.length > 0 ? allPlayers : null;
+}
+
+async function batchFetchLestaStats(accountIds) {
+    // Lesta API supports up to 100 accounts per request
+    const BATCH_SIZE = 100;
+    const batches = [];
+
+    for (let i = 0; i < accountIds.length; i += BATCH_SIZE) {
+        batches.push(accountIds.slice(i, i + BATCH_SIZE));
+    }
+
+    const progressBar = document.querySelector('.progress-bar');
+    let loaded = 0;
+
+    for (const batch of batches) {
+        try {
+            const ids = batch.join(',');
+            const url = `${LESTA_API_URL}/account/info/?application_id=${LESTA_APP_ID}&account_id=${ids}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+
+            if (data.status === 'ok' && data.data) {
+                for (const [id, stats] of Object.entries(data.data)) {
+                    if (stats) {
+                        playersStats[id] = stats;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Batch fetch error:', e);
+        }
+
+        loaded += batch.length;
+        const pct = Math.round((loaded / accountIds.length) * 100);
+        if (progressBar) progressBar.style.width = pct + '%';
+
+        const statusEl = document.getElementById('loadingStatus');
+        if (statusEl) statusEl.textContent = `Загружено ${loaded} из ${accountIds.length}...`;
+    }
+}
+
+function cacheData() {
+    try {
+        // Cache for 10 minutes
+        localStorage.setItem('top_players_cache', JSON.stringify({
+            players: allPlayers,
+            stats: playersStats,
+            timestamp: Date.now(),
+        }));
+    } catch (e) { /* quota exceeded, ignore */ }
+}
+
+// ============================================================
+// RENDER TABLE
+// ============================================================
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const cfg = CATEGORIES[currentCategory];
+
+    // Update header label
+    document.getElementById('thValueLabel').textContent = cfg.label;
+
+    // Sort players
+    const sorted = getSortedPlayers();
+    const filtered = filterText
+        ? sorted.filter(p => p.wot_nickname.toLowerCase().includes(filterText))
+        : sorted;
+
+    document.getElementById('totalCount').textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr class="loading-row">
+                <td colspan="5">Нет результатов по запросу "${filterText}"</td>
+            </tr>
+        `;
+        return;
+    }
+
+    // Build HTML efficiently (no DOM thrashing)
+    const rows = [];
+    for (let i = 0; i < filtered.length; i++) {
+        const p = filtered[i];
+        const rank = i + 1;
+        const stats = playersStats[String(p.wot_account_id)];
+        rows.push(createRowHTML(p, stats, rank, cfg));
+    }
+
+    tbody.innerHTML = rows.join('');
+}
+
+function getSortedPlayers() {
+    const cfg = CATEGORIES[currentCategory];
+    const desc = sortAscending ? !cfg.sortDesc : cfg.sortDesc;
+
+    return [...allPlayers].sort((a, b) => {
+        const sa = playersStats[String(a.wot_account_id)];
+        const sb = playersStats[String(b.wot_account_id)];
+        if (!sa && !sb) return 0;
+        if (!sa) return 1;
+        if (!sb) return -1;
+
+        const va = cfg.getValue(sa);
+        const vb = cfg.getValue(sb);
+        return desc ? (vb - va) : (va - vb);
+    });
+}
+
+function createRowHTML(player, stats, rank, cfg) {
+    const rating = stats?.global_rating || 0;
+    const allStats = stats?.statistics?.all || {};
+    const battles = allStats.battles || 0;
+    const wins = allStats.wins || 0;
+    const winrate = battles > 0 ? ((wins / battles) * 100).toFixed(1) : '—';
+
+    const value = stats ? cfg.getValue(stats) : 0;
+    const formatted = stats ? cfg.format(value) : '—';
+
+    // WN8 color
+    let wn8Class = 'wn8-dot--gray';
+    if (rating >= 10000) wn8Class = 'wn8-dot--purple';
+    else if (rating >= 8000) wn8Class = 'wn8-dot--blue';
+    else if (rating >= 6000) wn8Class = 'wn8-dot--green';
+    else if (rating >= 4000) wn8Class = 'wn8-dot--yellow';
+    else if (rating > 0) wn8Class = 'wn8-dot--red';
+
+    // Rank display
+    let rankClass = '';
+    let rankContent = rank;
+    if (rank === 1) { rankClass = 'rank-1'; rankContent = '<span class="rank-medal">🥇</span>'; }
+    else if (rank === 2) { rankClass = 'rank-2'; rankContent = '<span class="rank-medal">🥈</span>'; }
+    else if (rank === 3) { rankClass = 'rank-3'; rankContent = '<span class="rank-medal">🥉</span>'; }
+
+    // Winrate color
+    let wrClass = '';
+    const wrNum = parseFloat(winrate);
+    if (!isNaN(wrNum)) {
+        if (wrNum >= 55) wrClass = 'wr-good';
+        else if (wrNum >= 49) wrClass = 'wr-avg';
+        else wrClass = 'wr-bad';
+    }
+
+    const tgName = player.first_name || player.username || '';
+
+    const accountId = player.wot_account_id;
+
+    return `
+        <tr class="${rankClass}" onclick="showPlayerModal(${accountId})">
+            <td class="td-rank ${rank === 1 ? 'td-rank--gold' : rank === 2 ? 'td-rank--silver' : rank === 3 ? 'td-rank--bronze' : ''}">${rankContent}</td>
+            <td>
+                <div class="td-player">
+                    <span class="wn8-dot ${wn8Class}"></span>
+                    <div>
+                        <div class="player-nick">${player.wot_nickname}</div>
+                        ${tgName ? `<div class="player-tg">${tgName}</div>` : ''}
+                    </div>
+                </div>
+            </td>
+            <td class="td-value">${formatted}</td>
+            <td class="td-battles">${battles > 0 ? battles.toLocaleString('ru-RU') : '—'}</td>
+            <td class="td-winrate ${wrClass}">${winrate}${winrate !== '—' ? '%' : ''}</td>
+        </tr>
+    `;
 }
 
 // ============================================================
@@ -316,179 +361,58 @@ async function selectSuggestion(player) {
 // ============================================================
 function switchCategory(cat) {
     currentCategory = cat;
+    sortAscending = false;
 
-    // Update active tab
     document.querySelectorAll('.cat-tab').forEach(tab => {
         tab.classList.toggle('cat-tab--active', tab.dataset.cat === cat);
     });
 
-    // Update description
-    const cfg = CATEGORIES[cat];
-    document.getElementById('catTitle').textContent = cfg.title;
-    document.getElementById('catSubtitle').textContent = cfg.subtitle;
-    document.querySelector('.category-desc__icon').textContent = cfg.icon;
+    const arrow = document.getElementById('sortArrow');
+    arrow.classList.toggle('asc', !CATEGORIES[cat].sortDesc);
 
-    // Animate description
-    const desc = document.querySelector('.category-desc');
-    desc.style.animation = 'none';
-    desc.offsetHeight; // force reflow
-    desc.style.animation = 'fadeIn 0.4s ease-out';
-
-    // Re-render
-    renderLeaderboard();
+    renderTable();
 
     if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.selectionChanged();
     }
 }
 
-// ============================================================
-// RENDER LEADERBOARD
-// ============================================================
-function renderLeaderboard() {
+function toggleSortDir() {
+    sortAscending = !sortAscending;
+    const arrow = document.getElementById('sortArrow');
     const cfg = CATEGORIES[currentCategory];
-    const emptyState = document.getElementById('emptyState');
-    const podium = document.getElementById('podium');
-    const playersList = document.getElementById('playersList');
-
-    if (topPlayers.length === 0) {
-        emptyState.style.display = 'block';
-        podium.style.display = 'none';
-        playersList.innerHTML = '';
-        return;
-    }
-
-    emptyState.style.display = 'none';
-
-    // Sort players
-    const sorted = [...topPlayers].sort((a, b) => {
-        const va = cfg.getValue(a);
-        const vb = cfg.getValue(b);
-        return cfg.sortDesc ? (vb - va) : (va - vb);
-    });
-
-    // Get max value for bar widths
-    const values = sorted.map(p => cfg.getValue(p));
-    const maxVal = cfg.sortDesc
-        ? Math.max(...values)
-        : Math.max(...values.map((v, i) => {
-            // For veteran (oldest), invert for visual bar
-            return sorted.length - i;
-        }));
-
-    // Render podium (top 3)
-    if (sorted.length >= 3) {
-        podium.style.display = 'flex';
-        renderPodiumSlot('podium1', sorted[0], 1, cfg);
-        renderPodiumSlot('podium2', sorted[1], 2, cfg);
-        renderPodiumSlot('podium3', sorted[2], 3, cfg);
-    } else {
-        podium.style.display = 'none';
-    }
-
-    // Render player list (starting from position 4 if podium shown, else from 1)
-    const startIdx = sorted.length >= 3 ? 3 : 0;
-    const listPlayers = sorted.slice(startIdx);
-
-    if (sorted.length < 3) {
-        // Render all in list mode if <3 players
-        playersList.innerHTML = sorted.map((p, i) => createPlayerRow(p, i + 1, cfg, values)).join('');
-    } else {
-        playersList.innerHTML = listPlayers.map((p, i) => createPlayerRow(p, i + 4, cfg, values)).join('');
-    }
-
-    // Animate bars
-    setTimeout(() => {
-        document.querySelectorAll('.podium-bar__fill').forEach(bar => {
-            bar.style.width = bar.dataset.width || '0%';
-        });
-    }, 200);
+    const isAsc = sortAscending ? !cfg.sortDesc : !cfg.sortDesc;
+    arrow.classList.toggle('asc', sortAscending);
+    renderTable();
 }
 
-function renderPodiumSlot(slotId, player, rank, cfg) {
-    const slot = document.getElementById(slotId);
-    if (!slot || !player) return;
-
-    const value = cfg.getValue(player);
-    const formatted = cfg.format(value);
-
-    slot.querySelector('.podium-name').textContent = player.nickname || '—';
-    slot.querySelector('.podium-value').textContent = formatted;
-
-    // Bar percentage
-    const allValues = topPlayers.map(p => cfg.getValue(p));
-    const maxV = cfg.sortDesc ? Math.max(...allValues) : 1;
-    let barPct;
-    if (cfg.sortDesc) {
-        barPct = maxV > 0 ? Math.round((value / maxV) * 100) : 0;
-    } else {
-        // For veteran mode, rank-based percentage
-        barPct = Math.round(((topPlayers.length - rank + 1) / topPlayers.length) * 100);
-    }
-    const bar = slot.querySelector('.podium-bar__fill');
-    bar.dataset.width = barPct + '%';
-
-    // Click to view detail
-    slot.onclick = () => showPlayerModal(player);
-}
-
-function createPlayerRow(player, rank, cfg, allValues) {
-    const value = cfg.getValue(player);
-    const formatted = cfg.format(value);
-
-    // WN8 color for rating
-    const rating = player.global_rating || 0;
-    let wn8Class = 'wn8--red';
-    if (rating >= 10000) wn8Class = 'wn8--purple';
-    else if (rating >= 8000) wn8Class = 'wn8--blue';
-    else if (rating >= 6000) wn8Class = 'wn8--green';
-    else if (rating >= 4000) wn8Class = 'wn8--yellow';
-
-    // Sub info based on category
-    const stats = player.statistics?.all || {};
-    const battles = stats.battles || 0;
-    const winrate = battles > 0 ? ((stats.wins / battles) * 100).toFixed(1) : 0;
-    let subText = `${battles.toLocaleString()} боёв • ${winrate}% побед`;
-
-    const animDelay = Math.min((rank - 1) * 0.06, 0.6);
-
-    return `
-        <div class="player-row" style="animation-delay: ${animDelay}s" onclick="showPlayerModal(topPlayers.find(p => p.account_id === ${player.account_id}))">
-            <div class="player-rank ${rank <= 10 ? 'player-rank--top' : ''}">${rank}</div>
-            <div class="player-row-avatar">
-                <span class="wn8-indicator ${wn8Class}"></span>
-                🪖
-            </div>
-            <div class="player-row-info">
-                <div class="player-row-name">${player.nickname || '—'}</div>
-                <div class="player-row-sub">${subText}</div>
-            </div>
-            <div class="player-row-value">
-                <div class="player-row-value__main">${formatted}</div>
-                <div class="player-row-value__unit">${cfg.unit}</div>
-            </div>
-            <button class="player-row-remove" onclick="event.stopPropagation(); removePlayer(${player.account_id})" title="Удалить">✕</button>
-        </div>
-    `;
+// ============================================================
+// FILTER
+// ============================================================
+function filterTable() {
+    filterText = document.getElementById('filterInput').value.trim().toLowerCase();
+    renderTable();
 }
 
 // ============================================================
 // PLAYER MODAL
 // ============================================================
-function showPlayerModal(player) {
-    if (!player) return;
+function showPlayerModal(accountId) {
+    const stats = playersStats[String(accountId)];
+    const player = allPlayers.find(p => p.wot_account_id === accountId);
+    if (!stats || !player) return;
 
-    const stats = player.statistics?.all || {};
-    const battles = stats.battles || 0;
-    const wins = stats.wins || 0;
-    const winrate = battles > 0 ? ((wins / battles) * 100).toFixed(1) : 0;
-    const avgDmg = battles > 0 ? Math.round(stats.damage_dealt / battles) : 0;
-    const avgFrags = battles > 0 ? (stats.frags / battles).toFixed(2) : 0;
-    const survRate = battles > 0 ? ((stats.survived_battles / battles) * 100).toFixed(1) : 0;
-    const rating = player.global_rating || 0;
+    const allS = stats.statistics?.all || {};
+    const battles = allS.battles || 0;
+    const wins = allS.wins || 0;
+    const winrate = battles > 0 ? ((wins / battles) * 100).toFixed(1) : '0';
+    const avgDmg = battles > 0 ? Math.round(allS.damage_dealt / battles) : 0;
+    const avgFrags = battles > 0 ? (allS.frags / battles).toFixed(2) : '0';
+    const survRate = battles > 0 ? ((allS.survived_battles / battles) * 100).toFixed(1) : '0';
+    const rating = stats.global_rating || 0;
     const playtimeH = Math.round(battles * 7 / 60);
-    const created = player.created_at
-        ? new Date(player.created_at * 1000).toLocaleDateString('ru-RU')
+    const created = stats.created_at
+        ? new Date(stats.created_at * 1000).toLocaleDateString('ru-RU')
         : '—';
 
     let ratingText, ratingColor;
@@ -508,14 +432,13 @@ function showPlayerModal(player) {
             <div class="modal-header">
                 <div class="modal-avatar">🪖</div>
                 <div class="modal-info">
-                    <h3>${player.nickname || '—'}</h3>
-                    <div class="modal-rating" style="color:${ratingColor}">${ratingText} • ${rating.toLocaleString()}</div>
+                    <h3>${stats.nickname || player.wot_nickname}</h3>
+                    <div class="modal-rating" style="color:${ratingColor}">${ratingText} • ${rating.toLocaleString('ru-RU')}</div>
                 </div>
             </div>
-
             <div class="modal-stats">
                 <div class="modal-stat">
-                    <div class="modal-stat__value">${battles.toLocaleString()}</div>
+                    <div class="modal-stat__value">${battles.toLocaleString('ru-RU')}</div>
                     <div class="modal-stat__label">⚔️ Боёв</div>
                 </div>
                 <div class="modal-stat">
@@ -523,7 +446,7 @@ function showPlayerModal(player) {
                     <div class="modal-stat__label">🏆 Побед</div>
                 </div>
                 <div class="modal-stat">
-                    <div class="modal-stat__value">${avgDmg.toLocaleString()}</div>
+                    <div class="modal-stat__value">${avgDmg.toLocaleString('ru-RU')}</div>
                     <div class="modal-stat__label">💥 Ср. урон</div>
                 </div>
                 <div class="modal-stat">
@@ -535,7 +458,7 @@ function showPlayerModal(player) {
                     <div class="modal-stat__label">💚 Выживание</div>
                 </div>
                 <div class="modal-stat">
-                    <div class="modal-stat__value">${playtimeH.toLocaleString()} ч</div>
+                    <div class="modal-stat__value">${playtimeH.toLocaleString('ru-RU')} ч</div>
                     <div class="modal-stat__label">⏱ Время</div>
                 </div>
                 <div class="modal-stat">
@@ -543,20 +466,18 @@ function showPlayerModal(player) {
                     <div class="modal-stat__label">📅 Регистрация</div>
                 </div>
                 <div class="modal-stat">
-                    <div class="modal-stat__value">${(stats.max_damage || 0).toLocaleString()}</div>
+                    <div class="modal-stat__value">${(allS.max_damage || 0).toLocaleString('ru-RU')}</div>
                     <div class="modal-stat__label">🔥 Макс. урон</div>
                 </div>
             </div>
-
             <div class="modal-actions">
-                <button class="modal-btn modal-btn--primary" onclick="openStatsPage('${player.nickname}')">📊 Подробнее</button>
+                <button class="modal-btn modal-btn--primary" onclick="openStatsPage('${stats.nickname || player.wot_nickname}')">📊 Подробнее</button>
                 <button class="modal-btn modal-btn--secondary" onclick="document.getElementById('playerModal').remove()">Закрыть</button>
             </div>
         </div>
     `;
 
     document.body.appendChild(overlay);
-
     if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
     }
@@ -565,71 +486,12 @@ function showPlayerModal(player) {
 function openStatsPage(nickname) {
     const modal = document.getElementById('playerModal');
     if (modal) modal.remove();
-
-    const myId = localStorage.getItem('my_telegram_id');
-    let url = `stats.html?nick=${encodeURIComponent(nickname)}`;
-    if (myId) url += `&telegram_id=${myId}`;
-    window.location.href = url;
-}
-
-// ============================================================
-// PLAYER MANAGEMENT
-// ============================================================
-function removePlayer(accountId) {
-    topPlayers = topPlayers.filter(p => p.account_id !== accountId);
-    saveTopPlayers();
-    renderLeaderboard();
-    showToast('🗑', 'Игрок удалён из списка');
-
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    }
-}
-
-function saveTopPlayers() {
-    localStorage.setItem('top_players_data', JSON.stringify(topPlayers));
+    window.location.href = `stats.html?nick=${encodeURIComponent(nickname)}`;
 }
 
 // ============================================================
 // UI HELPERS
 // ============================================================
-function showLoading(show) {
-    const el = document.getElementById('topLoading');
-    if (el) el.style.display = show ? 'flex' : 'none';
-}
-
-function shakeInput(input) {
-    if (!input) return;
-    input.style.animation = 'shake 0.4s ease';
-    input.style.borderColor = '#e74c3c';
-    setTimeout(() => {
-        input.style.animation = '';
-        input.style.borderColor = '';
-    }, 500);
-
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-    }
-}
-
-// Inject shake animation
-(function () {
-    if (!document.getElementById('shakeStyleTop')) {
-        const style = document.createElement('style');
-        style.id = 'shakeStyleTop';
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                20% { transform: translateX(-8px); }
-                40% { transform: translateX(8px); }
-                60% { transform: translateX(-4px); }
-                80% { transform: translateX(4px); }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-})();
-
 function goBack() {
     if (window.Telegram?.WebApp?.BackButton) {
         window.Telegram.WebApp.BackButton.hide();
@@ -637,7 +499,6 @@ function goBack() {
     window.location.href = 'index.html';
 }
 
-// Setup Telegram back button
 if (window.Telegram?.WebApp?.BackButton) {
     window.Telegram.WebApp.BackButton.show();
     window.Telegram.WebApp.BackButton.onClick(goBack);
@@ -646,9 +507,10 @@ if (window.Telegram?.WebApp?.BackButton) {
 // ============================================================
 // EXPOSE
 // ============================================================
-window.addPlayerToTop = addPlayerToTop;
 window.switchCategory = switchCategory;
-window.removePlayer = removePlayer;
+window.toggleSortDir = toggleSortDir;
+window.filterTable = filterTable;
 window.showPlayerModal = showPlayerModal;
 window.openStatsPage = openStatsPage;
+window.loadAllPlayers = loadAllPlayers;
 window.goBack = goBack;

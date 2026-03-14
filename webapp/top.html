@@ -26,6 +26,10 @@
             <h1>🏆 Топ Игроков</h1>
             <span class="header-sub">Мир Танков</span>
         </div>
+        <div class="header-count" id="headerCount">
+            <span class="count-num" id="totalCount">—</span>
+            <span class="count-label">игроков</span>
+        </div>
     </header>
 
     <!-- Category Tabs -->
@@ -54,78 +58,51 @@
         </div>
     </div>
 
-    <!-- Category Description -->
-    <div class="category-desc" id="categoryDesc">
-        <div class="category-desc__icon">🎖</div>
-        <div class="category-desc__text">
-            <h3 id="catTitle">Топ по WN8 рейтингу</h3>
-            <p id="catSubtitle">Лучшие игроки по личному рейтингу</p>
+    <!-- Search/Filter Bar -->
+    <div class="filter-bar">
+        <div class="search-wrap">
+            <span class="search-icon-sm">🔍</span>
+            <input type="text" id="filterInput" class="filter-input" placeholder="Поиск по нику..."
+                oninput="filterTable()">
         </div>
+        <button class="refresh-btn" id="refreshBtn" onclick="loadAllPlayers()" title="Обновить">
+            <span class="refresh-icon">🔄</span>
+        </button>
     </div>
 
-    <!-- Add Player Section -->
-    <div class="add-player-section">
-        <div class="add-player-card">
-            <div class="add-input-wrap">
-                <input type="text" id="addPlayerInput" class="add-input" placeholder="Добавить игрока по нику..."
-                    autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="24">
-                <button class="add-btn" id="addBtn" onclick="addPlayerToTop()">
-                    <span>➕</span>
-                </button>
-            </div>
-            <div class="add-hint">Найдите и добавьте игроков в рейтинг</div>
-        </div>
+    <!-- Loading State -->
+    <div class="loading-full" id="loadingFull">
+        <div class="loading-spinner-lg"></div>
+        <p class="loading-text">Загрузка игроков...</p>
+        <p class="loading-sub" id="loadingStatus">Получаем данные из базы</p>
     </div>
 
-    <!-- Loading -->
-    <div class="top-loading" id="topLoading" style="display: none;">
-        <div class="loading-spinner"></div>
-        <span>Загрузка...</span>
-    </div>
-
-    <!-- Leaderboard -->
-    <div class="leaderboard" id="leaderboard">
-        <!-- Podium (Top 3) -->
-        <div class="podium" id="podium" style="display: none;">
-            <div class="podium-slot podium-slot--2" id="podium2">
-                <div class="podium-medal">🥈</div>
-                <div class="podium-avatar">🪖</div>
-                <div class="podium-name">—</div>
-                <div class="podium-value">—</div>
-                <div class="podium-bar">
-                    <div class="podium-bar__fill"></div>
-                </div>
-            </div>
-            <div class="podium-slot podium-slot--1" id="podium1">
-                <div class="podium-crown">👑</div>
-                <div class="podium-medal">🥇</div>
-                <div class="podium-avatar podium-avatar--gold">🪖</div>
-                <div class="podium-name">—</div>
-                <div class="podium-value">—</div>
-                <div class="podium-bar">
-                    <div class="podium-bar__fill"></div>
-                </div>
-            </div>
-            <div class="podium-slot podium-slot--3" id="podium3">
-                <div class="podium-medal">🥉</div>
-                <div class="podium-avatar">🪖</div>
-                <div class="podium-name">—</div>
-                <div class="podium-value">—</div>
-                <div class="podium-bar">
-                    <div class="podium-bar__fill"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Players list (rest) -->
-        <div class="players-list" id="playersList"></div>
+    <!-- Table -->
+    <div class="table-wrap" id="tableWrap" style="display: none;">
+        <table class="top-table" id="topTable">
+            <thead>
+                <tr>
+                    <th class="th-rank">#</th>
+                    <th class="th-player">Игрок</th>
+                    <th class="th-value sortable" id="thValue" onclick="toggleSortDir()">
+                        <span id="thValueLabel">WN8</span>
+                        <span class="sort-arrow" id="sortArrow">▼</span>
+                    </th>
+                    <th class="th-battles">Боёв</th>
+                    <th class="th-winrate">Побед</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
     </div>
 
     <!-- Empty State -->
-    <div class="empty-state" id="emptyState">
-        <div class="empty-icon">🔍</div>
-        <h3>Топ пока пуст</h3>
-        <p>Добавьте игроков по нику, чтобы сравнить их рейтинги!</p>
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">📭</div>
+        <h3>Нет игроков</h3>
+        <p>Никто из подписчиков ещё не привязал аккаунт Мир Танков.<br>
+            Привяжите ник в профиле через /start → Профиль</p>
     </div>
 
     <script src="js/app.js"></script>
