@@ -36,14 +36,29 @@ let filterText = '';
 let isLoading = false;
 let onlineOnly = false;
 
-// Онлайн = последний бой менее 15 минут назад
-const ONLINE_THRESHOLD_SEC = 15 * 60;
-
+// Онлайн-определение:
+// 1) logout_at < updated_at → ещё в клиенте (не вышел)
+// 2) last_battle_time < 30 минут → недавно играл
+// 3) logout_at < 5 минут → только что вышел
 function isPlayerOnline(accountId) {
     const stats = playersStats[String(accountId)];
-    if (!stats || !stats.last_battle_time) return false;
+    if (!stats) return false;
     const now = Math.floor(Date.now() / 1000);
-    return (now - stats.last_battle_time) < ONLINE_THRESHOLD_SEC;
+
+    const lastBattle = stats.last_battle_time || 0;
+    const logoutAt = stats.logout_at || 0;
+    const updatedAt = stats.updated_at || 0;
+
+    // Если logout_at < updated_at → игрок в клиенте (не разлогинился)
+    if (logoutAt > 0 && updatedAt > 0 && logoutAt < updatedAt) return true;
+
+    // Последний бой менее 30 минут назад
+    if (lastBattle > 0 && (now - lastBattle) < 30 * 60) return true;
+
+    // Вышел менее 5 минут назад
+    if (logoutAt > 0 && (now - logoutAt) < 5 * 60) return true;
+
+    return false;
 }
 
 // Текущий пользователь
@@ -450,9 +465,6 @@ function switchCategory(cat) {
         tab.classList.toggle('cat-tab--active', tab.dataset.cat === cat);
     });
 
-    const arrow = document.getElementById('sortArrow');
-    arrow.classList.toggle('asc', !CATEGORIES[cat].sortDesc);
-
     renderTable();
 
     if (window.Telegram?.WebApp?.HapticFeedback) {
@@ -462,10 +474,6 @@ function switchCategory(cat) {
 
 function toggleSortDir() {
     sortAscending = !sortAscending;
-    const arrow = document.getElementById('sortArrow');
-    const cfg = CATEGORIES[currentCategory];
-    const isAsc = sortAscending ? !cfg.sortDesc : !cfg.sortDesc;
-    arrow.classList.toggle('asc', sortAscending);
     renderTable();
 }
 
