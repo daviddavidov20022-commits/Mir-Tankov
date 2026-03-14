@@ -312,11 +312,7 @@ body {
 }
 
 .top-table thead {
-    position: sticky;
-    top: 149px;
-    z-index: 50;
     background: rgba(13, 17, 23, 0.98);
-    backdrop-filter: blur(10px);
 }
 
 .top-table th {
