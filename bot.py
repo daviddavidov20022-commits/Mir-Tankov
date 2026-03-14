@@ -4819,6 +4819,107 @@ async def api_global_challenge_delete(request):
 
 
 
+# --- PROFILE SAVE/GET API ---
+
+async def api_profile_save(request):
+    """POST /api/profile/save — сохранить привязку WoT аккаунта и аватарку в БД"""
+    try:
+        data = await request.json()
+        telegram_id = data.get("telegram_id")
+        if not telegram_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+
+        telegram_id = int(telegram_id)
+
+        from database import get_db
+        with get_db() as conn:
+            # Проверяем, что пользователь существует
+            user = conn.execute(
+                "SELECT id FROM users WHERE telegram_id = ?", (telegram_id,)
+            ).fetchone()
+
+            if not user:
+                # Создаём пользователя если не существует
+                conn.execute(
+                    "INSERT INTO users (telegram_id, first_name) VALUES (?, ?)",
+                    (telegram_id, data.get("first_name", ""))
+                )
+
+            # Обновляем WoT данные
+            wot_nickname = data.get("wot_nickname")
+            wot_account_id = data.get("wot_account_id")
+            avatar = data.get("avatar")
+
+            updates = []
+            params = []
+
+            if wot_nickname is not None:
+                updates.append("wot_nickname = ?")
+                params.append(wot_nickname)
+            if wot_account_id is not None:
+                updates.append("wot_account_id = ?")
+                params.append(int(wot_account_id))
+            if avatar is not None:
+                updates.append("avatar = ?")
+                params.append(avatar)
+
+            # Всегда обновляем first_name если передан
+            first_name = data.get("first_name")
+            if first_name:
+                updates.append("first_name = ?")
+                params.append(first_name)
+
+            if updates:
+                params.append(telegram_id)
+                conn.execute(
+                    f"UPDATE users SET {', '.join(updates)} WHERE telegram_id = ?",
+                    params
+                )
+
+        logger.info(f"Profile saved for TG:{telegram_id} WoT:{wot_nickname} AccID:{wot_account_id}")
+        return cors_response({"ok": True})
+    except Exception as e:
+        logger.error(f"API profile_save error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_profile_get(request):
+    """GET /api/profile?telegram_id=123 — получить профиль из БД"""
+    try:
+        telegram_id = request.query.get("telegram_id")
+        if not telegram_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+
+        from database import get_db
+        with get_db() as conn:
+            user = conn.execute(
+                """SELECT telegram_id, first_name, username, wot_nickname, wot_account_id,
+                          wot_verified, avatar, coins, xp, level, joined_at
+                   FROM users WHERE telegram_id = ?""",
+                (int(telegram_id),)
+            ).fetchone()
+
+            if not user:
+                return cors_response({"error": "User not found"}, 404)
+
+            return cors_response({
+                "telegram_id": user["telegram_id"],
+                "first_name": user["first_name"],
+                "username": user["username"],
+                "wot_nickname": user["wot_nickname"],
+                "wot_account_id": user["wot_account_id"],
+                "wot_verified": bool(user["wot_verified"]),
+                "avatar": user["avatar"],
+                "coins": user["coins"],
+                "xp": user["xp"],
+                "level": user["level"],
+                "joined_at": user["joined_at"],
+            })
+    except Exception as e:
+        logger.error(f"API profile_get error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 # --- TOP PLAYERS API ---
 
 async def api_top_players(request):
@@ -4888,6 +4989,10 @@ def create_api_app():
     app.router.add_get("/api/admin/users", api_admin_users)
     app.router.add_post("/api/admin/toggle-admin", api_admin_toggle_admin)
     app.router.add_post("/api/admin/cancel-challenge", api_admin_cancel_challenge)
+
+    # Profile API
+    app.router.add_post("/api/profile/save", api_profile_save)
+    app.router.add_get("/api/profile", api_profile_get)
 
     # Top Players API
     app.router.add_get("/api/top/players", api_top_players)

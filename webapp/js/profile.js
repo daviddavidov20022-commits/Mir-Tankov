@@ -1,6 +1,7 @@
 /**
  * Профиль — JS логика
- * Управление никнеймом, реальная статистика через API Lesta Games
+ * Управление никнеймом, аватаркой, реальная статистика через API Lesta Games
+ * Данные сохраняются на сервер через POST /api/profile/save
  */
 
 // ============================================================
@@ -8,6 +9,19 @@
 // ============================================================
 const LESTA_API_URL = 'https://api.tanki.su/wot';
 const LESTA_APP_ID = 'c984faa7dc529f4cb0139505d5e8043c';
+
+// API сервера бота
+const PROFILE_API_BASE = (() => {
+    const params = new URLSearchParams(window.location.search);
+    const host = params.get('api') || localStorage.getItem('api_host');
+    if (host) return host;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return `http://${window.location.hostname}:8081`;
+    }
+    const savedApi = localStorage.getItem('api_url');
+    if (savedApi) return savedApi;
+    return 'https://mir-tankov-api.onrender.com';
+})();
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ
@@ -17,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProfile();
     loadProgress();
     checkAchievements();
+    setupAvatarPicker();
+    loadProfileFromServer();
 });
 
 // ============================================================
@@ -60,7 +76,6 @@ function loadProfile() {
 function syncToCloud(nickname, accountId) {
     const tg = window.Telegram?.WebApp;
     if (!tg?.CloudStorage) return;
-    // Сохраняем в облако чтобы на других устройствах тоже было
     tg.CloudStorage.setItem('wot_nickname', nickname);
     if (accountId) tg.CloudStorage.setItem('wot_account_id', String(accountId));
     tg.CloudStorage.setItem('wot_verified', 'true');
@@ -73,6 +88,231 @@ function saveToCloud(nickname, accountId) {
         tg.CloudStorage.setItem('wot_nickname', nickname);
         tg.CloudStorage.setItem('wot_account_id', String(accountId));
         tg.CloudStorage.setItem('wot_verified', 'true');
+    }
+}
+
+// ============================================================
+// СОХРАНЕНИЕ НА СЕРВЕР (критично для Топ Игроков!)
+// ============================================================
+function getTelegramId() {
+    const tg = window.Telegram?.WebApp;
+    if (tg?.initDataUnsafe?.user?.id) return tg.initDataUnsafe.user.id;
+    // Из URL
+    const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('telegram_id');
+    if (urlId) return parseInt(urlId);
+    // Из localStorage
+    return localStorage.getItem('my_telegram_id');
+}
+
+function getFirstName() {
+    const tg = window.Telegram?.WebApp;
+    return tg?.initDataUnsafe?.user?.first_name || '';
+}
+
+async function saveToServer(data) {
+    const telegramId = getTelegramId();
+    if (!telegramId) {
+        console.warn('No telegram_id, cannot save to server');
+        return;
+    }
+
+    try {
+        const payload = {
+            telegram_id: telegramId,
+            first_name: getFirstName(),
+            ...data,
+        };
+        console.log('Saving to server:', payload);
+
+        const resp = await fetch(`${PROFILE_API_BASE}/api/profile/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const result = await resp.json();
+        if (result.ok) {
+            console.log('Profile saved to server!');
+        } else {
+            console.warn('Server save failed:', result.error);
+        }
+    } catch (e) {
+        console.warn('Cannot reach API server:', e.message);
+    }
+}
+
+async function loadProfileFromServer() {
+    const telegramId = getTelegramId();
+    if (!telegramId) return;
+
+    try {
+        const resp = await fetch(`${PROFILE_API_BASE}/api/profile?telegram_id=${telegramId}`);
+        const data = await resp.json();
+
+        if (data.wot_nickname && data.wot_account_id) {
+            // Восстанавливаем из сервера если в localStorage нет
+            if (!localStorage.getItem('wot_nickname')) {
+                localStorage.setItem('wot_nickname', data.wot_nickname);
+                localStorage.setItem('wot_account_id', String(data.wot_account_id));
+                localStorage.setItem('wot_verified', 'true');
+                showSavedNickname(data.wot_nickname);
+                loadQuickStats(data.wot_nickname);
+                showToast('✅', 'Аккаунт восстановлен с сервера');
+            }
+        }
+
+        // Восстанавливаем аватарку с сервера
+        if (data.avatar) {
+            localStorage.setItem('user_avatar', data.avatar);
+            updateAvatarDisplay(data.avatar);
+        }
+    } catch (e) {
+        console.warn('Cannot load profile from server:', e.message);
+    }
+}
+
+// ============================================================
+// АВАТАРКА — выбор и сохранение
+// ============================================================
+const AVATAR_EMOJIS = ['🪖', '🎖', '⭐', '🏆', '🔥', '💎', '🐱', '🐶', '🦊', '🐻', '🦁', '🐺', '🎯', '🚀', '💀', '👑', '🛡️', '⚔️'];
+
+function setupAvatarPicker() {
+    const avatarImage = document.getElementById('avatarImage');
+    if (!avatarImage) return;
+
+    // Загружаем сохранённую аватарку
+    const saved = localStorage.getItem('user_avatar');
+    if (saved) updateAvatarDisplay(saved);
+
+    // Клик по аватарке — открывает выбор
+    avatarImage.style.cursor = 'pointer';
+    avatarImage.addEventListener('click', showAvatarPicker);
+}
+
+function showAvatarPicker() {
+    // Удаляем старый пикер если есть
+    const old = document.getElementById('avatarPickerOverlay');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'avatarPickerOverlay';
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); z-index: 5000;
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px; backdrop-filter: blur(8px);
+    `;
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: #151b24; border: 1px solid rgba(200,170,110,0.3);
+        border-radius: 18px; padding: 20px; width: 100%; max-width: 340px;
+        animation: fadeInUp 0.3s ease;
+    `;
+
+    let emojisHtml = '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px;">';
+    AVATAR_EMOJIS.forEach(emoji => {
+        emojisHtml += `<button onclick="selectAvatarEmoji('${emoji}')" style="
+            font-size:1.6rem;padding:10px;background:rgba(255,255,255,0.04);
+            border:1px solid rgba(255,255,255,0.08);border-radius:12px;cursor:pointer;
+            transition:all 0.2s;" onmouseover="this.style.background='rgba(200,170,110,0.15)'" 
+            onmouseout="this.style.background='rgba(255,255,255,0.04)'">${emoji}</button>`;
+    });
+    emojisHtml += '</div>';
+
+    modal.innerHTML = `
+        <h3 style="font-family:'Russo One',sans-serif;color:#C8AA6E;margin-bottom:14px;font-size:0.95rem;">📸 Выберите аватарку</h3>
+        <p style="font-size:0.75rem;color:#8b9bb4;margin-bottom:12px;">Нажмите на эмодзи или загрузите фото:</p>
+        ${emojisHtml}
+        <div style="display:flex;gap:8px;">
+            <label style="flex:1;padding:11px;border-radius:10px;background:linear-gradient(135deg,#C8AA6E,#E8D5A3);
+                color:#0a0e14;text-align:center;cursor:pointer;font-size:0.8rem;font-weight:600;">
+                📷 Загрузить фото
+                <input type="file" accept="image/*" onchange="uploadAvatarPhoto(event)" style="display:none;">
+            </label>
+            <button onclick="document.getElementById('avatarPickerOverlay').remove()" style="
+                flex:1;padding:11px;border-radius:10px;background:transparent;
+                border:1px solid rgba(255,255,255,0.1);color:#8b9bb4;cursor:pointer;font-size:0.8rem;">Закрыть</button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+}
+
+function selectAvatarEmoji(emoji) {
+    localStorage.setItem('user_avatar', emoji);
+    updateAvatarDisplay(emoji);
+    saveToServer({ avatar: emoji });
+    const overlay = document.getElementById('avatarPickerOverlay');
+    if (overlay) overlay.remove();
+    showToast('✅', 'Аватарка сохранена!');
+}
+
+function uploadAvatarPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Ограничение размера (500KB макс для base64)
+    if (file.size > 500000) {
+        showToast('❌', 'Фото слишком большое (макс 500KB)');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        // Создаём миниатюру 64x64
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            // Круг
+            ctx.beginPath();
+            ctx.arc(32, 32, 32, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            // Масштаб и центрирование
+            const scale = Math.max(64 / img.width, 64 / img.height);
+            const w = img.width * scale, h = img.height * scale;
+            ctx.drawImage(img, (64 - w) / 2, (64 - h) / 2, w, h);
+
+            const base64 = canvas.toDataURL('image/webp', 0.7);
+            localStorage.setItem('user_avatar', base64);
+            updateAvatarDisplay(base64);
+            saveToServer({ avatar: base64 });
+
+            const overlay = document.getElementById('avatarPickerOverlay');
+            if (overlay) overlay.remove();
+            showToast('✅', 'Фото сохранено!');
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function updateAvatarDisplay(avatar) {
+    const el = document.getElementById('avatarImage');
+    if (!el) return;
+
+    if (avatar.startsWith('data:')) {
+        // Фото
+        el.innerHTML = '';
+        el.style.backgroundImage = `url(${avatar})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+        el.style.fontSize = '0';
+    } else {
+        // Эмодзи
+        el.textContent = avatar;
+        el.style.backgroundImage = 'none';
+        el.style.fontSize = '';
     }
 }
 
@@ -184,6 +424,9 @@ function checkVerifyParams() {
         localStorage.setItem('wot_verified', 'true');
         saveToCloud(nickname, accountId);
 
+        // ✅ СОХРАНЯЕМ НА СЕРВЕР!
+        saveToServer({ wot_nickname: nickname, wot_account_id: parseInt(accountId) });
+
         showSavedNickname(nickname);
         loadQuickStats(nickname);
         showToast('✅', `Аккаунт ${nickname} привязан!`);
@@ -262,6 +505,9 @@ async function verifyCode() {
 
             // Сохраняем в облако Telegram (навсегда!)
             saveToCloud(realNick, accountId);
+
+            // ✅ СОХРАНЯЕМ НА СЕРВЕР (для Топ Игроков!)
+            saveToServer({ wot_nickname: realNick, wot_account_id: accountId });
 
             showSavedNickname(realNick);
             loadQuickStats(realNick);
@@ -598,3 +844,6 @@ window.showStep2 = showStep2;
 window.verifyCode = verifyCode;
 window.viewMyStats = viewMyStats;
 window.goBack = goBack;
+window.selectAvatarEmoji = selectAvatarEmoji;
+window.uploadAvatarPhoto = uploadAvatarPhoto;
+window.showAvatarPicker = showAvatarPicker;

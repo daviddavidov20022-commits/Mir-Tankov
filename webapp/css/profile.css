@@ -153,6 +153,29 @@ body {
     font-size: 48px;
     border: 2px solid var(--border-gold);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.avatar-image:active {
+    transform: scale(0.95);
+}
+
+.avatar-container::after {
+    content: '📷';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(200, 170, 110, 0.9);
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 0.55rem;
+    z-index: 2;
+    color: #0a0e14;
+    font-weight: 700;
+    pointer-events: none;
 }
 
 .avatar-level {
