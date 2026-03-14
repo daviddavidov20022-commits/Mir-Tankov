@@ -196,15 +196,34 @@ async function loadAllPlayers() {
 }
 
 async function fetchBotPlayers() {
+    // Способ 1: API бота (если бот на сервере или localhost)
     try {
-        const resp = await fetch(`${API_BASE}/api/top/players`);
+        const resp = await fetch(`${API_BASE}/api/top/players`, { signal: AbortSignal.timeout(5000) });
         const data = await resp.json();
-        if (data.players) return data.players;
+        if (data.players && data.players.length > 0) {
+            console.log(`✅ Загружено ${data.players.length} игроков из API`);
+            return data.players;
+        }
     } catch (e) {
-        console.warn('Bot API unavailable, using fallback...');
+        console.warn('Bot API недоступен, пробуем JSON файл...', e.message);
     }
 
-    // Fallback: if API not accessible, try local cache
+    // Способ 2: Статический JSON файл на GitHub Pages
+    try {
+        const jsonUrl = 'data/players.json';
+        const resp = await fetch(jsonUrl, { signal: AbortSignal.timeout(5000) });
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.players && data.players.length > 0) {
+                console.log(`✅ Загружено ${data.players.length} игроков из JSON файла`);
+                return data.players;
+            }
+        }
+    } catch (e) {
+        console.warn('JSON файл недоступен:', e.message);
+    }
+
+    // Способ 3: Кэш
     return allPlayers.length > 0 ? allPlayers : null;
 }
 
