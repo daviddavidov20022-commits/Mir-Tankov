@@ -13,6 +13,15 @@ const DEFAULT_CHANNEL = 'iserveri';
 const TWITCH_WS_URL = 'wss://irc-ws.chat.twitch.tv:443';
 const MAX_CHAT_MESSAGES = 200;
 
+// Популярные каналы для быстрого переключения
+const POPULAR_CHANNELS = [
+    { name: 'ISERVERI', channel: 'iserveri', desc: 'Мир Танков' },
+    { name: 'Silvername', channel: 'silvername', desc: 'WoT стримы' },
+    { name: 'EviL_GrannY', channel: 'evil_granny', desc: 'WoT' },
+    { name: 'Amway921', channel: 'amway921', desc: 'WoT обзоры' },
+    { name: 'LeBwa', channel: 'lebwa', desc: 'WoT' },
+];
+
 let currentChannel = DEFAULT_CHANNEL;
 let twitchWs = null;
 let chatMessages = [];
@@ -20,7 +29,6 @@ let isConnected = false;
 let reconnectAttempts = 0;
 let reconnectTimeout = null;
 
-// Twitch badge colors by user color
 const DEFAULT_COLORS = [
     '#FF4500', '#00FF7F', '#1E90FF', '#9ACD32', '#FF69B4',
     '#FFD700', '#00CED1', '#FF6347', '#8A2BE2', '#2E8B57',
@@ -79,34 +87,62 @@ function initTwitchPlayer() {
     iframe.src = `https://player.twitch.tv/?channel=${currentChannel}&parent=${parent}&muted=false`;
 }
 
-function changeChannel() {
-    const input = document.getElementById('channelInput');
-    const newChannel = input.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-    if (!newChannel) return;
+/**
+ * Извлечь имя канала из ссылки или текста
+ * Поддерживает: twitch.tv/username, просто username
+ */
+function extractTwitchChannel(input) {
+    input = input.trim();
+    // twitch.tv/username или www.twitch.tv/username
+    const match = input.match(/twitch\.tv\/([a-zA-Z0-9_]+)/i);
+    if (match) return match[1].toLowerCase();
+    // Просто имя канала
+    const clean = input.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    return clean || null;
+}
+
+function changeChannel(channelName) {
+    let newChannel;
+    if (channelName) {
+        newChannel = channelName;
+    } else {
+        const input = document.getElementById('channelInput');
+        newChannel = extractTwitchChannel(input.value);
+    }
+    if (!newChannel) { showToast('❌', 'Введи имя канала!'); return; }
 
     currentChannel = newChannel;
     
-    // Обновляем плеер
     initTwitchPlayer();
-    
-    // Переподключаем чат
     disconnectTwitchChat();
     connectTwitchChat();
     
-    // Обновляем UI
     document.getElementById('streamTitle').textContent = newChannel.toUpperCase();
     document.getElementById('channelSettings').style.display = 'none';
+    document.getElementById('channelInput').value = newChannel;
     
-    // Системное сообщение
     addSystemMessage(`Канал переключён на ${newChannel}`);
-    
     showToast('📺', `Канал: ${newChannel}`);
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) { }
 }
 
 function toggleChannelSettings() {
     const el = document.getElementById('channelSettings');
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    const isHidden = el.style.display === 'none';
+    el.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) renderPopularChannels();
+}
+
+function renderPopularChannels() {
+    const container = document.getElementById('popularChannels');
+    if (!container) return;
+    container.innerHTML = POPULAR_CHANNELS.map(ch => `
+        <button class="popular-ch ${ch.channel === currentChannel ? 'popular-ch--active' : ''}" 
+                onclick="changeChannel('${ch.channel}')">
+            <span class="popular-ch__name">${ch.name}</span>
+            <span class="popular-ch__desc">${ch.desc}</span>
+        </button>
+    `).join('');
 }
 
 // ==========================================

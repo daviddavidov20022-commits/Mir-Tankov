@@ -148,6 +148,45 @@
     box-shadow: 0 4px 16px rgba(145, 70, 255, 0.3);
 }
 
+.channel-settings__popular {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.popular-ch {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.popular-ch:hover {
+    background: rgba(145, 70, 255, 0.1);
+    border-color: rgba(145, 70, 255, 0.2);
+}
+
+.popular-ch--active {
+    background: rgba(145, 70, 255, 0.15);
+    border-color: rgba(145, 70, 255, 0.35);
+}
+
+.popular-ch__name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.7rem;
+    color: #e8e6e3;
+    font-weight: 600;
+}
+
+.popular-ch__desc {
+    font-size: 0.55rem;
+    color: #5A6577;
+}
 /* Stream Player */
 .stream-player {
     border-radius: 12px;

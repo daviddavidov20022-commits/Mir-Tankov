@@ -53,8 +53,12 @@
                 <div class="channel-settings__title">Сменить канал</div>
                 <div class="channel-settings__input-group">
                     <input type="text" id="channelInput" class="channel-settings__input" 
-                           placeholder="Имя канала Twitch..." value="iserveri" autocomplete="off">
+                           placeholder="Имя канала или ссылка twitch.tv/..." value="iserveri" autocomplete="off"
+                           onkeydown="if(event.key==='Enter')changeChannel()">
                     <button class="channel-settings__btn" onclick="changeChannel()">Подключить</button>
+                </div>
+                <div class="channel-settings__popular" id="popularChannels">
+                    <!-- Filled by JS -->
                 </div>
             </div>
 
