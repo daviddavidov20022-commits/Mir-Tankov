@@ -5777,7 +5777,20 @@ def create_api_app():
     obs_dir = os.path.join(os.path.dirname(__file__), 'webapp', 'obs')
     if os.path.isdir(obs_dir):
         app.router.add_static('/obs/', obs_dir)
-
+    
+    # Раздача webapp файлов (quiz.html и др.)
+    webapp_dir = os.path.join(os.path.dirname(__file__), 'webapp')
+    
+    async def serve_webapp_file(request):
+        """Отдаёт файлы из webapp/"""
+        filename = request.match_info.get('filename', '')
+        filepath = os.path.join(webapp_dir, filename)
+        if os.path.isfile(filepath) and not '..' in filename:
+            return web.FileResponse(filepath)
+        return web.Response(text="Not found", status=404)
+    
+    app.router.add_get('/quiz.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'quiz.html')))
+    
     return app
 
 
