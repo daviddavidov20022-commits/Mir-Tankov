@@ -22,7 +22,7 @@ const API_BASE = (() => {
     // GitHub Pages — нужен внешний API
     const savedApi = localStorage.getItem('api_url');
     if (savedApi) return savedApi;
-    return 'https://mir-tankov-api.onrender.com'; // fallback
+    return 'https://mir-tankov-production.up.railway.app'; // fallback
 })();
 
 // ============================================================

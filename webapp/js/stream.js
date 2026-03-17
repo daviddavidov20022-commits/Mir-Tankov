@@ -20,7 +20,7 @@ const BOT_API_URL = (() => {
     }
     const savedApi = localStorage.getItem('api_url');
     if (savedApi) return savedApi;
-    return 'https://mir-tankov-api.onrender.com';
+    return 'https://mir-tankov-production.up.railway.app';
 })();
 
 // Каналы по умолчанию (если localStorage пуст)
