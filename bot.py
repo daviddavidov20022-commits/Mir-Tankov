@@ -1,3 +1,4 @@
+# v2.5 — донаты + музыка + OBS виджет + TwitchReader
 import asyncio
 import json
 import logging
