@@ -831,3 +831,85 @@
         width: 100%;
     }
 }
+
+/* ==========================================
+   YOUTUBE OPEN CARD (вместо iframe)
+   ========================================== */
+.yt-open-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f0f18, #1a1025, #0f1520);
+}
+
+.yt-open-card__inner {
+    text-align: center;
+    padding: 24px;
+    max-width: 320px;
+}
+
+.yt-open-card__icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.yt-open-card__title {
+    font-family: 'Oswald', 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: #e8e6e3;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.yt-open-card__desc {
+    font-size: 0.7rem;
+    color: #8b95a5;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.yt-open-card__btn {
+    display: inline-block;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff4444, #cc2222);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: 'Oswald', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
+}
+
+.yt-open-card__btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 28px rgba(255, 68, 68, 0.45);
+}
+
+.yt-open-card__btn:active {
+    transform: scale(0.97);
+}
+
+.yt-open-card__hint {
+    font-size: 0.6rem;
+    color: #5A6577;
+    margin-top: 12px;
+}
