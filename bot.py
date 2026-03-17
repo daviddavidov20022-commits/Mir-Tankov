@@ -4979,6 +4979,7 @@ async def api_top_players(request):
 # ==========================================
 import collections
 import time as _time
+import uuid as _uuid
 
 # Хранилище сообщений чата (в памяти, последние 200)
 stream_chat_messages = collections.deque(maxlen=200)
@@ -4987,11 +4988,38 @@ stream_channels = [
     {"name": "ISERVERI", "channel": "iserveri", "desc": "Мир Танков"},
 ]
 
+# Конфиг трансляции (какие платформы включены)
+stream_config = {
+    "twitch": {"enabled": True, "channel": "iserveri"},
+    "youtube": {"enabled": False, "channel": ""},
+    "vk": {"enabled": False, "channel": ""},
+}
+
+def _load_stream_config():
+    global stream_config
+    try:
+        config_file = os.path.join(os.path.dirname(__file__), 'stream_config.json')
+        if os.path.exists(config_file):
+            with open(config_file, 'r', encoding='utf-8') as f:
+                stream_config = json.load(f)
+                logger.info(f"Загружен конфиг стрима: {stream_config}")
+    except Exception as e:
+        logger.warning(f"Не удалось загрузить конфиг стрима: {e}")
+
+def _save_stream_config():
+    try:
+        config_file = os.path.join(os.path.dirname(__file__), 'stream_config.json')
+        with open(config_file, 'w', encoding='utf-8') as f:
+            json.dump(stream_config, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.warning(f"Не удалось сохранить конфиг стрима: {e}")
+
+_load_stream_config()
+
 # Загружаем каналы из файла при старте
 def _load_stream_channels():
     global stream_channels
     try:
-        import json
         channels_file = os.path.join(os.path.dirname(__file__), 'stream_channels.json')
         if os.path.exists(channels_file):
             with open(channels_file, 'r', encoding='utf-8') as f:
@@ -5002,7 +5030,6 @@ def _load_stream_channels():
 
 def _save_stream_channels():
     try:
-        import json
         channels_file = os.path.join(os.path.dirname(__file__), 'stream_channels.json')
         with open(channels_file, 'w', encoding='utf-8') as f:
             json.dump(stream_channels, f, ensure_ascii=False, indent=2)
@@ -5010,6 +5037,129 @@ def _save_stream_channels():
         logger.warning(f"Не удалось сохранить каналы стрима: {e}")
 
 _load_stream_channels()
+
+
+# ==========================================
+# СЕРВЕРНОЕ ЧТЕНИЕ TWITCH ЧАТА (IRC)
+# ==========================================
+class TwitchChatReader:
+    """Читает Twitch чат на сервере и складывает в общую очередь"""
+    
+    def __init__(self):
+        self.ws = None
+        self.channel = None
+        self.running = False
+        self.seen_ids = set()
+    
+    async def start(self, channel):
+        """Запустить чтение канала"""
+        self.channel = channel.lower().strip('#')
+        self.running = True
+        asyncio.create_task(self._run())
+        logger.info(f"[TwitchReader] Запущен для #{self.channel}")
+    
+    async def stop(self):
+        self.running = False
+        if self.ws:
+            try: await self.ws.close()
+            except: pass
+    
+    async def change_channel(self, channel):
+        """Сменить канал"""
+        await self.stop()
+        await asyncio.sleep(1)
+        await self.start(channel)
+    
+    async def _run(self):
+        import aiohttp as _aiohttp
+        while self.running:
+            try:
+                async with _aiohttp.ClientSession() as session:
+                    self.ws = await session.ws_connect('wss://irc-ws.chat.twitch.tv:443')
+                    await self.ws.send_str('CAP REQ :twitch.tv/tags')
+                    await self.ws.send_str('PASS SCHMOOPIIE')
+                    nick = f'justinfan{int(_time.time()) % 100000}'
+                    await self.ws.send_str(f'NICK {nick}')
+                    await self.ws.send_str(f'JOIN #{self.channel}')
+                    logger.info(f"[TwitchReader] Подключен к #{self.channel}")
+                    
+                    async for msg in self.ws:
+                        if not self.running:
+                            break
+                        if msg.type == _aiohttp.WSMsgType.TEXT:
+                            for line in msg.data.split('\r\n'):
+                                if not line:
+                                    continue
+                                if line.startswith('PING'):
+                                    await self.ws.send_str('PONG :tmi.twitch.tv')
+                                elif 'PRIVMSG' in line:
+                                    self._parse_and_store(line)
+                        elif msg.type in (_aiohttp.WSMsgType.CLOSED, _aiohttp.WSMsgType.ERROR):
+                            break
+            except Exception as e:
+                logger.warning(f"[TwitchReader] Ошибка: {e}")
+            
+            if self.running:
+                logger.info("[TwitchReader] Переподключение через 5с...")
+                await asyncio.sleep(5)
+    
+    def _parse_and_store(self, raw):
+        """Парсим IRC сообщение и добавляем в общий чат"""
+        try:
+            tags = {}
+            rest = raw
+            if raw.startswith('@'):
+                space_idx = raw.index(' ')
+                tag_str = raw[1:space_idx]
+                rest = raw[space_idx + 1:]
+                for pair in tag_str.split(';'):
+                    if '=' in pair:
+                        k, v = pair.split('=', 1)
+                        tags[k] = v
+            
+            if 'PRIVMSG' not in rest:
+                return
+            
+            # :username!user@user.tmi.twitch.tv PRIVMSG #channel :message
+            excl = rest.index('!')
+            username = rest[1:excl]
+            msg_start = rest.index(':', 1) + 1 if rest.count(':') > 1 else None
+            if not msg_start:
+                return
+            # Найти второе двоеточие (после PRIVMSG #channel :)
+            privmsg_idx = rest.index('PRIVMSG')
+            colon_idx = rest.index(':', privmsg_idx)
+            text = rest[colon_idx + 1:]
+            
+            color = tags.get('color', '#9146FF')
+            display_name = tags.get('display-name', username)
+            
+            msg_id = str(_uuid.uuid4())[:8]
+            
+            # Дедупликация
+            dedup_key = f"{username}:{text[:30]}:{int(_time.time())}"
+            if dedup_key in self.seen_ids:
+                return
+            self.seen_ids.add(dedup_key)
+            if len(self.seen_ids) > 500:
+                self.seen_ids = set(list(self.seen_ids)[-200:])
+            
+            stream_chat_messages.append({
+                "id": msg_id,
+                "platform": "twitch",
+                "username": display_name,
+                "text": text,
+                "color": color or '#9146FF',
+                "timestamp": _time.time(),
+                "telegram_id": 0,
+            })
+        except Exception as e:
+            pass  # Тихо пропускаем битые сообщения
+
+
+# Глобальный ридер
+twitch_reader = TwitchChatReader()
+
 
 
 async def api_stream_chat_get(request):
@@ -5074,6 +5224,231 @@ async def api_stream_channels_save(request):
         _save_stream_channels()
 
         return cors_response({"success": True, "count": len(stream_channels)})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+# ==========================================
+# ДОНАТЫ И ЗАКАЗ МУЗЫКИ
+# ==========================================
+donate_events = collections.deque(maxlen=50)
+music_queue = []
+DONATE_MIN = 10  # минимальный донат
+
+async def api_stream_donate(request):
+    """POST /api/stream/donate  {telegram_id, username, amount, message}"""
+    try:
+        data = await request.json()
+        tg_id = int(data.get("telegram_id", 0))
+        username = data.get("username", "Аноним").strip()
+        amount = int(data.get("amount", 0))
+        message = data.get("message", "").strip()[:200]
+        
+        if amount < DONATE_MIN:
+            return cors_response({"error": f"Минимум {DONATE_MIN} 🧀"}, 400)
+        
+        if not tg_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+        
+        # Проверить и списать сыр
+        profile_file = os.path.join(os.path.dirname(__file__), 'profiles', f'{tg_id}.json')
+        if not os.path.exists(profile_file):
+            return cors_response({"error": "Профиль не найден"}, 404)
+        
+        with open(profile_file, 'r', encoding='utf-8') as f:
+            profile = json.load(f)
+        
+        current_cheese = profile.get('cheese', 0)
+        if current_cheese < amount:
+            return cors_response({"error": f"Недостаточно Сыра! У вас {current_cheese} 🧀"}, 400)
+        
+        # Списать
+        profile['cheese'] = current_cheese - amount
+        with open(profile_file, 'w', encoding='utf-8') as f:
+            json.dump(profile, f, ensure_ascii=False, indent=2)
+        
+        # Создать событие доната
+        event = {
+            "id": str(_uuid.uuid4())[:8],
+            "telegram_id": tg_id,
+            "username": username,
+            "amount": amount,
+            "message": message,
+            "timestamp": _time.time(),
+            "shown": False,
+        }
+        donate_events.append(event)
+        
+        # Добавить в чат
+        stream_chat_messages.append({
+            "id": event["id"],
+            "platform": "donate",
+            "username": f"🧀 {username}",
+            "text": f"[ДОНАТ {amount} 🧀] {message}" if message else f"[ДОНАТ {amount} 🧀]",
+            "color": "#FFC107",
+            "timestamp": _time.time(),
+            "telegram_id": tg_id,
+        })
+        
+        logger.info(f"[Donate] {username} задонатил {amount} сыра: {message}")
+        return cors_response({"success": True, "event": event, "new_balance": profile['cheese']})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_donate_latest(request):
+    """GET /api/stream/donate/latest — OBS виджет забирает новые донаты"""
+    try:
+        # Найти первый непоказанный донат
+        for event in donate_events:
+            if not event.get("shown"):
+                event["shown"] = True
+                return cors_response({"event": event})
+        return cors_response({"event": None})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_donate_history(request):
+    """GET /api/stream/donate/history — последние донаты"""
+    try:
+        events = [e for e in donate_events]
+        events.reverse()
+        return cors_response({"events": events[:20]})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_music_request(request):
+    """POST /api/stream/music/request  {telegram_id, username, url, amount}"""
+    try:
+        data = await request.json()
+        tg_id = int(data.get("telegram_id", 0))
+        username = data.get("username", "Аноним").strip()
+        url = data.get("url", "").strip()
+        amount = int(data.get("amount", 50))
+        
+        MUSIC_COST = 50
+        if amount < MUSIC_COST:
+            return cors_response({"error": f"Заказ музыки стоит {MUSIC_COST} 🧀"}, 400)
+        
+        if not url:
+            return cors_response({"error": "Нужна ссылка на трек"}, 400)
+        
+        if not tg_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+        
+        # Списать сыр
+        profile_file = os.path.join(os.path.dirname(__file__), 'profiles', f'{tg_id}.json')
+        if not os.path.exists(profile_file):
+            return cors_response({"error": "Профиль не найден"}, 404)
+        
+        with open(profile_file, 'r', encoding='utf-8') as f:
+            profile = json.load(f)
+        
+        current_cheese = profile.get('cheese', 0)
+        if current_cheese < amount:
+            return cors_response({"error": f"Недостаточно Сыра! У вас {current_cheese} 🧀"}, 400)
+        
+        profile['cheese'] = current_cheese - amount
+        with open(profile_file, 'w', encoding='utf-8') as f:
+            json.dump(profile, f, ensure_ascii=False, indent=2)
+        
+        track = {
+            "id": str(_uuid.uuid4())[:8],
+            "telegram_id": tg_id,
+            "username": username,
+            "url": url,
+            "amount": amount,
+            "timestamp": _time.time(),
+            "played": False,
+        }
+        music_queue.append(track)
+        
+        # Уведомление в чат
+        stream_chat_messages.append({
+            "id": track["id"],
+            "platform": "music",
+            "username": f"🎵 {username}",
+            "text": f"[МУЗЫКА за {amount} 🧀] {url}",
+            "color": "#E040FB",
+            "timestamp": _time.time(),
+            "telegram_id": tg_id,
+        })
+        
+        logger.info(f"[Music] {username} заказал: {url}")
+        return cors_response({"success": True, "track": track, "new_balance": profile['cheese']})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_music_queue(request):
+    """GET /api/stream/music/queue — текущая очередь"""
+    try:
+        queue = [t for t in music_queue if not t.get("played")]
+        return cors_response({"queue": queue})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_music_next(request):
+    """GET /api/stream/music/next — OBS плеер забирает следующий трек"""
+    try:
+        for track in music_queue:
+            if not track.get("played"):
+                track["played"] = True
+                return cors_response({"track": track})
+        return cors_response({"track": None})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_music_skip(request):
+    """POST /api/stream/music/skip — пропустить трек (админ)"""
+    try:
+        data = await request.json()
+        tg_id = int(data.get("telegram_id", 0))
+        if not is_admin_user(tg_id):
+            return cors_response({"error": "Admin only"}, 403)
+        
+        for track in music_queue:
+            if not track.get("played"):
+                track["played"] = True
+                return cors_response({"success": True, "skipped": track})
+        return cors_response({"success": True, "skipped": None})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_config_get(request):
+    """GET /api/stream/config — получить конфиг трансляции"""
+    return cors_response({"config": stream_config})
+
+
+async def api_stream_config_save(request):
+    """POST /api/stream/config/save  {telegram_id, config: {...}}"""
+    global stream_config
+    try:
+        data = await request.json()
+        tg_id = int(data.get("telegram_id", 0))
+        
+        if not is_admin_user(tg_id):
+            return cors_response({"error": "Admin only"}, 403)
+        
+        new_config = data.get("config", {})
+        if not isinstance(new_config, dict):
+            return cors_response({"error": "config must be a dict"}, 400)
+        
+        old_twitch_ch = stream_config.get('twitch', {}).get('channel', '')
+        stream_config = new_config
+        _save_stream_config()
+        
+        # Если Twitch канал изменился — переключить ридер
+        new_twitch_ch = new_config.get('twitch', {}).get('channel', '')
+        if new_twitch_ch and new_twitch_ch != old_twitch_ch:
+            await twitch_reader.change_channel(new_twitch_ch)
+        
+        return cors_response({"success": True, "config": stream_config})
     except Exception as e:
         return cors_response({"error": str(e)}, 500)
 
@@ -5252,6 +5627,17 @@ def create_api_app():
     app.router.add_post("/api/stream/chat/twitch-send", api_stream_chat_twitch_send)
     app.router.add_get("/api/stream/channels", api_stream_channels_get)
     app.router.add_post("/api/stream/channels/save", api_stream_channels_save)
+    app.router.add_post("/api/stream/config/save", api_stream_config_save)
+    app.router.add_get("/api/stream/config", api_stream_config_get)
+
+    # Donate & Music API
+    app.router.add_post("/api/stream/donate", api_stream_donate)
+    app.router.add_get("/api/stream/donate/latest", api_stream_donate_latest)
+    app.router.add_get("/api/stream/donate/history", api_stream_donate_history)
+    app.router.add_post("/api/stream/music/request", api_stream_music_request)
+    app.router.add_get("/api/stream/music/queue", api_stream_music_queue)
+    app.router.add_get("/api/stream/music/next", api_stream_music_next)
+    app.router.add_post("/api/stream/music/skip", api_stream_music_skip)
 
     # Global Challenges API
     app.router.add_post("/api/global-challenge/create", api_global_challenge_create)
@@ -5285,6 +5671,12 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", API_PORT)
     await site.start()
     logger.info(f"API сервер запущен на порту {API_PORT}")
+
+    # Запускаем серверное чтение Twitch чата
+    twitch_ch = stream_config.get('twitch', {}).get('channel', 'iserveri')
+    if twitch_ch:
+        await twitch_reader.start(twitch_ch)
+        logger.info(f"TwitchChatReader запущен для #{twitch_ch}")
 
     # Запускаем бот
     await dp.start_polling(bot)

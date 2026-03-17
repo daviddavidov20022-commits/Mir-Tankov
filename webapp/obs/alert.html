@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>МИР ТАНКОВ — Stream Alert</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+        }
+
+        .alert-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: none;
+            z-index: 100;
+        }
+
+        .alert-container.show {
+            animation: alertIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .alert-container.hide {
+            animation: alertOut 0.5s ease-in forwards;
+        }
+
+        @keyframes alertIn {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1) rotate(2deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0); opacity: 1; }
+        }
+
+        @keyframes alertOut {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; }
+        }
+
+        /* Малый донат (10-49) */
+        .alert-box {
+            min-width: 400px;
+            max-width: 600px;
+            padding: 20px 30px;
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-box--small {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.95), rgba(50, 50, 50, 0.95));
+            border: 2px solid rgba(255, 193, 7, 0.4);
+            box-shadow: 0 0 30px rgba(255, 193, 7, 0.2), inset 0 0 30px rgba(255, 193, 7, 0.05);
+        }
+
+        /* Средний донат (50-199) */
+        .alert-box--medium {
+            background: linear-gradient(135deg, rgba(30, 20, 0, 0.95), rgba(60, 40, 0, 0.95));
+            border: 3px solid rgba(255, 193, 7, 0.6);
+            box-shadow: 0 0 50px rgba(255, 193, 7, 0.3), inset 0 0 40px rgba(255, 193, 7, 0.1);
+        }
+
+        /* Большой донат (200+) */
+        .alert-box--large {
+            background: linear-gradient(135deg, rgba(50, 30, 0, 0.95), rgba(80, 50, 0, 0.95));
+            border: 4px solid rgba(255, 215, 0, 0.8);
+            box-shadow: 0 0 80px rgba(255, 215, 0, 0.5), inset 0 0 60px rgba(255, 215, 0, 0.15);
+            animation: goldenPulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes goldenPulse {
+            from { box-shadow: 0 0 80px rgba(255, 215, 0, 0.4), inset 0 0 60px rgba(255, 215, 0, 0.1); }
+            to { box-shadow: 0 0 120px rgba(255, 215, 0, 0.7), inset 0 0 80px rgba(255, 215, 0, 0.2); }
+        }
+
+        .alert-icon {
+            font-size: 3.5rem;
+            margin-bottom: 8px;
+            animation: bounceIcon 0.8s ease infinite alternate;
+        }
+
+        @keyframes bounceIcon {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+
+        .alert-username {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #FFC107;
+            text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+            margin-bottom: 4px;
+        }
+
+        .alert-amount {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+            margin-bottom: 8px;
+        }
+
+        .alert-amount--large {
+            font-size: 3rem;
+            animation: amountPulse 0.5s ease infinite alternate;
+        }
+
+        @keyframes amountPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        .alert-message {
+            font-size: 1.1rem;
+            color: #e0e0e0;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-top: 8px;
+            line-height: 1.4;
+            max-height: 120px;
+            overflow: hidden;
+        }
+
+        .alert-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 6px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Частицы */
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particleFall 2s ease-out forwards;
+        }
+
+        @keyframes particleFall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+        }
+
+        /* Взрыв для больших донатов */
+        .explosion {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 200vw;
+            height: 200vh;
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 200, 0, 0.4) 0%, transparent 70%);
+            animation: explode 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="alert-container" id="alertContainer">
+        <div class="alert-box" id="alertBox">
+            <div class="alert-icon" id="alertIcon">🧀</div>
+            <div class="alert-username" id="alertUsername">Танкист</div>
+            <div class="alert-amount" id="alertAmount">100 🧀</div>
+            <div class="alert-message" id="alertMessage"></div>
+            <div class="alert-label">МИР ТАНКОВ</div>
+        </div>
+    </div>
+
+    <audio id="soundSmall" preload="auto">
+        <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=" type="audio/wav">
+    </audio>
+
+    <script>
+        // Конфиг
+        const API_URL = new URLSearchParams(window.location.search).get('api') || 'https://mir-tankov-api.onrender.com';
+        const POLL_INTERVAL = 2000;
+        const ALERT_DURATION = 7000;
+
+        let isShowing = false;
+
+        async function pollDonations() {
+            if (isShowing) return;
+            try {
+                const resp = await fetch(`${API_URL}/api/stream/donate/latest`);
+                const data = await resp.json();
+                if (data.event) {
+                    showAlert(data.event);
+                }
+            } catch (e) {
+                // Тихо
+            }
+        }
+
+        function showAlert(event) {
+            isShowing = true;
+            const container = document.getElementById('alertContainer');
+            const box = document.getElementById('alertBox');
+            const icon = document.getElementById('alertIcon');
+            const username = document.getElementById('alertUsername');
+            const amount = document.getElementById('alertAmount');
+            const message = document.getElementById('alertMessage');
+
+            // Уровень доната
+            let tier = 'small';
+            if (event.amount >= 200) tier = 'large';
+            else if (event.amount >= 50) tier = 'medium';
+
+            // Иконка
+            if (tier === 'large') icon.textContent = '💥';
+            else if (tier === 'medium') icon.textContent = '⭐';
+            else icon.textContent = '🧀';
+
+            // Стиль
+            box.className = `alert-box alert-box--${tier}`;
+            amount.className = tier === 'large' ? 'alert-amount alert-amount--large' : 'alert-amount';
+
+            // Данные
+            username.textContent = event.username;
+            amount.textContent = `${event.amount} 🧀`;
+            
+            if (event.message) {
+                message.textContent = event.message;
+                message.style.display = 'block';
+            } else {
+                message.style.display = 'none';
+            }
+
+            // Частицы и взрыв для больших донатов
+            if (tier === 'large') {
+                createExplosion();
+                spawnParticles(30);
+            } else if (tier === 'medium') {
+                spawnParticles(15);
+            } else {
+                spawnParticles(5);
+            }
+
+            // Показать
+            container.classList.remove('hide');
+            container.classList.add('show');
+
+            // Скрыть через N секунд
+            const duration = tier === 'large' ? 10000 : tier === 'medium' ? 8000 : ALERT_DURATION;
+            setTimeout(() => {
+                container.classList.remove('show');
+                container.classList.add('hide');
+                setTimeout(() => {
+                    container.classList.remove('hide');
+                    isShowing = false;
+                }, 600);
+            }, duration);
+        }
+
+        function spawnParticles(count) {
+            const colors = ['#FFD700', '#FFC107', '#FF9800', '#FF5722', '#E91E63', '#9C27B0'];
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.top = '-20px';
+                p.style.width = (4 + Math.random() * 8) + 'px';
+                p.style.height = p.style.width;
+                p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                p.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+                p.style.animationDelay = (Math.random() * 0.5) + 's';
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 4000);
+            }
+        }
+
+        function createExplosion() {
+            const el = document.createElement('div');
+            el.className = 'explosion';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        // Polling
+        setInterval(pollDonations, POLL_INTERVAL);
+        console.log('[МИР ТАНКОВ Alert] Виджет запущен, API:', API_URL);
+    </script>
+</body>
+</html>

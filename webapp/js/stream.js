@@ -45,6 +45,7 @@ let reconnectAttempts = 0;
 let reconnectTimeout = null;
 let isAdmin = false;
 let myTelegramId = 0;
+let myUsername = 'Танкист';
 let platformChatVisible = false;
 
 const DEFAULT_COLORS = [
@@ -96,6 +97,7 @@ function identifyMe() {
     const tg = window.Telegram?.WebApp;
     if (tg?.initDataUnsafe?.user) {
         myTelegramId = tg.initDataUnsafe.user.id;
+        myUsername = tg.initDataUnsafe.user.first_name || 'Танкист';
         localStorage.setItem('my_telegram_id', String(myTelegramId));
         return;
     }
@@ -789,9 +791,9 @@ function saveStreamConfig() {
     
     localStorage.setItem('stream_config', JSON.stringify(config));
     
-    // Сохранить на сервер
+    // Сохранить на сервер (серверный TwitchReader переключится автоматически)
     if (myTelegramId) {
-        fetch(`${BOT_API_URL}/api/stream/channels/save`, {
+        fetch(`${BOT_API_URL}/api/stream/config/save`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ telegram_id: myTelegramId, config }),
@@ -803,7 +805,20 @@ function saveStreamConfig() {
     try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
 }
 
-function loadStreamConfig() {
+async function loadStreamConfig() {
+    // Сначала из сервера
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/stream/config`);
+        const data = await resp.json();
+        if (data.config) {
+            applyStreamConfig(data.config);
+            fillAdminForm(data.config);
+            localStorage.setItem('stream_config', JSON.stringify(data.config));
+            return;
+        }
+    } catch(e) {}
+    
+    // Fallback: localStorage
     try {
         const raw = localStorage.getItem('stream_config');
         if (raw) {
@@ -849,6 +864,142 @@ function updateStreamConfig() {
     // Вызывается при изменении полей — подсветка
 }
 
+// ==========================================
+// ДОНАТЫ И ЗАКАЗ МУЗЫКИ
+// ==========================================
+async function getMyCheeseBalance() {
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/profile?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        return data.cheese || data.coins || 0;
+    } catch(e) {
+        // Fallback: localStorage
+        try {
+            const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
+            return local.coins || 0;
+        } catch(e2) { return 0; }
+    }
+}
+
+async function openDonateModal() {
+    document.getElementById('donateModal').style.display = 'flex';
+    const balance = await getMyCheeseBalance();
+    document.getElementById('donateBalance').textContent = `Баланс: ${balance} 🧀`;
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
+}
+
+function closeDonateModal() {
+    document.getElementById('donateModal').style.display = 'none';
+}
+
+function setDonateAmount(val) {
+    document.getElementById('donateAmount').value = val;
+    try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch(e) {}
+}
+
+async function sendDonate() {
+    const amount = parseInt(document.getElementById('donateAmount').value) || 0;
+    const message = document.getElementById('donateMessage').value.trim();
+    
+    if (amount < 10) {
+        showToast('❌', 'Минимум 10 🧀');
+        return;
+    }
+    
+    if (!myTelegramId) {
+        showToast('❌', 'Нужна авторизация через Telegram');
+        return;
+    }
+    
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/stream/donate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                telegram_id: myTelegramId,
+                username: myUsername || 'Танкист',
+                amount: amount,
+                message: message,
+            }),
+        });
+        const data = await resp.json();
+        
+        if (data.success) {
+            closeDonateModal();
+            showToast('🧀', `Донат ${amount} 🧀 отправлен!`);
+            document.getElementById('donateMessage').value = '';
+            // Обновить баланс в localStorage
+            try {
+                const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
+                local.coins = data.new_balance;
+                localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
+            } catch(e) {}
+            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
+        } else {
+            showToast('❌', data.error || 'Ошибка доната');
+            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
+        }
+    } catch(e) {
+        showToast('❌', 'Ошибка сети');
+    }
+}
+
+async function openMusicModal() {
+    document.getElementById('musicModal').style.display = 'flex';
+    const balance = await getMyCheeseBalance();
+    document.getElementById('musicBalance').textContent = `Баланс: ${balance} 🧀`;
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
+}
+
+function closeMusicModal() {
+    document.getElementById('musicModal').style.display = 'none';
+}
+
+async function sendMusicRequest() {
+    const url = document.getElementById('musicUrl').value.trim();
+    
+    if (!url) {
+        showToast('❌', 'Вставь ссылку на видео');
+        return;
+    }
+    
+    if (!myTelegramId) {
+        showToast('❌', 'Нужна авторизация через Telegram');
+        return;
+    }
+    
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/stream/music/request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                telegram_id: myTelegramId,
+                username: myUsername || 'Танкист',
+                url: url,
+                amount: 50,
+            }),
+        });
+        const data = await resp.json();
+        
+        if (data.success) {
+            closeMusicModal();
+            showToast('🎵', 'Трек добавлен в очередь!');
+            document.getElementById('musicUrl').value = '';
+            try {
+                const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
+                local.coins = data.new_balance;
+                localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
+            } catch(e) {}
+            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
+        } else {
+            showToast('❌', data.error || 'Ошибка заказа');
+            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
+        }
+    } catch(e) {
+        showToast('❌', 'Ошибка сети');
+    }
+}
+
 // Expose globals
 window.changeChannel = changeChannel;
 window.toggleChannelSettings = toggleChannelSettings;
@@ -863,3 +1014,10 @@ window.moveChannel = moveChannel;
 window.toggleAdminPanel = toggleAdminPanel;
 window.saveStreamConfig = saveStreamConfig;
 window.updateStreamConfig = updateStreamConfig;
+window.openDonateModal = openDonateModal;
+window.closeDonateModal = closeDonateModal;
+window.setDonateAmount = setDonateAmount;
+window.sendDonate = sendDonate;
+window.openMusicModal = openMusicModal;
+window.closeMusicModal = closeMusicModal;
+window.sendMusicRequest = sendMusicRequest;

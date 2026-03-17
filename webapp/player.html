@@ -118,6 +118,56 @@
                 </div>
             </div>
 
+            <!-- Donate & Music Buttons -->
+            <div class="stream-actions">
+                <button class="stream-action-btn stream-action-btn--donate" onclick="openDonateModal()">
+                    <span class="stream-action-btn__icon">🧀</span>
+                    <span class="stream-action-btn__text">Донат</span>
+                </button>
+                <button class="stream-action-btn stream-action-btn--music" onclick="openMusicModal()">
+                    <span class="stream-action-btn__icon">🎵</span>
+                    <span class="stream-action-btn__text">Музыка</span>
+                </button>
+            </div>
+
+            <!-- Donate Modal -->
+            <div class="modal-overlay" id="donateModal" style="display:none;" onclick="if(event.target===this)closeDonateModal()">
+                <div class="modal-dialog">
+                    <div class="modal-dialog__title">🧀 Донат на стрим</div>
+                    <div class="modal-dialog__balance" id="donateBalance">Баланс: ... 🧀</div>
+                    
+                    <div class="donate-amounts">
+                        <button class="donate-amount-btn" onclick="setDonateAmount(10)">10 🧀</button>
+                        <button class="donate-amount-btn" onclick="setDonateAmount(50)">50 🧀</button>
+                        <button class="donate-amount-btn" onclick="setDonateAmount(100)">100 🧀</button>
+                        <button class="donate-amount-btn" onclick="setDonateAmount(500)">500 🧀</button>
+                    </div>
+                    
+                    <input type="number" id="donateAmount" class="modal-input" placeholder="Сумма (мин. 10)" min="10" value="50">
+                    <textarea id="donateMessage" class="modal-input modal-textarea" placeholder="Сообщение на стрим (необязательно)" maxlength="200" rows="2"></textarea>
+                    
+                    <button class="modal-btn modal-btn--primary" onclick="sendDonate()">
+                        🧀 Отправить донат
+                    </button>
+                    <button class="modal-btn modal-btn--secondary" onclick="closeDonateModal()">Отмена</button>
+                </div>
+            </div>
+
+            <!-- Music Modal -->
+            <div class="modal-overlay" id="musicModal" style="display:none;" onclick="if(event.target===this)closeMusicModal()">
+                <div class="modal-dialog">
+                    <div class="modal-dialog__title">🎵 Заказ музыки</div>
+                    <div class="modal-dialog__balance" id="musicBalance">Баланс: ... 🧀</div>
+                    <div class="modal-dialog__cost">Стоимость: 50 🧀</div>
+                    
+                    <input type="text" id="musicUrl" class="modal-input" placeholder="Ссылка на YouTube видео" autocomplete="off">
+                    
+                    <button class="modal-btn modal-btn--primary" onclick="sendMusicRequest()">
+                        🎵 Заказать (50 🧀)
+                    </button>
+                    <button class="modal-btn modal-btn--secondary" onclick="closeMusicModal()">Отмена</button>
+                </div>
+            </div>
             <!-- Admin Panel -->
             <div class="admin-panel" id="adminPanel">
                 <div class="admin-panel__header" onclick="toggleAdminPanel()">
