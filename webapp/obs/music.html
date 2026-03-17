@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Music Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+            background: transparent;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        /* Виджет названия трека */
+        #music-widget {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            background: rgba(10, 14, 20, 0.85);
+            border: 1px solid rgba(200, 170, 110, 0.3);
+            border-left: 4px solid #E040FB;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            transform: translateX(-120%);
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            min-width: 300px;
+        }
+
+        #music-widget.visible {
+            transform: translateX(0);
+        }
+
+        .icon {
+            font-size: 24px;
+            margin-right: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #E040FB;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+            font-weight: 700;
+        }
+
+        .track-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 350px;
+        }
+
+        .requested-by {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 2px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Скрытый плеер */
+        #player-container {
+            position: absolute;
+            top: -1000px;
+            left: -1000px;
+            width: 1px;
+            height: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="music-widget">
+        <div class="icon">🎵</div>
+        <div class="info">
+            <div class="label" id="status-label">Сейчас играет</div>
+            <div class="track-name" id="track-name">Ожидание заказов...</div>
+            <div class="requested-by" id="requested-by">Мир Танков</div>
+        </div>
+    </div>
+
+    <div id="player-container">
+        <div id="yt-player"></div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        const API_BASE = new URLSearchParams(window.location.search).get('api') || 'https://mir-tankov-api.onrender.com';
+        let player;
+        let isPlayerReady = false;
+        let currentRequestId = null;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('yt-player', {
+                height: '1',
+                width: '1',
+                videoId: '',
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 0,
+                    'disablekb': 1,
+                    'modestbranding': 1
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            isPlayerReady = true;
+            console.log("Player ready. Starting queue check...");
+            checkQueue();
+        }
+
+        function onPlayerStateChange(event) {
+            // Если видео закончилось (состояние 0)
+            if (event.data === YT.PlayerState.ENDED) {
+                hideWidget();
+                setTimeout(checkQueue, 2000); // Проверяем следующий трек через 2 сек
+            }
+        }
+
+        function onPlayerError(e) {
+            console.error("Player error:", e.data);
+            hideWidget();
+            setTimeout(checkQueue, 3000);
+        }
+
+        async function checkQueue() {
+            if (!isPlayerReady) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/stream/music/next`);
+                const data = await response.json();
+                
+                if (data.url) {
+                    playTrack(data);
+                } else {
+                    // Очередь пуста, проверяем через 10 секунд
+                    setTimeout(checkQueue, 10000);
+                }
+            } catch (e) {
+                console.error("Failed to fetch queue:", e);
+                setTimeout(checkQueue, 10000);
+            }
+        }
+
+        function playTrack(track) {
+            const videoId = extractVideoId(track.url);
+            if (!videoId) {
+                console.error("Invalid YouTube URL:", track.url);
+                checkQueue();
+                return;
+            }
+
+            currentRequestId = track.id;
+            
+            // Настройка виджета
+            document.getElementById('track-name').textContent = track.url; // В идеале нужен заголовок, но пока URL
+            document.getElementById('requested-by').textContent = `Заказал: ${track.username}`;
+            showWidget();
+
+            // Запуск видео
+            player.loadVideoById(videoId);
+            player.playVideo();
+        }
+
+        function showWidget() {
+            document.getElementById('music-widget').classList.add('visible');
+        }
+
+        function hideWidget() {
+            document.getElementById('music-widget').classList.remove('visible');
+        }
+
+        function extractVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+    </script>
+</body>
+</html>
