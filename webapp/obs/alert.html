@@ -250,30 +250,32 @@
                     if (d.tts_enabled !== undefined) CONFIG.ttsEnabled = d.tts_enabled;
                     if (d.tts_speed) CONFIG.ttsSpeed = d.tts_speed;
                     if (d.tts_min_amount) CONFIG.ttsMinAmount = d.tts_min_amount;
-                    
-                    // Загружаем медиа-файлы с сервера
-                    const mediaMap = {
-                        sound_small: 'soundSmall', sound_medium: 'soundMedium', sound_large: 'soundLarge',
-                        media_small: 'mediaSmall', media_medium: 'mediaMedium', media_large: 'mediaLarge'
-                    };
-                    for (const [key, cfgKey] of Object.entries(mediaMap)) {
-                        const hasFlag = d[`has_${key}`];
-                        console.log(`[Alert] Media flag has_${key}=${hasFlag}`);
-                        if (hasFlag) {
-                            try {
-                                const mr = await fetch(`${API_URL}/api/stream/media/${key}`);
-                                const md = await mr.json();
-                                if (md.data) {
-                                    CONFIG[cfgKey] = md.data;
-                                    console.log(`[Alert] ✅ Loaded ${key} (${md.data.length} chars)`);
-                                } else {
-                                    console.log(`[Alert] ❌ ${key}: no data in response`);
-                                }
-                            } catch(e) { console.log(`[Alert] ❌ Media load error: ${key}`, e); }
-                        }
-                    }
                 }
-                console.log('[Alert] Config loaded', CONFIG);
+                
+                // Загружаем ВСЕ медиа-файлы с сервера (без проверки флагов)
+                const mediaMap = {
+                    sound_small: 'soundSmall', sound_medium: 'soundMedium', sound_large: 'soundLarge',
+                    media_small: 'mediaSmall', media_medium: 'mediaMedium', media_large: 'mediaLarge'
+                };
+                for (const [key, cfgKey] of Object.entries(mediaMap)) {
+                    try {
+                        const mr = await fetch(`${API_URL}/api/stream/media/${key}`);
+                        if (mr.ok) {
+                            const md = await mr.json();
+                            if (md.data) {
+                                CONFIG[cfgKey] = md.data;
+                                console.log(`[Alert] ✅ ${key} загружен (${md.data.length} символов)`);
+                            }
+                        }
+                    } catch(e) { /* файл не найден — ок */ }
+                }
+                
+                console.log('[Alert] Config loaded, sounds:', 
+                    CONFIG.soundSmall ? '✅' : '❌', 
+                    CONFIG.soundMedium ? '✅' : '❌',
+                    ', media:', CONFIG.mediaSmall ? '✅' : '❌',
+                    CONFIG.mediaMedium ? '✅' : '❌'
+                );
             } catch(e) {
                 console.log('[Alert] Using default config');
             }
