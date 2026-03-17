@@ -266,28 +266,109 @@ function buildYoutubeEmbed(parsed) {
         return `${host}/embed/${parsed.id}?autoplay=1&rel=0`;
     }
 
-    if (parsed.type === 'channel_live') {
-        if (proxy.type === 'youtube') {
-            return `${host}/embed/live_stream?channel=${parsed.handle}&autoplay=1`;
-        }
-        // Invidious — открываем канал (может показать последнее видео)
-        return `${host}/channel/${parsed.handle}`;
-    }
-
-    if (parsed.type === 'channel_id') {
-        if (proxy.type === 'youtube') {
-            return `${host}/embed/live_stream?channel=${parsed.id}&autoplay=1`;
-        }
-        return `${host}/channel/${parsed.id}`;
-    }
-
-    if (parsed.type === 'channel') {
-        // Каналы нельзя встроить, но Invidious покажет страницу
-        return `${host}/@${parsed.handle}`;
-    }
-
-    // Ошибочные типы — вернём null, обработаем в playVideo
+    // Каналы и лайвы обрабатываются через resolveYoutubeChannel (async)
+    // Здесь вернём null — playVideo() обработает
     return null;
+}
+
+/**
+ * Найти стрим или последнее видео канала через Invidious API
+ * Приоритет: активный лайв-стрим > последнее видео
+ * Поддерживает @handle и channelId
+ */
+async function resolveYoutubeChannel(parsed) {
+    const proxy = YT_PROXIES[currentProxyIndex];
+    const host = proxy.host;
+
+    // Если прокси — оригинальный YouTube, API нет
+    if (proxy.type === 'youtube') {
+        return null;
+    }
+
+    try {
+        let channelId = null;
+
+        // Если у нас handle — сначала ищем канал
+        if (parsed.type === 'channel' || parsed.type === 'channel_live') {
+            const handle = parsed.handle;
+            const searchResp = await fetch(`${host}/api/v1/search?q=${encodeURIComponent('@' + handle)}&type=channel`, {
+                signal: AbortSignal.timeout(8000)
+            });
+            if (!searchResp.ok) throw new Error('Search API failed');
+            const searchData = await searchResp.json();
+            if (searchData.length > 0 && searchData[0].authorId) {
+                channelId = searchData[0].authorId;
+            }
+        } else if (parsed.type === 'channel_id') {
+            channelId = parsed.id;
+        }
+
+        if (!channelId) {
+            return null;
+        }
+
+        // 1) Сначала ищем АКТИВНЫЙ СТРИМ
+        try {
+            const streamsResp = await fetch(`${host}/api/v1/channels/${channelId}/streams`, {
+                signal: AbortSignal.timeout(8000)
+            });
+            if (streamsResp.ok) {
+                const streamsData = await streamsResp.json();
+                const streams = streamsData.videos || streamsData;
+                // Ищем стрим с liveNow === true
+                const liveStream = streams.find(v => v.liveNow === true);
+                if (liveStream && liveStream.videoId) {
+                    return {
+                        embedUrl: `${host}/embed/${liveStream.videoId}?autoplay=1&quality=hd720&local=true`,
+                        title: liveStream.title || '🔴 Прямая трансляция',
+                        channelName: liveStream.author || parsed.handle || 'Канал',
+                        isLive: true,
+                    };
+                }
+            }
+        } catch (e) {
+            console.warn('[resolveYoutubeChannel] Streams endpoint error:', e.message);
+        }
+
+        // 2) Проверяем последние видео — может быть лайв среди них
+        try {
+            const videosResp = await fetch(`${host}/api/v1/channels/${channelId}/videos?sort_by=newest`, {
+                signal: AbortSignal.timeout(8000)
+            });
+            if (videosResp.ok) {
+                const videosData = await videosResp.json();
+                const videos = videosData.videos || videosData;
+                
+                // Сначала ищем live среди видео
+                const liveVideo = videos.find(v => v.liveNow === true);
+                if (liveVideo && liveVideo.videoId) {
+                    return {
+                        embedUrl: `${host}/embed/${liveVideo.videoId}?autoplay=1&quality=hd720&local=true`,
+                        title: liveVideo.title || '🔴 Прямая трансляция',
+                        channelName: liveVideo.author || parsed.handle || 'Канал',
+                        isLive: true,
+                    };
+                }
+
+                // Если лайва нет — берём последнее видео
+                if (videos.length > 0 && videos[0].videoId) {
+                    return {
+                        embedUrl: `${host}/embed/${videos[0].videoId}?autoplay=1&quality=hd720&local=true`,
+                        title: videos[0].title || 'Последнее видео',
+                        channelName: videos[0].author || parsed.handle || 'Канал',
+                        isLive: false,
+                    };
+                }
+            }
+        } catch (e) {
+            console.warn('[resolveYoutubeChannel] Videos endpoint error:', e.message);
+        }
+
+        return null;
+    } catch (e) {
+        console.warn('[resolveYoutubeChannel] Error:', e.message);
+        return null;
+    }
 }
 
 function parseVkUrl(url) {
@@ -432,7 +513,7 @@ function selectProxy(index) {
 // ==========================================
 // ВОСПРОИЗВЕДЕНИЕ
 // ==========================================
-function playVideo() {
+async function playVideo() {
     const input = document.getElementById('urlInput');
     const url = input.value.trim();
 
@@ -474,7 +555,28 @@ function playVideo() {
         return;
     }
 
-    const embedUrl = platform.buildEmbed(parsed);
+    let embedUrl = platform.buildEmbed(parsed);
+    let resolvedInfo = null;
+
+    // YouTube: каналы — ищем стрим или последнее видео через API
+    if (!embedUrl && currentPlatform === 'youtube' &&
+        (parsed.type === 'channel' || parsed.type === 'channel_id' || parsed.type === 'channel_live')) {
+        showToast('🔍', 'Ищу стрим или видео канала...', 6000);
+        const resolved = await resolveYoutubeChannel(parsed);
+        if (resolved) {
+            embedUrl = resolved.embedUrl;
+            resolvedInfo = resolved;
+            if (resolved.isLive) {
+                showToast('🔴', `Стрим: ${resolved.title}`, 3000);
+            } else {
+                showToast('📹', `Стрим не найден. Последнее видео: ${resolved.title}`, 4000);
+            }
+        } else {
+            showToast('❌', 'Канал не найден или нет видео. Попробуй другой сервер или вставь прямую ссылку.', 5000);
+            shakeInput();
+            return;
+        }
+    }
 
     if (!embedUrl) {
         showToast('❌', 'Не удалось построить ссылку. Попробуй другую ссылку.', 4000);
@@ -503,9 +605,12 @@ function playVideo() {
     iframe.allowFullscreen = true;
     iframe.setAttribute('frameborder', '0');
 
-    // Показать название прокси для YouTube
+    // Показать информацию о том, что играет
     let displayText = url;
-    if (currentPlatform === 'youtube') {
+    if (resolvedInfo) {
+        const liveTag = resolvedInfo.isLive ? '🔴 LIVE' : '📹';
+        displayText = `${liveTag} ${resolvedInfo.title}`;
+    } else if (currentPlatform === 'youtube') {
         const proxy = YT_PROXIES[currentProxyIndex];
         if (proxy.type !== 'youtube') {
             displayText = `через ${proxy.name}`;
