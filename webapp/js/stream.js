@@ -40,6 +40,9 @@ const DEFAULT_COLORS = [
     '#DAA520', '#D2691E', '#5F9EA0', '#FF7F50', '#6495ED',
 ];
 
+let lastChatTimestamp = 0;
+let chatPollInterval = null;
+
 // ==========================================
 // ИНИЦИАЛИЗАЦИЯ
 // ==========================================
@@ -48,10 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initUser();
     identifyMe();
     createParticles();
+    loadChannelsFromServer();
     initTwitchPlayer();
     connectTwitchChat();
     initChatInput();
     checkAdmin();
+    startChatPolling();
 });
 
 function initTelegram() {
@@ -183,6 +188,7 @@ function renderPopularChannels() {
 // ==========================================
 function saveChannels() {
     localStorage.setItem('stream_channels', JSON.stringify(CHANNELS));
+    syncChannelsToServer();
 }
 
 function addChannel() {
@@ -484,7 +490,7 @@ function initChatInput() {
     });
 }
 
-function sendChatMessage() {
+async function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
     if (!text) return;
@@ -493,6 +499,7 @@ function sendChatMessage() {
     const user = tg?.initDataUnsafe?.user;
     const username = user?.first_name || 'Танкист';
 
+    // Показываем сразу локально
     addChatMessage({
         platform: 'telegram',
         username: username,
@@ -500,14 +507,97 @@ function sendChatMessage() {
         color: '#29B6F6',
         badges: '📱',
         time: new Date(),
+        local: true,
     });
 
     input.value = '';
     try { tg?.HapticFeedback?.impactOccurred('light'); } catch (e) { }
+
+    // Отправляем на сервер
+    if (myTelegramId) {
+        try {
+            await fetch(`${BOT_API_URL}/api/stream/chat/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: myTelegramId, username, text }),
+            });
+        } catch (e) {
+            console.warn('[Chat] Send error:', e);
+        }
+    }
 }
 
 function toggleChatPlatform() {
     showToast('📱', 'Отправка через Telegram');
+}
+
+// ==========================================
+// POLLING ТЕЛЕГРАМ СООБЩЕНИЙ
+// ==========================================
+function startChatPolling() {
+    if (chatPollInterval) clearInterval(chatPollInterval);
+    chatPollInterval = setInterval(pollChatMessages, 2000);
+}
+
+const shownMessageIds = new Set();
+
+async function pollChatMessages() {
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/stream/chat?after=${lastChatTimestamp}`);
+        const data = await resp.json();
+        if (data.messages && data.messages.length > 0) {
+            for (const msg of data.messages) {
+                // Пропускаем свои сообщения (уже показаны локально)
+                if (msg.telegram_id === myTelegramId) {
+                    lastChatTimestamp = Math.max(lastChatTimestamp, msg.timestamp);
+                    continue;
+                }
+                // Пропускаем дубликаты
+                if (shownMessageIds.has(msg.id)) continue;
+                shownMessageIds.add(msg.id);
+
+                addChatMessage({
+                    platform: 'telegram',
+                    username: msg.username,
+                    text: msg.text,
+                    color: '#29B6F6',
+                    badges: '📱',
+                    time: new Date(msg.timestamp * 1000),
+                });
+                lastChatTimestamp = Math.max(lastChatTimestamp, msg.timestamp);
+            }
+        }
+    } catch (e) {
+        // Тихо — не спамим ошибками
+    }
+}
+
+// ==========================================
+// ЗАГРУЗКА КАНАЛОВ С СЕРВЕРА
+// ==========================================
+async function loadChannelsFromServer() {
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/stream/channels`);
+        const data = await resp.json();
+        if (data.channels && data.channels.length > 0) {
+            CHANNELS = data.channels;
+        }
+    } catch (e) {
+        console.warn('[Channels] Load error, using defaults');
+    }
+}
+
+async function syncChannelsToServer() {
+    if (!isAdmin || !myTelegramId) return;
+    try {
+        await fetch(`${BOT_API_URL}/api/stream/channels/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegram_id: myTelegramId, channels: CHANNELS }),
+        });
+    } catch (e) {
+        console.warn('[Channels] Sync error:', e);
+    }
 }
 
 // ==========================================

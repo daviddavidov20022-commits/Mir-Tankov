@@ -4970,6 +4970,110 @@ async def api_top_players(request):
 
 
 # ==========================================
+# STREAM CHAT API — Общий чат стрима
+# ==========================================
+import collections
+import time as _time
+
+# Хранилище сообщений чата (в памяти, последние 200)
+stream_chat_messages = collections.deque(maxlen=200)
+# Хранилище каналов (в памяти, сохраняется при рестарте из файла)
+stream_channels = [
+    {"name": "ISERVERI", "channel": "iserveri", "desc": "Мир Танков"},
+]
+
+# Загружаем каналы из файла при старте
+def _load_stream_channels():
+    global stream_channels
+    try:
+        import json
+        channels_file = os.path.join(os.path.dirname(__file__), 'stream_channels.json')
+        if os.path.exists(channels_file):
+            with open(channels_file, 'r', encoding='utf-8') as f:
+                stream_channels = json.load(f)
+                logger.info(f"Загружено {len(stream_channels)} каналов стрима")
+    except Exception as e:
+        logger.warning(f"Не удалось загрузить каналы стрима: {e}")
+
+def _save_stream_channels():
+    try:
+        import json
+        channels_file = os.path.join(os.path.dirname(__file__), 'stream_channels.json')
+        with open(channels_file, 'w', encoding='utf-8') as f:
+            json.dump(stream_channels, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.warning(f"Не удалось сохранить каналы стрима: {e}")
+
+_load_stream_channels()
+
+
+async def api_stream_chat_get(request):
+    """GET /api/stream/chat?after=timestamp — получить сообщения чата"""
+    try:
+        after = float(request.query.get("after", 0))
+        msgs = [m for m in stream_chat_messages if m["timestamp"] > after]
+        return cors_response({"messages": msgs})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_chat_send(request):
+    """POST /api/stream/chat/send  {telegram_id, username, text}"""
+    try:
+        data = await request.json()
+        telegram_id = int(data.get("telegram_id", 0))
+        username = data.get("username", "Танкист").strip()
+        text = data.get("text", "").strip()
+
+        if not telegram_id or not text:
+            return cors_response({"error": "telegram_id and text required"}, 400)
+
+        if len(text) > 500:
+            text = text[:500]
+
+        msg = {
+            "id": int(_time.time() * 1000),
+            "telegram_id": telegram_id,
+            "username": username,
+            "text": text,
+            "platform": "telegram",
+            "timestamp": _time.time(),
+        }
+        stream_chat_messages.append(msg)
+
+        return cors_response({"success": True, "message": msg})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_channels_get(request):
+    """GET /api/stream/channels — получить список каналов"""
+    return cors_response({"channels": stream_channels})
+
+
+async def api_stream_channels_save(request):
+    """POST /api/stream/channels/save  {telegram_id, channels: [...]}"""
+    global stream_channels
+    try:
+        data = await request.json()
+        tg_id = int(data.get("telegram_id", 0))
+
+        if not is_admin_user(tg_id):
+            return cors_response({"error": "Admin only"}, 403)
+
+        channels = data.get("channels", [])
+        if not isinstance(channels, list):
+            return cors_response({"error": "channels must be a list"}, 400)
+
+        stream_channels = channels
+        _save_stream_channels()
+
+        return cors_response({"success": True, "count": len(stream_channels)})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+# ==========================================
 # ЗАПУСК
 # ==========================================
 
@@ -5017,6 +5121,12 @@ def create_api_app():
 
     # Streams API
     app.router.add_get("/api/streams/status", api_streams_status)
+
+    # Stream Chat API
+    app.router.add_get("/api/stream/chat", api_stream_chat_get)
+    app.router.add_post("/api/stream/chat/send", api_stream_chat_send)
+    app.router.add_get("/api/stream/channels", api_stream_channels_get)
+    app.router.add_post("/api/stream/channels/save", api_stream_channels_save)
 
     # Global Challenges API
     app.router.add_post("/api/global-challenge/create", api_global_challenge_create)
