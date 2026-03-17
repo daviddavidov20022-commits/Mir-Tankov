@@ -1,22 +1,8 @@
 /**
  * МИР ТАНКОВ — Видеоплеер (player.js)
- * YouTube: открытие через Invidious в браузере Telegram (обход замедления)
+ * YouTube: обычный embed (для стримов нужен VPN, или используйте Twitch)
  * VK Video / Twitch: embed через iframe (работает без ограничений)
  */
-
-// ==========================================
-// YOUTUBE ПРОКСИ (Invidious — проверенные инстансы)
-// Embed отключен на публичных инстансах, используем redirect в браузер
-// ==========================================
-const YT_PROXIES = [
-    { name: 'Invidious 🇩🇪 Германия', host: 'https://yewtu.be', type: 'invidious', flag: '🇩🇪' },
-    { name: 'Invidious 🇺🇦 Украина', host: 'https://invidious.nerdvpn.de', type: 'invidious', flag: '🇺🇦' },
-    { name: 'Invidious 🇨🇱 Чили', host: 'https://inv.nadeko.net', type: 'invidious', flag: '🇨🇱' },
-    { name: 'YouTube ⚠️ оригинал', host: 'https://www.youtube.com', type: 'youtube', flag: '⚠️' },
-];
-
-let currentProxyIndex = parseInt(localStorage.getItem('yt_proxy_index') || '0');
-if (currentProxyIndex >= YT_PROXIES.length) currentProxyIndex = 0;
 
 // ==========================================
 // КОНФИГ ПЛАТФОРМ
@@ -24,14 +10,14 @@ if (currentProxyIndex >= YT_PROXIES.length) currentProxyIndex = 0;
 const PLATFORMS = {
     youtube: {
         name: 'YouTube',
-        placeholder: 'Вставь ссылку YouTube видео или канала...',
+        placeholder: 'Ссылка на видео или канал/стрим...',
         color: 'youtube',
         parseUrl: parseYoutubeUrl,
-        buildEmbed: () => null, // YouTube открывается в браузере, не в iframe
+        buildEmbed: buildYoutubeEmbed,
     },
     vk: {
         name: 'VK Видео',
-        placeholder: 'Вставь ссылку VK Видео...',
+        placeholder: 'Ссылка на видео VK...',
         color: 'vk',
         parseUrl: parseVkUrl,
         buildEmbed: buildVkEmbed,
@@ -65,7 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     renderQuickChannels();
     renderHistory();
-    renderProxySelector();
+
+    // Прячем прокси-секцию (больше не нужна)
+    const proxySection = document.getElementById('proxySection');
+    if (proxySection) proxySection.style.display = 'none';
 
     document.getElementById('urlInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') playVideo();
@@ -133,40 +122,37 @@ function switchPlatform(platform) {
 
     const pulse = document.getElementById('nowPlayingPulse');
     if (pulse) pulse.className = 'now-playing__pulse now-playing__pulse--' + platform;
-
-    const proxySection = document.getElementById('proxySection');
-    if (proxySection) proxySection.style.display = platform === 'youtube' ? 'block' : 'none';
 }
 
 // ==========================================
 // ПАРСЕРЫ URL
 // ==========================================
 function extractYoutubeVideoId(url) {
-    let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-    if (m) return m[1];
-    m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-    if (m) return m[1];
-    m = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
-    if (m) return m[1];
-    m = url.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
-    if (m) return m[1];
-    m = url.match(/\/live\/([a-zA-Z0-9_-]{11})/);
-    if (m) return m[1];
+    let m;
+    m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/); if (m) return m[1];
+    m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/); if (m) return m[1];
+    m = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/); if (m) return m[1];
+    m = url.match(/\/shorts\/([a-zA-Z0-9_-]{11})/); if (m) return m[1];
+    m = url.match(/\/live\/([a-zA-Z0-9_-]{11})/); if (m) return m[1];
     if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
     return null;
 }
 
 function parseYoutubeUrl(url) {
     url = url.trim();
+
     const videoId = extractYoutubeVideoId(url);
     if (videoId) return { type: 'video', id: videoId };
 
+    // @channel/live → live stream embed
     let match = url.match(/youtube\.com\/@([a-zA-Z0-9_-]+)\/live/i);
     if (match) return { type: 'channel_live', handle: match[1] };
 
+    // @channel → channel page (will try to embed live)
     match = url.match(/youtube\.com\/@([a-zA-Z0-9_-]+)/i);
     if (match) return { type: 'channel', handle: match[1] };
 
+    // /channel/ID
     match = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/i);
     if (match) return { type: 'channel_id', id: match[1] };
 
@@ -174,6 +160,24 @@ function parseYoutubeUrl(url) {
     if (url.includes('youtube.com/playlist')) return { type: 'error_playlist' };
     if (url.includes('youtube.com') || url.includes('youtu.be')) return { type: 'error_unknown' };
     return { type: 'error_not_video' };
+}
+
+function buildYoutubeEmbed(parsed) {
+    if (parsed.type === 'video') {
+        return `https://www.youtube.com/embed/${parsed.id}?autoplay=1&rel=0`;
+    }
+    if (parsed.type === 'channel_live') {
+        // YouTube embed для live стрима по хэндлу
+        return `https://www.youtube.com/embed/live_stream?channel=${parsed.handle}&autoplay=1`;
+    }
+    if (parsed.type === 'channel') {
+        // Для каналов тоже пробуем embed live
+        return `https://www.youtube.com/embed/live_stream?channel=${parsed.handle}&autoplay=1`;
+    }
+    if (parsed.type === 'channel_id') {
+        return `https://www.youtube.com/embed/live_stream?channel=${parsed.id}&autoplay=1`;
+    }
+    return null;
 }
 
 function parseVkUrl(url) {
@@ -212,276 +216,34 @@ function buildTwitchEmbed(parsed) {
 }
 
 // ==========================================
-// YOUTUBE: Invidious API (поиск стримов и видео каналов)
-// ==========================================
-function buildYoutubeWatchUrl(videoId) {
-    const proxy = YT_PROXIES[currentProxyIndex];
-    if (proxy.type === 'invidious') {
-        return `${proxy.host}/watch?v=${videoId}&local=true&quality=hd720`;
-    }
-    return `https://www.youtube.com/watch?v=${videoId}`;
-}
-
-async function resolveYoutubeChannel(parsed) {
-    const proxy = YT_PROXIES[currentProxyIndex];
-    const host = proxy.host;
-    if (proxy.type === 'youtube') return null;
-
-    try {
-        let channelId = null;
-
-        if (parsed.type === 'channel' || parsed.type === 'channel_live') {
-            const searchResp = await fetch(`${host}/api/v1/search?q=${encodeURIComponent('@' + parsed.handle)}&type=channel`, {
-                signal: AbortSignal.timeout(8000)
-            });
-            if (!searchResp.ok) throw new Error('Search failed');
-            const searchData = await searchResp.json();
-            if (searchData.length > 0 && searchData[0].authorId) {
-                channelId = searchData[0].authorId;
-            }
-        } else if (parsed.type === 'channel_id') {
-            channelId = parsed.id;
-        }
-
-        if (!channelId) return null;
-
-        // 1) Ищем АКТИВНЫЙ СТРИМ
-        try {
-            const resp = await fetch(`${host}/api/v1/channels/${channelId}/streams`, { signal: AbortSignal.timeout(8000) });
-            if (resp.ok) {
-                const data = await resp.json();
-                const streams = data.videos || data;
-                const live = streams.find(v => v.liveNow === true);
-                if (live && live.videoId) {
-                    return { videoId: live.videoId, title: live.title || 'Прямая трансляция', isLive: true };
-                }
-            }
-        } catch (e) { /* ignore */ }
-
-        // 2) Ищем live среди последних видео
-        try {
-            const resp = await fetch(`${host}/api/v1/channels/${channelId}/videos?sort_by=newest`, { signal: AbortSignal.timeout(8000) });
-            if (resp.ok) {
-                const data = await resp.json();
-                const videos = data.videos || data;
-                const live = videos.find(v => v.liveNow === true);
-                if (live && live.videoId) {
-                    return { videoId: live.videoId, title: live.title || 'Прямая трансляция', isLive: true };
-                }
-                if (videos.length > 0 && videos[0].videoId) {
-                    return { videoId: videos[0].videoId, title: videos[0].title || 'Последнее видео', isLive: false };
-                }
-            }
-        } catch (e) { /* ignore */ }
-
-        return null;
-    } catch (e) {
-        console.warn('[resolveYoutubeChannel]', e.message);
-        return null;
-    }
-}
-
-// ==========================================
-// YOUTUBE: Открытие в браузере Telegram
-// ==========================================
-function openYoutubeInBrowser(videoId, title, isLive) {
-    const watchUrl = buildYoutubeWatchUrl(videoId);
-
-    const container = document.getElementById('playerContainer');
-    const aspect = document.getElementById('playerAspect');
-    const nowPlaying = document.getElementById('nowPlaying');
-    const nowValue = document.getElementById('nowPlayingValue');
-    const loading = document.getElementById('playerLoading');
-
-    // Очистка
-    const oldIframe = aspect.querySelector('iframe');
-    if (oldIframe) oldIframe.remove();
-    const oldCard = aspect.querySelector('.yt-open-card');
-    if (oldCard) oldCard.remove();
-
-    container.style.display = 'block';
-    loading.classList.add('player-loading--hidden');
-
-    // Красивая карточка вместо iframe
-    const card = document.createElement('div');
-    card.className = 'yt-open-card';
-    card.innerHTML = `
-        <div class="yt-open-card__inner">
-            <div class="yt-open-card__icon">${isLive ? '🔴' : '▶️'}</div>
-            <div class="yt-open-card__title">${escapeHtml(title || 'YouTube видео')}</div>
-            <div class="yt-open-card__desc">
-                ${isLive ? 'Прямая трансляция' : 'Видео'} откроется через Invidious — без замедления
-            </div>
-            <button class="yt-open-card__btn" onclick="openWatchUrl('${watchUrl}')">
-                ${isLive ? '🔴 Смотреть стрим' : '▶ Смотреть видео'}
-            </button>
-            <div class="yt-open-card__hint">Откроется во встроенном браузере Telegram</div>
-        </div>
-    `;
-    aspect.appendChild(card);
-
-    nowPlaying.style.display = 'flex';
-    nowValue.textContent = `${isLive ? '🔴 LIVE' : '📹'} ${title}`;
-    isPlaying = true;
-
-    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // Сразу открываем
-    openWatchUrl(watchUrl);
-
-    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) { }
-}
-
-function openWatchUrl(url) {
-    try {
-        const tg = window.Telegram?.WebApp;
-        if (tg?.openLink) {
-            tg.openLink(url);
-        } else {
-            window.open(url, '_blank');
-        }
-    } catch (e) {
-        window.open(url, '_blank');
-    }
-}
-
-// ==========================================
-// ПРОКСИ-СЕЛЕКТОР
-// ==========================================
-function renderProxySelector() {
-    const container = document.getElementById('proxySection');
-    if (!container) return;
-
-    const proxy = YT_PROXIES[currentProxyIndex];
-    const isOriginal = proxy.type === 'youtube';
-
-    container.innerHTML = `
-        <div class="proxy-selector">
-            <div class="proxy-selector__header" onclick="toggleProxyList()">
-                <div class="proxy-selector__info">
-                    <div class="proxy-selector__label">🔓 YouTube сервер (обход замедления)</div>
-                    <div class="proxy-selector__current">
-                        <span class="proxy-selector__dot ${isOriginal ? 'proxy-selector__dot--warn' : 'proxy-selector__dot--ok'}"></span>
-                        <span class="proxy-selector__name">${proxy.flag} ${proxy.name}</span>
-                    </div>
-                </div>
-                <div class="proxy-selector__arrow" id="proxyArrow">▾</div>
-            </div>
-            ${!isOriginal ? `
-                <div class="proxy-selector__status proxy-selector__status--ok">
-                    ✅ Видео откроется через Invidious — без замедления
-                </div>
-            ` : `
-                <div class="proxy-selector__status proxy-selector__status--warn">
-                    ⚠️ Оригинал — может не работать из-за замедления
-                </div>
-            `}
-            <div class="proxy-selector__list" id="proxyList" style="display: none;">
-                ${YT_PROXIES.map((p, i) => `
-                    <div class="proxy-selector__item ${i === currentProxyIndex ? 'proxy-selector__item--active' : ''}" 
-                         onclick="selectProxy(${i}); event.stopPropagation();">
-                        <span class="proxy-selector__item-dot ${p.type === 'youtube' ? 'proxy-selector__dot--warn' : 'proxy-selector__dot--ok'}"></span>
-                        <span class="proxy-selector__item-name">${p.flag} ${p.name}</span>
-                        <span class="proxy-selector__item-type">${p.type === 'invidious' ? '🚀 Прокси' : '⚠️ Прямой'}</span>
-                        ${i === currentProxyIndex ? '<span class="proxy-selector__item-check">✓</span>' : ''}
-                    </div>
-                `).join('')}
-                <div class="proxy-selector__hint">
-                    💡 YouTube откроется в браузере Telegram через выбранный сервер
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function toggleProxyList() {
-    const list = document.getElementById('proxyList');
-    const arrow = document.getElementById('proxyArrow');
-    if (!list) return;
-    const isVisible = list.style.display !== 'none';
-    list.style.display = isVisible ? 'none' : 'block';
-    if (arrow) arrow.textContent = isVisible ? '▾' : '▴';
-}
-
-function selectProxy(index) {
-    if (index < 0 || index >= YT_PROXIES.length) return;
-    currentProxyIndex = index;
-    localStorage.setItem('yt_proxy_index', String(index));
-    renderProxySelector();
-    showToast('🔓', `Сервер: ${YT_PROXIES[index].name}`);
-    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) { }
-}
-
-// ==========================================
 // ВОСПРОИЗВЕДЕНИЕ
 // ==========================================
-async function playVideo() {
+function playVideo() {
     const input = document.getElementById('urlInput');
     const url = input.value.trim();
 
-    if (!url) {
-        shakeInput();
-        showToast('⚠️', 'Вставь ссылку!');
-        return;
-    }
+    if (!url) { shakeInput(); showToast('⚠️', 'Вставь ссылку!'); return; }
 
     const platform = PLATFORMS[currentPlatform];
     const parsed = platform.parseUrl(url);
 
-    // Ошибки парсинга
-    if (parsed.type === 'error_search') { showToast('❌', 'Ссылка на поиск не поддерживается!', 5000); shakeInput(); return; }
-    if (parsed.type === 'error_playlist') { showToast('❌', 'Плейлисты не поддерживаются.', 5000); shakeInput(); return; }
-    if (parsed.type === 'error_not_video') { showToast('❌', 'Вставь ссылку на видео или канал!', 5000); shakeInput(); return; }
-    if (parsed.type === 'error_unknown' || parsed.type === 'error') { showToast('❌', 'Не удалось распознать ссылку.', 5000); shakeInput(); return; }
+    // Ошибки
+    if (parsed.type === 'error_search') { showToast('❌', 'Ссылка на поиск не поддерживается!', 4000); shakeInput(); return; }
+    if (parsed.type === 'error_playlist') { showToast('❌', 'Плейлисты не поддерживаются.', 4000); shakeInput(); return; }
+    if (parsed.type === 'error_not_video') { showToast('❌', 'Вставь ссылку на видео или канал!', 4000); shakeInput(); return; }
+    if (parsed.type === 'error_unknown' || parsed.type === 'error') { showToast('❌', 'Не удалось распознать ссылку.', 4000); shakeInput(); return; }
 
+    // VK: каналы нельзя embed
     if (currentPlatform === 'vk' && (parsed.type === 'user' || parsed.type === 'raw')) {
-        showToast('❌', 'Вставь ссылку на конкретное видео VK!', 5000);
+        showToast('❌', 'Вставь ссылку на конкретное видео VK!', 4000);
         shakeInput();
         return;
     }
 
-    // ==========================================
-    // YouTube — открываем через Invidious в браузере Telegram
-    // ==========================================
-    if (currentPlatform === 'youtube') {
-        let videoId = null;
-        let title = 'YouTube видео';
-        let isLive = false;
-
-        if (parsed.type === 'video') {
-            videoId = parsed.id;
-        } else if (parsed.type === 'channel' || parsed.type === 'channel_id' || parsed.type === 'channel_live') {
-            showToast('🔍', 'Ищу стрим канала...', 6000);
-            const resolved = await resolveYoutubeChannel(parsed);
-            if (resolved) {
-                videoId = resolved.videoId;
-                title = resolved.title;
-                isLive = resolved.isLive;
-                showToast(isLive ? '🔴' : '📹', isLive ? `Стрим: ${title}` : `Последнее видео: ${title}`, 3000);
-            } else {
-                showToast('❌', 'Канал не найден. Попробуй другой сервер.', 5000);
-                shakeInput();
-                return;
-            }
-        }
-
-        if (videoId) {
-            openYoutubeInBrowser(videoId, title, isLive);
-            addToHistory(url, currentPlatform);
-            return;
-        }
-
-        showToast('❌', 'Не удалось распознать видео.', 4000);
-        shakeInput();
-        return;
-    }
-
-    // ==========================================
-    // VK / Twitch — embed через iframe
-    // ==========================================
     const embedUrl = platform.buildEmbed(parsed);
     if (!embedUrl) { showToast('❌', 'Не удалось построить ссылку.', 4000); shakeInput(); return; }
 
+    // Показываем плеер
     const container = document.getElementById('playerContainer');
     const aspect = document.getElementById('playerAspect');
     const loading = document.getElementById('playerLoading');
@@ -491,25 +253,39 @@ async function playVideo() {
     container.style.display = 'block';
     loading.classList.remove('player-loading--hidden');
 
+    // Очистка
     const oldIframe = aspect.querySelector('iframe');
     if (oldIframe) oldIframe.remove();
     const oldCard = aspect.querySelector('.yt-open-card');
     if (oldCard) oldCard.remove();
 
+    // Создаём iframe
     const iframe = document.createElement('iframe');
     iframe.src = embedUrl;
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
     iframe.allowFullscreen = true;
     iframe.setAttribute('frameborder', '0');
 
-    const loadTimeout = setTimeout(() => loading.classList.add('player-loading--hidden'), 10000);
-    iframe.onload = () => { clearTimeout(loadTimeout); setTimeout(() => loading.classList.add('player-loading--hidden'), 500); };
+    // Таймаут загрузки
+    const loadTimeout = setTimeout(() => {
+        loading.classList.add('player-loading--hidden');
+        if (currentPlatform === 'youtube') {
+            showToast('💡', 'YouTube замедлен в РФ. Для стримов используй Twitch!', 5000);
+        }
+    }, 12000);
+
+    iframe.onload = () => {
+        clearTimeout(loadTimeout);
+        setTimeout(() => loading.classList.add('player-loading--hidden'), 500);
+    };
 
     aspect.appendChild(iframe);
 
+    // Now playing
     nowPlaying.style.display = 'flex';
     nowValue.textContent = url;
     isPlaying = true;
+
     container.scrollIntoView({ behavior: 'smooth', block: 'center' });
     addToHistory(url, currentPlatform);
 
@@ -647,6 +423,3 @@ window.playFromHistory = playFromHistory;
 window.clearHistory = clearHistory;
 window.goBack = goBack;
 window.openGame = openGame;
-window.toggleProxyList = toggleProxyList;
-window.selectProxy = selectProxy;
-window.openWatchUrl = openWatchUrl;

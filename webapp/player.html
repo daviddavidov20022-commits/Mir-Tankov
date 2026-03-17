@@ -100,11 +100,6 @@
             <button class="player-btn player-btn--youtube" id="playBtn" onclick="playVideo()">▶ Играть</button>
         </div>
 
-        <!-- YouTube Proxy Selector (заполняется из JS) -->
-        <div id="proxySection" style="margin-bottom: 16px;">
-            <!-- Rendered by renderProxySelector() -->
-        </div>
-
         <!-- Now Playing (hidden by default) -->
         <div class="now-playing" id="nowPlaying" style="display: none;">
             <div class="now-playing__pulse now-playing__pulse--youtube" id="nowPlayingPulse"></div>
@@ -137,13 +132,12 @@
         <div class="player-tips">
             <div class="player-tips__title">💡 Как пользоваться</div>
             <ul class="player-tips__list">
-                <li><b>YouTube</b> — вставь ссылку на конкретное видео:<br>
-                    <code style="color:#C8AA6E;font-size:0.65rem;">youtube.com/watch?v=xxxxx</code> или <code style="color:#C8AA6E;font-size:0.65rem;">youtu.be/xxxxx</code></li>
-                <li><b>Прокси-сервер</b> — видео грузится через Invidious (обход замедления YT!)</li>
-                <li><b>Не работает?</b> — смени сервер в блоке «YouTube сервер» выше</li>
-                <li><b>VK Видео</b> — ссылка вида <code style="color:#C8AA6E;font-size:0.65rem;">vk.com/video-123_456</code></li>
-                <li><b>Twitch</b> — имя канала или ссылка <code style="color:#C8AA6E;font-size:0.65rem;">twitch.tv/channel</code></li>
-                <li>⚠️ Ссылки на <b>поиск</b>, <b>плейлисты</b> и <b>каналы</b> YouTube не поддерживаются</li>
+                <li><b>YouTube</b> — ссылка на видео или канал/стрим:<br>
+                    <code style="color:#C8AA6E;font-size:0.65rem;">youtube.com/watch?v=xxxxx</code> или <code style="color:#C8AA6E;font-size:0.65rem;">youtube.com/@канал</code></li>
+                <li><b>VK Видео</b> — <code style="color:#C8AA6E;font-size:0.65rem;">vk.com/video-123_456</code></li>
+                <li><b>Twitch</b> — имя канала: <code style="color:#C8AA6E;font-size:0.65rem;">twitch.tv/channel</code></li>
+                <li>💜 <b>Для стримов лучше Twitch</b> — работает без ограничений!</li>
+                <li>⚠️ YouTube может медленно грузиться из-за замедления в РФ</li>
             </ul>
         </div>
 
