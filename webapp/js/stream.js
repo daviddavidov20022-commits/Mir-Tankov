@@ -905,7 +905,11 @@ async function getMyCheeseBalance() {
 async function openDonateModal() {
     document.getElementById('donateModal').style.display = 'flex';
     const balance = await getMyCheeseBalance();
-    document.getElementById('donateBalance').textContent = `Баланс: ${balance} 🧀`;
+    if (isAdmin) {
+        document.getElementById('donateBalance').textContent = `Баланс: ∞ 🧀 (ADMIN — бесплатно)`;
+    } else {
+        document.getElementById('donateBalance').textContent = `Баланс: ${balance} 🧀`;
+    }
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
 }
 

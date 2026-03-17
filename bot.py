@@ -5252,21 +5252,32 @@ async def api_stream_donate(request):
             return cors_response({"error": "telegram_id required"}, 400)
         
         # Проверить и списать сыр
+        is_admin = (ADMIN_ID and tg_id == ADMIN_ID)
         profile_file = os.path.join(os.path.dirname(__file__), 'profiles', f'{tg_id}.json')
+        
         if not os.path.exists(profile_file):
-            return cors_response({"error": "Профиль не найден"}, 404)
+            if is_admin:
+                # Автосоздаём профиль для админа
+                os.makedirs(os.path.join(os.path.dirname(__file__), 'profiles'), exist_ok=True)
+                profile = {'cheese': 99999, 'username': username}
+                with open(profile_file, 'w', encoding='utf-8') as f:
+                    json.dump(profile, f, ensure_ascii=False, indent=2)
+            else:
+                return cors_response({"error": "Профиль не найден"}, 404)
         
         with open(profile_file, 'r', encoding='utf-8') as f:
             profile = json.load(f)
         
         current_cheese = profile.get('cheese', 0)
-        if current_cheese < amount:
+        
+        if not is_admin and current_cheese < amount:
             return cors_response({"error": f"Недостаточно Сыра! У вас {current_cheese} 🧀"}, 400)
         
-        # Списать
-        profile['cheese'] = current_cheese - amount
-        with open(profile_file, 'w', encoding='utf-8') as f:
-            json.dump(profile, f, ensure_ascii=False, indent=2)
+        # Списать (только для обычных юзеров!)
+        if not is_admin:
+            profile['cheese'] = current_cheese - amount
+            with open(profile_file, 'w', encoding='utf-8') as f:
+                json.dump(profile, f, ensure_ascii=False, indent=2)
         
         # Создать событие доната
         event = {
@@ -5340,20 +5351,28 @@ async def api_stream_music_request(request):
             return cors_response({"error": "telegram_id required"}, 400)
         
         # Списать сыр
+        is_admin = (ADMIN_ID and tg_id == ADMIN_ID)
         profile_file = os.path.join(os.path.dirname(__file__), 'profiles', f'{tg_id}.json')
         if not os.path.exists(profile_file):
-            return cors_response({"error": "Профиль не найден"}, 404)
+            if is_admin:
+                os.makedirs(os.path.join(os.path.dirname(__file__), 'profiles'), exist_ok=True)
+                profile = {'cheese': 99999, 'username': username}
+                with open(profile_file, 'w', encoding='utf-8') as f:
+                    json.dump(profile, f, ensure_ascii=False, indent=2)
+            else:
+                return cors_response({"error": "Профиль не найден"}, 404)
         
         with open(profile_file, 'r', encoding='utf-8') as f:
             profile = json.load(f)
         
         current_cheese = profile.get('cheese', 0)
-        if current_cheese < amount:
+        if not is_admin and current_cheese < amount:
             return cors_response({"error": f"Недостаточно Сыра! У вас {current_cheese} 🧀"}, 400)
         
-        profile['cheese'] = current_cheese - amount
-        with open(profile_file, 'w', encoding='utf-8') as f:
-            json.dump(profile, f, ensure_ascii=False, indent=2)
+        if not is_admin:
+            profile['cheese'] = current_cheese - amount
+            with open(profile_file, 'w', encoding='utf-8') as f:
+                json.dump(profile, f, ensure_ascii=False, indent=2)
         
         track = {
             "id": str(_uuid.uuid4())[:8],
