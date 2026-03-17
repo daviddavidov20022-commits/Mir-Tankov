@@ -221,9 +221,9 @@
 
             el.style.display = 'block';
             if (url.startsWith('data:video/') || url.match(/\.(mp4|webm)$/i)) {
-                el.innerHTML = `<video src="${url}" autoplay loop playsinline></video>`;
+                el.innerHTML = `<video src="${url}" autoplay muted playsinline></video>`;
                 const vid = el.querySelector('video');
-                if (vid) { vid.volume = CONFIG.soundVolume; vid.play().catch(() => {}); }
+                if (vid) vid.play().catch(() => {});
             } else {
                 el.innerHTML = `<img src="${url}" alt="">`;
             }
