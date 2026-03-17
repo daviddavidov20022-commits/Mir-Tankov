@@ -1198,10 +1198,35 @@ async function sendTestMusic() {
 setTimeout(() => {
     if (isAdmin) {
         loadAdminSettings();
-        refreshMusicQueue();
-        refreshDonateHistory();
+        // Показать кнопку шестерёнки
+        const gearBtn = document.getElementById('adminGearBtn');
+        if (gearBtn) gearBtn.style.display = 'block';
     }
 }, 2000);
+
+function openSettingsModal() {
+    document.getElementById('settingsModal').style.display = 'flex';
+    loadAdminSettings();
+    refreshMusicQueue();
+    refreshDonateHistory();
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').style.display = 'none';
+}
+
+function switchSettingsTab(tabName, btn) {
+    // Hide all panels
+    document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
+    // Deactivate all tabs
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('settings-tab--active'));
+    // Show selected
+    const panel = document.getElementById('settingsTab_' + tabName);
+    if (panel) panel.style.display = 'block';
+    if (btn) btn.classList.add('settings-tab--active');
+    try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch(e) {}
+}
 
 // Expose globals
 window.changeChannel = changeChannel;
@@ -1232,3 +1257,6 @@ window.skipTrack = skipTrack;
 window.removeTrack = removeTrack;
 window.sendTestDonate = sendTestDonate;
 window.sendTestMusic = sendTestMusic;
+window.openSettingsModal = openSettingsModal;
+window.closeSettingsModal = closeSettingsModal;
+window.switchSettingsTab = switchSettingsTab;

@@ -168,152 +168,93 @@
                     <button class="modal-btn modal-btn--secondary" onclick="closeMusicModal()">Отмена</button>
                 </div>
             </div>
-            <!-- Admin Panel -->
-            <div class="admin-panel" id="adminPanel">
-                <div class="admin-panel__header" onclick="toggleAdminPanel()">
-                    <span>⚙️ Настройки стрим-хаба (Админ)</span>
-                    <span class="admin-panel__toggle">▾</span>
-                </div>
-                <div class="admin-panel__content" id="adminPanelContent">
-                    
-                    <!-- Настройка стримера -->
-                    <div class="admin-section">
-                        <div class="admin-section__title">📺 Настройка трансляции</div>
-                        
-                        <!-- Twitch -->
-                        <div class="admin-platform-row">
-                            <label class="admin-toggle">
-                                <input type="checkbox" id="adminTwitchEnabled" checked onchange="updateStreamConfig()">
-                                <span class="admin-toggle__label">💜 Twitch</span>
-                            </label>
-                            <input type="text" id="adminTwitchChannel" class="admin-input admin-input--sm" 
-                                   placeholder="Имя канала (thejove)" autocomplete="off" onchange="updateStreamConfig()">
-                        </div>
-                        
-                        <!-- YouTube -->
-                        <div class="admin-platform-row">
-                            <label class="admin-toggle">
-                                <input type="checkbox" id="adminYoutubeEnabled" onchange="updateStreamConfig()">
-                                <span class="admin-toggle__label">🔴 YouTube</span>
-                            </label>
-                            <input type="text" id="adminYoutubeChannel" class="admin-input admin-input--sm" 
-                                   placeholder="ID канала или ссылка" autocomplete="off" onchange="updateStreamConfig()">
-                        </div>
-                        
-                        <!-- VK -->
-                        <div class="admin-platform-row">
-                            <label class="admin-toggle">
-                                <input type="checkbox" id="adminVkEnabled" onchange="updateStreamConfig()">
-                                <span class="admin-toggle__label">🔵 VK</span>
-                            </label>
-                            <input type="text" id="adminVkChannel" class="admin-input admin-input--sm" 
-                                   placeholder="Ссылка на стрим VK" autocomplete="off" onchange="updateStreamConfig()">
-                        </div>
-                        
-                        <button class="admin-save-btn" onclick="saveStreamConfig()">💾 Сохранить настройки</button>
+
+            <!-- ⚙️ Admin Gear Button (только для админов) -->
+            <button class="admin-gear-btn" id="adminGearBtn" onclick="openSettingsModal()" style="display:none;">⚙️</button>
+
+            <!-- Settings Modal -->
+            <div class="settings-overlay" id="settingsModal" style="display:none;" onclick="if(event.target===this)closeSettingsModal()">
+                <div class="settings-modal">
+                    <div class="settings-modal__header">
+                        <span class="settings-modal__title">⚙️ Настройки стрима</span>
+                        <button class="settings-modal__close" onclick="closeSettingsModal()">✕</button>
                     </div>
 
-                    <!-- Быстрые каналы -->
-                    <div class="admin-section">
-                        <div class="admin-section__title">📋 Быстрые каналы</div>
-                        <div class="admin-panel__add">
-                            <div class="admin-add-row">
-                                <input type="text" id="adminChName" class="admin-input admin-input--sm" placeholder="Название" autocomplete="off">
-                                <select id="adminChPlatform" class="admin-select">
+                    <!-- Tabs -->
+                    <div class="settings-tabs">
+                        <button class="settings-tab settings-tab--active" onclick="switchSettingsTab('broadcast', this)">📺 Трансляция</button>
+                        <button class="settings-tab" onclick="switchSettingsTab('music', this)">🎵 Музыка</button>
+                        <button class="settings-tab" onclick="switchSettingsTab('donates', this)">🧀 Донаты</button>
+                    </div>
+
+                    <!-- Tab: Broadcast -->
+                    <div class="settings-panel" id="settingsTab_broadcast">
+                        <div class="sp-group">
+                            <div class="sp-group__title">Платформы</div>
+                            <div class="sp-row">
+                                <label class="sp-toggle"><input type="checkbox" id="adminTwitchEnabled" checked onchange="updateStreamConfig()"><span>💜 Twitch</span></label>
+                                <input type="text" id="adminTwitchChannel" class="sp-input" placeholder="Канал" autocomplete="off">
+                            </div>
+                            <div class="sp-row">
+                                <label class="sp-toggle"><input type="checkbox" id="adminYoutubeEnabled" onchange="updateStreamConfig()"><span>🔴 YouTube</span></label>
+                                <input type="text" id="adminYoutubeChannel" class="sp-input" placeholder="ID/ссылка" autocomplete="off">
+                            </div>
+                            <div class="sp-row">
+                                <label class="sp-toggle"><input type="checkbox" id="adminVkEnabled" onchange="updateStreamConfig()"><span>🔵 VK</span></label>
+                                <input type="text" id="adminVkChannel" class="sp-input" placeholder="Ссылка VK" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="sp-group">
+                            <div class="sp-group__title">Быстрые каналы</div>
+                            <div class="sp-row">
+                                <input type="text" id="adminChName" class="sp-input" placeholder="Название" autocomplete="off">
+                                <select id="adminChPlatform" class="sp-select">
                                     <option value="twitch">💜 Twitch</option>
                                     <option value="youtube">🔴 YouTube</option>
                                     <option value="vk">🔵 VK</option>
                                 </select>
                             </div>
-                            <div class="admin-add-row">
-                                <input type="text" id="adminChUrl" class="admin-input admin-input--sm" placeholder="Канал/ссылка" autocomplete="off">
-                                <button class="admin-add-btn-sm" onclick="addChannel()">➕</button>
+                            <div class="sp-row">
+                                <input type="text" id="adminChUrl" class="sp-input" placeholder="Канал/ссылка" autocomplete="off">
+                                <button class="sp-btn-add" onclick="addChannel()">➕</button>
                             </div>
+                            <div id="adminChannelList"></div>
                         </div>
-                        <div class="admin-channel-list" id="adminChannelList">
-                            <!-- Filled by JS -->
-                        </div>
+                        <button class="sp-save-btn" onclick="saveStreamConfig()">💾 Сохранить</button>
                     </div>
 
-                    <!-- 🎵 Управление музыкой -->
-                    <div class="admin-section">
-                        <div class="admin-section__title">🎵 Управление музыкой</div>
-                        
-                        <div class="admin-row">
-                            <span class="admin-row__label">💰 Стоимость заказа</span>
-                            <input type="number" id="adminMusicCost" class="admin-input admin-input--xs" value="50" min="0">
-                            <span class="admin-row__unit">🧀</span>
+                    <!-- Tab: Music -->
+                    <div class="settings-panel" id="settingsTab_music" style="display:none;">
+                        <div class="sp-group">
+                            <div class="sp-group__title">Параметры</div>
+                            <div class="sp-row"><span class="sp-label">💰 Стоимость заказа</span><input type="number" id="adminMusicCost" class="sp-input-sm" value="50" min="0"><span class="sp-unit">🧀</span></div>
+                            <div class="sp-row"><span class="sp-label">👁 Мин. просмотров</span><input type="number" id="adminMusicMinViews" class="sp-input-sm" value="1000" min="0"></div>
+                            <div class="sp-row"><span class="sp-label">⏱ Макс. длительность</span><input type="number" id="adminMusicMaxDuration" class="sp-input-sm" value="300" min="30"><span class="sp-unit">сек</span></div>
+                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminMusicPaused"><span>⏸ Пауза очереди</span></label></div>
                         </div>
-                        
-                        <div class="admin-row">
-                            <span class="admin-row__label">👁 Мин. просмотров</span>
-                            <input type="number" id="adminMusicMinViews" class="admin-input admin-input--xs" value="1000" min="0">
+                        <button class="sp-save-btn" onclick="saveMusicSettings()">💾 Сохранить</button>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">📋 Очередь <button class="sp-refresh" onclick="refreshMusicQueue()">🔄</button></div>
+                            <div id="musicQueueList" class="sp-list"><div class="sp-list__empty">Загрузка...</div></div>
                         </div>
-                        
-                        <div class="admin-row">
-                            <span class="admin-row__label">⏱ Макс. длительность</span>
-                            <input type="number" id="adminMusicMaxDuration" class="admin-input admin-input--xs" value="300" min="30">
-                            <span class="admin-row__unit">сек</span>
-                        </div>
-                        
-                        <div class="admin-row">
-                            <label class="admin-toggle">
-                                <input type="checkbox" id="adminMusicPaused">
-                                <span class="admin-toggle__label">⏸ Пауза очереди</span>
-                            </label>
-                        </div>
-                        
-                        <button class="admin-save-btn" onclick="saveMusicSettings()">💾 Сохранить настройки музыки</button>
-                        
-                        <!-- Очередь -->
-                        <div class="admin-subsection">
-                            <div class="admin-subsection__title">
-                                📋 Очередь треков 
-                                <button class="admin-refresh-btn" onclick="refreshMusicQueue()">🔄</button>
-                            </div>
-                            <div id="musicQueueList" class="admin-queue-list">
-                                <div class="admin-queue-empty">Загрузка...</div>
-                            </div>
-                        </div>
+
+                        <button class="sp-test-btn sp-test-btn--music" onclick="sendTestMusic()">🎵 Тест алерта музыки</button>
                     </div>
 
-                    <!-- 🧀 Управление донатами -->
-                    <div class="admin-section">
-                        <div class="admin-section__title">🧀 Управление донатами</div>
-                        
-                        <div class="admin-row">
-                            <span class="admin-row__label">💰 Мин. сумма доната</span>
-                            <input type="number" id="adminDonateMin" class="admin-input admin-input--xs" value="10" min="1">
-                            <span class="admin-row__unit">🧀</span>
+                    <!-- Tab: Donates -->
+                    <div class="settings-panel" id="settingsTab_donates" style="display:none;">
+                        <div class="sp-group">
+                            <div class="sp-group__title">Параметры</div>
+                            <div class="sp-row"><span class="sp-label">💰 Мин. сумма доната</span><input type="number" id="adminDonateMin" class="sp-input-sm" value="10" min="1"><span class="sp-unit">🧀</span></div>
+                            <div class="sp-row"><span class="sp-label">⏱ Длительность алерта</span><input type="number" id="adminAlertDuration" class="sp-input-sm" value="5" min="1" max="30"><span class="sp-unit">сек</span></div>
                         </div>
-                        
-                        <div class="admin-row">
-                            <span class="admin-row__label">⏱ Длительность алерта</span>
-                            <input type="number" id="adminAlertDuration" class="admin-input admin-input--xs" value="5" min="1" max="30">
-                            <span class="admin-row__unit">сек</span>
-                        </div>
+                        <button class="sp-save-btn" onclick="saveDonateSettings()">💾 Сохранить</button>
+                        <button class="sp-test-btn sp-test-btn--donate" onclick="sendTestDonate()">🧀 Тест алерта доната</button>
 
-                        <button class="admin-save-btn" onclick="saveDonateSettings()">💾 Сохранить настройки донатов</button>
-                        
-                        <!-- Тест кнопка -->
-                        <div class="admin-test-section">
-                            <button class="admin-test-btn admin-test-btn--donate" onclick="sendTestDonate()">
-                                🧀 Тест алерта доната
-                            </button>
-                            <button class="admin-test-btn admin-test-btn--music" onclick="sendTestMusic()">
-                                🎵 Тест алерта музыки
-                            </button>
-                        </div>
-                        
-                        <!-- Последние донаты -->
-                        <div class="admin-subsection">
-                            <div class="admin-subsection__title">
-                                📊 Последние донаты
-                                <button class="admin-refresh-btn" onclick="refreshDonateHistory()">🔄</button>
-                            </div>
-                            <div id="donateHistoryList" class="admin-queue-list">
-                                <div class="admin-queue-empty">Загрузка...</div>
-                            </div>
+                        <div class="sp-group">
+                            <div class="sp-group__title">📊 Последние донаты <button class="sp-refresh" onclick="refreshDonateHistory()">🔄</button></div>
+                            <div id="donateHistoryList" class="sp-list"><div class="sp-list__empty">Загрузка...</div></div>
                         </div>
                     </div>
                 </div>
