@@ -104,7 +104,31 @@
 
         </div>
 
-        <!-- Bottom nav -->
+            <!-- Admin Panel (hidden, shown only for admins) -->
+            <div class="admin-panel" id="adminPanel" style="display: none;">
+                <div class="admin-panel__header" onclick="toggleAdminPanel()">
+                    <span>⚙️ Управление каналами (Админ)</span>
+                    <span class="admin-panel__toggle">▾</span>
+                </div>
+                <div class="admin-panel__content" id="adminPanelContent" style="display: none;">
+                    
+                    <div class="admin-panel__add">
+                        <div class="admin-panel__add-title">➕ Добавить канал</div>
+                        <input type="text" id="adminChName" class="admin-input" placeholder="Название (например: LeBwa)" autocomplete="off">
+                        <input type="text" id="adminChUrl" class="admin-input" placeholder="Twitch ссылка или имя (lebwa)" autocomplete="off">
+                        <input type="text" id="adminChDesc" class="admin-input" placeholder="Описание (WoT стримы)" autocomplete="off">
+                        <button class="admin-add-btn" onclick="addChannel()">➕ Добавить</button>
+                    </div>
+
+                    <div class="admin-panel__list-title">📋 Текущие каналы</div>
+                    <div class="admin-channel-list" id="adminChannelList">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
         <nav class="bottom-nav">
             <a class="bottom-nav__item" onclick="openGame('index.html')">
                 <span class="bottom-nav__icon">🏠</span>

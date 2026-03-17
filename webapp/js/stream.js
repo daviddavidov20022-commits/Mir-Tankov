@@ -1,9 +1,7 @@
 /**
  * МИР ТАНКОВ — Стрим-хаб (stream.js)
  * Twitch стрим + мультиплатформенный чат
- * 
- * Чат Twitch: анонимное чтение через WebSocket IRC
- * Чат Telegram: через бота (отправка/получение)
+ * Админ: управление списком каналов
  */
 
 // ==========================================
@@ -12,15 +10,20 @@
 const DEFAULT_CHANNEL = 'iserveri';
 const TWITCH_WS_URL = 'wss://irc-ws.chat.twitch.tv:443';
 const MAX_CHAT_MESSAGES = 200;
+const BOT_API_URL = localStorage.getItem('bot_api_url') || window.location.origin || 'http://localhost:8081';
 
-// Популярные каналы для быстрого переключения
-const POPULAR_CHANNELS = [
+// Каналы по умолчанию (если localStorage пуст)
+const DEFAULT_CHANNELS = [
     { name: 'ISERVERI', channel: 'iserveri', desc: 'Мир Танков' },
-    { name: 'Silvername', channel: 'silvername', desc: 'WoT стримы' },
-    { name: 'EviL_GrannY', channel: 'evil_granny', desc: 'WoT' },
-    { name: 'Amway921', channel: 'amway921', desc: 'WoT обзоры' },
-    { name: 'LeBwa', channel: 'lebwa', desc: 'WoT' },
 ];
+
+// Загружаем каналы из localStorage (или defaults)
+let savedChannels = null;
+try {
+    const raw = localStorage.getItem('stream_channels');
+    if (raw) savedChannels = JSON.parse(raw);
+} catch (e) { }
+let CHANNELS = savedChannels || [...DEFAULT_CHANNELS];
 
 let currentChannel = DEFAULT_CHANNEL;
 let twitchWs = null;
@@ -28,6 +31,8 @@ let chatMessages = [];
 let isConnected = false;
 let reconnectAttempts = 0;
 let reconnectTimeout = null;
+let isAdmin = false;
+let myTelegramId = 0;
 
 const DEFAULT_COLORS = [
     '#FF4500', '#00FF7F', '#1E90FF', '#9ACD32', '#FF69B4',
@@ -41,10 +46,12 @@ const DEFAULT_COLORS = [
 document.addEventListener('DOMContentLoaded', () => {
     initTelegram();
     initUser();
+    identifyMe();
     createParticles();
     initTwitchPlayer();
     connectTwitchChat();
     initChatInput();
+    checkAdmin();
 });
 
 function initTelegram() {
@@ -60,6 +67,35 @@ function initUser() {
     if (tg?.initDataUnsafe?.user?.first_name && nameEl) {
         nameEl.textContent = tg.initDataUnsafe.user.first_name;
     }
+}
+
+function identifyMe() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlId = urlParams.get('telegram_id');
+    if (urlId) { myTelegramId = parseInt(urlId); return; }
+
+    const tg = window.Telegram?.WebApp;
+    if (tg?.initDataUnsafe?.user) {
+        myTelegramId = tg.initDataUnsafe.user.id;
+        localStorage.setItem('my_telegram_id', String(myTelegramId));
+        return;
+    }
+
+    const saved = localStorage.getItem('my_telegram_id');
+    if (saved) myTelegramId = parseInt(saved);
+}
+
+async function checkAdmin() {
+    if (!myTelegramId) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        if (data.is_admin) {
+            isAdmin = true;
+            const adminPanel = document.getElementById('adminPanel');
+            if (adminPanel) adminPanel.style.display = 'block';
+        }
+    } catch (e) { }
 }
 
 function createParticles() {
@@ -89,14 +125,11 @@ function initTwitchPlayer() {
 
 /**
  * Извлечь имя канала из ссылки или текста
- * Поддерживает: twitch.tv/username, просто username
  */
 function extractTwitchChannel(input) {
     input = input.trim();
-    // twitch.tv/username или www.twitch.tv/username
     const match = input.match(/twitch\.tv\/([a-zA-Z0-9_]+)/i);
     if (match) return match[1].toLowerCase();
-    // Просто имя канала
     const clean = input.toLowerCase().replace(/[^a-z0-9_]/g, '');
     return clean || null;
 }
@@ -136,13 +169,108 @@ function toggleChannelSettings() {
 function renderPopularChannels() {
     const container = document.getElementById('popularChannels');
     if (!container) return;
-    container.innerHTML = POPULAR_CHANNELS.map(ch => `
+    container.innerHTML = CHANNELS.map(ch => `
         <button class="popular-ch ${ch.channel === currentChannel ? 'popular-ch--active' : ''}" 
                 onclick="changeChannel('${ch.channel}')">
-            <span class="popular-ch__name">${ch.name}</span>
-            <span class="popular-ch__desc">${ch.desc}</span>
+            <span class="popular-ch__name">${escapeHtml(ch.name)}</span>
+            <span class="popular-ch__desc">${escapeHtml(ch.desc)}</span>
         </button>
     `).join('');
+}
+
+// ==========================================
+// АДМИН: УПРАВЛЕНИЕ КАНАЛАМИ
+// ==========================================
+function saveChannels() {
+    localStorage.setItem('stream_channels', JSON.stringify(CHANNELS));
+}
+
+function addChannel() {
+    const nameInput = document.getElementById('adminChName');
+    const urlInput = document.getElementById('adminChUrl');
+    const descInput = document.getElementById('adminChDesc');
+
+    const name = nameInput.value.trim();
+    const channelRaw = urlInput.value.trim();
+    const desc = descInput.value.trim() || 'Стрим';
+
+    if (!name) { showToast('❌', 'Введи название канала!'); return; }
+    if (!channelRaw) { showToast('❌', 'Введи ссылку или имя Twitch!'); return; }
+
+    const channel = extractTwitchChannel(channelRaw);
+    if (!channel) { showToast('❌', 'Не удалось определить канал!'); return; }
+
+    // Проверка дубликатов
+    if (CHANNELS.some(ch => ch.channel === channel)) {
+        showToast('⚠️', `${channel} уже добавлен!`);
+        return;
+    }
+
+    CHANNELS.push({ name, channel, desc });
+    saveChannels();
+    renderAdminChannelList();
+    renderPopularChannels();
+
+    // Очистка полей
+    nameInput.value = '';
+    urlInput.value = '';
+    descInput.value = '';
+
+    showToast('✅', `Канал ${name} добавлен!`);
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) { }
+}
+
+function removeChannel(index) {
+    if (index < 0 || index >= CHANNELS.length) return;
+    const ch = CHANNELS[index];
+    CHANNELS.splice(index, 1);
+    saveChannels();
+    renderAdminChannelList();
+    renderPopularChannels();
+    showToast('🗑', `Канал ${ch.name} удалён`);
+}
+
+function moveChannel(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= CHANNELS.length) return;
+    [CHANNELS[index], CHANNELS[newIndex]] = [CHANNELS[newIndex], CHANNELS[index]];
+    saveChannels();
+    renderAdminChannelList();
+    renderPopularChannels();
+}
+
+function renderAdminChannelList() {
+    const list = document.getElementById('adminChannelList');
+    if (!list) return;
+
+    if (CHANNELS.length === 0) {
+        list.innerHTML = '<div style="color:#5A6577;font-size:0.75rem;text-align:center;padding:12px;">Нет каналов</div>';
+        return;
+    }
+
+    list.innerHTML = CHANNELS.map((ch, i) => `
+        <div class="admin-ch-item">
+            <div class="admin-ch-item__info">
+                <span class="admin-ch-item__name">${escapeHtml(ch.name)}</span>
+                <span class="admin-ch-item__channel">twitch.tv/${escapeHtml(ch.channel)}</span>
+                <span class="admin-ch-item__desc">${escapeHtml(ch.desc)}</span>
+            </div>
+            <div class="admin-ch-item__actions">
+                ${i > 0 ? `<button class="admin-ch-btn" onclick="moveChannel(${i}, -1)" title="Вверх">↑</button>` : ''}
+                ${i < CHANNELS.length - 1 ? `<button class="admin-ch-btn" onclick="moveChannel(${i}, 1)" title="Вниз">↓</button>` : ''}
+                <button class="admin-ch-btn admin-ch-btn--delete" onclick="removeChannel(${i})" title="Удалить">✕</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleAdminPanel() {
+    const panel = document.getElementById('adminPanel');
+    if (!panel) return;
+    const content = document.getElementById('adminPanelContent');
+    const isHidden = content.style.display === 'none';
+    content.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) renderAdminChannelList();
 }
 
 // ==========================================
@@ -163,7 +291,6 @@ function connectTwitchChat() {
     }
 
     twitchWs.onopen = () => {
-        // Подключаемся анонимно (justinfan)
         twitchWs.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
         twitchWs.send('PASS SCHMOOPIIE');
         twitchWs.send('NICK justinfan' + Math.floor(Math.random() * 100000));
@@ -179,22 +306,12 @@ function connectTwitchChat() {
         const lines = event.data.split('\r\n');
         for (const line of lines) {
             if (!line) continue;
-            
-            // PING/PONG для поддержания соединения
             if (line.startsWith('PING')) {
                 twitchWs.send('PONG :tmi.twitch.tv');
                 continue;
             }
-
-            // Парсим сообщения чата
-            if (line.includes('PRIVMSG')) {
-                parseTwitchMessage(line);
-            }
-
-            // Уведомление о подписке, рейде и т.д.
-            if (line.includes('USERNOTICE')) {
-                parseTwitchNotice(line);
-            }
+            if (line.includes('PRIVMSG')) parseTwitchMessage(line);
+            if (line.includes('USERNOTICE')) parseTwitchNotice(line);
         }
     };
 
@@ -214,15 +331,9 @@ function connectTwitchChat() {
 }
 
 function disconnectTwitchChat() {
-    if (twitchWs) {
-        twitchWs.close();
-        twitchWs = null;
-    }
+    if (twitchWs) { twitchWs.close(); twitchWs = null; }
     isConnected = false;
-    if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-        reconnectTimeout = null;
-    }
+    if (reconnectTimeout) { clearTimeout(reconnectTimeout); reconnectTimeout = null; }
 }
 
 function scheduleReconnect() {
@@ -235,7 +346,6 @@ function scheduleReconnect() {
 function updateConnectionStatus(status) {
     const badge = document.getElementById('chatBadgeTwitch');
     if (!badge) return;
-    
     if (status === 'connected') {
         badge.className = 'chat-platform-badge chat-platform-badge--twitch chat-platform-badge--active';
         badge.textContent = '💜 Twitch ●';
@@ -253,22 +363,18 @@ function updateConnectionStatus(status) {
 // ==========================================
 function parseTwitchMessage(raw) {
     try {
-        // Парсим теги @key=value;key=value
         let tags = {};
         let rest = raw;
-
         if (raw.startsWith('@')) {
             const spaceIdx = raw.indexOf(' ');
             const tagStr = raw.substring(1, spaceIdx);
             rest = raw.substring(spaceIdx + 1);
-            
             tagStr.split(';').forEach(pair => {
                 const [k, v] = pair.split('=');
                 tags[k] = v || '';
             });
         }
 
-        // Извлекаем сообщение
         const msgMatch = rest.match(/PRIVMSG\s+#\S+\s+:(.+)/);
         if (!msgMatch) return;
 
@@ -280,7 +386,6 @@ function parseTwitchMessage(raw) {
         const isVip = (tags['badges'] || '').includes('vip');
         const isBroadcaster = (tags['badges'] || '').includes('broadcaster');
 
-        // Определяем бейджи
         let badges = '';
         if (isBroadcaster) badges += '🎬';
         else if (isMod) badges += '🗡️';
@@ -311,26 +416,17 @@ function parseTwitchNotice(raw) {
                 tags[k] = v || '';
             });
         }
-
         const msgType = tags['msg-id'] || '';
         const displayName = tags['display-name'] || '';
-        const systemMsg = (tags['system-msg'] || '').replace(/\\s/g, ' ');
-
-        if (msgType === 'sub' || msgType === 'resub') {
-            addSystemMessage(`⭐ ${displayName} подписался!`);
-        } else if (msgType === 'raid') {
-            addSystemMessage(`🚀 Рейд от ${displayName}!`);
-        } else if (msgType === 'subgift') {
-            addSystemMessage(`🎁 ${displayName} подарил подписку!`);
-        }
+        if (msgType === 'sub' || msgType === 'resub') addSystemMessage(`⭐ ${displayName} подписался!`);
+        else if (msgType === 'raid') addSystemMessage(`🚀 Рейд от ${displayName}!`);
+        else if (msgType === 'subgift') addSystemMessage(`🎁 ${displayName} подарил подписку!`);
     } catch (e) { }
 }
 
 function getRandomColor(name) {
     let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
     return DEFAULT_COLORS[Math.abs(hash) % DEFAULT_COLORS.length];
 }
 
@@ -339,9 +435,7 @@ function getRandomColor(name) {
 // ==========================================
 function addChatMessage(msg) {
     chatMessages.push(msg);
-    if (chatMessages.length > MAX_CHAT_MESSAGES) {
-        chatMessages = chatMessages.slice(-MAX_CHAT_MESSAGES);
-    }
+    if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages = chatMessages.slice(-MAX_CHAT_MESSAGES);
     renderChatMessage(msg);
 }
 
@@ -351,7 +445,6 @@ function renderChatMessage(msg) {
 
     const el = document.createElement('div');
     el.className = `chat-msg chat-msg--${msg.platform}`;
-
     const platformIcon = msg.platform === 'twitch' ? '💜' : '📱';
     const timeStr = msg.time.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 
@@ -365,23 +458,14 @@ function renderChatMessage(msg) {
     `;
 
     container.appendChild(el);
-    
-    // Автоскролл (если пользователь не прокручивал вверх)
     const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-    if (isNearBottom) {
-        container.scrollTop = container.scrollHeight;
-    }
-
-    // Удаляем старые DOM элементы
-    while (container.children.length > MAX_CHAT_MESSAGES + 10) {
-        container.removeChild(container.firstChild);
-    }
+    if (isNearBottom) container.scrollTop = container.scrollHeight;
+    while (container.children.length > MAX_CHAT_MESSAGES + 10) container.removeChild(container.firstChild);
 }
 
 function addSystemMessage(text) {
     const container = document.getElementById('chatMessages');
     if (!container) return;
-
     const el = document.createElement('div');
     el.className = 'chat-system-msg';
     el.innerHTML = `<span class="chat-system-msg__icon">🎮</span><span>${escapeHtml(text)}</span>`;
@@ -390,17 +474,13 @@ function addSystemMessage(text) {
 }
 
 // ==========================================
-// ОТПРАВКА СООБЩЕНИЙ (Telegram)
+// ОТПРАВКА СООБЩЕНИЙ
 // ==========================================
 function initChatInput() {
     const input = document.getElementById('chatInput');
     if (!input) return;
-
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendChatMessage();
-        }
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
     });
 }
 
@@ -409,12 +489,10 @@ function sendChatMessage() {
     const text = input.value.trim();
     if (!text) return;
 
-    // Получаем имя пользователя Telegram
     const tg = window.Telegram?.WebApp;
     const user = tg?.initDataUnsafe?.user;
     const username = user?.first_name || 'Танкист';
 
-    // Показываем сообщение в чате
     addChatMessage({
         platform: 'telegram',
         username: username,
@@ -424,18 +502,11 @@ function sendChatMessage() {
         time: new Date(),
     });
 
-    // Очищаем инпут
     input.value = '';
-
-    // Хаптик
     try { tg?.HapticFeedback?.impactOccurred('light'); } catch (e) { }
-
-    // TODO: Отправить через бота в общий Telegram чат
-    // Потребуется эндпоинт на бэкенде
 }
 
 function toggleChatPlatform() {
-    // Пока доступна только Telegram для отправки
     showToast('📱', 'Отправка через Telegram');
 }
 
@@ -483,3 +554,7 @@ window.sendChatMessage = sendChatMessage;
 window.toggleChatPlatform = toggleChatPlatform;
 window.goBack = goBack;
 window.openGame = openGame;
+window.addChannel = addChannel;
+window.removeChannel = removeChannel;
+window.moveChannel = moveChannel;
+window.toggleAdminPanel = toggleAdminPanel;
