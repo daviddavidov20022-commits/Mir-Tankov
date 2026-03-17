@@ -137,22 +137,45 @@
                     if (d.tts_min_amount) CONFIG.ttsMinAmount = d.tts_min_amount;
                 }
                 
-                // Загружаем ВСЕ медиа с сервера (без флагов — просто пробуем)
-                const mediaMap = {
-                    sound_small: 'soundSmall', sound_medium: 'soundMedium', sound_large: 'soundLarge',
-                    media_small: 'mediaSmall', media_medium: 'mediaMedium', media_large: 'mediaLarge'
-                };
-                for (const [key, cfgKey] of Object.entries(mediaMap)) {
+                // Загружаем медиа: сначала API (SQLite), потом статические файлы
+                const mediaKeys = [
+                    {key: 'sound_small', cfg: 'soundSmall', exts: ['.mp3','.ogg','.wav']},
+                    {key: 'sound_medium', cfg: 'soundMedium', exts: ['.mp3','.ogg','.wav']},
+                    {key: 'sound_large', cfg: 'soundLarge', exts: ['.mp3','.ogg','.wav']},
+                    {key: 'media_small', cfg: 'mediaSmall', exts: ['.gif','.mp4','.webm']},
+                    {key: 'media_medium', cfg: 'mediaMedium', exts: ['.gif','.mp4','.webm']},
+                    {key: 'media_large', cfg: 'mediaLarge', exts: ['.gif','.mp4','.webm']},
+                ];
+                for (const m of mediaKeys) {
+                    // 1) Пробуем API (SQLite)
                     try {
-                        const mr = await fetch(`${API_URL}/api/stream/media/${key}`);
+                        const mr = await fetch(`${API_URL}/api/stream/media/${m.key}`);
                         if (mr.ok) {
                             const md = await mr.json();
                             if (md.data) {
-                                CONFIG[cfgKey] = md.data;
-                                console.log(`[Alert] ✅ ${key} загружен`);
+                                CONFIG[m.cfg] = md.data;
+                                console.log(`[Alert] ✅ ${m.key} (API)`);
+                                continue;
                             }
                         }
                     } catch(e) {}
+                    // 2) Пробуем статические файлы /obs/media/
+                    for (const ext of m.exts) {
+                        try {
+                            const sr = await fetch(`${API_URL}/obs/media/${m.key}${ext}`);
+                            if (sr.ok) {
+                                const blob = await sr.blob();
+                                const dataUri = await new Promise(resolve => {
+                                    const reader = new FileReader();
+                                    reader.onload = () => resolve(reader.result);
+                                    reader.readAsDataURL(blob);
+                                });
+                                CONFIG[m.cfg] = dataUri;
+                                console.log(`[Alert] ✅ ${m.key} (static ${ext})`);
+                                break;
+                            }
+                        } catch(e) {}
+                    }
                 }
                 
                 console.log('[Alert] Конфиг загружен. Звуки:', 

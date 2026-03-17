@@ -5478,7 +5478,20 @@ async def api_stream_config_save(request):
         return cors_response({"error": str(e)}, 500)
 
 
-# === Медиа загрузка/отдача для донат-алертов (SQLite) ===
+# === Медиа загрузка/отдача для донат-алертов ===
+import base64 as _base64
+
+# Папка для статических медиа-файлов (в git-репозитории!)
+_static_media_dir = os.path.join(os.path.dirname(__file__), 'webapp', 'obs', 'media')
+os.makedirs(_static_media_dir, exist_ok=True)
+
+# Маппинг MIME → расширение
+_MIME_TO_EXT = {
+    'audio/mpeg': '.mp3', 'audio/mp3': '.mp3', 'audio/ogg': '.ogg', 
+    'audio/wav': '.wav', 'audio/x-wav': '.wav',
+    'video/mp4': '.mp4', 'video/webm': '.webm',
+    'image/gif': '.gif', 'image/png': '.png', 'image/jpeg': '.jpg',
+}
 
 async def api_stream_media_upload(request):
     """POST /api/stream/media/upload  {telegram_id, key, data}"""
@@ -5492,13 +5505,40 @@ async def api_stream_media_upload(request):
         if not key or not b64data:
             return cors_response({"error": "key and data required"}, 400)
         
-        from database import get_db
-        with get_db() as conn:
-            conn.execute(
-                "INSERT OR REPLACE INTO stream_media (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
-                (key, b64data)
-            )
-        logger.info(f"Media uploaded to DB: {key} ({len(b64data)} chars)")
+        # 1) Сохраняем в SQLite (работает до следующего деплоя)
+        try:
+            from database import get_db
+            with get_db() as conn:
+                conn.execute(
+                    "INSERT OR REPLACE INTO stream_media (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                    (key, b64data)
+                )
+        except Exception as e:
+            logger.warning(f"SQLite save error: {e}")
+        
+        # 2) Сохраняем как статический файл (переживёт деплой!)
+        try:
+            # Удалить старые файлы с таким ключом
+            for f in os.listdir(_static_media_dir):
+                if f.startswith(key):
+                    os.remove(os.path.join(_static_media_dir, f))
+            
+            # Декодируем data URI → бинарный файл
+            # data:audio/mpeg;base64,/+NIxAAA... → binary
+            if ',' in b64data:
+                header, raw_b64 = b64data.split(',', 1)
+                # Определяем расширение из MIME
+                mime = header.split(':')[1].split(';')[0] if ':' in header else ''
+                ext = _MIME_TO_EXT.get(mime, '.bin')
+                binary = _base64.b64decode(raw_b64)
+                filepath = os.path.join(_static_media_dir, f"{key}{ext}")
+                with open(filepath, 'wb') as f:
+                    f.write(binary)
+                logger.info(f"Media saved static: {key}{ext} ({len(binary)} bytes)")
+        except Exception as e:
+            logger.warning(f"Static file save error: {e}")
+        
+        logger.info(f"Media uploaded: {key} ({len(b64data)} chars)")
         return cors_response({"success": True, "key": key})
     except Exception as e:
         logger.error(f"Media upload error: {e}")
@@ -5507,15 +5547,34 @@ async def api_stream_media_upload(request):
 async def api_stream_media_get(request):
     """GET /api/stream/media/{key}"""
     key = request.match_info.get('key', '')
+    
+    # 1) Пробуем SQLite
     try:
         from database import get_db
         with get_db() as conn:
             row = conn.execute("SELECT data FROM stream_media WHERE key = ?", (key,)).fetchone()
-        if not row:
-            return cors_response({"error": "not found"}, 404)
-        return cors_response({"key": key, "data": row["data"]})
-    except Exception as e:
-        return cors_response({"error": str(e)}, 500)
+        if row:
+            return cors_response({"key": key, "data": row["data"]})
+    except Exception:
+        pass
+    
+    # 2) Пробуем статический файл
+    try:
+        for f in os.listdir(_static_media_dir):
+            if f.startswith(key + '.'):
+                filepath = os.path.join(_static_media_dir, f)
+                with open(filepath, 'rb') as fh:
+                    binary = fh.read()
+                ext = os.path.splitext(f)[1]
+                mime_map = {'.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav',
+                           '.mp4': 'video/mp4', '.webm': 'video/webm', '.gif': 'image/gif'}
+                mime = mime_map.get(ext, 'application/octet-stream')
+                data_uri = f"data:{mime};base64,{_base64.b64encode(binary).decode()}"
+                return cors_response({"key": key, "data": data_uri})
+    except Exception:
+        pass
+    
+    return cors_response({"error": "not found"}, 404)
 
 
 # ==========================================
