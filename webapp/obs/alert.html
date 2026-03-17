@@ -218,14 +218,16 @@
 
         // Настройки по умолчанию (загрузятся с сервера)
         let CONFIG = {
-            alertDuration: 7,        // секунды
+            alertDuration: 7,
             soundEnabled: true,
-            soundVolume: 0.7,        // 0-1
-            animationStyle: 'particles', // particles | cheese | explosion | flash | all
+            soundVolume: 0.7,
+            soundSmall: '',          // URL для кастомного звука
+            soundMedium: '',
+            soundLarge: '',
+            animationStyle: 'all',
             ttsEnabled: true,
-            ttsSpeed: 1.0,           // 0.5 - 2.0
-            ttsMinAmount: 30,        // мин. сумма для озвучки
-            mediaUrl: '',            // URL на гиф/видео
+            ttsSpeed: 1.0,
+            ttsMinAmount: 30,
             mediaSmall: '',
             mediaMedium: '',
             mediaLarge: '',
@@ -244,6 +246,9 @@
                     if (d.alert_duration) CONFIG.alertDuration = d.alert_duration;
                     if (d.sound_enabled !== undefined) CONFIG.soundEnabled = d.sound_enabled;
                     if (d.sound_volume !== undefined) CONFIG.soundVolume = d.sound_volume;
+                    if (d.sound_small) CONFIG.soundSmall = d.sound_small;
+                    if (d.sound_medium) CONFIG.soundMedium = d.sound_medium;
+                    if (d.sound_large) CONFIG.soundLarge = d.sound_large;
                     if (d.animation_style) CONFIG.animationStyle = d.animation_style;
                     if (d.tts_enabled !== undefined) CONFIG.ttsEnabled = d.tts_enabled;
                     if (d.tts_speed) CONFIG.ttsSpeed = d.tts_speed;
@@ -282,14 +287,14 @@
         }
 
         function playSoundSmall() {
-            // Короткий звон
+            if (CONFIG.soundSmall) { playCustomSound(CONFIG.soundSmall); return; }
             playTone(800, 0.15, 'sine', 0.4);
             setTimeout(() => playTone(1000, 0.2, 'sine', 0.3), 100);
             setTimeout(() => playTone(1200, 0.3, 'sine', 0.2), 200);
         }
 
         function playSoundMedium() {
-            // Аккорд вверх
+            if (CONFIG.soundMedium) { playCustomSound(CONFIG.soundMedium); return; }
             playTone(523, 0.2, 'sine', 0.4);
             setTimeout(() => playTone(659, 0.2, 'sine', 0.4), 120);
             setTimeout(() => playTone(784, 0.2, 'sine', 0.4), 240);
@@ -297,7 +302,7 @@
         }
 
         function playSoundLarge() {
-            // Эпический фанфар
+            if (CONFIG.soundLarge) { playCustomSound(CONFIG.soundLarge); return; }
             [0, 80, 160, 240].forEach((delay, i) => {
                 setTimeout(() => playTone(440 * (i+1), 0.3, 'square', 0.2), delay);
             });
@@ -306,6 +311,15 @@
                 playTone(1100, 0.5, 'triangle', 0.3);
                 playTone(1320, 0.8, 'sine', 0.4);
             }, 350);
+        }
+
+        function playCustomSound(url) {
+            if (!CONFIG.soundEnabled) return;
+            try {
+                const audio = new Audio(url);
+                audio.volume = CONFIG.soundVolume;
+                audio.play().catch(e => console.log('Sound error:', e));
+            } catch(e) { console.log('Sound load error:', e); }
         }
 
         // ==========================================

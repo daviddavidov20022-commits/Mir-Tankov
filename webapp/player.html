@@ -251,9 +251,13 @@
                         </div>
 
                         <div class="sp-group">
-                            <div class="sp-group__title">🔊 Звук</div>
+                            <div class="sp-group__title">🔊 Звуки доната</div>
                             <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminSoundEnabled" checked><span>Звук при донате</span></label></div>
                             <div class="sp-row"><span class="sp-label">Громкость</span><input type="range" id="adminSoundVolume" min="0" max="100" value="70" class="sp-range"><span class="sp-unit" id="adminSoundVolumeVal">70%</span></div>
+                            <div class="sp-row"><span class="sp-label">🔹 Малый (10+)</span><input type="text" id="adminSoundSmall" class="sp-input" placeholder="URL .mp3/.wav (или пусто = встроенный)" autocomplete="off"></div>
+                            <div class="sp-row"><span class="sp-label">🔸 Средний (50+)</span><input type="text" id="adminSoundMedium" class="sp-input" placeholder="URL .mp3/.wav" autocomplete="off"></div>
+                            <div class="sp-row"><span class="sp-label">🔶 Большой (200+)</span><input type="text" id="adminSoundLarge" class="sp-input" placeholder="URL .mp3/.wav" autocomplete="off"></div>
+                            <div class="sp-hint">Кинь .mp3 в папку webapp/obs/media/sounds/ → вставь URL сюда</div>
                         </div>
 
                         <div class="sp-group">
@@ -271,21 +275,31 @@
                         </div>
 
                         <div class="sp-group">
-                            <div class="sp-group__title">🗣 Озвучка текста (TTS)</div>
-                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminTtsEnabled" checked><span>Озвучка сообщений</span></label></div>
-                            <div class="sp-row"><span class="sp-label">Скорость</span><input type="range" id="adminTtsSpeed" min="50" max="200" value="100" class="sp-range"><span class="sp-unit" id="adminTtsSpeedVal">1.0x</span></div>
-                            <div class="sp-row"><span class="sp-label">Мин. сумма для TTS</span><input type="number" id="adminTtsMinAmount" class="sp-input-sm" value="30" min="0"><span class="sp-unit">🧀</span></div>
+                            <div class="sp-group__title">🎬 Видео/GIF при донате</div>
+                            <div class="sp-row"><span class="sp-label">🔹 Малый (10+)</span><input type="text" id="adminMediaSmall" class="sp-input" placeholder="URL .gif/.mp4/.webm" autocomplete="off"></div>
+                            <div class="sp-row"><span class="sp-label">🔸 Средний (50+)</span><input type="text" id="adminMediaMedium" class="sp-input" placeholder="URL .gif/.mp4/.webm" autocomplete="off"></div>
+                            <div class="sp-row"><span class="sp-label">🔶 Большой (200+)</span><input type="text" id="adminMediaLarge" class="sp-input" placeholder="URL .gif/.mp4/.webm" autocomplete="off"></div>
+                            <div class="sp-hint">Кинь .gif/.mp4 в папку webapp/obs/media/videos/ → вставь URL</div>
                         </div>
 
                         <div class="sp-group">
-                            <div class="sp-group__title">🎬 Медиа (видео/гиф)</div>
-                            <div class="sp-row"><span class="sp-label">Малый донат</span><input type="text" id="adminMediaSmall" class="sp-input" placeholder="URL гифки/видео" autocomplete="off"></div>
-                            <div class="sp-row"><span class="sp-label">Средний (50+)</span><input type="text" id="adminMediaMedium" class="sp-input" placeholder="URL гифки/видео" autocomplete="off"></div>
-                            <div class="sp-row"><span class="sp-label">Большой (200+)</span><input type="text" id="adminMediaLarge" class="sp-input" placeholder="URL гифки/видео" autocomplete="off"></div>
+                            <div class="sp-group__title">🗣 Озвучка текста (TTS)</div>
+                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminTtsEnabled" checked><span>Озвучка сообщений</span></label></div>
+                            <div class="sp-row"><span class="sp-label">Скорость</span><input type="range" id="adminTtsSpeed" min="50" max="200" value="100" class="sp-range"><span class="sp-unit" id="adminTtsSpeedVal">1.0x</span></div>
+                            <div class="sp-row"><span class="sp-label">Мин. для TTS</span><input type="number" id="adminTtsMinAmount" class="sp-input-sm" value="30" min="0"><span class="sp-unit">🧀</span></div>
                         </div>
 
-                        <button class="sp-save-btn" onclick="saveDonateSettings()">💾 Сохранить</button>
+                        <button class="sp-save-btn" onclick="saveDonateSettings()">💾 Сохранить настройки</button>
                         <button class="sp-test-btn sp-test-btn--donate" onclick="sendTestDonate()">🧀 Тест алерта доната</button>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">📺 Для OBS</div>
+                            <div class="sp-hint" style="font-size:0.72rem;line-height:1.5;color:rgba(255,255,255,0.5);">
+                                Добавь в OBS → Source → Browser:<br>
+                                <span style="color:#C8AA6E;word-break:break-all;" id="obsAlertUrl"></span><br>
+                                Ширина: 600 | Высота: 400
+                            </div>
+                        </div>
 
                         <div class="sp-group">
                             <div class="sp-group__title">📊 Последние донаты <button class="sp-refresh" onclick="refreshDonateHistory()">🔄</button></div>

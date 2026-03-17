@@ -1064,6 +1064,9 @@ async function saveDonateSettings() {
         alert_duration: parseInt(document.getElementById('adminAlertDuration')?.value) || 7,
         sound_enabled: document.getElementById('adminSoundEnabled')?.checked ?? true,
         sound_volume: (parseInt(volSlider?.value) || 70) / 100,
+        sound_small: document.getElementById('adminSoundSmall')?.value || '',
+        sound_medium: document.getElementById('adminSoundMedium')?.value || '',
+        sound_large: document.getElementById('adminSoundLarge')?.value || '',
         animation_style: document.getElementById('adminAnimStyle')?.value || 'all',
         tts_enabled: document.getElementById('adminTtsEnabled')?.checked ?? true,
         tts_speed: (parseInt(spdSlider?.value) || 100) / 100,
@@ -1098,12 +1101,15 @@ function loadAdminSettings() {
         const ds = JSON.parse(localStorage.getItem('stream_donate_settings') || '{}');
         if (ds.min_amount) document.getElementById('adminDonateMin').value = ds.min_amount;
         if (ds.alert_duration) document.getElementById('adminAlertDuration').value = ds.alert_duration;
-        if (ds.sound_enabled !== undefined) document.getElementById('adminSoundEnabled').checked = ds.sound_enabled;
+         if (ds.sound_enabled !== undefined) document.getElementById('adminSoundEnabled').checked = ds.sound_enabled;
         if (ds.sound_volume !== undefined) {
             const v = Math.round(ds.sound_volume * 100);
             document.getElementById('adminSoundVolume').value = v;
             document.getElementById('adminSoundVolumeVal').textContent = v + '%';
         }
+        if (ds.sound_small) document.getElementById('adminSoundSmall').value = ds.sound_small;
+        if (ds.sound_medium) document.getElementById('adminSoundMedium').value = ds.sound_medium;
+        if (ds.sound_large) document.getElementById('adminSoundLarge').value = ds.sound_large;
         if (ds.animation_style) document.getElementById('adminAnimStyle').value = ds.animation_style;
         if (ds.tts_enabled !== undefined) document.getElementById('adminTtsEnabled').checked = ds.tts_enabled;
         if (ds.tts_speed !== undefined) {
@@ -1116,6 +1122,10 @@ function loadAdminSettings() {
         if (ds.media_medium) document.getElementById('adminMediaMedium').value = ds.media_medium;
         if (ds.media_large) document.getElementById('adminMediaLarge').value = ds.media_large;
     } catch(e) {}
+
+    // OBS URL
+    const obsEl = document.getElementById('obsAlertUrl');
+    if (obsEl) obsEl.textContent = `${BOT_API_URL}/obs/alert.html`;
 
     // Слайдеры — живое обновление
     document.getElementById('adminSoundVolume')?.addEventListener('input', (e) => {
