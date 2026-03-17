@@ -91,26 +91,30 @@ function identifyMe() {
 }
 
 async function checkAdmin() {
+    const debugEl = document.getElementById('adminDebug');
+    
     if (!myTelegramId) {
-        console.warn('[Admin] No telegram_id, cannot check admin');
+        if (debugEl) debugEl.textContent = '⚠️ telegram_id не определён';
         return;
     }
+    
     try {
-        console.log(`[Admin] Checking admin for telegram_id=${myTelegramId}, URL: ${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
-        const resp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
+        const url = `${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`;
+        if (debugEl) debugEl.textContent = `🔍 Проверка: tg_id=${myTelegramId}, url=${BOT_API_URL}`;
+        
+        const resp = await fetch(url);
         const data = await resp.json();
-        console.log('[Admin] API response:', data);
+        
         if (data.is_admin) {
             isAdmin = true;
             const adminPanel = document.getElementById('adminPanel');
-            if (adminPanel) {
-                adminPanel.style.display = 'block';
-                console.log('[Admin] Admin panel shown!');
-            }
+            if (adminPanel) adminPanel.style.display = 'block';
+            if (debugEl) debugEl.textContent = `✅ Админ! tg_id=${myTelegramId}`;
+        } else {
+            if (debugEl) debugEl.textContent = `❌ Не админ. tg_id=${myTelegramId}, resp: ${JSON.stringify(data).substring(0, 80)}`;
         }
     } catch (e) {
-        console.warn('[Admin] API error:', e.message);
-        // Повтор через 3 секунды
+        if (debugEl) debugEl.textContent = `❌ API ошибка: ${e.message} | URL: ${BOT_API_URL}`;
         setTimeout(() => checkAdmin(), 3000);
     }
 }
