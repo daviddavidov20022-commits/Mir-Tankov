@@ -1432,3 +1432,35 @@
     padding: 6px 0 0;
     line-height: 1.4;
 }
+/* Upload row */
+.sp-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    flex-wrap: wrap;
+}
+.sp-upload-row .sp-label {
+    min-width: 110px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.7);
+}
+.sp-upload-btn {
+    background: rgba(200,170,110,0.12);
+    border: 1px dashed rgba(200,170,110,0.4);
+    color: #C8AA6E;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.sp-upload-btn:hover {
+    background: rgba(200,170,110,0.25);
+    border-style: solid;
+}
+.sp-upload-status {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.35);
+}
