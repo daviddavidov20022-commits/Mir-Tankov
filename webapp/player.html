@@ -105,24 +105,13 @@
                     </div>
                 </div>
 
-                <!-- Platform Chat Embed (native login) -->
-                <div class="platform-chat-embed" id="platformChatEmbed" style="display: none;">
-                    <div class="platform-chat-embed__header">
-                        <span id="platformChatTitle">💜 Чат Twitch (войди чтобы писать)</span>
-                        <button class="platform-chat-embed__toggle" onclick="togglePlatformChat()">▾</button>
-                    </div>
-                    <div class="platform-chat-embed__frame" id="platformChatFrame">
-                        <iframe id="platformChatIframe" frameborder="0"></iframe>
-                    </div>
-                </div>
-
                 <!-- Chat Input -->
                 <div class="stream-chat__input-area">
-                    <div class="stream-chat__platform-select" id="chatPlatformSelect" onclick="togglePlatformChat()">
-                        <span id="chatPlatformIcon">📱</span>
+                    <div class="stream-chat__platform-info" id="chatPlatformInfo">
+                        💜 → Twitch
                     </div>
                     <input type="text" class="stream-chat__input" id="chatInput" 
-                           placeholder="Написать в Telegram..." 
+                           placeholder="Написать сообщение..." 
                            autocomplete="off" 
                            maxlength="500">
                     <button class="stream-chat__send" id="chatSendBtn" onclick="sendChatMessage()">➤</button>
@@ -132,28 +121,71 @@
             <!-- Admin Panel -->
             <div class="admin-panel" id="adminPanel">
                 <div class="admin-panel__header" onclick="toggleAdminPanel()">
-                    <span>⚙️ Управление каналами (Админ)</span>
+                    <span>⚙️ Настройки стрим-хаба (Админ)</span>
                     <span class="admin-panel__toggle">▾</span>
                 </div>
                 <div class="admin-panel__content" id="adminPanelContent">
                     
-                    <div class="admin-panel__add">
-                        <div class="admin-panel__add-title">➕ Добавить канал</div>
-                        <input type="text" id="adminChName" class="admin-input" placeholder="Название (например: LeBwa)" autocomplete="off">
-                        <input type="text" id="adminChUrl" class="admin-input" placeholder="Twitch ссылка или имя (lebwa)" autocomplete="off">
-                        <input type="text" id="adminChDesc" class="admin-input" placeholder="Описание (WoT стримы)" autocomplete="off">
-                        <button class="admin-add-btn" onclick="addChannel()">➕ Добавить</button>
+                    <!-- Настройка стримера -->
+                    <div class="admin-section">
+                        <div class="admin-section__title">📺 Настройка трансляции</div>
+                        
+                        <!-- Twitch -->
+                        <div class="admin-platform-row">
+                            <label class="admin-toggle">
+                                <input type="checkbox" id="adminTwitchEnabled" checked onchange="updateStreamConfig()">
+                                <span class="admin-toggle__label">💜 Twitch</span>
+                            </label>
+                            <input type="text" id="adminTwitchChannel" class="admin-input admin-input--sm" 
+                                   placeholder="Имя канала (thejove)" autocomplete="off" onchange="updateStreamConfig()">
+                        </div>
+                        
+                        <!-- YouTube -->
+                        <div class="admin-platform-row">
+                            <label class="admin-toggle">
+                                <input type="checkbox" id="adminYoutubeEnabled" onchange="updateStreamConfig()">
+                                <span class="admin-toggle__label">🔴 YouTube</span>
+                            </label>
+                            <input type="text" id="adminYoutubeChannel" class="admin-input admin-input--sm" 
+                                   placeholder="ID канала или ссылка" autocomplete="off" onchange="updateStreamConfig()">
+                        </div>
+                        
+                        <!-- VK -->
+                        <div class="admin-platform-row">
+                            <label class="admin-toggle">
+                                <input type="checkbox" id="adminVkEnabled" onchange="updateStreamConfig()">
+                                <span class="admin-toggle__label">🔵 VK</span>
+                            </label>
+                            <input type="text" id="adminVkChannel" class="admin-input admin-input--sm" 
+                                   placeholder="Ссылка на стрим VK" autocomplete="off" onchange="updateStreamConfig()">
+                        </div>
+                        
+                        <button class="admin-save-btn" onclick="saveStreamConfig()">💾 Сохранить настройки</button>
                     </div>
 
-                    <div class="admin-panel__list-title">📋 Текущие каналы</div>
-                    <div class="admin-channel-list" id="adminChannelList">
-                        <!-- Filled by JS -->
+                    <!-- Быстрые каналы -->
+                    <div class="admin-section">
+                        <div class="admin-section__title">📋 Быстрые каналы</div>
+                        <div class="admin-panel__add">
+                            <div class="admin-add-row">
+                                <input type="text" id="adminChName" class="admin-input admin-input--sm" placeholder="Название" autocomplete="off">
+                                <select id="adminChPlatform" class="admin-select">
+                                    <option value="twitch">💜 Twitch</option>
+                                    <option value="youtube">🔴 YouTube</option>
+                                    <option value="vk">🔵 VK</option>
+                                </select>
+                            </div>
+                            <div class="admin-add-row">
+                                <input type="text" id="adminChUrl" class="admin-input admin-input--sm" placeholder="Канал/ссылка" autocomplete="off">
+                                <button class="admin-add-btn-sm" onclick="addChannel()">➕</button>
+                            </div>
+                        </div>
+                        <div class="admin-channel-list" id="adminChannelList">
+                            <!-- Filled by JS -->
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Debug (временно) -->
-            <div id="adminDebug" style="color:#5A6577;font-size:0.6rem;padding:8px 0;text-align:center;">Загрузка...</div>
 
         </div>
         <nav class="bottom-nav">

@@ -496,6 +496,18 @@
     border-color: rgba(41, 182, 246, 0.3);
 }
 
+.stream-chat__platform-info {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 0.55rem;
+    color: #9146FF;
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+    font-family: 'Oswald', sans-serif;
+}
+
 .stream-chat__input::placeholder {
     color: #3d4654;
 }
@@ -716,4 +728,112 @@
 .admin-ch-btn--delete:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #f87171;
+}
+
+/* Admin Sections */
+.admin-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding-top: 10px;
+    margin-top: 8px;
+}
+
+.admin-section:first-child {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.admin-section__title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.7rem;
+    color: #C8AA6E;
+    margin-bottom: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.admin-platform-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.admin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    min-width: 110px;
+}
+
+.admin-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #C8AA6E;
+    cursor: pointer;
+}
+
+.admin-toggle__label {
+    font-size: 0.65rem;
+    color: #8b95a5;
+    font-weight: 600;
+}
+
+.admin-input--sm {
+    flex: 1;
+    padding: 6px 10px !important;
+    font-size: 0.65rem !important;
+}
+
+.admin-save-btn {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(200, 170, 110, 0.25);
+    background: rgba(200, 170, 110, 0.08);
+    color: #C8AA6E;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+}
+
+.admin-save-btn:hover {
+    background: rgba(200, 170, 110, 0.15);
+}
+
+.admin-select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(10, 14, 20, 0.8);
+    color: #8b95a5;
+    font-size: 0.65rem;
+    font-family: 'Oswald', sans-serif;
+    cursor: pointer;
+}
+
+.admin-add-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.admin-add-btn-sm {
+    width: 36px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid rgba(200, 170, 110, 0.2);
+    background: rgba(200, 170, 110, 0.08);
+    color: #C8AA6E;
+    font-size: 0.8rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.admin-add-btn-sm:hover {
+    background: rgba(200, 170, 110, 0.15);
 }

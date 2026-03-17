@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     identifyMe();
     createParticles();
     loadChannelsFromServer();
+    loadStreamConfig();
     initPlayer();
     connectTwitchChat();
     initChatInput();
@@ -175,13 +176,30 @@ function switchPlatform(platform) {
         tab.classList.toggle('platform-tab--active', tab.dataset.platform === platform);
     });
     
-    // Обновить placeholder
-    const input = document.getElementById('channelInput');
-    if (input) {
-        if (platform === 'twitch') input.placeholder = 'Имя канала или twitch.tv/...';
-        else if (platform === 'vk') input.placeholder = 'Ссылка VK стрима (vk.com/video...)';
-        else if (platform === 'youtube') input.placeholder = 'Ссылка YouTube или ID канала';
+    // Обновить placeholder канала
+    const channelInput = document.getElementById('channelInput');
+    if (channelInput) {
+        if (platform === 'twitch') channelInput.placeholder = 'Имя канала или twitch.tv/...';
+        else if (platform === 'vk') channelInput.placeholder = 'Ссылка VK стрима (vk.com/video...)';
+        else if (platform === 'youtube') channelInput.placeholder = 'Ссылка YouTube или ID канала';
     }
+    
+    // Обновить индикатор платформы у чата
+    const platformInfo = document.getElementById('chatPlatformInfo');
+    const chatInput = document.getElementById('chatInput');
+    if (platformInfo) {
+        if (platform === 'twitch') {
+            platformInfo.textContent = '💜 → Twitch';
+            platformInfo.style.color = '#9146FF';
+        } else if (platform === 'vk') {
+            platformInfo.textContent = '🔵 → VK';
+            platformInfo.style.color = '#0077FF';
+        } else if (platform === 'youtube') {
+            platformInfo.textContent = '🔴 → YouTube';
+            platformInfo.style.color = '#FF0000';
+        }
+    }
+    if (chatInput) chatInput.placeholder = `Написать в ${platform.toUpperCase()}...`;
     
     // Twitch IRC чат только для Twitch
     if (platform === 'twitch') {
@@ -750,6 +768,87 @@ function openGame(url) {
     window.location.href = url;
 }
 
+// ==========================================
+// КОНФИГ ТРАНСЛЯЦИИ (АДМИН)
+// ==========================================
+function saveStreamConfig() {
+    const config = {
+        twitch: {
+            enabled: document.getElementById('adminTwitchEnabled')?.checked || false,
+            channel: document.getElementById('adminTwitchChannel')?.value?.trim() || '',
+        },
+        youtube: {
+            enabled: document.getElementById('adminYoutubeEnabled')?.checked || false,
+            channel: document.getElementById('adminYoutubeChannel')?.value?.trim() || '',
+        },
+        vk: {
+            enabled: document.getElementById('adminVkEnabled')?.checked || false,
+            channel: document.getElementById('adminVkChannel')?.value?.trim() || '',
+        },
+    };
+    
+    localStorage.setItem('stream_config', JSON.stringify(config));
+    
+    // Сохранить на сервер
+    if (myTelegramId) {
+        fetch(`${BOT_API_URL}/api/stream/channels/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegram_id: myTelegramId, config }),
+        }).catch(e => console.warn('[Config] Save error'));
+    }
+    
+    applyStreamConfig(config);
+    showToast('💾', 'Настройки сохранены!');
+    try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
+}
+
+function loadStreamConfig() {
+    try {
+        const raw = localStorage.getItem('stream_config');
+        if (raw) {
+            const config = JSON.parse(raw);
+            applyStreamConfig(config);
+            fillAdminForm(config);
+        }
+    } catch(e) {}
+}
+
+function fillAdminForm(config) {
+    if (config.twitch) {
+        const el = document.getElementById('adminTwitchEnabled');
+        if (el) el.checked = config.twitch.enabled;
+        const ch = document.getElementById('adminTwitchChannel');
+        if (ch && config.twitch.channel) ch.value = config.twitch.channel;
+    }
+    if (config.youtube) {
+        const el = document.getElementById('adminYoutubeEnabled');
+        if (el) el.checked = config.youtube.enabled;
+        const ch = document.getElementById('adminYoutubeChannel');
+        if (ch && config.youtube.channel) ch.value = config.youtube.channel;
+    }
+    if (config.vk) {
+        const el = document.getElementById('adminVkEnabled');
+        if (el) el.checked = config.vk.enabled;
+        const ch = document.getElementById('adminVkChannel');
+        if (ch && config.vk.channel) ch.value = config.vk.channel;
+    }
+}
+
+function applyStreamConfig(config) {
+    // Показывать/скрывать вкладки платформ
+    document.querySelectorAll('.platform-tab').forEach(tab => {
+        const platform = tab.dataset.platform;
+        if (config[platform]) {
+            tab.style.display = config[platform].enabled ? 'flex' : 'none';
+        }
+    });
+}
+
+function updateStreamConfig() {
+    // Вызывается при изменении полей — подсветка
+}
+
 // Expose globals
 window.changeChannel = changeChannel;
 window.toggleChannelSettings = toggleChannelSettings;
@@ -762,3 +861,5 @@ window.addChannel = addChannel;
 window.removeChannel = removeChannel;
 window.moveChannel = moveChannel;
 window.toggleAdminPanel = toggleAdminPanel;
+window.saveStreamConfig = saveStreamConfig;
+window.updateStreamConfig = updateStreamConfig;
