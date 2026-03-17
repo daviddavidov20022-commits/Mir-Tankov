@@ -257,12 +257,19 @@
                         media_small: 'mediaSmall', media_medium: 'mediaMedium', media_large: 'mediaLarge'
                     };
                     for (const [key, cfgKey] of Object.entries(mediaMap)) {
-                        if (d[`has_${key}`]) {
+                        const hasFlag = d[`has_${key}`];
+                        console.log(`[Alert] Media flag has_${key}=${hasFlag}`);
+                        if (hasFlag) {
                             try {
                                 const mr = await fetch(`${API_URL}/api/stream/media/${key}`);
                                 const md = await mr.json();
-                                if (md.data) CONFIG[cfgKey] = md.data;
-                            } catch(e) { console.log('Media load error:', key); }
+                                if (md.data) {
+                                    CONFIG[cfgKey] = md.data;
+                                    console.log(`[Alert] ✅ Loaded ${key} (${md.data.length} chars)`);
+                                } else {
+                                    console.log(`[Alert] ❌ ${key}: no data in response`);
+                                }
+                            } catch(e) { console.log(`[Alert] ❌ Media load error: ${key}`, e); }
                         }
                     }
                 }
@@ -378,15 +385,23 @@
             let url = '';
             if (tier === 'large' && CONFIG.mediaLarge) url = CONFIG.mediaLarge;
             else if (tier === 'medium' && CONFIG.mediaMedium) url = CONFIG.mediaMedium;
-            else if (CONFIG.mediaSmall) url = CONFIG.mediaSmall;
+            else if (tier === 'small' && CONFIG.mediaSmall) url = CONFIG.mediaSmall;
+            // Fallback: medium → small
+            if (!url && tier === 'medium' && CONFIG.mediaSmall) url = CONFIG.mediaSmall;
+            // Fallback: large → medium → small
+            if (!url && tier === 'large') url = CONFIG.mediaMedium || CONFIG.mediaSmall;
+
+            console.log(`[Alert] showMedia tier=${tier}, hasUrl=${!!url}, urlLen=${url?.length || 0}`);
 
             if (!url) { mediaEl.style.display = 'none'; return; }
 
             mediaEl.style.display = 'block';
             if (url.match(/\.(mp4|webm)$/i) || url.startsWith('data:video/')) {
-                mediaEl.innerHTML = `<video src="${url}" autoplay muted loop></video>`;
+                mediaEl.innerHTML = `<video src="${url}" autoplay muted loop playsinline style="max-width:100%;max-height:200px;border-radius:8px;"></video>`;
+                const vid = mediaEl.querySelector('video');
+                if (vid) vid.play().catch(e => console.log('Video play error:', e));
             } else {
-                mediaEl.innerHTML = `<img src="${url}" alt="alert">`;
+                mediaEl.innerHTML = `<img src="${url}" alt="alert" style="max-width:100%;max-height:200px;border-radius:8px;">`;
             }
         }
 
@@ -534,6 +549,8 @@
         // Запуск
         loadConfig().then(() => {
             setInterval(pollDonations, POLL_INTERVAL);
+            // Перезагружать конфиг каждые 30 сек (подхватит новые звуки)
+            setInterval(loadConfig, 30000);
             console.log('[МИР ТАНКОВ Alert] Виджет запущен, API:', API_URL);
             console.log('[Alert] Custom sounds:', {
                 small: CONFIG.soundSmall ? '✅ (' + CONFIG.soundSmall.substring(0,30) + '...)' : '❌ нет',

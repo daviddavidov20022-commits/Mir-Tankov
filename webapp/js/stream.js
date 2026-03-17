@@ -1089,6 +1089,20 @@ function handleFileUpload(input, key) {
                 if (status) { status.textContent = '✅ ' + file.name; status.style.color = '#4CAF50'; }
                 showToast('✅', `${file.name} загружен на сервер`);
                 
+                // Сразу сохранить флаг has_* в конфиг
+                const flagKey = `has_${key}`;
+                try {
+                    await fetch(`${BOT_API_URL}/api/stream/config/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ telegram_id: myTelegramId, config: { donate: { [flagKey]: true } } }),
+                    });
+                    // Обновить localStorage
+                    const prev = JSON.parse(localStorage.getItem('stream_donate_settings') || '{}');
+                    prev[flagKey] = true;
+                    localStorage.setItem('stream_donate_settings', JSON.stringify(prev));
+                } catch(e) { console.log('Config save error:', e); }
+                
                 // Если звук — проиграть превью
                 if (key.startsWith('sound_')) {
                     const audio = new Audio(reader.result);
