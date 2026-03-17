@@ -123,8 +123,8 @@ async function checkAdmin() {
         
         if (data.is_admin) {
             isAdmin = true;
-            const adminPanel = document.getElementById('adminPanel');
-            if (adminPanel) adminPanel.style.display = 'block';
+            const gearBtn = document.getElementById('adminGearBtn');
+            if (gearBtn) gearBtn.style.display = 'block';
             if (debugEl) debugEl.textContent = `✅ Админ! tg_id=${myTelegramId}`;
         } else {
             if (debugEl) debugEl.textContent = `❌ Не админ. tg_id=${myTelegramId}, resp: ${JSON.stringify(data).substring(0, 80)}`;
