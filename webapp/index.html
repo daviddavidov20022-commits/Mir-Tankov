@@ -274,6 +274,32 @@
             </div>
         </div>
 
+        <!-- Video Player Section -->
+        <section class="section-header" style="margin-top: 24px;">
+            <h2>📺 Видеоплеер</h2>
+            <p>Смотри YouTube, VK и Twitch прямо здесь!</p>
+        </section>
+
+        <div class="games-grid" style="margin-bottom: 16px;">
+            <div class="game-card game-card--active game-card--stats" id="gamePlayer"
+                onclick="openGame('player.html')" style="background: linear-gradient(135deg, #1d1520, #1a1030); border-color: rgba(145, 70, 255, 0.2);">
+                <div class="game-card__badge game-card__badge--hot">НОВИНКА</div>
+                <div class="game-card__icon" style="height:auto;margin-bottom:0;">
+                    <div class="tank-mini" style="border-color: rgba(145, 70, 255, 0.5); background: linear-gradient(135deg, rgba(145, 70, 255, 0.3), rgba(255, 0, 0, 0.2)); animation: statsPulse 3s ease-in-out infinite;">
+                        <div class="tank-mini__body">📺</div>
+                    </div>
+                </div>
+                <div class="game-card__info">
+                    <h3 class="game-card__title">Видеоплеер</h3>
+                    <p class="game-card__desc">YouTube, VK Видео и Twitch — всё в одном месте!</p>
+                </div>
+                <div class="game-card__footer" style="border-top:none;padding-top:0;margin-top:4px;">
+                    <span class="game-card__reward">🎬 3 платформы</span>
+                    <span class="game-card__play">Смотреть →</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Daily bonus section -->
         <section class="daily-bonus" id="dailyBonus">
             <div class="daily-bonus__content">
@@ -409,9 +435,9 @@
             <span class="nav-icon">🏆</span>
             <span class="nav-label">Топ</span>
         </div>
-        <div class="nav-item" onclick="openGame('challenges.html')">
-            <span class="nav-icon">⚔️</span>
-            <span class="nav-label">Арена</span>
+        <div class="nav-item" onclick="openGame('player.html')">
+            <span class="nav-icon">📺</span>
+            <span class="nav-label">Плеер</span>
         </div>
         <div class="nav-item" onclick="openGame('friends.html')">
             <span class="nav-icon">👥</span>
