@@ -369,6 +369,15 @@ def init_db():
         except Exception:
             pass
 
+        # ===== СТРИМ МЕДИА (звуки/видео для донат-алертов) =====
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS stream_media (
+                key TEXT PRIMARY KEY,
+                data TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
         logger.info("База данных инициализирована")
 
 

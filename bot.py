@@ -5478,9 +5478,7 @@ async def api_stream_config_save(request):
         return cors_response({"error": str(e)}, 500)
 
 
-# === Медиа загрузка/отдача для донат-алертов ===
-_media_dir = os.path.join(os.path.dirname(__file__), 'stream_media')
-os.makedirs(_media_dir, exist_ok=True)
+# === Медиа загрузка/отдача для донат-алертов (SQLite) ===
 
 async def api_stream_media_upload(request):
     """POST /api/stream/media/upload  {telegram_id, key, data}"""
@@ -5493,26 +5491,31 @@ async def api_stream_media_upload(request):
         b64data = data.get("data", "")
         if not key or not b64data:
             return cors_response({"error": "key and data required"}, 400)
-        filepath = os.path.join(_media_dir, f"{key}.b64")
-        with open(filepath, 'w') as f:
-            f.write(b64data)
-        logger.info(f"Media uploaded: {key} ({len(b64data)} bytes)")
+        
+        from database import get_db
+        with get_db() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO stream_media (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                (key, b64data)
+            )
+        logger.info(f"Media uploaded to DB: {key} ({len(b64data)} chars)")
         return cors_response({"success": True, "key": key})
     except Exception as e:
+        logger.error(f"Media upload error: {e}")
         return cors_response({"error": str(e)}, 500)
 
 async def api_stream_media_get(request):
     """GET /api/stream/media/{key}"""
     key = request.match_info.get('key', '')
-    filepath = os.path.join(_media_dir, f"{key}.b64")
-    if not os.path.exists(filepath):
-        return cors_response({"error": "not found"}, 404)
     try:
-        with open(filepath, 'r') as f:
-            b64data = f.read()
-        return cors_response({"key": key, "data": b64data})
-    except:
-        return cors_response({"error": "read error"}, 500)
+        from database import get_db
+        with get_db() as conn:
+            row = conn.execute("SELECT data FROM stream_media WHERE key = ?", (key,)).fetchone()
+        if not row:
+            return cors_response({"error": "not found"}, 404)
+        return cors_response({"key": key, "data": row["data"]})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
 
 
 # ==========================================
