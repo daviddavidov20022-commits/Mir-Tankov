@@ -5460,7 +5460,12 @@ async def api_stream_config_save(request):
             return cors_response({"error": "config must be a dict"}, 400)
         
         old_twitch_ch = stream_config.get('twitch', {}).get('channel', '')
-        stream_config = new_config
+        # MERGE вместо перезаписи
+        for key, value in new_config.items():
+            if isinstance(value, dict) and isinstance(stream_config.get(key), dict):
+                stream_config[key].update(value)
+            else:
+                stream_config[key] = value
         _save_stream_config()
         
         # Если Twitch канал изменился — переключить ридер
@@ -5471,6 +5476,43 @@ async def api_stream_config_save(request):
         return cors_response({"success": True, "config": stream_config})
     except Exception as e:
         return cors_response({"error": str(e)}, 500)
+
+
+# === Медиа загрузка/отдача для донат-алертов ===
+_media_dir = os.path.join(os.path.dirname(__file__), 'stream_media')
+os.makedirs(_media_dir, exist_ok=True)
+
+async def api_stream_media_upload(request):
+    """POST /api/stream/media/upload  {telegram_id, key, data}"""
+    try:
+        data = await request.json()
+        tg_id = int(data.get("telegram_id", 0))
+        if not is_admin_user(tg_id):
+            return cors_response({"error": "Admin only"}, 403)
+        key = data.get("key", "")
+        b64data = data.get("data", "")
+        if not key or not b64data:
+            return cors_response({"error": "key and data required"}, 400)
+        filepath = os.path.join(_media_dir, f"{key}.b64")
+        with open(filepath, 'w') as f:
+            f.write(b64data)
+        logger.info(f"Media uploaded: {key} ({len(b64data)} bytes)")
+        return cors_response({"success": True, "key": key})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+async def api_stream_media_get(request):
+    """GET /api/stream/media/{key}"""
+    key = request.match_info.get('key', '')
+    filepath = os.path.join(_media_dir, f"{key}.b64")
+    if not os.path.exists(filepath):
+        return cors_response({"error": "not found"}, 404)
+    try:
+        with open(filepath, 'r') as f:
+            b64data = f.read()
+        return cors_response({"key": key, "data": b64data})
+    except:
+        return cors_response({"error": "read error"}, 500)
 
 
 # ==========================================
@@ -5649,6 +5691,8 @@ def create_api_app():
     app.router.add_post("/api/stream/channels/save", api_stream_channels_save)
     app.router.add_post("/api/stream/config/save", api_stream_config_save)
     app.router.add_get("/api/stream/config", api_stream_config_get)
+    app.router.add_post("/api/stream/media/upload", api_stream_media_upload)
+    app.router.add_get("/api/stream/media/{key}", api_stream_media_get)
 
     # Donate & Music API
     app.router.add_post("/api/stream/donate", api_stream_donate)

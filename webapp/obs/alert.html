@@ -246,16 +246,25 @@
                     if (d.alert_duration) CONFIG.alertDuration = d.alert_duration;
                     if (d.sound_enabled !== undefined) CONFIG.soundEnabled = d.sound_enabled;
                     if (d.sound_volume !== undefined) CONFIG.soundVolume = d.sound_volume;
-                    if (d.sound_small) CONFIG.soundSmall = d.sound_small;
-                    if (d.sound_medium) CONFIG.soundMedium = d.sound_medium;
-                    if (d.sound_large) CONFIG.soundLarge = d.sound_large;
                     if (d.animation_style) CONFIG.animationStyle = d.animation_style;
                     if (d.tts_enabled !== undefined) CONFIG.ttsEnabled = d.tts_enabled;
                     if (d.tts_speed) CONFIG.ttsSpeed = d.tts_speed;
                     if (d.tts_min_amount) CONFIG.ttsMinAmount = d.tts_min_amount;
-                    if (d.media_small) CONFIG.mediaSmall = d.media_small;
-                    if (d.media_medium) CONFIG.mediaMedium = d.media_medium;
-                    if (d.media_large) CONFIG.mediaLarge = d.media_large;
+                    
+                    // Загружаем медиа-файлы с сервера
+                    const mediaMap = {
+                        sound_small: 'soundSmall', sound_medium: 'soundMedium', sound_large: 'soundLarge',
+                        media_small: 'mediaSmall', media_medium: 'mediaMedium', media_large: 'mediaLarge'
+                    };
+                    for (const [key, cfgKey] of Object.entries(mediaMap)) {
+                        if (d[`has_${key}`]) {
+                            try {
+                                const mr = await fetch(`${API_URL}/api/stream/media/${key}`);
+                                const md = await mr.json();
+                                if (md.data) CONFIG[cfgKey] = md.data;
+                            } catch(e) { console.log('Media load error:', key); }
+                        }
+                    }
                 }
                 console.log('[Alert] Config loaded', CONFIG);
             } catch(e) {
@@ -374,7 +383,7 @@
             if (!url) { mediaEl.style.display = 'none'; return; }
 
             mediaEl.style.display = 'block';
-            if (url.match(/\.(mp4|webm)$/i)) {
+            if (url.match(/\.(mp4|webm)$/i) || url.startsWith('data:video/')) {
                 mediaEl.innerHTML = `<video src="${url}" autoplay muted loop></video>`;
             } else {
                 mediaEl.innerHTML = `<img src="${url}" alt="alert">`;

@@ -1093,21 +1093,36 @@ window.handleFileUpload = handleFileUpload;
 async function saveDonateSettings() {
     const volSlider = document.getElementById('adminSoundVolume');
     const prev = JSON.parse(localStorage.getItem('stream_donate_settings') || '{}');
+    
+    // Загружаем медиа-файлы на сервер
+    const mediaKeys = ['sound_small', 'sound_medium', 'sound_large', 'media_small', 'media_medium', 'media_large'];
+    for (const key of mediaKeys) {
+        if (uploadedFiles[key]) {
+            try {
+                await fetch(`${BOT_API_URL}/api/stream/media/upload`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: myTelegramId, key, data: uploadedFiles[key] }),
+                });
+            } catch(e) { console.log('Upload error:', key, e); }
+        }
+    }
+    
     const settings = {
         min_amount: parseInt(document.getElementById('adminDonateMin')?.value) || 10,
         alert_duration: parseInt(document.getElementById('adminAlertDuration')?.value) || 7,
         sound_enabled: document.getElementById('adminSoundEnabled')?.checked ?? true,
         sound_volume: (parseInt(volSlider?.value) || 70) / 100,
-        sound_small: uploadedFiles.sound_small || prev.sound_small || '',
-        sound_medium: uploadedFiles.sound_medium || prev.sound_medium || '',
-        sound_large: uploadedFiles.sound_large || prev.sound_large || '',
+        has_sound_small: !!(uploadedFiles.sound_small || prev.has_sound_small),
+        has_sound_medium: !!(uploadedFiles.sound_medium || prev.has_sound_medium),
+        has_sound_large: !!(uploadedFiles.sound_large || prev.has_sound_large),
         animation_style: document.getElementById('adminAnimStyle')?.value || 'all',
         tts_enabled: document.getElementById('adminTtsEnabled')?.checked ?? true,
         tts_speed: (parseInt(document.getElementById('adminTtsSpeed')?.value) || 100) / 100,
         tts_min_amount: parseInt(document.getElementById('adminTtsMinAmount')?.value) || 30,
-        media_small: uploadedFiles.media_small || prev.media_small || '',
-        media_medium: uploadedFiles.media_medium || prev.media_medium || '',
-        media_large: uploadedFiles.media_large || prev.media_large || '',
+        has_media_small: !!(uploadedFiles.media_small || prev.has_media_small),
+        has_media_medium: !!(uploadedFiles.media_medium || prev.has_media_medium),
+        has_media_large: !!(uploadedFiles.media_large || prev.has_media_large),
     };
     try {
         await fetch(`${BOT_API_URL}/api/stream/config/save`, {
@@ -1141,9 +1156,9 @@ function loadAdminSettings() {
             document.getElementById('adminSoundVolume').value = v;
             document.getElementById('adminSoundVolumeVal').textContent = v + '%';
         }
-        if (ds.sound_small) { const el = document.getElementById('statusSound_small'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
-        if (ds.sound_medium) { const el = document.getElementById('statusSound_medium'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
-        if (ds.sound_large) { const el = document.getElementById('statusSound_large'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
+        if (ds.has_sound_small) { const el = document.getElementById('statusSound_small'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
+        if (ds.has_sound_medium) { const el = document.getElementById('statusSound_medium'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
+        if (ds.has_sound_large) { const el = document.getElementById('statusSound_large'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
         if (ds.animation_style) document.getElementById('adminAnimStyle').value = ds.animation_style;
         if (ds.tts_enabled !== undefined) document.getElementById('adminTtsEnabled').checked = ds.tts_enabled;
         if (ds.tts_speed !== undefined) {
@@ -1152,9 +1167,9 @@ function loadAdminSettings() {
             document.getElementById('adminTtsSpeedVal').textContent = ds.tts_speed.toFixed(1) + 'x';
         }
         if (ds.tts_min_amount !== undefined) document.getElementById('adminTtsMinAmount').value = ds.tts_min_amount;
-        if (ds.media_small) { const el = document.getElementById('statusMedia_small'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
-        if (ds.media_medium) { const el = document.getElementById('statusMedia_medium'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
-        if (ds.media_large) { const el = document.getElementById('statusMedia_large'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
+        if (ds.has_media_small) { const el = document.getElementById('statusMedia_small'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
+        if (ds.has_media_medium) { const el = document.getElementById('statusMedia_medium'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
+        if (ds.has_media_large) { const el = document.getElementById('statusMedia_large'); if (el) { el.textContent = '✅ Загружен'; el.style.color = '#4CAF50'; } }
     } catch(e) {}
 
     // OBS URL
