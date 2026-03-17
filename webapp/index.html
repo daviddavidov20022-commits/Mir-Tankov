@@ -72,231 +72,127 @@
     <!-- Main content -->
     <main class="main-content">
 
-        <!-- Player Stats Card - NEW! -->
+        <!-- Quick Actions -->
         <section class="section-header">
-            <h2>📊 Моя Статистика</h2>
-            <p>Проверь свои показатели в игре!</p>
+            <h2>⚡ Быстрый доступ</h2>
         </section>
 
-        <div class="games-grid" style="margin-bottom: 16px;">
-            <!-- Stats Card -->
-            <div class="game-card game-card--active game-card--stats" id="gameStats" onclick="openGame('stats.html')">
-                <div class="game-card__badge game-card__badge--hot">НОВИНКА</div>
-                <div class="game-card__icon">
-                    <div class="tank-mini">
-                        <div class="tank-mini__body">🏅</div>
-                    </div>
+        <div class="menu-list">
+            <div class="menu-item menu-item--active" onclick="openGame('stats.html')">
+                <div class="menu-item__icon" style="background:rgba(52,152,219,0.15);">🏅</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Статистика Танкиста</div>
+                    <div class="menu-item__desc">WN8 рейтинг, % побед, средний урон</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Статистика Танкиста</h3>
-                    <p class="game-card__desc">Введи ник и узнай свой % побед, средний урон и рейтинг!</p>
+                <div class="menu-item__badge menu-item__badge--new">NEW</div>
+                <div class="menu-item__arrow">›</div>
+            </div>
+
+            <div class="menu-item menu-item--active" onclick="openGame('top.html')">
+                <div class="menu-item__icon" style="background:rgba(200,170,110,0.15);">🏆</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Игроки и Рейтинги</div>
+                    <div class="menu-item__desc">Топ, друзья, вызовы на бой</div>
                 </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">📈 WN8 рейтинг</span>
-                    <span class="game-card__play">Открыть →</span>
+                <div class="menu-item__arrow">›</div>
+            </div>
+
+            <div class="menu-item menu-item--active" onclick="openGame('player.html')">
+                <div class="menu-item__icon" style="background:rgba(145,70,255,0.15);">📺</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Видеоплеер</div>
+                    <div class="menu-item__desc">YouTube, VK, Twitch без замедления</div>
                 </div>
+                <div class="menu-item__badge menu-item__badge--new">NEW</div>
+                <div class="menu-item__arrow">›</div>
             </div>
         </div>
 
-        <!-- Players Section -->
-        <section class="section-header" style="margin-top: 8px;">
-            <h2>👥 Наши Игроки</h2>
-            <p>Все участники клуба Мир Танков!</p>
-        </section>
-
-        <div class="games-grid" style="margin-bottom: 16px;">
-            <div class="game-card game-card--active game-card--top" id="gameTop" onclick="openGame('top.html')">
-                <div class="game-card__badge game-card__badge--hot">НОВИНКА</div>
-                <div class="game-card__icon">
-                    <div class="tank-mini">
-                        <div class="tank-mini__body">🏆</div>
-                    </div>
-                </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Список Игроков и Рейтинги</h3>
-                    <p class="game-card__desc">Все участники, рейтинги, друзья и вызовы на бой!</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">🎖 Игроки • Рейтинги • Вызовы</span>
-                    <span class="game-card__play">Открыть →</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Games Section -->
+        <!-- Games -->
         <section class="section-header">
             <h2>🎮 Игры</h2>
-            <p>Выбери игру и получай награды!</p>
         </section>
 
-        <div class="games-grid">
-            <!-- Wheel of Fortune -->
-            <div class="game-card game-card--active" id="gameWheel" onclick="openGame('wheel.html')">
-                <div class="game-card__badge">НОВИНКА</div>
-                <div class="game-card__icon">
-                    <div class="wheel-mini">
-                        <div class="wheel-mini__inner">🎰</div>
-                    </div>
+        <div class="menu-list">
+            <div class="menu-item menu-item--active" onclick="openGame('wheel.html')">
+                <div class="menu-item__icon" style="background:rgba(200,170,110,0.15);">🎰</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Колесо Фортуны</div>
+                    <div class="menu-item__desc">Крути и выигрывай до 1000 🧀</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Колесо Фортуны</h3>
-                    <p class="game-card__desc">Крути колесо и выигрывай ценные призы!</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">🧀 До 1000</span>
-                    <span class="game-card__play">Играть →</span>
-                </div>
+                <div class="menu-item__arrow">›</div>
             </div>
 
-            <!-- Quiz - Coming soon -->
-            <div class="game-card game-card--locked" id="gameQuiz">
-                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
-                <div class="game-card__lock">🔒</div>
-                <div class="game-card__icon">
-                    <div class="quiz-mini">❓</div>
+            <div class="menu-item menu-item--active" onclick="openGame('global-challenge.html')">
+                <div class="menu-item__icon" style="background:rgba(231,76,60,0.15);">🔥</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Общий Челлендж</div>
+                    <div class="menu-item__desc">Таймер, топ-3, призы</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Танковая Викторина</h3>
-                    <p class="game-card__desc">Проверь свои знания о танках!</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">⭐ Опыт x2</span>
-                    <span class="game-card__play">Скоро</span>
-                </div>
+                <div class="menu-item__badge menu-item__badge--live">LIVE</div>
+                <div class="menu-item__arrow">›</div>
             </div>
 
-            <!-- Global Challenge - ACTIVE! -->
-            <div class="game-card game-card--active game-card--challenge" id="gameGlobalChallenge"
-                onclick="openGame('global-challenge.html')">
-                <div class="game-card__badge game-card__badge--hot">LIVE</div>
-                <div class="game-card__icon">
-                    <div class="battle-mini" style="filter:none;animation: vsPulse 2s ease-in-out infinite">🔥</div>
+            <div class="menu-item menu-item--active" onclick="openGame('challenges.html')">
+                <div class="menu-item__icon" style="background:rgba(200,170,110,0.15);">⚔️</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Арена PvP</div>
+                    <div class="menu-item__desc">Вызови соперника на дуэль</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Общий Челлендж</h3>
-                    <p class="game-card__desc">Соревнуйся с другими! Таймер, топ-3, призы</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">🧀 Призы</span>
-                    <span class="game-card__play">Играть →</span>
-                </div>
+                <div class="menu-item__arrow">›</div>
             </div>
 
-            <!-- Arena - ACTIVE! -->
-            <div class="game-card game-card--active" id="gameArena" onclick="openGame('challenges.html')">
-                <div class="game-card__badge game-card__badge--hot">НОВИНКА</div>
-                <div class="game-card__icon">
-                    <div class="battle-mini">⚔️</div>
+            <div class="menu-item menu-item--locked">
+                <div class="menu-item__icon" style="background:rgba(100,100,100,0.1);">❓</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Танковая Викторина</div>
+                    <div class="menu-item__desc">Проверь знания о танках</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Арена PvP</h3>
-                    <p class="game-card__desc">Вызови соперника на дуэль!</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">🧀 Ставки</span>
-                    <span class="game-card__play">Играть →</span>
-                </div>
+                <div class="menu-item__badge menu-item__badge--soon">СКОРО</div>
             </div>
 
-            <!-- Slot Machine - Coming soon -->
-            <div class="game-card game-card--locked" id="gameSlots">
-                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
-                <div class="game-card__lock">🔒</div>
-                <div class="game-card__icon">
-                    <div class="slots-mini">🎰</div>
+            <div class="menu-item menu-item--locked">
+                <div class="menu-item__icon" style="background:rgba(100,100,100,0.1);">🎰</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Слоты Танков</div>
+                    <div class="menu-item__desc">Испытай удачу</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Слоты Танков</h3>
-                    <p class="game-card__desc">Испытай удачу на танковых слотах!</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">🪙 Джекпот</span>
-                    <span class="game-card__play">Скоро</span>
-                </div>
+                <div class="menu-item__badge menu-item__badge--soon">СКОРО</div>
             </div>
 
-            <!-- Daily Missions - Coming soon -->
-            <div class="game-card game-card--locked" id="gameMissions">
-                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
-                <div class="game-card__lock">🔒</div>
-                <div class="game-card__icon">
-                    <div class="missions-mini">📋</div>
+            <div class="menu-item menu-item--locked">
+                <div class="menu-item__icon" style="background:rgba(100,100,100,0.1);">📋</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Ежедневные Задания</div>
+                    <div class="menu-item__desc">Бонусы каждый день</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Ежедневные Задания</h3>
-                    <p class="game-card__desc">Выполняй задания каждый день!</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">🎁 Бонусы</span>
-                    <span class="game-card__play">Скоро</span>
-                </div>
+                <div class="menu-item__badge menu-item__badge--soon">СКОРО</div>
             </div>
 
-            <!-- Card Collection - Coming soon -->
-            <div class="game-card game-card--locked" id="gameCards">
-                <div class="game-card__badge game-card__badge--soon">СКОРО</div>
-                <div class="game-card__lock">🔒</div>
-                <div class="game-card__icon">
-                    <div class="cards-mini">🃏</div>
+            <div class="menu-item menu-item--locked">
+                <div class="menu-item__icon" style="background:rgba(100,100,100,0.1);">🃏</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Коллекция Танков</div>
+                    <div class="menu-item__desc">Собери все карточки</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Коллекция Танков</h3>
-                    <p class="game-card__desc">Собери все карточки танков!</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">🃏 Редкости</span>
-                    <span class="game-card__play">Скоро</span>
-                </div>
+                <div class="menu-item__badge menu-item__badge--soon">СКОРО</div>
             </div>
         </div>
 
-        <!-- Cheese Exchange -->
-        <section class="section-header" style="margin-top: 24px;">
-            <h2>🧀 Обменник</h2>
-            <p>Обменяй рубли на внутреннюю валюту СЫР!</p>
+        <!-- Shop -->
+        <section class="section-header">
+            <h2>🛒 Магазин</h2>
         </section>
 
-        <div class="games-grid" style="margin-bottom: 16px;">
-            <div class="game-card game-card--active game-card--cheese" id="gameCheese"
-                onclick="openGame('cheese.html')">
-                <div class="game-card__badge game-card__badge--hot">ПОКУПАЙ</div>
-                <div class="game-card__icon">
-                    <div class="cheese-mini">🧀</div>
+        <div class="menu-list">
+            <div class="menu-item menu-item--active" onclick="openGame('cheese.html')">
+                <div class="menu-item__icon" style="background:rgba(255,193,7,0.15);">🧀</div>
+                <div class="menu-item__info">
+                    <div class="menu-item__title">Купить СЫР</div>
+                    <div class="menu-item__desc">1 ₽ = 1 🧀 — обменник валюты</div>
                 </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Купить СЫР</h3>
-                    <p class="game-card__desc">1 ₽ = 1 🧀 — покупай и трать на игры, арену и колесо!</p>
-                </div>
-                <div class="game-card__footer">
-                    <span class="game-card__reward">💰 1₽ = 1🧀</span>
-                    <span class="game-card__play">Купить →</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Video Player Section -->
-        <section class="section-header" style="margin-top: 24px;">
-            <h2>📺 Видеоплеер</h2>
-            <p>Смотри YouTube, VK и Twitch прямо здесь!</p>
-        </section>
-
-        <div class="games-grid" style="margin-bottom: 16px;">
-            <div class="game-card game-card--active game-card--stats" id="gamePlayer"
-                onclick="openGame('player.html')" style="background: linear-gradient(135deg, #1d1520, #1a1030); border-color: rgba(145, 70, 255, 0.2);">
-                <div class="game-card__badge game-card__badge--hot">НОВИНКА</div>
-                <div class="game-card__icon" style="height:auto;margin-bottom:0;">
-                    <div class="tank-mini" style="border-color: rgba(145, 70, 255, 0.5); background: linear-gradient(135deg, rgba(145, 70, 255, 0.3), rgba(255, 0, 0, 0.2)); animation: statsPulse 3s ease-in-out infinite;">
-                        <div class="tank-mini__body">📺</div>
-                    </div>
-                </div>
-                <div class="game-card__info">
-                    <h3 class="game-card__title">Видеоплеер</h3>
-                    <p class="game-card__desc">YouTube, VK Видео и Twitch — всё в одном месте!</p>
-                </div>
-                <div class="game-card__footer" style="border-top:none;padding-top:0;margin-top:4px;">
-                    <span class="game-card__reward">🎬 3 платформы</span>
-                    <span class="game-card__play">Смотреть →</span>
-                </div>
+                <div class="menu-item__badge menu-item__badge--hot">💰</div>
+                <div class="menu-item__arrow">›</div>
             </div>
         </div>
 

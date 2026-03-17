@@ -1,30 +1,24 @@
 /**
  * МИР ТАНКОВ — Видеоплеер (player.js)
- * Встроенный просмотр YouTube (через прокси), VK Video, Twitch
+ * Встроенный просмотр YouTube (через Invidious прокси), VK Video, Twitch
  * 
- * YouTube проксируется через Invidious/Piped — обход замедления!
+ * YouTube проксируется через Invidious — обход замедления!
+ * Invidious — открытый фронтенд для YouTube, серверы в Европе/Латинской Америке
  */
 
 // ==========================================
-// YOUTUBE ПРОКСИ-ФРОНТЕНДЫ (обход замедления)
-// Это публичные серверы, которые загружают видео
-// с YouTube через свои серверы (в Европе/США)
-// и отдают его пользователю без ограничений.
+// YOUTUBE ПРОКСИ (Invidious — проверенные инстансы)
+// Данные с https://api.invidious.io/instances.json
 // ==========================================
 const YT_PROXIES = [
-    // Piped instances (проксируют видео через свой сервер)
-    { name: 'Piped (Kavin)', embed: 'https://piped.kavin.rocks/embed', type: 'piped' },
-    { name: 'Piped Video', embed: 'https://piped.video/embed', type: 'piped' },
-    { name: 'Piped (Lunar)', embed: 'https://piped.lunar.icu/embed', type: 'piped' },
-    // Invidious instances
-    { name: 'Invidious (FDN)', embed: 'https://invidious.fdn.fr/embed', type: 'invidious' },
-    { name: 'Invidious (Nerdvpn)', embed: 'https://inv.nerdvpn.de/embed', type: 'invidious' },
-    { name: 'Invidious (Privacydev)', embed: 'https://invidious.privacydev.net/embed', type: 'invidious' },
-    // Оригинальный YouTube (fallback, если прокси не нужен)
-    { name: 'YouTube (оригинал)', embed: 'https://www.youtube.com/embed', type: 'youtube' },
+    // Проверенные Invidious инстансы (март 2026, uptime 99%+)
+    { name: 'Invidious 🇩🇪 Германия', host: 'https://yewtu.be', type: 'invidious', flag: '🇩🇪' },
+    { name: 'Invidious 🇺🇦 Украина', host: 'https://invidious.nerdvpn.de', type: 'invidious', flag: '🇺🇦' },
+    { name: 'Invidious 🇨🇱 Чили', host: 'https://inv.nadeko.net', type: 'invidious', flag: '🇨🇱' },
+    // Оригинальный YouTube (может не работать из-за замедления)
+    { name: 'YouTube ⚠️ оригинал', host: 'https://www.youtube.com', type: 'youtube', flag: '⚠️' },
 ];
 
-// Текущий выбранный прокси (по умолчанию — первый Piped)
 let currentProxyIndex = parseInt(localStorage.getItem('yt_proxy_index') || '0');
 if (currentProxyIndex >= YT_PROXIES.length) currentProxyIndex = 0;
 
@@ -34,7 +28,7 @@ if (currentProxyIndex >= YT_PROXIES.length) currentProxyIndex = 0;
 const PLATFORMS = {
     youtube: {
         name: 'YouTube',
-        placeholder: 'Вставь ссылку YouTube...',
+        placeholder: 'Вставь ссылку YouTube видео...',
         color: 'youtube',
         parseUrl: parseYoutubeUrl,
         buildEmbed: buildYoutubeEmbed,
@@ -55,21 +49,14 @@ const PLATFORMS = {
     },
 };
 
-// Быстрый доступ — каналы
+// Быстрый доступ — каналы (только прямые ссылки, которые можно embed'ить!)
 const QUICK_CHANNELS = [
-    {
-        name: 'ISERVERI',
-        platform: 'youtube',
-        url: 'https://www.youtube.com/@ISERVERI/live',
-        icon: '🔴',
-        desc: 'YouTube Live',
-    },
     {
         name: 'ISERVERI',
         platform: 'twitch',
         url: 'https://www.twitch.tv/serverenok',
         icon: '💜',
-        desc: 'Twitch канал',
+        desc: 'Twitch стрим',
     },
     {
         name: 'iserveri',
@@ -79,11 +66,11 @@ const QUICK_CHANNELS = [
         desc: 'VK Видео',
     },
     {
-        name: 'WOT Лучшее',
+        name: 'ISERVERI',
         platform: 'youtube',
-        url: 'https://www.youtube.com/results?search_query=мир+танков+лучшие+моменты',
-        icon: '🎯',
-        desc: 'YouTube поиск',
+        url: 'https://www.youtube.com/@ISERVERI',
+        icon: '🔴',
+        desc: 'YouTube канал',
     },
 ];
 
@@ -197,34 +184,50 @@ function switchPlatform(platform) {
 // ПАРСЕРЫ URL
 // ==========================================
 
+/**
+ * Извлекает ID видео из любого YouTube URL
+ * Поддерживает: watch?v=, youtu.be/, embed/, shorts/, live/
+ * Возвращает null если это не ссылка на конкретное видео
+ */
+function extractYoutubeVideoId(url) {
+    // youtu.be/ID
+    let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (m) return m[1];
+
+    // youtube.com/watch?v=ID
+    m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    if (m) return m[1];
+
+    // youtube.com/embed/ID
+    m = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
+    if (m) return m[1];
+
+    // youtube.com/shorts/ID
+    m = url.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
+    if (m) return m[1];
+
+    // youtube.com/live/ID
+    m = url.match(/\/live\/([a-zA-Z0-9_-]{11})/);
+    if (m) return m[1];
+
+    // Просто 11-символьный ID
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+
+    return null;
+}
+
 function parseYoutubeUrl(url) {
     url = url.trim();
 
-    // youtu.be/ID
-    let match = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-    if (match) return { type: 'video', id: match[1] };
+    // Пробуем извлечь ID видео
+    const videoId = extractYoutubeVideoId(url);
+    if (videoId) return { type: 'video', id: videoId };
 
-    // youtube.com/watch?v=ID
-    match = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-    if (match) return { type: 'video', id: match[1] };
-
-    // youtube.com/embed/ID
-    match = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
-    if (match) return { type: 'video', id: match[1] };
-
-    // youtube.com/shorts/ID
-    match = url.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
-    if (match) return { type: 'video', id: match[1] };
-
-    // youtube.com/live/ID
-    match = url.match(/\/live\/([a-zA-Z0-9_-]{11})/);
-    if (match) return { type: 'video', id: match[1] };
-
-    // youtube.com/@channel/live → live stream embed
-    match = url.match(/youtube\.com\/@([a-zA-Z0-9_-]+)\/live/i);
+    // youtube.com/@channel/live → live стрим
+    let match = url.match(/youtube\.com\/@([a-zA-Z0-9_-]+)\/live/i);
     if (match) return { type: 'channel_live', handle: match[1] };
 
-    // youtube.com/@channel → channel page embed
+    // youtube.com/@channel → страница канала (нельзя embed, откроем в Invidious)
     match = url.match(/youtube\.com\/@([a-zA-Z0-9_-]+)/i);
     if (match) return { type: 'channel', handle: match[1] };
 
@@ -232,57 +235,58 @@ function parseYoutubeUrl(url) {
     match = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/i);
     if (match) return { type: 'channel_id', id: match[1] };
 
-    // Just an 11-char ID
-    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return { type: 'video', id: url };
-
-    // YouTube search/playlist URL — open as-is through search
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        return { type: 'search', query: url };
+    // Ссылка на поиск/плейлист — НЕ поддерживается для embed
+    if (url.includes('youtube.com/results') || url.includes('search_query')) {
+        return { type: 'error_search' };
     }
 
-    // Treat as search
-    return { type: 'search', query: url };
+    if (url.includes('youtube.com/playlist')) {
+        return { type: 'error_playlist' };
+    }
+
+    // Любая другая YouTube ссылка
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        return { type: 'error_unknown' };
+    }
+
+    // Не YouTube ссылка — может быть название видео
+    return { type: 'error_not_video' };
 }
 
 function buildYoutubeEmbed(parsed) {
     const proxy = YT_PROXIES[currentProxyIndex];
-    const embedBase = proxy.embed;
+    const host = proxy.host;
 
     if (parsed.type === 'video') {
-        if (proxy.type === 'piped') {
-            return `${embedBase}/${parsed.id}?autoplay=1`;
-        }
+        // Основной кейс — конкретное видео по ID
         if (proxy.type === 'invidious') {
-            return `${embedBase}/${parsed.id}?autoplay=1&quality=hd720`;
+            return `${host}/embed/${parsed.id}?autoplay=1&quality=hd720&local=true`;
         }
-        // youtube original
-        return `${embedBase}/${parsed.id}?autoplay=1&rel=0`;
+        // YouTube оригинал
+        return `${host}/embed/${parsed.id}?autoplay=1&rel=0`;
     }
+
     if (parsed.type === 'channel_live') {
         if (proxy.type === 'youtube') {
-            return `${embedBase}/live_stream?channel=${parsed.handle}&autoplay=1`;
+            return `${host}/embed/live_stream?channel=${parsed.handle}&autoplay=1`;
         }
-        // Piped/Invidious — каналы по имени сложнее, попробуем поиск
-        return `${embedBase.replace('/embed', '')}/c/${parsed.handle}`;
+        // Invidious — открываем канал (может показать последнее видео)
+        return `${host}/channel/${parsed.handle}`;
     }
+
     if (parsed.type === 'channel_id') {
         if (proxy.type === 'youtube') {
-            return `${embedBase}/live_stream?channel=${parsed.id}&autoplay=1`;
+            return `${host}/embed/live_stream?channel=${parsed.id}&autoplay=1`;
         }
-        return `${embedBase.replace('/embed', '')}/channel/${parsed.id}`;
+        return `${host}/channel/${parsed.id}`;
     }
+
     if (parsed.type === 'channel') {
-        if (proxy.type === 'youtube') {
-            return `${embedBase}?listType=search&list=${parsed.handle}&autoplay=1`;
-        }
-        return `${embedBase.replace('/embed', '')}/@${parsed.handle}`;
+        // Каналы нельзя встроить, но Invidious покажет страницу
+        return `${host}/@${parsed.handle}`;
     }
-    if (parsed.type === 'search') {
-        if (proxy.type === 'youtube') {
-            return `${embedBase}?listType=search&list=${encodeURIComponent(parsed.query)}&autoplay=1`;
-        }
-        return `${embedBase.replace('/embed', '')}/search?q=${encodeURIComponent(parsed.query)}`;
-    }
+
+    // Ошибочные типы — вернём null, обработаем в playVideo
     return null;
 }
 
@@ -297,20 +301,15 @@ function parseVkUrl(url) {
     match = url.match(/video_ext\.php\?(.+)/);
     if (match) return { type: 'ext', params: match[1] };
 
-    // vk.com/video/@user
+    // vk.com/video/@user — страница канала, не конкретное видео
     match = url.match(/vk\.com\/video\/@([a-zA-Z0-9_]+)/);
     if (match) return { type: 'user', username: match[1] };
 
-    // vk.com/clips/@user
-    match = url.match(/vk\.com\/clips\/([a-zA-Z0-9_]+)/);
-    if (match) return { type: 'user', username: match[1] };
-
-    // Just try to parse as a VK video URL
     if (url.includes('vk.com')) {
         return { type: 'raw', url: url };
     }
 
-    return { type: 'search', query: url };
+    return { type: 'error', query: url };
 }
 
 function buildVkEmbed(parsed) {
@@ -320,24 +319,21 @@ function buildVkEmbed(parsed) {
     if (parsed.type === 'ext') {
         return `https://vk.com/video_ext.php?${parsed.params}`;
     }
-    if (parsed.type === 'user' || parsed.type === 'raw') {
-        return null;
-    }
     return null;
 }
 
 function parseTwitchUrl(url) {
     url = url.trim();
 
-    // twitch.tv/channel
-    let match = url.match(/twitch\.tv\/([a-zA-Z0-9_]+)/i);
-    if (match) return { type: 'channel', name: match[1] };
-
     // twitch.tv/videos/ID
-    match = url.match(/twitch\.tv\/videos\/(\d+)/i);
+    let match = url.match(/twitch\.tv\/videos\/(\d+)/i);
     if (match) return { type: 'video', id: match[1] };
 
-    // Just a channel name
+    // twitch.tv/channel
+    match = url.match(/twitch\.tv\/([a-zA-Z0-9_]+)/i);
+    if (match && match[1].toLowerCase() !== 'videos') return { type: 'channel', name: match[1] };
+
+    // Просто имя канала
     if (/^[a-zA-Z0-9_]{2,30}$/.test(url)) return { type: 'channel', name: url };
 
     return { type: 'channel', name: url.replace(/\s+/g, '') };
@@ -355,7 +351,7 @@ function buildTwitchEmbed(parsed) {
 }
 
 // ==========================================
-// ПРОКСИ-СЕЛЕКТОР (выбор сервера YouTube)
+// ПРОКСИ-СЕЛЕКТОР (Выбор сервера YouTube)
 // ==========================================
 function renderProxySelector() {
     const container = document.getElementById('proxySection');
@@ -368,10 +364,10 @@ function renderProxySelector() {
         <div class="proxy-selector">
             <div class="proxy-selector__header" onclick="toggleProxyList()">
                 <div class="proxy-selector__info">
-                    <div class="proxy-selector__label">🔓 YouTube сервер</div>
+                    <div class="proxy-selector__label">🔓 YouTube сервер (обход замедления)</div>
                     <div class="proxy-selector__current">
                         <span class="proxy-selector__dot ${isOriginal ? 'proxy-selector__dot--warn' : 'proxy-selector__dot--ok'}"></span>
-                        <span class="proxy-selector__name">${proxy.name}</span>
+                        <span class="proxy-selector__name">${proxy.flag} ${proxy.name}</span>
                     </div>
                 </div>
                 <div class="proxy-selector__arrow" id="proxyArrow">▾</div>
@@ -382,21 +378,22 @@ function renderProxySelector() {
                 </div>
             ` : `
                 <div class="proxy-selector__status proxy-selector__status--warn">
-                    ⚠️ Может не работать из-за замедления YouTube в РФ
+                    ⚠️ Оригинал — может не работать из-за замедления YouTube в РФ
                 </div>
             `}
             <div class="proxy-selector__list" id="proxyList" style="display: none;">
                 ${YT_PROXIES.map((p, i) => `
                     <div class="proxy-selector__item ${i === currentProxyIndex ? 'proxy-selector__item--active' : ''}" 
-                         onclick="selectProxy(${i})">
+                         onclick="selectProxy(${i}); event.stopPropagation();">
                         <span class="proxy-selector__item-dot ${p.type === 'youtube' ? 'proxy-selector__dot--warn' : 'proxy-selector__dot--ok'}"></span>
-                        <span class="proxy-selector__item-name">${p.name}</span>
-                        <span class="proxy-selector__item-type">${p.type === 'piped' ? '🚀 Прокси' : p.type === 'invidious' ? '🛡 Прокси' : '⚠️ Прямой'}</span>
+                        <span class="proxy-selector__item-name">${p.flag} ${p.name}</span>
+                        <span class="proxy-selector__item-type">${p.type === 'invidious' ? '🚀 Прокси' : '⚠️ Прямой'}</span>
                         ${i === currentProxyIndex ? '<span class="proxy-selector__item-check">✓</span>' : ''}
                     </div>
                 `).join('')}
                 <div class="proxy-selector__hint">
-                    💡 Если видео не грузится — попробуй другой сервер
+                    💡 Если видео не грузится — попробуй другой сервер<br>
+                    📌 Нужна ссылка на <b>конкретное видео</b>, не на поиск/канал
                 </div>
             </div>
         </div>
@@ -422,7 +419,7 @@ function selectProxy(index) {
     const proxy = YT_PROXIES[index];
     showToast('🔓', `Сервер: ${proxy.name}`);
 
-    // Если уже играет YouTube — перезапустить с новым прокси
+    // Если уже что-то играет — перезапустить с новым прокси
     if (isPlaying && currentPlatform === 'youtube') {
         playVideo();
     }
@@ -430,33 +427,6 @@ function selectProxy(index) {
     try {
         window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
     } catch (e) { }
-}
-
-// Автоматическая проверка прокси — пингуем текущий
-async function checkCurrentProxy() {
-    const proxy = YT_PROXIES[currentProxyIndex];
-    if (proxy.type === 'youtube') return; // оригинал не проверяем
-
-    try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-
-        const resp = await fetch(proxy.embed.replace('/embed', ''), {
-            method: 'HEAD',
-            mode: 'no-cors',
-            signal: controller.signal,
-        });
-        clearTimeout(timeout);
-        console.log(`[Proxy] ${proxy.name} — доступен`);
-    } catch (e) {
-        console.warn(`[Proxy] ${proxy.name} — недоступен, пробуем следующий`);
-        // Попробовать следующий прокси
-        const nextIndex = (currentProxyIndex + 1) % YT_PROXIES.length;
-        if (nextIndex !== currentProxyIndex) {
-            selectProxy(nextIndex);
-            showToast('🔄', `Сервер ${proxy.name} недоступен, переключаю...`);
-        }
-    }
 }
 
 // ==========================================
@@ -468,16 +438,46 @@ function playVideo() {
 
     if (!url) {
         shakeInput();
-        showToast('⚠️', 'Вставь ссылку или введи название!');
+        showToast('⚠️', 'Вставь ссылку на видео!');
         return;
     }
 
     const platform = PLATFORMS[currentPlatform];
     const parsed = platform.parseUrl(url);
+
+    // Обработка ошибок парсинга (YouTube)
+    if (parsed.type === 'error_search') {
+        showToast('❌', 'Ссылка на поиск YouTube не поддерживается! Вставь ссылку на конкретное видео.', 5000);
+        shakeInput();
+        return;
+    }
+    if (parsed.type === 'error_playlist') {
+        showToast('❌', 'Плейлисты пока не поддерживаются. Вставь ссылку на конкретное видео.', 5000);
+        shakeInput();
+        return;
+    }
+    if (parsed.type === 'error_not_video') {
+        showToast('❌', 'Нужна ссылка на конкретное видео! Пример: youtube.com/watch?v=xxxxx', 5000);
+        shakeInput();
+        return;
+    }
+    if (parsed.type === 'error_unknown' || parsed.type === 'error') {
+        showToast('❌', 'Не удалось распознать ссылку. Вставь ссылку на видео.', 5000);
+        shakeInput();
+        return;
+    }
+
+    // VK: каналы нельзя embed'ить
+    if (currentPlatform === 'vk' && (parsed.type === 'user' || parsed.type === 'raw')) {
+        showToast('❌', 'Вставь ссылку на конкретное видео VK! Пример: vk.com/video-123_456', 5000);
+        shakeInput();
+        return;
+    }
+
     const embedUrl = platform.buildEmbed(parsed);
 
     if (!embedUrl) {
-        showToast('❌', 'Не удалось распознать ссылку. Попробуй другую.');
+        showToast('❌', 'Не удалось построить ссылку. Попробуй другую ссылку.', 4000);
         shakeInput();
         return;
     }
@@ -508,23 +508,22 @@ function playVideo() {
     if (currentPlatform === 'youtube') {
         const proxy = YT_PROXIES[currentProxyIndex];
         if (proxy.type !== 'youtube') {
-            displayText = `${url} (через ${proxy.name})`;
+            displayText = `через ${proxy.name}`;
         }
     }
 
-    iframe.onload = () => {
-        setTimeout(() => {
-            loading.classList.add('player-loading--hidden');
-        }, 500);
-    };
-
-    // Если iframe не загрузился за 8 сек — предложить сменить прокси
+    // Если iframe не загрузился за 10 сек — предложить сменить прокси
     const loadTimeout = setTimeout(() => {
         loading.classList.add('player-loading--hidden');
-        if (currentPlatform === 'youtube' && YT_PROXIES[currentProxyIndex].type !== 'youtube') {
-            showToast('💡', 'Долго грузится? Попробуй другой сервер ↓', 5000);
+        if (currentPlatform === 'youtube') {
+            const proxy = YT_PROXIES[currentProxyIndex];
+            if (proxy.type !== 'youtube') {
+                showToast('💡', 'Долго грузится? Попробуй другой сервер ↓', 5000);
+            } else {
+                showToast('💡', 'YouTube замедлен. Выбери прокси-сервер выше!', 5000);
+            }
         }
-    }, 8000);
+    }, 10000);
 
     iframe.onload = () => {
         clearTimeout(loadTimeout);

@@ -643,6 +643,133 @@ body {
 }
 
 /* ==========================================
+   COMPACT MENU LIST
+   ========================================== */
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: var(--gradient-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-item--active {
+    cursor: pointer;
+}
+
+.menu-item--active:hover {
+    border-color: rgba(200, 170, 110, 0.2);
+    background: linear-gradient(135deg, rgba(200, 170, 110, 0.06), rgba(22, 29, 40, 0.95));
+    transform: translateX(4px);
+}
+
+.menu-item--active:active {
+    transform: scale(0.98);
+}
+
+.menu-item--locked {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.menu-item__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.menu-item__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.menu-item__title {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menu-item__desc {
+    font-size: 0.65rem;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menu-item__badge {
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.menu-item__badge--new {
+    background: rgba(200, 170, 110, 0.15);
+    color: var(--color-gold);
+    border: 1px solid rgba(200, 170, 110, 0.25);
+}
+
+.menu-item__badge--live {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    animation: dotPulse 1.5s ease-in-out infinite;
+}
+
+.menu-item__badge--soon {
+    background: rgba(100, 100, 120, 0.15);
+    color: var(--color-text-muted);
+    border: 1px solid rgba(100, 100, 120, 0.2);
+}
+
+.menu-item__badge--hot {
+    font-size: 0.8rem;
+    padding: 0;
+    background: none;
+    border: none;
+    flex-shrink: 0;
+}
+
+.menu-item__arrow {
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: transform var(--transition-fast);
+    font-weight: 300;
+}
+
+.menu-item--active:hover .menu-item__arrow {
+    color: var(--color-gold);
+    transform: translateX(3px);
+}
+
+
+/* ==========================================
    DAILY BONUS
    ========================================== */
 .daily-bonus {
