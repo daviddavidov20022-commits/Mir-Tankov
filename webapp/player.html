@@ -100,6 +100,11 @@
             <button class="player-btn player-btn--youtube" id="playBtn" onclick="playVideo()">▶ Играть</button>
         </div>
 
+        <!-- YouTube Proxy Selector (заполняется из JS) -->
+        <div id="proxySection" style="margin-bottom: 16px;">
+            <!-- Rendered by renderProxySelector() -->
+        </div>
+
         <!-- Now Playing (hidden by default) -->
         <div class="now-playing" id="nowPlaying" style="display: none;">
             <div class="now-playing__pulse now-playing__pulse--youtube" id="nowPlayingPulse"></div>
@@ -132,7 +137,8 @@
         <div class="player-tips">
             <div class="player-tips__title">💡 Подсказки</div>
             <ul class="player-tips__list">
-                <li><b>YouTube</b> — вставь ссылку на видео или канал</li>
+                <li><b>YouTube</b> — видео проксируется через внешние серверы (обход замедления!)</li>
+                <li><b>Выбор сервера</b> — если видео не грузится, смени YouTube-сервер выше</li>
                 <li><b>VK Видео</b> — вставь ссылку на видео VK</li>
                 <li><b>Twitch</b> — введи имя канала или вставь ссылку</li>
                 <li>Нажми на карточку в «Быстром доступе» для мгновенного просмотра</li>

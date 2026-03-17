@@ -1,10 +1,35 @@
 /**
  * МИР ТАНКОВ — Видеоплеер (player.js)
- * Встроенный просмотр YouTube, VK Video, Twitch
+ * Встроенный просмотр YouTube (через прокси), VK Video, Twitch
+ * 
+ * YouTube проксируется через Invidious/Piped — обход замедления!
  */
 
 // ==========================================
-// КОНФИГ
+// YOUTUBE ПРОКСИ-ФРОНТЕНДЫ (обход замедления)
+// Это публичные серверы, которые загружают видео
+// с YouTube через свои серверы (в Европе/США)
+// и отдают его пользователю без ограничений.
+// ==========================================
+const YT_PROXIES = [
+    // Piped instances (проксируют видео через свой сервер)
+    { name: 'Piped (Kavin)', embed: 'https://piped.kavin.rocks/embed', type: 'piped' },
+    { name: 'Piped Video', embed: 'https://piped.video/embed', type: 'piped' },
+    { name: 'Piped (Lunar)', embed: 'https://piped.lunar.icu/embed', type: 'piped' },
+    // Invidious instances
+    { name: 'Invidious (FDN)', embed: 'https://invidious.fdn.fr/embed', type: 'invidious' },
+    { name: 'Invidious (Nerdvpn)', embed: 'https://inv.nerdvpn.de/embed', type: 'invidious' },
+    { name: 'Invidious (Privacydev)', embed: 'https://invidious.privacydev.net/embed', type: 'invidious' },
+    // Оригинальный YouTube (fallback, если прокси не нужен)
+    { name: 'YouTube (оригинал)', embed: 'https://www.youtube.com/embed', type: 'youtube' },
+];
+
+// Текущий выбранный прокси (по умолчанию — первый Piped)
+let currentProxyIndex = parseInt(localStorage.getItem('yt_proxy_index') || '0');
+if (currentProxyIndex >= YT_PROXIES.length) currentProxyIndex = 0;
+
+// ==========================================
+// КОНФИГ ПЛАТФОРМ
 // ==========================================
 const PLATFORMS = {
     youtube: {
@@ -75,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     renderQuickChannels();
     renderHistory();
+    renderProxySelector();
 
     // Enter для запуска
     document.getElementById('urlInput').addEventListener('keydown', (e) => {
@@ -159,6 +185,12 @@ function switchPlatform(platform) {
     // Update now playing pulse
     const pulse = document.getElementById('nowPlayingPulse');
     if (pulse) pulse.className = 'now-playing__pulse now-playing__pulse--' + platform;
+
+    // Показать/скрыть селектор прокси (только для YouTube)
+    const proxySection = document.getElementById('proxySection');
+    if (proxySection) {
+        proxySection.style.display = platform === 'youtube' ? 'block' : 'none';
+    }
 }
 
 // ==========================================
@@ -213,22 +245,43 @@ function parseYoutubeUrl(url) {
 }
 
 function buildYoutubeEmbed(parsed) {
+    const proxy = YT_PROXIES[currentProxyIndex];
+    const embedBase = proxy.embed;
+
     if (parsed.type === 'video') {
-        return `https://www.youtube.com/embed/${parsed.id}?autoplay=1&rel=0`;
+        if (proxy.type === 'piped') {
+            return `${embedBase}/${parsed.id}?autoplay=1`;
+        }
+        if (proxy.type === 'invidious') {
+            return `${embedBase}/${parsed.id}?autoplay=1&quality=hd720`;
+        }
+        // youtube original
+        return `${embedBase}/${parsed.id}?autoplay=1&rel=0`;
     }
     if (parsed.type === 'channel_live') {
-        // Embed live stream for a channel handle
-        return `https://www.youtube.com/embed/live_stream?channel=${parsed.handle}&autoplay=1`;
+        if (proxy.type === 'youtube') {
+            return `${embedBase}/live_stream?channel=${parsed.handle}&autoplay=1`;
+        }
+        // Piped/Invidious — каналы по имени сложнее, попробуем поиск
+        return `${embedBase.replace('/embed', '')}/c/${parsed.handle}`;
     }
     if (parsed.type === 'channel_id') {
-        return `https://www.youtube.com/embed/live_stream?channel=${parsed.id}&autoplay=1`;
+        if (proxy.type === 'youtube') {
+            return `${embedBase}/live_stream?channel=${parsed.id}&autoplay=1`;
+        }
+        return `${embedBase.replace('/embed', '')}/channel/${parsed.id}`;
     }
     if (parsed.type === 'channel') {
-        // For handles we can try to embed search
-        return `https://www.youtube.com/embed?listType=search&list=${parsed.handle}&autoplay=1`;
+        if (proxy.type === 'youtube') {
+            return `${embedBase}?listType=search&list=${parsed.handle}&autoplay=1`;
+        }
+        return `${embedBase.replace('/embed', '')}/@${parsed.handle}`;
     }
     if (parsed.type === 'search') {
-        return `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(parsed.query)}&autoplay=1`;
+        if (proxy.type === 'youtube') {
+            return `${embedBase}?listType=search&list=${encodeURIComponent(parsed.query)}&autoplay=1`;
+        }
+        return `${embedBase.replace('/embed', '')}/search?q=${encodeURIComponent(parsed.query)}`;
     }
     return null;
 }
@@ -236,7 +289,7 @@ function buildYoutubeEmbed(parsed) {
 function parseVkUrl(url) {
     url = url.trim();
 
-    // vk.com/video-XXXXX_XXXXX или vk.com/video_ext.php?oid=X&id=X&hash=X
+    // vk.com/video-XXXXX_XXXXX
     let match = url.match(/video(-?\d+)_(\d+)/);
     if (match) return { type: 'video', oid: match[1], id: match[2] };
 
@@ -267,9 +320,8 @@ function buildVkEmbed(parsed) {
     if (parsed.type === 'ext') {
         return `https://vk.com/video_ext.php?${parsed.params}`;
     }
-    // For user/channel — we can't embed a page, show message
     if (parsed.type === 'user' || parsed.type === 'raw') {
-        return null; // will show error
+        return null;
     }
     return null;
 }
@@ -300,6 +352,111 @@ function buildTwitchEmbed(parsed) {
         return `https://player.twitch.tv/?video=v${parsed.id}&parent=${parent}&autoplay=true`;
     }
     return null;
+}
+
+// ==========================================
+// ПРОКСИ-СЕЛЕКТОР (выбор сервера YouTube)
+// ==========================================
+function renderProxySelector() {
+    const container = document.getElementById('proxySection');
+    if (!container) return;
+
+    const proxy = YT_PROXIES[currentProxyIndex];
+    const isOriginal = proxy.type === 'youtube';
+
+    container.innerHTML = `
+        <div class="proxy-selector">
+            <div class="proxy-selector__header" onclick="toggleProxyList()">
+                <div class="proxy-selector__info">
+                    <div class="proxy-selector__label">🔓 YouTube сервер</div>
+                    <div class="proxy-selector__current">
+                        <span class="proxy-selector__dot ${isOriginal ? 'proxy-selector__dot--warn' : 'proxy-selector__dot--ok'}"></span>
+                        <span class="proxy-selector__name">${proxy.name}</span>
+                    </div>
+                </div>
+                <div class="proxy-selector__arrow" id="proxyArrow">▾</div>
+            </div>
+            ${!isOriginal ? `
+                <div class="proxy-selector__status proxy-selector__status--ok">
+                    ✅ Прокси-сервер — YouTube работает без ограничений
+                </div>
+            ` : `
+                <div class="proxy-selector__status proxy-selector__status--warn">
+                    ⚠️ Может не работать из-за замедления YouTube в РФ
+                </div>
+            `}
+            <div class="proxy-selector__list" id="proxyList" style="display: none;">
+                ${YT_PROXIES.map((p, i) => `
+                    <div class="proxy-selector__item ${i === currentProxyIndex ? 'proxy-selector__item--active' : ''}" 
+                         onclick="selectProxy(${i})">
+                        <span class="proxy-selector__item-dot ${p.type === 'youtube' ? 'proxy-selector__dot--warn' : 'proxy-selector__dot--ok'}"></span>
+                        <span class="proxy-selector__item-name">${p.name}</span>
+                        <span class="proxy-selector__item-type">${p.type === 'piped' ? '🚀 Прокси' : p.type === 'invidious' ? '🛡 Прокси' : '⚠️ Прямой'}</span>
+                        ${i === currentProxyIndex ? '<span class="proxy-selector__item-check">✓</span>' : ''}
+                    </div>
+                `).join('')}
+                <div class="proxy-selector__hint">
+                    💡 Если видео не грузится — попробуй другой сервер
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function toggleProxyList() {
+    const list = document.getElementById('proxyList');
+    const arrow = document.getElementById('proxyArrow');
+    if (!list) return;
+
+    const isVisible = list.style.display !== 'none';
+    list.style.display = isVisible ? 'none' : 'block';
+    if (arrow) arrow.textContent = isVisible ? '▾' : '▴';
+}
+
+function selectProxy(index) {
+    if (index < 0 || index >= YT_PROXIES.length) return;
+    currentProxyIndex = index;
+    localStorage.setItem('yt_proxy_index', String(index));
+    renderProxySelector();
+
+    const proxy = YT_PROXIES[index];
+    showToast('🔓', `Сервер: ${proxy.name}`);
+
+    // Если уже играет YouTube — перезапустить с новым прокси
+    if (isPlaying && currentPlatform === 'youtube') {
+        playVideo();
+    }
+
+    try {
+        window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+    } catch (e) { }
+}
+
+// Автоматическая проверка прокси — пингуем текущий
+async function checkCurrentProxy() {
+    const proxy = YT_PROXIES[currentProxyIndex];
+    if (proxy.type === 'youtube') return; // оригинал не проверяем
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
+        const resp = await fetch(proxy.embed.replace('/embed', ''), {
+            method: 'HEAD',
+            mode: 'no-cors',
+            signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        console.log(`[Proxy] ${proxy.name} — доступен`);
+    } catch (e) {
+        console.warn(`[Proxy] ${proxy.name} — недоступен, пробуем следующий`);
+        // Попробовать следующий прокси
+        const nextIndex = (currentProxyIndex + 1) % YT_PROXIES.length;
+        if (nextIndex !== currentProxyIndex) {
+            selectProxy(nextIndex);
+            showToast('🔄', `Сервер ${proxy.name} недоступен, переключаю...`);
+        }
+    }
 }
 
 // ==========================================
@@ -346,22 +503,41 @@ function playVideo() {
     iframe.allowFullscreen = true;
     iframe.setAttribute('frameborder', '0');
 
+    // Показать название прокси для YouTube
+    let displayText = url;
+    if (currentPlatform === 'youtube') {
+        const proxy = YT_PROXIES[currentProxyIndex];
+        if (proxy.type !== 'youtube') {
+            displayText = `${url} (через ${proxy.name})`;
+        }
+    }
+
     iframe.onload = () => {
         setTimeout(() => {
             loading.classList.add('player-loading--hidden');
         }, 500);
     };
 
-    // Auto-hide loading after timeout
-    setTimeout(() => {
+    // Если iframe не загрузился за 8 сек — предложить сменить прокси
+    const loadTimeout = setTimeout(() => {
         loading.classList.add('player-loading--hidden');
-    }, 4000);
+        if (currentPlatform === 'youtube' && YT_PROXIES[currentProxyIndex].type !== 'youtube') {
+            showToast('💡', 'Долго грузится? Попробуй другой сервер ↓', 5000);
+        }
+    }, 8000);
+
+    iframe.onload = () => {
+        clearTimeout(loadTimeout);
+        setTimeout(() => {
+            loading.classList.add('player-loading--hidden');
+        }, 500);
+    };
 
     aspect.appendChild(iframe);
 
     // Now playing bar
     nowPlaying.style.display = 'flex';
-    nowValue.textContent = url;
+    nowValue.textContent = displayText;
     isPlaying = true;
 
     // Auto-scroll to player
@@ -445,7 +621,6 @@ function renderQuickChannels() {
 // ИСТОРИЯ
 // ==========================================
 function addToHistory(url, platform) {
-    // Remove duplicate
     history = history.filter(h => h.url !== url);
 
     history.unshift({
@@ -454,7 +629,6 @@ function addToHistory(url, platform) {
         time: new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }),
     });
 
-    // Keep max 15
     if (history.length > 15) history = history.slice(0, 15);
     localStorage.setItem('player_history', JSON.stringify(history));
     renderHistory();
@@ -528,3 +702,5 @@ window.playFromHistory = playFromHistory;
 window.clearHistory = clearHistory;
 window.goBack = goBack;
 window.openGame = openGame;
+window.toggleProxyList = toggleProxyList;
+window.selectProxy = selectProxy;
