@@ -2,6 +2,103 @@
    STREAM HUB — Стрим + Мультиплатформенный чат
    ========================================== */
 
+/* Platform Tabs */
+.platform-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 4px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.platform-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #5A6577;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+}
+
+.platform-tab:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #8b95a5;
+}
+
+.platform-tab--active[data-platform="twitch"] {
+    background: rgba(145, 70, 255, 0.15);
+    border-color: rgba(145, 70, 255, 0.3);
+    color: #9146FF;
+}
+
+.platform-tab--active[data-platform="vk"] {
+    background: rgba(0, 119, 255, 0.15);
+    border-color: rgba(0, 119, 255, 0.3);
+    color: #0077FF;
+}
+
+.platform-tab--active[data-platform="youtube"] {
+    background: rgba(255, 0, 0, 0.12);
+    border-color: rgba(255, 0, 0, 0.25);
+    color: #FF0000;
+}
+
+.platform-tab__icon {
+    font-size: 0.9rem;
+}
+
+.platform-tab__name {
+    text-transform: uppercase;
+}
+
+/* Platform Chat Embed */
+.platform-chat-embed {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 4px;
+}
+
+.platform-chat-embed__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    font-size: 0.65rem;
+    color: #8b95a5;
+    cursor: pointer;
+}
+
+.platform-chat-embed__toggle {
+    background: none;
+    border: none;
+    color: #5A6577;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.platform-chat-embed__frame {
+    height: 300px;
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+}
+
+.platform-chat-embed__frame iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
 /* Stream Header */
 .stream-header {
     display: flex;

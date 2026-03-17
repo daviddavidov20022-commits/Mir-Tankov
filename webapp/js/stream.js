@@ -37,6 +37,7 @@ try {
 let CHANNELS = savedChannels || [...DEFAULT_CHANNELS];
 
 let currentChannel = DEFAULT_CHANNEL;
+let currentPlatform = 'twitch';
 let twitchWs = null;
 let chatMessages = [];
 let isConnected = false;
@@ -44,6 +45,7 @@ let reconnectAttempts = 0;
 let reconnectTimeout = null;
 let isAdmin = false;
 let myTelegramId = 0;
+let platformChatVisible = false;
 
 const DEFAULT_COLORS = [
     '#FF4500', '#00FF7F', '#1E90FF', '#9ACD32', '#FF69B4',
@@ -63,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     identifyMe();
     createParticles();
     loadChannelsFromServer();
-    initTwitchPlayer();
+    initPlayer();
     connectTwitchChat();
     initChatInput();
     checkAdmin();
@@ -146,13 +148,77 @@ function createParticles() {
 }
 
 // ==========================================
-// TWITCH PLAYER
+// МУЛЬТИПЛАТФОРМЕННЫЙ ПЛЕЕР
 // ==========================================
-function initTwitchPlayer() {
-    const iframe = document.getElementById('twitchPlayer');
+function initPlayer() {
+    const iframe = document.getElementById('streamPlayerIframe');
     if (!iframe) return;
     const parent = window.location.hostname || 'localhost';
-    iframe.src = `https://player.twitch.tv/?channel=${currentChannel}&parent=${parent}&muted=false`;
+
+    if (currentPlatform === 'twitch') {
+        iframe.src = `https://player.twitch.tv/?channel=${currentChannel}&parent=${parent}&muted=false`;
+    } else if (currentPlatform === 'vk') {
+        // VK Video embed: поддерживает прямые трансляции
+        iframe.src = `https://vk.com/video_ext.php?oid=${currentChannel}&hd=2&autoplay=1`;
+    } else if (currentPlatform === 'youtube') {
+        iframe.src = `https://www.youtube.com/embed/live_stream?channel=${currentChannel}&autoplay=1`;
+    }
+    
+    updatePlatformChat();
+}
+
+function switchPlatform(platform) {
+    currentPlatform = platform;
+    
+    // Обновить табы
+    document.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.classList.toggle('platform-tab--active', tab.dataset.platform === platform);
+    });
+    
+    // Обновить placeholder
+    const input = document.getElementById('channelInput');
+    if (input) {
+        if (platform === 'twitch') input.placeholder = 'Имя канала или twitch.tv/...';
+        else if (platform === 'vk') input.placeholder = 'Ссылка VK стрима (vk.com/video...)';
+        else if (platform === 'youtube') input.placeholder = 'Ссылка YouTube или ID канала';
+    }
+    
+    // Twitch IRC чат только для Twitch
+    if (platform === 'twitch') {
+        connectTwitchChat();
+    } else {
+        disconnectTwitchChat();
+    }
+    
+    addSystemMessage(`Платформа: ${platform.toUpperCase()}`);
+    showToast(platform === 'twitch' ? '💜' : platform === 'vk' ? '🔵' : '🔴', `${platform.toUpperCase()}`);
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch(e) {}
+}
+
+function updatePlatformChat() {
+    const embed = document.getElementById('platformChatEmbed');
+    const iframe = document.getElementById('platformChatIframe');
+    const title = document.getElementById('platformChatTitle');
+    const parent = window.location.hostname || 'localhost';
+    
+    if (currentPlatform === 'twitch') {
+        if (title) title.textContent = '💜 Чат Twitch (войди чтобы писать)';
+        if (iframe) iframe.src = `https://www.twitch.tv/embed/${currentChannel}/chat?parent=${parent}&darkpopout`;
+    } else if (currentPlatform === 'vk') {
+        if (title) title.textContent = '🔵 Чат VK (войди чтобы писать)';
+        if (iframe) iframe.src = '';
+    } else if (currentPlatform === 'youtube') {
+        if (title) title.textContent = '🔴 Чат YouTube (войди чтобы писать)';
+        if (iframe) iframe.src = '';
+    }
+}
+
+function togglePlatformChat() {
+    const embed = document.getElementById('platformChatEmbed');
+    if (!embed) return;
+    platformChatVisible = !platformChatVisible;
+    embed.style.display = platformChatVisible ? 'block' : 'none';
+    if (platformChatVisible) updatePlatformChat();
 }
 
 /**
@@ -178,9 +244,11 @@ function changeChannel(channelName) {
 
     currentChannel = newChannel;
     
-    initTwitchPlayer();
-    disconnectTwitchChat();
-    connectTwitchChat();
+    initPlayer();
+    if (currentPlatform === 'twitch') {
+        disconnectTwitchChat();
+        connectTwitchChat();
+    }
     
     document.getElementById('streamTitle').textContent = newChannel.toUpperCase();
     document.getElementById('channelSettings').style.display = 'none';
@@ -309,6 +377,16 @@ function toggleAdminPanel() {
 // ==========================================
 // TWITCH CHAT (WebSocket IRC)
 // ==========================================
+function disconnectTwitchChat() {
+    if (reconnectTimeout) { clearTimeout(reconnectTimeout); reconnectTimeout = null; }
+    if (twitchWs) {
+        try { twitchWs.close(); } catch(e) {}
+        twitchWs = null;
+    }
+    isConnected = false;
+    updateConnectionStatus('offline');
+}
+
 function connectTwitchChat() {
     if (twitchWs && twitchWs.readyState === WebSocket.OPEN) return;
 
@@ -676,7 +754,8 @@ function openGame(url) {
 window.changeChannel = changeChannel;
 window.toggleChannelSettings = toggleChannelSettings;
 window.sendChatMessage = sendChatMessage;
-window.toggleChatPlatform = toggleChatPlatform;
+window.togglePlatformChat = togglePlatformChat;
+window.switchPlatform = switchPlatform;
 window.goBack = goBack;
 window.openGame = openGame;
 window.addChannel = addChannel;

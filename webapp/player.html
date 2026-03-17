@@ -35,6 +35,22 @@
         <div class="content-area">
             <button class="btn-back" onclick="goBack()">← Назад</button>
 
+            <!-- Platform Tabs -->
+            <div class="platform-tabs" id="platformTabs">
+                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="switchPlatform('twitch')">
+                    <span class="platform-tab__icon">💜</span>
+                    <span class="platform-tab__name">Twitch</span>
+                </button>
+                <button class="platform-tab" data-platform="vk" onclick="switchPlatform('vk')">
+                    <span class="platform-tab__icon">🔵</span>
+                    <span class="platform-tab__name">VK</span>
+                </button>
+                <button class="platform-tab" data-platform="youtube" onclick="switchPlatform('youtube')">
+                    <span class="platform-tab__icon">🔴</span>
+                    <span class="platform-tab__name">YouTube</span>
+                </button>
+            </div>
+
             <!-- Stream Info -->
             <div class="stream-header">
                 <div class="stream-header__live" id="streamLiveBadge">
@@ -53,7 +69,7 @@
                 <div class="channel-settings__title">Сменить канал</div>
                 <div class="channel-settings__input-group">
                     <input type="text" id="channelInput" class="channel-settings__input" 
-                           placeholder="Имя канала или ссылка twitch.tv/..." value="iserveri" autocomplete="off"
+                           placeholder="Имя канала или ссылка..." value="iserveri" autocomplete="off"
                            onkeydown="if(event.key==='Enter')changeChannel()">
                     <button class="channel-settings__btn" onclick="changeChannel()">Подключить</button>
                 </div>
@@ -62,10 +78,10 @@
                 </div>
             </div>
 
-            <!-- Twitch Player -->
+            <!-- Universal Player -->
             <div class="stream-player" id="streamPlayer">
                 <div class="stream-player__aspect">
-                    <iframe id="twitchPlayer" 
+                    <iframe id="streamPlayerIframe" 
                             allowfullscreen
                             frameborder="0">
                     </iframe>
@@ -89,9 +105,20 @@
                     </div>
                 </div>
 
+                <!-- Platform Chat Embed (native login) -->
+                <div class="platform-chat-embed" id="platformChatEmbed" style="display: none;">
+                    <div class="platform-chat-embed__header">
+                        <span id="platformChatTitle">💜 Чат Twitch (войди чтобы писать)</span>
+                        <button class="platform-chat-embed__toggle" onclick="togglePlatformChat()">▾</button>
+                    </div>
+                    <div class="platform-chat-embed__frame" id="platformChatFrame">
+                        <iframe id="platformChatIframe" frameborder="0"></iframe>
+                    </div>
+                </div>
+
                 <!-- Chat Input -->
                 <div class="stream-chat__input-area">
-                    <div class="stream-chat__platform-select" id="chatPlatformSelect" onclick="toggleChatPlatform()">
+                    <div class="stream-chat__platform-select" id="chatPlatformSelect" onclick="togglePlatformChat()">
                         <span id="chatPlatformIcon">📱</span>
                     </div>
                     <input type="text" class="stream-chat__input" id="chatInput" 
