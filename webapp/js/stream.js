@@ -1057,9 +1057,20 @@ async function saveMusicSettings() {
 }
 
 async function saveDonateSettings() {
+    const volSlider = document.getElementById('adminSoundVolume');
+    const spdSlider = document.getElementById('adminTtsSpeed');
     const settings = {
         min_amount: parseInt(document.getElementById('adminDonateMin')?.value) || 10,
-        alert_duration: parseInt(document.getElementById('adminAlertDuration')?.value) || 5,
+        alert_duration: parseInt(document.getElementById('adminAlertDuration')?.value) || 7,
+        sound_enabled: document.getElementById('adminSoundEnabled')?.checked ?? true,
+        sound_volume: (parseInt(volSlider?.value) || 70) / 100,
+        animation_style: document.getElementById('adminAnimStyle')?.value || 'all',
+        tts_enabled: document.getElementById('adminTtsEnabled')?.checked ?? true,
+        tts_speed: (parseInt(spdSlider?.value) || 100) / 100,
+        tts_min_amount: parseInt(document.getElementById('adminTtsMinAmount')?.value) || 30,
+        media_small: document.getElementById('adminMediaSmall')?.value || '',
+        media_medium: document.getElementById('adminMediaMedium')?.value || '',
+        media_large: document.getElementById('adminMediaLarge')?.value || '',
     };
     try {
         await fetch(`${BOT_API_URL}/api/stream/config/save`, {
@@ -1087,7 +1098,32 @@ function loadAdminSettings() {
         const ds = JSON.parse(localStorage.getItem('stream_donate_settings') || '{}');
         if (ds.min_amount) document.getElementById('adminDonateMin').value = ds.min_amount;
         if (ds.alert_duration) document.getElementById('adminAlertDuration').value = ds.alert_duration;
+        if (ds.sound_enabled !== undefined) document.getElementById('adminSoundEnabled').checked = ds.sound_enabled;
+        if (ds.sound_volume !== undefined) {
+            const v = Math.round(ds.sound_volume * 100);
+            document.getElementById('adminSoundVolume').value = v;
+            document.getElementById('adminSoundVolumeVal').textContent = v + '%';
+        }
+        if (ds.animation_style) document.getElementById('adminAnimStyle').value = ds.animation_style;
+        if (ds.tts_enabled !== undefined) document.getElementById('adminTtsEnabled').checked = ds.tts_enabled;
+        if (ds.tts_speed !== undefined) {
+            const s = Math.round(ds.tts_speed * 100);
+            document.getElementById('adminTtsSpeed').value = s;
+            document.getElementById('adminTtsSpeedVal').textContent = ds.tts_speed.toFixed(1) + 'x';
+        }
+        if (ds.tts_min_amount !== undefined) document.getElementById('adminTtsMinAmount').value = ds.tts_min_amount;
+        if (ds.media_small) document.getElementById('adminMediaSmall').value = ds.media_small;
+        if (ds.media_medium) document.getElementById('adminMediaMedium').value = ds.media_medium;
+        if (ds.media_large) document.getElementById('adminMediaLarge').value = ds.media_large;
     } catch(e) {}
+
+    // Слайдеры — живое обновление
+    document.getElementById('adminSoundVolume')?.addEventListener('input', (e) => {
+        document.getElementById('adminSoundVolumeVal').textContent = e.target.value + '%';
+    });
+    document.getElementById('adminTtsSpeed')?.addEventListener('input', (e) => {
+        document.getElementById('adminTtsSpeedVal').textContent = (e.target.value / 100).toFixed(1) + 'x';
+    });
 }
 
 async function refreshMusicQueue() {

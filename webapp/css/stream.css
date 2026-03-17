@@ -1396,3 +1396,22 @@
 .sp-test-btn--donate:hover { background: rgba(255,193,7,0.12); }
 .sp-test-btn--music { background: rgba(224,64,251,0.05); border-color: rgba(224,64,251,0.2); color: #E040FB; }
 .sp-test-btn--music:hover { background: rgba(224,64,251,0.12); }
+
+/* Range slider */
+.sp-range {
+    flex: 1;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    outline: none;
+}
+.sp-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #C8AA6E;
+    cursor: pointer;
+}
