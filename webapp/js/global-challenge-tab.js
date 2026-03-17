@@ -43,6 +43,18 @@ async function gcLoadChallenge() {
         }
 
         // Show admin panel if admin
+        // Если isAdmin ещё не определён — пробуем проверить напрямую
+        if (!isAdmin && myTelegramId) {
+            try {
+                const meResp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
+                const meData = await meResp.json();
+                if (meData.is_admin) {
+                    isAdmin = true;
+                    const adminTab = document.getElementById('adminTab');
+                    if (adminTab) adminTab.style.display = '';
+                }
+            } catch(e) {}
+        }
         if (isAdmin) {
             document.getElementById('gcAdminPanel').style.display = '';
         }
