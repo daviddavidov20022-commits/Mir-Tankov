@@ -5667,6 +5667,11 @@ def create_api_app():
     app.router.add_post("/api/global-challenge/finish", api_global_challenge_finish)
     app.router.add_post("/api/global-challenge/delete", api_global_challenge_delete)
 
+    # Раздача OBS виджетов через HTTP (file:// не работает с YouTube API)
+    obs_dir = os.path.join(os.path.dirname(__file__), 'webapp', 'obs')
+    if os.path.isdir(obs_dir):
+        app.router.add_static('/obs/', obs_dir)
+
     return app
 
 

@@ -1014,3 +1014,191 @@
 .modal-btn--secondary:hover {
     background: rgba(255, 255, 255, 0.08);
 }
+
+/* Admin Panel — Music & Donate */
+.admin-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.admin-row__label {
+    flex: 1;
+    font-size: 0.7rem;
+    color: #8b95a5;
+}
+
+.admin-row__unit {
+    font-size: 0.65rem;
+    color: #5A6577;
+}
+
+.admin-input--xs {
+    width: 70px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.3);
+    color: #e8e6e3;
+    font-size: 0.7rem;
+    text-align: center;
+}
+
+.admin-subsection {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.admin-subsection__title {
+    font-size: 0.65rem;
+    color: #C8AA6E;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.admin-refresh-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.7rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.admin-refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-queue-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.admin-queue-empty {
+    text-align: center;
+    font-size: 0.65rem;
+    color: #5A6577;
+    padding: 10px;
+}
+
+.admin-queue-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    margin-bottom: 4px;
+    font-size: 0.65rem;
+}
+
+.admin-queue-item__num {
+    color: #C8AA6E;
+    font-weight: 700;
+    min-width: 16px;
+}
+
+.admin-queue-item__info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.admin-queue-item__title {
+    color: #e8e6e3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-queue-item__user {
+    font-size: 0.6rem;
+    color: #5A6577;
+}
+
+.admin-queue-item__btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 2px;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.admin-queue-item__btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-test-section {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.admin-test-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px dashed;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.admin-test-btn--donate {
+    background: rgba(255, 193, 7, 0.05);
+    border-color: rgba(255, 193, 7, 0.2);
+    color: #FFC107;
+}
+
+.admin-test-btn--donate:hover {
+    background: rgba(255, 193, 7, 0.12);
+}
+
+.admin-test-btn--music {
+    background: rgba(224, 64, 251, 0.05);
+    border-color: rgba(224, 64, 251, 0.2);
+    color: #E040FB;
+}
+
+.admin-test-btn--music:hover {
+    background: rgba(224, 64, 251, 0.12);
+}
+
+/* Donate history item */
+.admin-donate-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(255, 193, 7, 0.04);
+    margin-bottom: 4px;
+    font-size: 0.65rem;
+}
+
+.admin-donate-item__amount {
+    color: #FFC107;
+    font-weight: 700;
+    min-width: 40px;
+}
+
+.admin-donate-item__msg {
+    flex: 1;
+    color: #e8e6e3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-donate-item__user {
+    color: #5A6577;
+    font-size: 0.6rem;
+}

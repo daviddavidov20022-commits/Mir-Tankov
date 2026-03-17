@@ -1025,6 +1025,184 @@ async function sendMusicRequest() {
     }
 }
 
+// ==========================================
+// АДМИН ПАНЕЛЬ — МУЗЫКА И ДОНАТЫ
+// ==========================================
+async function saveMusicSettings() {
+    const settings = {
+        cost: parseInt(document.getElementById('adminMusicCost')?.value) || 50,
+        min_views: parseInt(document.getElementById('adminMusicMinViews')?.value) || 1000,
+        max_duration: parseInt(document.getElementById('adminMusicMaxDuration')?.value) || 300,
+        paused: document.getElementById('adminMusicPaused')?.checked || false,
+    };
+    try {
+        await fetch(`${BOT_API_URL}/api/stream/config/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegram_id: myTelegramId, config: { music: settings } }),
+        });
+        localStorage.setItem('stream_music_settings', JSON.stringify(settings));
+        showToast('✅', 'Настройки музыки сохранены');
+    } catch(e) {
+        localStorage.setItem('stream_music_settings', JSON.stringify(settings));
+        showToast('💾', 'Сохранено локально');
+    }
+}
+
+async function saveDonateSettings() {
+    const settings = {
+        min_amount: parseInt(document.getElementById('adminDonateMin')?.value) || 10,
+        alert_duration: parseInt(document.getElementById('adminAlertDuration')?.value) || 5,
+    };
+    try {
+        await fetch(`${BOT_API_URL}/api/stream/config/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegram_id: myTelegramId, config: { donate: settings } }),
+        });
+        localStorage.setItem('stream_donate_settings', JSON.stringify(settings));
+        showToast('✅', 'Настройки донатов сохранены');
+    } catch(e) {
+        localStorage.setItem('stream_donate_settings', JSON.stringify(settings));
+        showToast('💾', 'Сохранено локально');
+    }
+}
+
+function loadAdminSettings() {
+    try {
+        const ms = JSON.parse(localStorage.getItem('stream_music_settings') || '{}');
+        if (ms.cost) document.getElementById('adminMusicCost').value = ms.cost;
+        if (ms.min_views !== undefined) document.getElementById('adminMusicMinViews').value = ms.min_views;
+        if (ms.max_duration) document.getElementById('adminMusicMaxDuration').value = ms.max_duration;
+        if (ms.paused) document.getElementById('adminMusicPaused').checked = ms.paused;
+    } catch(e) {}
+    try {
+        const ds = JSON.parse(localStorage.getItem('stream_donate_settings') || '{}');
+        if (ds.min_amount) document.getElementById('adminDonateMin').value = ds.min_amount;
+        if (ds.alert_duration) document.getElementById('adminAlertDuration').value = ds.alert_duration;
+    } catch(e) {}
+}
+
+async function refreshMusicQueue() {
+    const container = document.getElementById('musicQueueList');
+    if (!container) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/stream/music/queue`);
+        const data = await resp.json();
+        const queue = data.queue || [];
+        
+        if (queue.length === 0) {
+            container.innerHTML = '<div class="admin-queue-empty">Очередь пуста 🎵</div>';
+            return;
+        }
+        
+        container.innerHTML = queue.map((t, i) => `
+            <div class="admin-queue-item">
+                <span class="admin-queue-item__num">${i + 1}</span>
+                <div class="admin-queue-item__info">
+                    <div class="admin-queue-item__title">${t.url || 'Неизвестный трек'}</div>
+                    <div class="admin-queue-item__user">👤 ${t.username} • ${t.played ? '✅ Сыгран' : '⏳ В очереди'}</div>
+                </div>
+                <button class="admin-queue-item__btn" onclick="skipTrack('${t.id}')" title="Пропустить">⏭</button>
+                <button class="admin-queue-item__btn" onclick="removeTrack('${t.id}')" title="Удалить">🗑</button>
+            </div>
+        `).join('');
+    } catch(e) {
+        container.innerHTML = '<div class="admin-queue-empty">❌ Ошибка загрузки</div>';
+    }
+}
+
+async function refreshDonateHistory() {
+    const container = document.getElementById('donateHistoryList');
+    if (!container) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/stream/donate/history`);
+        const data = await resp.json();
+        const events = data.events || [];
+        
+        if (events.length === 0) {
+            container.innerHTML = '<div class="admin-queue-empty">Донатов пока нет 🧀</div>';
+            return;
+        }
+        
+        container.innerHTML = events.slice(0, 15).map(e => `
+            <div class="admin-donate-item">
+                <span class="admin-donate-item__amount">${e.amount} 🧀</span>
+                <span class="admin-donate-item__msg">${e.message || '—'}</span>
+                <span class="admin-donate-item__user">👤 ${e.username}</span>
+            </div>
+        `).join('');
+    } catch(e) {
+        container.innerHTML = '<div class="admin-queue-empty">❌ Ошибка загрузки</div>';
+    }
+}
+
+async function skipTrack(trackId) {
+    try {
+        await fetch(`${BOT_API_URL}/api/stream/music/skip`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegram_id: myTelegramId, track_id: trackId }),
+        });
+        showToast('⏭', 'Трек пропущен');
+        refreshMusicQueue();
+    } catch(e) { showToast('❌', 'Ошибка'); }
+}
+
+async function removeTrack(trackId) {
+    try {
+        await fetch(`${BOT_API_URL}/api/stream/music/skip`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegram_id: myTelegramId, track_id: trackId, remove: true }),
+        });
+        showToast('🗑', 'Трек удалён');
+        refreshMusicQueue();
+    } catch(e) { showToast('❌', 'Ошибка'); }
+}
+
+async function sendTestDonate() {
+    try {
+        await fetch(`${BOT_API_URL}/api/stream/donate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                telegram_id: myTelegramId,
+                username: myUsername || 'Тест',
+                amount: 100,
+                message: '🧪 Тестовый алерт доната!',
+            }),
+        });
+        showToast('🧀', 'Тестовый донат отправлен!');
+    } catch(e) { showToast('❌', 'Ошибка сети'); }
+}
+
+async function sendTestMusic() {
+    try {
+        await fetch(`${BOT_API_URL}/api/stream/music/request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                telegram_id: myTelegramId,
+                username: myUsername || 'Тест',
+                url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                amount: 50,
+            }),
+        });
+        showToast('🎵', 'Тестовый трек добавлен!');
+        refreshMusicQueue();
+    } catch(e) { showToast('❌', 'Ошибка сети'); }
+}
+
+// Загрузка при открытии админки
+setTimeout(() => {
+    if (isAdmin) {
+        loadAdminSettings();
+        refreshMusicQueue();
+        refreshDonateHistory();
+    }
+}, 2000);
+
 // Expose globals
 window.changeChannel = changeChannel;
 window.toggleChannelSettings = toggleChannelSettings;
@@ -1046,3 +1224,11 @@ window.sendDonate = sendDonate;
 window.openMusicModal = openMusicModal;
 window.closeMusicModal = closeMusicModal;
 window.sendMusicRequest = sendMusicRequest;
+window.saveMusicSettings = saveMusicSettings;
+window.saveDonateSettings = saveDonateSettings;
+window.refreshMusicQueue = refreshMusicQueue;
+window.refreshDonateHistory = refreshDonateHistory;
+window.skipTrack = skipTrack;
+window.removeTrack = removeTrack;
+window.sendTestDonate = sendTestDonate;
+window.sendTestMusic = sendTestMusic;

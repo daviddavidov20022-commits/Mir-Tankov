@@ -14,7 +14,6 @@
             font-family: 'Roboto', sans-serif;
         }
 
-        /* Виджет названия трека */
         #music-widget {
             position: absolute;
             bottom: 20px;
@@ -38,40 +37,11 @@
             transform: translateX(0);
         }
 
-        .icon {
-            font-size: 24px;
-            margin-right: 15px;
-            animation: pulse 2s infinite;
-        }
-
-        .info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: #E040FB;
-            letter-spacing: 1px;
-            margin-bottom: 2px;
-            font-weight: 700;
-        }
-
-        .track-name {
-            font-size: 0.95rem;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 350px;
-        }
-
-        .requested-by {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-top: 2px;
-        }
+        .icon { font-size: 24px; margin-right: 15px; animation: pulse 2s infinite; }
+        .info { display: flex; flex-direction: column; }
+        .label { font-size: 10px; text-transform: uppercase; color: #E040FB; letter-spacing: 1px; margin-bottom: 2px; font-weight: 700; }
+        .track-name { font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 350px; }
+        .requested-by { font-size: 11px; color: rgba(255, 255, 255, 0.6); margin-top: 2px; }
 
         @keyframes pulse {
             0% { opacity: 1; transform: scale(1); }
@@ -79,13 +49,11 @@
             100% { opacity: 1; transform: scale(1); }
         }
 
-        /* Скрытый плеер */
-        #player-container {
+        #yt-player-wrap {
             position: absolute;
-            top: -1000px;
-            left: -1000px;
-            width: 1px;
-            height: 1px;
+            top: -9999px; left: -9999px;
+            width: 1px; height: 1px;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -100,93 +68,98 @@
         </div>
     </div>
 
-    <div id="player-container">
+    <div id="yt-player-wrap">
         <div id="yt-player"></div>
     </div>
 
-    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         const API_BASE = new URLSearchParams(window.location.search).get('api') || 'https://mir-tankov-api.onrender.com';
         let player;
         let isPlayerReady = false;
-        let currentRequestId = null;
+        let pollTimer = null;
+
+        // Загружаем YouTube IFrame API
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('yt-player', {
                 height: '1',
                 width: '1',
-                videoId: '',
-                playerVars: {
-                    'autoplay': 1,
-                    'controls': 0,
-                    'disablekb': 1,
-                    'modestbranding': 1
-                },
+                playerVars: { autoplay: 1, controls: 0 },
                 events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange,
-                    'onError': onPlayerError
+                    onReady: function() {
+                        isPlayerReady = true;
+                        console.log("YT Player ready!");
+                        checkQueue();
+                    },
+                    onStateChange: function(e) {
+                        if (e.data === YT.PlayerState.ENDED) {
+                            hideWidget();
+                            setTimeout(checkQueue, 2000);
+                        }
+                    },
+                    onError: function(e) {
+                        console.error("YT error:", e.data);
+                        hideWidget();
+                        setTimeout(checkQueue, 3000);
+                    }
                 }
             });
         }
 
-        function onPlayerReady(event) {
-            isPlayerReady = true;
-            console.log("Player ready. Starting queue check...");
-            checkQueue();
-        }
-
-        function onPlayerStateChange(event) {
-            // Если видео закончилось (состояние 0)
-            if (event.data === YT.PlayerState.ENDED) {
-                hideWidget();
-                setTimeout(checkQueue, 2000); // Проверяем следующий трек через 2 сек
-            }
-        }
-
-        function onPlayerError(e) {
-            console.error("Player error:", e.data);
-            hideWidget();
-            setTimeout(checkQueue, 3000);
-        }
-
         async function checkQueue() {
-            if (!isPlayerReady) return;
-            
+            console.log("Checking queue...");
             try {
-                const response = await fetch(`${API_BASE}/api/stream/music/next`);
-                const data = await response.json();
+                const resp = await fetch(`${API_BASE}/api/stream/music/next`);
+                const json = await resp.json();
                 
-                if (data.url) {
-                    playTrack(data);
+                // API может вернуть {track: {...}} или {url: ...}
+                const track = json.track || json;
+                console.log("Got track:", track);
+                
+                if (track && track.url) {
+                    playTrack(track);
                 } else {
-                    // Очередь пуста, проверяем через 10 секунд
-                    setTimeout(checkQueue, 10000);
+                    console.log("Queue empty, checking in 5s...");
+                    pollTimer = setTimeout(checkQueue, 5000);
                 }
             } catch (e) {
-                console.error("Failed to fetch queue:", e);
-                setTimeout(checkQueue, 10000);
+                console.error("Queue fetch error:", e);
+                pollTimer = setTimeout(checkQueue, 5000);
             }
         }
 
         function playTrack(track) {
             const videoId = extractVideoId(track.url);
+            console.log("Playing video:", videoId, "from", track.url);
+            
             if (!videoId) {
-                console.error("Invalid YouTube URL:", track.url);
-                checkQueue();
+                console.error("Bad URL:", track.url);
+                setTimeout(checkQueue, 2000);
                 return;
             }
 
-            currentRequestId = track.id;
-            
-            // Настройка виджета
-            document.getElementById('track-name').textContent = track.url; // В идеале нужен заголовок, но пока URL
-            document.getElementById('requested-by').textContent = `Заказал: ${track.username}`;
+            // Показать плашку
+            document.getElementById('track-name').textContent = track.title || track.url;
+            document.getElementById('requested-by').textContent = `Заказал: ${track.username || 'Аноним'}`;
             showWidget();
 
-            // Запуск видео
-            player.loadVideoById(videoId);
-            player.playVideo();
+            // Играть
+            if (isPlayerReady && player && player.loadVideoById) {
+                try {
+                    player.loadVideoById(videoId);
+                } catch(e) {
+                    console.error("Play error:", e);
+                }
+            }
+
+            // Авто-скрыть через 3 минуты (на случай если YT не отработает)
+            setTimeout(() => {
+                hideWidget();
+                setTimeout(checkQueue, 2000);
+            }, 180000);
         }
 
         function showWidget() {
@@ -198,10 +171,18 @@
         }
 
         function extractVideoId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
+            const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/v\/)([a-zA-Z0-9_-]{11})/);
+            return m ? m[1] : null;
         }
+
+        // Fallback: если YT API не загрузился за 5 сек — всё равно запускаем polling
+        setTimeout(() => {
+            if (!isPlayerReady) {
+                console.warn("YT API timeout, starting polling anyway");
+                isPlayerReady = true; // Плашка будет показываться, просто без звука
+                checkQueue();
+            }
+        }, 5000);
     </script>
 </body>
 </html>
