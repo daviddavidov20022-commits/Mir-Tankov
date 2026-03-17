@@ -108,30 +108,37 @@ function identifyMe() {
 
 async function checkAdmin() {
     const debugEl = document.getElementById('adminDebug');
+    const HARDCODED_ADMIN_ID = 6507474079;
     
     if (!myTelegramId) {
         if (debugEl) debugEl.textContent = '⚠️ telegram_id не определён';
         return;
     }
     
+    // Fallback: показать шестерёнку по ID, даже если API лежит
+    function showAdminUI() {
+        isAdmin = true;
+        const gearBtn = document.getElementById('adminGearBtn');
+        if (gearBtn) gearBtn.style.display = 'block';
+    }
+    
+    // Быстрый фоллбэк по хардкоду
+    if (myTelegramId === HARDCODED_ADMIN_ID) {
+        showAdminUI();
+        if (debugEl) debugEl.textContent = `✅ Админ (local) tg_id=${myTelegramId}`;
+    }
+    
     try {
         const url = `${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`;
-        if (debugEl) debugEl.textContent = `🔍 Проверка: tg_id=${myTelegramId}, url=${BOT_API_URL}`;
-        
         const resp = await fetch(url);
         const data = await resp.json();
         
         if (data.is_admin) {
-            isAdmin = true;
-            const gearBtn = document.getElementById('adminGearBtn');
-            if (gearBtn) gearBtn.style.display = 'block';
+            showAdminUI();
             if (debugEl) debugEl.textContent = `✅ Админ! tg_id=${myTelegramId}`;
-        } else {
-            if (debugEl) debugEl.textContent = `❌ Не админ. tg_id=${myTelegramId}, resp: ${JSON.stringify(data).substring(0, 80)}`;
         }
     } catch (e) {
-        if (debugEl) debugEl.textContent = `❌ API ошибка: ${e.message} | URL: ${BOT_API_URL}`;
-        setTimeout(() => checkAdmin(), 3000);
+        if (debugEl) debugEl.textContent = `⚠️ API недоступен, локальный режим`;
     }
 }
 
