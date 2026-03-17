@@ -69,6 +69,11 @@ VERIFY_REDIRECT_URL = WEBAPP_URL + "verify.html"
 _admin_env = os.getenv("ADMIN_ID", "")
 ADMIN_ID = int(_admin_env) if _admin_env.strip() else None
 
+# Twitch бот для отправки сообщений в чат
+# Получить токен: https://twitchapps.com/tmi/
+TWITCH_BOT_NICK = os.getenv("TWITCH_BOT_NICK", "")  # ник бота на Twitch (lowercase)
+TWITCH_BOT_TOKEN = os.getenv("TWITCH_BOT_TOKEN", "")  # oauth:xxxx...
+
 # Путь к конфигу призов
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "webapp", "prizes-config.json")
 # ============================================================
@@ -5074,6 +5079,125 @@ async def api_stream_channels_save(request):
 
 
 # ==========================================
+# TWITCH IRC — Отправка в Twitch чат
+# ==========================================
+import aiohttp
+
+class TwitchIRCClient:
+    """Клиент для отправки сообщений в Twitch чат через WebSocket IRC"""
+    
+    def __init__(self, nick, token):
+        self.nick = nick.lower()
+        self.token = token
+        self.ws = None
+        self.connected = False
+        self.current_channel = None
+    
+    async def connect(self):
+        """Подключиться к Twitch IRC"""
+        if not self.nick or not self.token:
+            logger.warning("[TwitchIRC] TWITCH_BOT_NICK / TWITCH_BOT_TOKEN не заданы")
+            return False
+        
+        try:
+            session = aiohttp.ClientSession()
+            self.ws = await session.ws_connect('wss://irc-ws.chat.twitch.tv:443')
+            
+            token = self.token if self.token.startswith('oauth:') else f'oauth:{self.token}'
+            await self.ws.send_str(f'PASS {token}')
+            await self.ws.send_str(f'NICK {self.nick}')
+            
+            self.connected = True
+            logger.info(f"[TwitchIRC] Подключен как {self.nick}")
+            
+            # Запускаем чтение (для PING/PONG)
+            asyncio.create_task(self._read_loop(session))
+            return True
+        except Exception as e:
+            logger.error(f"[TwitchIRC] Ошибка подключения: {e}")
+            self.connected = False
+            return False
+    
+    async def _read_loop(self, session):
+        """Читаем сообщения для PING/PONG"""
+        try:
+            async for msg in self.ws:
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    if msg.data.startswith('PING'):
+                        await self.ws.send_str('PONG :tmi.twitch.tv')
+                elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                    break
+        except Exception:
+            pass
+        finally:
+            self.connected = False
+            await session.close()
+            logger.info("[TwitchIRC] Отключен")
+    
+    async def join_channel(self, channel):
+        """Войти в канал"""
+        if not self.connected:
+            await self.connect()
+        if not self.connected:
+            return False
+        
+        channel = channel.lower().strip('#')
+        await self.ws.send_str(f'JOIN #{channel}')
+        self.current_channel = channel
+        logger.info(f"[TwitchIRC] Вошёл в #{channel}")
+        return True
+    
+    async def send_message(self, channel, text):
+        """Отправить сообщение в канал"""
+        channel = channel.lower().strip('#')
+        
+        if not self.connected:
+            await self.connect()
+        if not self.connected:
+            return False
+        
+        if self.current_channel != channel:
+            await self.join_channel(channel)
+        
+        await self.ws.send_str(f'PRIVMSG #{channel} :{text}')
+        logger.info(f"[TwitchIRC] #{channel}: {text}")
+        return True
+
+
+# Глобальный клиент
+twitch_irc = TwitchIRCClient(TWITCH_BOT_NICK, TWITCH_BOT_TOKEN)
+
+
+async def api_stream_chat_twitch_send(request):
+    """POST /api/stream/chat/twitch-send  {channel, username, text}
+    Отправляет сообщение от пользователя в Twitch чат через бота"""
+    try:
+        data = await request.json()
+        channel = data.get("channel", "").strip()
+        username = data.get("username", "Танкист").strip()
+        text = data.get("text", "").strip()
+
+        if not channel or not text:
+            return cors_response({"error": "channel and text required"}, 400)
+
+        if not TWITCH_BOT_NICK or not TWITCH_BOT_TOKEN:
+            return cors_response({"error": "Twitch бот не настроен. Добавьте TWITCH_BOT_NICK и TWITCH_BOT_TOKEN в .env"}, 400)
+
+        # Формат: [МТ] Username: сообщение
+        formatted = f"[МТ] {username}: {text}"
+        
+        success = await twitch_irc.send_message(channel, formatted)
+        
+        if success:
+            return cors_response({"success": True})
+        else:
+            return cors_response({"error": "Не удалось отправить в Twitch"}, 500)
+    except Exception as e:
+        logger.error(f"Twitch send error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+# ==========================================
 # ЗАПУСК
 # ==========================================
 
@@ -5125,6 +5249,7 @@ def create_api_app():
     # Stream Chat API
     app.router.add_get("/api/stream/chat", api_stream_chat_get)
     app.router.add_post("/api/stream/chat/send", api_stream_chat_send)
+    app.router.add_post("/api/stream/chat/twitch-send", api_stream_chat_twitch_send)
     app.router.add_get("/api/stream/channels", api_stream_channels_get)
     app.router.add_post("/api/stream/channels/save", api_stream_channels_save)
 

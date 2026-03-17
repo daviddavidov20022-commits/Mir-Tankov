@@ -10,7 +10,18 @@
 const DEFAULT_CHANNEL = 'iserveri';
 const TWITCH_WS_URL = 'wss://irc-ws.chat.twitch.tv:443';
 const MAX_CHAT_MESSAGES = 200;
-const BOT_API_URL = localStorage.getItem('bot_api_url') || window.location.origin || 'http://localhost:8081';
+// API URL — определяем автоматически (как в top-page.js)
+const BOT_API_URL = (() => {
+    const params = new URLSearchParams(window.location.search);
+    const host = params.get('api') || localStorage.getItem('api_host');
+    if (host) return host;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return `http://${window.location.hostname}:8081`;
+    }
+    const savedApi = localStorage.getItem('api_url');
+    if (savedApi) return savedApi;
+    return 'https://mir-tankov-api.onrender.com';
+})();
 
 // Каналы по умолчанию (если localStorage пуст)
 const DEFAULT_CHANNELS = [
@@ -529,13 +540,21 @@ async function sendChatMessage() {
     input.value = '';
     try { tg?.HapticFeedback?.impactOccurred('light'); } catch (e) { }
 
-    // Отправляем на сервер
+    // Отправляем на сервер (общий чат + Twitch)
     if (myTelegramId) {
         try {
-            await fetch(`${BOT_API_URL}/api/stream/chat/send`, {
+            // 1. В общий чат (видят все пользователи webapp)
+            fetch(`${BOT_API_URL}/api/stream/chat/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ telegram_id: myTelegramId, username, text }),
+            });
+
+            // 2. В Twitch чат (видят все на Twitch)
+            fetch(`${BOT_API_URL}/api/stream/chat/twitch-send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channel: currentChannel, username, text }),
             });
         } catch (e) {
             console.warn('[Chat] Send error:', e);
