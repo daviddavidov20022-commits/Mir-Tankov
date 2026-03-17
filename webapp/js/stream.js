@@ -91,16 +91,28 @@ function identifyMe() {
 }
 
 async function checkAdmin() {
-    if (!myTelegramId) return;
+    if (!myTelegramId) {
+        console.warn('[Admin] No telegram_id, cannot check admin');
+        return;
+    }
     try {
+        console.log(`[Admin] Checking admin for telegram_id=${myTelegramId}, URL: ${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
         const resp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
         const data = await resp.json();
+        console.log('[Admin] API response:', data);
         if (data.is_admin) {
             isAdmin = true;
             const adminPanel = document.getElementById('adminPanel');
-            if (adminPanel) adminPanel.style.display = 'block';
+            if (adminPanel) {
+                adminPanel.style.display = 'block';
+                console.log('[Admin] Admin panel shown!');
+            }
         }
-    } catch (e) { }
+    } catch (e) {
+        console.warn('[Admin] API error:', e.message);
+        // Повтор через 3 секунды
+        setTimeout(() => checkAdmin(), 3000);
+    }
 }
 
 function createParticles() {
