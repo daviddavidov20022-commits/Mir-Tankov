@@ -868,15 +868,36 @@ function updateStreamConfig() {
 // ДОНАТЫ И ЗАКАЗ МУЗЫКИ
 // ==========================================
 async function getMyCheeseBalance() {
+    if (!myTelegramId) {
+        identifyMe(); // Пробуем определить ID еще раз
+    }
+    
+    if (!myTelegramId) return 0;
+
     try {
+        // Пробуем получить с сервера
         const resp = await fetch(`${BOT_API_URL}/api/profile?telegram_id=${myTelegramId}`);
+        if (!resp.ok) throw new Error('API error');
+        
         const data = await resp.json();
-        return data.cheese || data.coins || 0;
-    } catch(e) {
-        // Fallback: localStorage
+        // Проверяем все возможные поля баланса
+        const balance = data.cheese ?? data.coins ?? data.balance ?? 0;
+        
+        // Обновляем локальный кеш на всякий случай
         try {
             const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
-            return local.coins || 0;
+            local.coins = balance;
+            localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
+        } catch(e) {}
+        
+        return balance;
+    } catch(e) {
+        console.warn("Falling back to local storage for balance:", e);
+        // Fallback: localStorage
+        try {
+            // Ищем в разных ключах, которые могут быть в приложении
+            const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || localStorage.getItem('userData') || '{}');
+            return local.coins || local.cheese || 0;
         } catch(e2) { return 0; }
     }
 }
