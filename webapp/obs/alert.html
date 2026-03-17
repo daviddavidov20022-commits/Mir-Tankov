@@ -535,6 +535,20 @@
         loadConfig().then(() => {
             setInterval(pollDonations, POLL_INTERVAL);
             console.log('[МИР ТАНКОВ Alert] Виджет запущен, API:', API_URL);
+            console.log('[Alert] Custom sounds:', {
+                small: CONFIG.soundSmall ? '✅ (' + CONFIG.soundSmall.substring(0,30) + '...)' : '❌ нет',
+                medium: CONFIG.soundMedium ? '✅' : '❌ нет',
+                large: CONFIG.soundLarge ? '✅' : '❌ нет',
+            });
+            
+            // Тестовый режим: ?test в URL
+            if (window.location.search.includes('test')) {
+                const btn = document.createElement('button');
+                btn.textContent = '🔊 Тест донат';
+                btn.style.cssText = 'position:fixed;bottom:10px;right:10px;z-index:9999;padding:10px 20px;font-size:16px;background:#C8AA6E;color:#000;border:none;border-radius:8px;cursor:pointer;';
+                btn.onclick = () => showAlert({username: 'Тестовый', amount: 100, message: 'Тестовое сообщение!'});
+                document.body.appendChild(btn);
+            }
         });
     </script>
 </body>

@@ -1063,28 +1063,50 @@ function handleFileUpload(input, key) {
     const file = input.files[0];
     if (!file) return;
     
-    // Проверка размера (макс 1MB)
-    if (file.size > 1024 * 1024) {
-        showToast('❌', 'Файл слишком большой (макс 1 МБ)');
+    // Проверка размера (макс 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('❌', 'Файл слишком большой (макс 5 МБ)');
         input.value = '';
         return;
     }
     
     const status = document.getElementById('status' + key.replace('sound_', 'Sound_').replace('media_', 'Media_'));
-    if (status) status.textContent = '⏳ Загрузка...';
+    if (status) { status.textContent = '⏳ Загрузка...'; status.style.color = '#C8AA6E'; }
     
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
         uploadedFiles[key] = reader.result; // data:audio/mp3;base64,...
-        if (status) {
-            status.textContent = '✅ ' + file.name;
-            status.style.color = '#4CAF50';
+        
+        // Сразу загрузить на сервер
+        try {
+            const resp = await fetch(`${BOT_API_URL}/api/stream/media/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: myTelegramId, key, data: reader.result }),
+            });
+            const result = await resp.json();
+            if (result.success) {
+                if (status) { status.textContent = '✅ ' + file.name; status.style.color = '#4CAF50'; }
+                showToast('✅', `${file.name} загружен на сервер`);
+                
+                // Если звук — проиграть превью
+                if (key.startsWith('sound_')) {
+                    const audio = new Audio(reader.result);
+                    audio.volume = 0.5;
+                    audio.play().catch(() => {});
+                }
+            } else {
+                if (status) { status.textContent = '❌ Ошибка сервера'; status.style.color = '#f44'; }
+                showToast('❌', result.error || 'Ошибка загрузки');
+            }
+        } catch(e) {
+            if (status) { status.textContent = '⚠️ ' + file.name + ' (локально)'; status.style.color = '#FF9800'; }
+            showToast('⚠️', 'Сервер недоступен, сохранено локально');
         }
-        showToast('✅', `${file.name} загружен`);
     };
     reader.onerror = () => {
-        if (status) status.textContent = '❌ Ошибка';
-        showToast('❌', 'Ошибка загрузки файла');
+        if (status) { status.textContent = '❌ Ошибка'; status.style.color = '#f44'; }
+        showToast('❌', 'Ошибка чтения файла');
     };
     reader.readAsDataURL(file);
 }

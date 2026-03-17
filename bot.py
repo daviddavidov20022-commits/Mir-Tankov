@@ -5640,7 +5640,7 @@ async def api_stream_chat_twitch_send(request):
 
 def create_api_app():
     """Создать aiohttp приложение с API маршрутами"""
-    app = web.Application()
+    app = web.Application(client_max_size=10 * 1024 * 1024)  # 10MB для медиа загрузок
 
     # CORS preflight
     app.router.add_route("OPTIONS", "/{path:.*}", handle_options)
