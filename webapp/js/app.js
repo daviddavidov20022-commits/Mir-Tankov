@@ -136,7 +136,7 @@ try {
 // ==========================================
 const userData = new UserData();
 
-const BOT_API_URL_APP = 'http://localhost:8081';
+const BOT_API_URL_APP = 'https://mir-tankov-production.up.railway.app';
 
 document.addEventListener('DOMContentLoaded', () => {
     initUser();

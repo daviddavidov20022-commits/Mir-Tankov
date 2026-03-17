@@ -24,7 +24,7 @@ const LESTA_APP = 'c984faa7dc529f4cb0139505d5e8043c';
 const BOT_USERNAME = 'Mir_tankov_privat_bot'; // username бота для приглашений
 
 // URL API бота — должен быть запущен bot.py
-const BOT_API_URL = localStorage.getItem('bot_api_url') || 'http://localhost:8081';
+const BOT_API_URL = localStorage.getItem('bot_api_url') || 'https://mir-tankov-production.up.railway.app';
 
 // Данные с сервера
 let friends = [];

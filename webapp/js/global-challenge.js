@@ -9,7 +9,7 @@
 // ============================================================
 // CONFIG
 // ============================================================
-const BOT_API_URL = localStorage.getItem('bot_api_url') || 'http://localhost:8081';
+const BOT_API_URL = localStorage.getItem('bot_api_url') || 'https://mir-tankov-production.up.railway.app';
 const CONDITION_MAP = {
     damage: { icon: '💥', name: 'Урон', unit: 'урона' },
     frags: { icon: '🎯', name: 'Фраги', unit: 'фрагов' },
