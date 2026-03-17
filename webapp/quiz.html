@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Танковая Викторина — МИР ТАНКОВ</title>
+    <meta name="description" content="Проверь свои знания танков X уровня! 30 вопросов по реальным характеристикам: урон, обзор, скорость, бронирование.">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --card: #141b2d;
+            --card2: #1a2340;
+            --accent: #C8AA6E;
+            --accent2: #F0C75E;
+            --green: #4CAF50;
+            --red: #f44336;
+            --text: #e0e0e0;
+            --dim: #6c7a93;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* Фоновая сетка */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(200,170,110,0.04) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(100,140,255,0.03) 0%, transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== СТАРТОВЫЙ ЭКРАН ===== */
+        .start-screen {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .start-screen h1 {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.4rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        .start-screen .subtitle {
+            color: var(--dim);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        .start-screen .info-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .info-card {
+            background: var(--card);
+            border: 1px solid rgba(200,170,110,0.15);
+            border-radius: 12px;
+            padding: 16px 10px;
+        }
+        .info-card .icon { font-size: 2rem; margin-bottom: 6px; }
+        .info-card .num { font-size: 1.4rem; font-weight: 900; color: var(--accent); }
+        .info-card .label { font-size: 0.75rem; color: var(--dim); }
+        .btn-start {
+            background: linear-gradient(135deg, var(--accent), #e6c84d);
+            color: #000;
+            border: none;
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Russo One', sans-serif;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(200,170,110,0.3);
+        }
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(200,170,110,0.5);
+        }
+
+        /* ===== ПРОГРЕСС ===== */
+        .quiz-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .progress-info {
+            font-size: 0.9rem;
+            color: var(--dim);
+        }
+        .progress-info span { color: var(--accent); font-weight: 700; }
+        .score-display {
+            display: flex; gap: 12px; font-size: 0.85rem;
+        }
+        .score-correct { color: var(--green); font-weight: 700; }
+        .score-wrong { color: var(--red); font-weight: 700; }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        /* ===== ВОПРОС ===== */
+        .question-card {
+            background: var(--card);
+            border: 1px solid rgba(200,170,110,0.15);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .question-category {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.5;
+            margin-bottom: 6px;
+        }
+        .tank-name {
+            color: var(--accent2);
+            font-family: 'Russo One', sans-serif;
+        }
+
+        /* ===== ВАРИАНТЫ ОТВЕТОВ ===== */
+        .answers {
+            display: grid;
+            gap: 10px;
+        }
+        .answer-btn {
+            background: var(--card2);
+            border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 1.05rem;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .answer-btn:hover:not(.disabled) {
+            border-color: var(--accent);
+            transform: translateX(4px);
+            background: rgba(200,170,110,0.08);
+        }
+        .answer-letter {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        .answer-btn.correct {
+            border-color: var(--green) !important;
+            background: rgba(76,175,80,0.15) !important;
+        }
+        .answer-btn.correct .answer-letter {
+            background: var(--green); color: #fff;
+        }
+        .answer-btn.wrong {
+            border-color: var(--red) !important;
+            background: rgba(244,67,54,0.12) !important;
+        }
+        .answer-btn.wrong .answer-letter {
+            background: var(--red); color: #fff;
+        }
+        .answer-btn.disabled { pointer-events: none; opacity: 0.6; }
+        .answer-btn.correct.disabled, .answer-btn.wrong.disabled { opacity: 1; }
+
+        /* Пояснение */
+        .explanation {
+            margin-top: 16px;
+            padding: 14px 18px;
+            background: rgba(200,170,110,0.06);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 10px 10px 0;
+            font-size: 0.9rem;
+            color: var(--dim);
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .explanation.show { display: block; }
+
+        .btn-next {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 16px;
+            width: 100%;
+            transition: all 0.2s;
+            display: none;
+        }
+        .btn-next.show { display: block; }
+        .btn-next:hover { background: var(--accent2); }
+
+        /* ===== ЭКРАН РЕЗУЛЬТАТОВ ===== */
+        .results-screen { display: none; }
+        .results-header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .results-icon { font-size: 4rem; margin-bottom: 12px; }
+        .results-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+        .results-subtitle { color: var(--dim); margin-bottom: 24px; }
+        .results-score {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .results-stat {
+            text-align: center;
+        }
+        .results-stat .big {
+            font-size: 2.5rem;
+            font-weight: 900;
+        }
+        .results-stat .lbl {
+            font-size: 0.8rem;
+            color: var(--dim);
+        }
+        .results-stat.good .big { color: var(--green); }
+        .results-stat.bad .big { color: var(--red); }
+        .results-stat.percent .big { color: var(--accent); }
+
+        /* Список ответов */
+        .review-list {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .review-item {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            border-left: 4px solid;
+        }
+        .review-item.ok { border-color: var(--green); }
+        .review-item.fail { border-color: var(--red); }
+        .review-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+        .review-q { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+        .review-a { font-size: 0.8rem; color: var(--dim); }
+        .review-a span { color: var(--green); font-weight: 600; }
+
+        .btn-restart {
+            background: linear-gradient(135deg, var(--accent), #e6c84d);
+            color: #000;
+            border: none;
+            padding: 16px 48px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            font-family: 'Russo One', sans-serif;
+            transition: all 0.3s;
+        }
+        .btn-restart:hover { transform: translateY(-2px); }
+
+        .hidden { display: none !important; }
+        
+        /* Общие анимации */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .shake { animation: shake 0.4s ease; }
+        .pop { animation: pop 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- СТАРТОВЫЙ ЭКРАН -->
+        <div class="start-screen" id="startScreen">
+            <h1>🎯 ТАНКОВАЯ ВИКТОРИНА</h1>
+            <p class="subtitle">Проверь свои знания танков X уровня.<br>Реальные характеристики из Мира Танков!</p>
+            <div class="info-cards">
+                <div class="info-card">
+                    <div class="icon">❓</div>
+                    <div class="num">30</div>
+                    <div class="label">Вопросов</div>
+                </div>
+                <div class="info-card">
+                    <div class="icon">🏆</div>
+                    <div class="num">4</div>
+                    <div class="label">Варианта</div>
+                </div>
+                <div class="info-card">
+                    <div class="icon">🎖️</div>
+                    <div class="num">X</div>
+                    <div class="label">Уровень</div>
+                </div>
+            </div>
+            <button class="btn-start" id="btnStart" onclick="startQuiz()">НАЧАТЬ ВИКТОРИНУ</button>
+        </div>
+
+        <!-- ЭКРАН ВОПРОСОВ -->
+        <div class="quiz-screen hidden" id="quizScreen">
+            <div class="quiz-header">
+                <div class="progress-info">Вопрос <span id="qNum">1</span> / <span id="qTotal">30</span></div>
+                <div class="score-display">
+                    <span class="score-correct">✅ <span id="correctCount">0</span></span>
+                    <span class="score-wrong">❌ <span id="wrongCount">0</span></span>
+                </div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="question-card" id="questionCard">
+                <div class="question-category" id="qCategory">ОБЗОР</div>
+                <div class="question-text" id="qText"></div>
+            </div>
+            <div class="answers" id="answersContainer"></div>
+            <div class="explanation" id="explanation"></div>
+            <button class="btn-next" id="btnNext" onclick="nextQuestion()">Следующий вопрос →</button>
+        </div>
+
+        <!-- ЭКРАН РЕЗУЛЬТАТОВ -->
+        <div class="results-screen" id="resultsScreen">
+            <div class="results-header">
+                <div class="results-icon" id="resultsIcon">🏆</div>
+                <div class="results-title" id="resultsTitle">Отличный результат!</div>
+                <div class="results-subtitle" id="resultsSubtitle">Ты знаток танков</div>
+            </div>
+            <div class="results-score">
+                <div class="results-stat good"><div class="big" id="finalCorrect">0</div><div class="lbl">Верно</div></div>
+                <div class="results-stat bad"><div class="big" id="finalWrong">0</div><div class="lbl">Ошибок</div></div>
+                <div class="results-stat percent"><div class="big" id="finalPercent">0%</div><div class="lbl">Точность</div></div>
+            </div>
+            <div class="review-list" id="reviewList"></div>
+            <button class="btn-restart" onclick="restartQuiz()">🔄 ПРОЙТИ ЗАНОВО</button>
+        </div>
+    </div>
+
+    <script>
+    // ==========================================
+    // ДАННЫЕ ТАНКОВ (реальные данные с Lesta API)
+    // ==========================================
+    const TANKS = {
+        "ИС-7": { type: "ТТ", hp: 2400, view: 400, speed: 60, damage: 490, reload: 13.7, caliber: 130, armor_f: 150, armor_t: 240 },
+        "Объект 140": { type: "СТ", hp: 2050, view: 400, speed: 55, damage: 320, reload: 6.6, caliber: 100, armor_f: 120, armor_t: 240 },
+        "Объект 430У": { type: "СТ", hp: 2000, view: 400, speed: 50, damage: 440, reload: 10.2, caliber: 122, armor_f: 160, armor_t: 300 },
+        "Объект 277": { type: "ТТ", hp: 2200, view: 400, speed: 55, damage: 490, reload: 12.5, caliber: 130, armor_f: 140, armor_t: 290 },
+        "Maus": { type: "ТТ", hp: 3000, view: 400, speed: 20, damage: 490, reload: 13.3, caliber: 128, armor_f: 200, armor_t: 260 },
+        "E 50 M": { type: "СТ", hp: 2050, view: 400, speed: 60, damage: 390, reload: 9.6, caliber: 105, armor_f: 150, armor_t: 250 },
+        "Leopard 1": { type: "СТ", hp: 1850, view: 410, speed: 70, damage: 420, reload: 9.3, caliber: 105, armor_f: 70, armor_t: 52 },
+        "Grille 15": { type: "ПТ", hp: 1800, view: 390, speed: 60, damage: 750, reload: 18.0, caliber: 150, armor_f: 30, armor_t: 0 },
+        "Bat.-Châtillon 25 t": { type: "СТ", hp: 1800, view: 400, speed: 65, damage: 240, reload: 24.0, caliber: 90, armor_f: 60, armor_t: 50 },
+        "T110E5": { type: "ТТ", hp: 2200, view: 400, speed: 37, damage: 400, reload: 8.8, caliber: 120, armor_f: 254, armor_t: 203 },
+        "AMX 50 B": { type: "ТТ", hp: 2300, view: 400, speed: 65, damage: 400, reload: 30.0, caliber: 120, armor_f: 170, armor_t: 100 },
+        "STB-1": { type: "СТ", hp: 2000, view: 400, speed: 50, damage: 360, reload: 7.1, caliber: 105, armor_f: 110, armor_t: 222 },
+        "WZ-111 5A": { type: "ТТ", hp: 2200, view: 400, speed: 50, damage: 490, reload: 11.2, caliber: 130, armor_f: 160, armor_t: 300 },
+        "Super Conqueror": { type: "ТТ", hp: 2400, view: 400, speed: 34, damage: 400, reload: 9.5, caliber: 120, armor_f: 152, armor_t: 279 },
+        "T-100 ЛТ": { type: "ЛТ", hp: 1500, view: 390, speed: 72, damage: 300, reload: 7.8, caliber: 100, armor_f: 90, armor_t: 180 },
+        "Sheridan": { type: "ЛТ", hp: 1600, view: 420, speed: 65, damage: 390, reload: 9.2, caliber: 105, armor_f: 14, armor_t: 38 },
+        "Объект 268/4": { type: "ПТ", hp: 1900, view: 370, speed: 40, damage: 650, reload: 17.0, caliber: 152, armor_f: 260, armor_t: 0 },
+        "FV4005": { type: "ПТ", hp: 1850, view: 390, speed: 32, damage: 1150, reload: 30.0, caliber: 183, armor_f: 76, armor_t: 14 },
+        "Jagdpanzer E 100": { type: "ПТ", hp: 2200, view: 390, speed: 30, damage: 1050, reload: 25.7, caliber: 170, armor_f: 200, armor_t: 0 },
+        "60TP": { type: "ТТ", hp: 2600, view: 390, speed: 35, damage: 750, reload: 19.5, caliber: 152, armor_f: 160, armor_t: 260 },
+        "Kranvagn": { type: "ТТ", hp: 2300, view: 390, speed: 45, damage: 440, reload: 25.0, caliber: 120, armor_f: 90, armor_t: 225 },
+        "Vz. 55": { type: "ТТ", hp: 2100, view: 390, speed: 50, damage: 490, reload: 11.2, caliber: 130, armor_f: 115, armor_t: 300 },
+        "M48 Patton": { type: "СТ", hp: 2200, view: 420, speed: 50, damage: 390, reload: 8.35, caliber: 105, armor_f: 152, armor_t: 254 },
+        "Объект 705А": { type: "ТТ", hp: 2450, view: 390, speed: 40, damage: 650, reload: 18.1, caliber: 152, armor_f: 175, armor_t: 330 },
+        "Strv 103B": { type: "ПТ", hp: 1800, view: 360, speed: 50, damage: 390, reload: 7.0, caliber: 105, armor_f: 50, armor_t: 0 },
+        "T110E3": { type: "ПТ", hp: 1950, view: 370, speed: 24, damage: 750, reload: 18.0, caliber: 155, armor_f: 305, armor_t: 0 },
+        "Progetto 65": { type: "СТ", hp: 1900, view: 400, speed: 65, damage: 360, reload: 15.4, caliber: 105, armor_f: 40, armor_t: 120 },
+        "Объект 907": { type: "СТ", hp: 2000, view: 400, speed: 55, damage: 320, reload: 6.5, caliber: 100, armor_f: 110, armor_t: 228 },
+        "ИС-4": { type: "ТТ", hp: 2500, view: 400, speed: 43, damage: 390, reload: 11.0, caliber: 122, armor_f: 155, armor_t: 250 },
+        "FV215b (183)": { type: "ПТ", hp: 2000, view: 390, speed: 34, damage: 1150, reload: 30.0, caliber: 183, armor_f: 152, armor_t: 254 }
+    };
+
+    const tankNames = Object.keys(TANKS);
+
+    // Генерация вопросов
+    function generateQuestions() {
+        const questions = [];
+        const templates = [
+            // ОБЗОР
+            (t) => ({
+                category: "ОБЗОР",
+                text: `Какой обзор у танка <span class="tank-name">${t}</span>?`,
+                correct: TANKS[t].view + " м",
+                unit: "м",
+                generate: () => genOptions(TANKS[t].view, [360,370,380,390,400,410,420], "м"),
+                explanation: `${t} имеет обзор ${TANKS[t].view} м. Класс: ${TANKS[t].type}.`
+            }),
+            // СРЕДНИЙ УРОН
+            (t) => ({
+                category: "УРОН",
+                text: `Какой средний урон ББ снарядом у <span class="tank-name">${t}</span>?`,
+                correct: TANKS[t].damage,
+                generate: () => genDamageOptions(TANKS[t].damage),
+                explanation: `${t} наносит ${TANKS[t].damage} среднего урона. Калибр: ${TANKS[t].caliber} мм.`
+            }),
+            // СКОРОСТЬ
+            (t) => ({
+                category: "СКОРОСТЬ",
+                text: `Какая максимальная скорость у <span class="tank-name">${t}</span>?`,
+                correct: TANKS[t].speed + " км/ч",
+                generate: () => genOptions(TANKS[t].speed, [20,24,30,32,34,35,37,40,43,45,48,50,55,56,60,65,70,72,75], "км/ч"),
+                explanation: `Максимальная скорость ${t} — ${TANKS[t].speed} км/ч. Тип: ${TANKS[t].type}.`
+            }),
+            // ХП
+            (t) => ({
+                category: "ПРОЧНОСТЬ",
+                text: `Сколько HP (прочности) у <span class="tank-name">${t}</span>?`,
+                correct: TANKS[t].hp,
+                generate: () => genHPOptions(TANKS[t].hp),
+                explanation: `${t} имеет ${TANKS[t].hp} единиц прочности.`
+            }),
+            // КАЛИБР
+            (t) => ({
+                category: "ОРУДИЕ",
+                text: `Какой калибр орудия у <span class="tank-name">${t}</span>?`,
+                correct: TANKS[t].caliber + " мм",
+                generate: () => genOptions(TANKS[t].caliber, [90,100,105,120,122,128,130,150,152,155,170,183], "мм"),
+                explanation: `${t} вооружён орудием калибра ${TANKS[t].caliber} мм.`
+            }),
+            // ПЕРЕЗАРЯДКА
+            (t) => ({
+                category: "ПЕРЕЗАРЯДКА",
+                text: `Какое время перезарядки у <span class="tank-name">${t}</span>?`,
+                correct: TANKS[t].reload + " сек",
+                generate: () => genReloadOptions(TANKS[t].reload),
+                explanation: `Перезарядка ${t} составляет ${TANKS[t].reload} секунд.`
+            }),
+            // ТИП ТАНКА
+            (t) => ({
+                category: "КЛАСС",
+                text: `К какому классу относится <span class="tank-name">${t}</span>?`,
+                correct: TANKS[t].type,
+                generate: () => {
+                    const types = ["ТТ", "СТ", "ЛТ", "ПТ"];
+                    return shuffle(types);
+                },
+                explanation: `${t} — это ${fullType(TANKS[t].type)}.`
+            }),
+            // ЛОБОВАЯ БРОНЯ КОРПУСА
+            (t) => TANKS[t].armor_f > 0 ? ({
+                category: "БРОНИРОВАНИЕ",
+                text: `Какая лобовая броня корпуса у <span class="tank-name">${t}</span>?`,
+                correct: TANKS[t].armor_f + " мм",
+                generate: () => genOptions(TANKS[t].armor_f, [14,30,40,50,60,70,76,80,90,100,110,114,115,120,130,135,140,150,152,155,160,170,175,180,195,200,230,240,254,260,300,305,350], "мм"),
+                explanation: `Лобовая броня корпуса ${t} — ${TANKS[t].armor_f} мм.`
+            }) : null,
+            // ЧТО БЫСТРЕЕ
+            (t, t2) => ({
+                category: "СРАВНЕНИЕ",
+                text: `Какой танк БЫСТРЕЕ?`,
+                correct: TANKS[t].speed >= TANKS[t2].speed ? t : t2,
+                generate: () => {
+                    const faster = TANKS[t].speed >= TANKS[t2].speed ? t : t2;
+                    const other = faster === t ? t2 : t;
+                    const others = shuffle(tankNames.filter(n => n !== t && n !== t2)).slice(0, 2);
+                    return shuffle([faster, other, ...others]);
+                },
+                explanation: `${t} — ${TANKS[t].speed} км/ч, ${t2} — ${TANKS[t2].speed} км/ч.`
+            }),
+            // У КОГО БОЛЬШЕ ХП
+            (t, t2) => ({
+                category: "СРАВНЕНИЕ",
+                text: `У кого БОЛЬШЕ прочности (HP)?`,
+                correct: TANKS[t].hp >= TANKS[t2].hp ? t : t2,
+                generate: () => {
+                    const more = TANKS[t].hp >= TANKS[t2].hp ? t : t2;
+                    const other = more === t ? t2 : t;
+                    const others = shuffle(tankNames.filter(n => n !== t && n !== t2)).slice(0, 2);
+                    return shuffle([more, other, ...others]);
+                },
+                explanation: `${t} — ${TANKS[t].hp} HP, ${t2} — ${TANKS[t2].hp} HP.`
+            }),
+        ];
+
+        const usedCombos = new Set();
+        let attempts = 0;
+        
+        while (questions.length < 30 && attempts < 200) {
+            attempts++;
+            const tIdx = Math.floor(Math.random() * tankNames.length);
+            const t2Idx = Math.floor(Math.random() * tankNames.length);
+            const tmplIdx = Math.floor(Math.random() * templates.length);
+            
+            const t = tankNames[tIdx];
+            const t2 = tankNames[t2Idx];
+            const combo = `${tmplIdx}-${t}`;
+            
+            if (usedCombos.has(combo)) continue;
+            if (tIdx === t2Idx && tmplIdx >= 8) continue;
+            
+            const q = templates[tmplIdx](t, t2);
+            if (!q) continue;
+            
+            const options = q.generate();
+            const correctAnswer = q.correct;
+            
+            if (!options.includes(String(correctAnswer)) && !options.includes(correctAnswer)) continue;
+            
+            usedCombos.add(combo);
+            questions.push({
+                category: q.category,
+                text: q.text,
+                options: options.map(String),
+                correct: String(correctAnswer),
+                explanation: q.explanation
+            });
+        }
+        
+        return shuffle(questions).slice(0, 30);
+    }
+
+    // Генераторы вариантов ответов
+    function genOptions(correct, pool, unit) {
+        const others = pool.filter(v => v !== correct);
+        const picked = shuffle(others).slice(0, 3);
+        return shuffle([correct + " " + unit, ...picked.map(v => v + " " + unit)]);
+    }
+
+    function genDamageOptions(correct) {
+        const variants = new Set([correct]);
+        const offsets = [-100, -60, -50, -30, 30, 50, 60, 100, 120];
+        while (variants.size < 4) {
+            const off = offsets[Math.floor(Math.random() * offsets.length)];
+            const v = correct + off;
+            if (v > 0) variants.add(v);
+        }
+        return shuffle([...variants].map(String));
+    }
+
+    function genHPOptions(correct) {
+        const variants = new Set([correct]);
+        const offsets = [-300, -200, -150, -100, 100, 150, 200, 300, 400, 500];
+        while (variants.size < 4) {
+            const off = offsets[Math.floor(Math.random() * offsets.length)];
+            const v = correct + off;
+            if (v > 0) variants.add(v);
+        }
+        return shuffle([...variants].map(String));
+    }
+
+    function genReloadOptions(correct) {
+        const variants = new Set([correct + " сек"]);
+        const offsets = [-5, -3, -2, -1, 1, 2, 3, 5, 7];
+        while (variants.size < 4) {
+            const off = offsets[Math.floor(Math.random() * offsets.length)];
+            const v = +(correct + off).toFixed(1);
+            if (v > 0) variants.add(v + " сек");
+        }
+        return shuffle([...variants]);
+    }
+
+    function fullType(t) {
+        return {ТТ: "Тяжёлый танк", СТ: "Средний танк", ЛТ: "Лёгкий танк", ПТ: "ПТ-САУ"}[t] || t;
+    }
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    // ==========================================
+    // ЛОГИКА КВИЗА
+    // ==========================================
+    let questions = [];
+    let currentQ = 0;
+    let correct = 0;
+    let wrong = 0;
+    let answered = false;
+    let results = [];
+
+    function startQuiz() {
+        questions = generateQuestions();
+        currentQ = 0;
+        correct = 0;
+        wrong = 0;
+        answered = false;
+        results = [];
+        
+        document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('resultsScreen').style.display = 'none';
+        document.getElementById('quizScreen').classList.remove('hidden');
+        document.getElementById('qTotal').textContent = questions.length;
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if (currentQ >= questions.length) { showResults(); return; }
+        
+        answered = false;
+        const q = questions[currentQ];
+        
+        document.getElementById('qNum').textContent = currentQ + 1;
+        document.getElementById('correctCount').textContent = correct;
+        document.getElementById('wrongCount').textContent = wrong;
+        document.getElementById('progressFill').style.width = ((currentQ / questions.length) * 100) + '%';
+        document.getElementById('qCategory').textContent = q.category;
+        document.getElementById('qText').innerHTML = q.text;
+        document.getElementById('explanation').classList.remove('show');
+        document.getElementById('btnNext').classList.remove('show');
+        
+        const container = document.getElementById('answersContainer');
+        container.innerHTML = '';
+        const letters = ['А', 'Б', 'В', 'Г'];
+        
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'answer-btn';
+            btn.innerHTML = `<span class="answer-letter">${letters[i]}</span><span>${opt}</span>`;
+            btn.onclick = () => selectAnswer(i);
+            container.appendChild(btn);
+        });
+        
+        document.getElementById('questionCard').style.animation = 'none';
+        document.getElementById('questionCard').offsetHeight;
+        document.getElementById('questionCard').style.animation = 'fadeIn 0.4s ease';
+    }
+
+    function selectAnswer(idx) {
+        if (answered) return;
+        answered = true;
+        
+        const q = questions[currentQ];
+        const btns = document.querySelectorAll('.answer-btn');
+        const selected = q.options[idx];
+        const isCorrect = selected === q.correct;
+        
+        btns.forEach((btn, i) => {
+            btn.classList.add('disabled');
+            if (q.options[i] === q.correct) btn.classList.add('correct');
+        });
+        
+        if (isCorrect) {
+            correct++;
+            btns[idx].classList.add('pop');
+        } else {
+            wrong++;
+            btns[idx].classList.add('wrong', 'shake');
+        }
+        
+        results.push({
+            question: q.text.replace(/<[^>]+>/g, ''),
+            correct: q.correct,
+            selected: selected,
+            isCorrect: isCorrect,
+            explanation: q.explanation
+        });
+        
+        document.getElementById('correctCount').textContent = correct;
+        document.getElementById('wrongCount').textContent = wrong;
+        
+        document.getElementById('explanation').innerHTML = (isCorrect ? '✅ Верно! ' : '❌ Неверно. ') + q.explanation;
+        document.getElementById('explanation').classList.add('show');
+        document.getElementById('btnNext').classList.add('show');
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        showQuestion();
+    }
+
+    function showResults() {
+        document.getElementById('quizScreen').classList.add('hidden');
+        document.getElementById('resultsScreen').style.display = 'block';
+        
+        const pct = Math.round((correct / questions.length) * 100);
+        document.getElementById('finalCorrect').textContent = correct;
+        document.getElementById('finalWrong').textContent = wrong;
+        document.getElementById('finalPercent').textContent = pct + '%';
+        
+        if (pct >= 90) {
+            document.getElementById('resultsIcon').textContent = '🏆';
+            document.getElementById('resultsTitle').textContent = 'ТАНКОВЫЙ ЭКСПЕРТ!';
+            document.getElementById('resultsSubtitle').textContent = 'Ты знаешь танки как свои пять пальцев!';
+        } else if (pct >= 70) {
+            document.getElementById('resultsIcon').textContent = '⭐';
+            document.getElementById('resultsTitle').textContent = 'Отличный результат!';
+            document.getElementById('resultsSubtitle').textContent = 'Ты хорошо разбираешься в технике';
+        } else if (pct >= 50) {
+            document.getElementById('resultsIcon').textContent = '🎯';
+            document.getElementById('resultsTitle').textContent = 'Неплохо!';
+            document.getElementById('resultsSubtitle').textContent = 'Есть куда расти, командир';
+        } else {
+            document.getElementById('resultsIcon').textContent = '📚';
+            document.getElementById('resultsTitle').textContent = 'Нужна подготовка!';
+            document.getElementById('resultsSubtitle').textContent = 'Изучи танкопедию и попробуй снова';
+        }
+        
+        const list = document.getElementById('reviewList');
+        list.innerHTML = '';
+        results.forEach((r, i) => {
+            const div = document.createElement('div');
+            div.className = 'review-item ' + (r.isCorrect ? 'ok' : 'fail');
+            div.innerHTML = `
+                <span class="review-icon">${r.isCorrect ? '✅' : '❌'}</span>
+                <div>
+                    <div class="review-q">${i + 1}. ${r.question}</div>
+                    <div class="review-a">${r.isCorrect ? '' : 'Ваш ответ: ' + r.selected + ' | '}Правильно: <span>${r.correct}</span></div>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function restartQuiz() {
+        document.getElementById('resultsScreen').style.display = 'none';
+        document.getElementById('startScreen').classList.remove('hidden');
+    }
+    </script>
+</body>
+</html>

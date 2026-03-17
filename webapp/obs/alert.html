@@ -220,17 +220,19 @@
         }
 
         function playSound(tier) {
-            if (tier === 'large' && CONFIG.soundLarge) { playCustomSound(CONFIG.soundLarge); return; }
-            if (tier === 'medium' && CONFIG.soundMedium) { playCustomSound(CONFIG.soundMedium); return; }
-            if (CONFIG.soundSmall) { playCustomSound(CONFIG.soundSmall); return; }
-            // Дефолтный звук
+            // Возвращает true если проиграл пользовательский звук
+            if (tier === 'large' && CONFIG.soundLarge) { playCustomSound(CONFIG.soundLarge); return true; }
+            if (tier === 'medium' && CONFIG.soundMedium) { playCustomSound(CONFIG.soundMedium); return true; }
+            if (CONFIG.soundSmall) { playCustomSound(CONFIG.soundSmall); return true; }
+            // Дефолтный звук (бип)
             playTone(800, 0.15, 'sine', 0.4);
             setTimeout(() => playTone(1000, 0.2, 'sine', 0.3), 100);
             setTimeout(() => playTone(1200, 0.3, 'sine', 0.2), 200);
+            return false;
         }
 
         // ========== МЕДИА ==========
-        function showMedia(tier) {
+        function showMedia(tier, hasCustomSound) {
             const el = document.getElementById('alertMedia');
             let url = '';
             if (tier === 'large' && CONFIG.mediaLarge) url = CONFIG.mediaLarge;
@@ -238,16 +240,23 @@
             if (!url && CONFIG.mediaSmall) url = CONFIG.mediaSmall;
             if (!url && CONFIG.mediaMedium) url = CONFIG.mediaMedium;
 
-            console.log(`[Alert] showMedia: tier=${tier}, hasUrl=${!!url}`);
+            console.log(`[Alert] showMedia: tier=${tier}, hasUrl=${!!url}, customSound=${hasCustomSound}`);
 
             if (!url) { el.style.display = 'none'; return; }
 
             el.style.display = 'block';
             if (url.startsWith('data:video/') || url.match(/\.(mp4|webm)$/i)) {
-                el.innerHTML = `<video src="${url}" autoplay muted playsinline></video>`;
+                // Если загружен отдельный mp3 → видео muted (звук из mp3)
+                // Если mp3 НЕ загружен → видео со своим звуком
+                const muted = hasCustomSound ? 'muted' : '';
+                el.innerHTML = `<video src="${url}" autoplay ${muted} playsinline></video>`;
                 const vid = el.querySelector('video');
-                if (vid) vid.play().catch(() => {});
+                if (vid) {
+                    if (!hasCustomSound) vid.volume = CONFIG.soundVolume;
+                    vid.play().catch(() => {});
+                }
             } else {
+                // GIF/картинка — без звука
                 el.innerHTML = `<img src="${url}" alt="">`;
             }
         }
@@ -308,11 +317,12 @@
                 message.style.display = 'none';
             }
 
-            // Медиа (видео/GIF)
-            showMedia(tier);
+            // Звук (сначала — чтобы знать muted ли видео)
+            const hasCustomSound = playSound(tier);
 
-            // Звук
-            playSound(tier);
+            // Медиа (видео/GIF)
+            // Если есть mp3 — видео muted; нет mp3 — видео со своим звуком
+            showMedia(tier, hasCustomSound);
 
             // TTS
             if (event.message) speakText(event.message, event.amount);
