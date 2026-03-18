@@ -31,6 +31,7 @@ let adminCondition = 'damage';
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     identifyMe();
+    showDebugInfo('Init', `myTelegramId = ${myTelegramId}`);
     loadChallenge();
     createParticles();
 
@@ -43,18 +44,26 @@ function identifyMe() {
     const urlId = urlParams.get('telegram_id');
     if (urlId) {
         myTelegramId = parseInt(urlId);
+        console.log('[GC-ID] Source: URL param, id:', myTelegramId);
         return;
     }
 
     const tg = window.Telegram?.WebApp;
+    console.log('[GC-ID] Telegram WebApp:', !!tg, 'initDataUnsafe:', JSON.stringify(tg?.initDataUnsafe));
     if (tg?.initDataUnsafe?.user) {
         myTelegramId = tg.initDataUnsafe.user.id;
         localStorage.setItem('my_telegram_id', String(myTelegramId));
+        console.log('[GC-ID] Source: Telegram WebApp, id:', myTelegramId);
         return;
     }
 
     const saved = localStorage.getItem('my_telegram_id');
-    if (saved) myTelegramId = parseInt(saved);
+    if (saved) {
+        myTelegramId = parseInt(saved);
+        console.log('[GC-ID] Source: localStorage, id:', myTelegramId);
+    } else {
+        console.log('[GC-ID] ❌ No ID found anywhere!');
+    }
 }
 
 // ============================================================
@@ -62,8 +71,12 @@ function identifyMe() {
 // ============================================================
 async function loadChallenge() {
     try {
+        // Сначала проверяем админа (чтобы не зависеть от порядка)
+        await checkAdmin();
+
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
         const data = await resp.json();
+        showDebugInfo('Challenge API', JSON.stringify(data.status));
 
         document.getElementById('gcLoading').style.display = 'none';
 
@@ -75,27 +88,58 @@ async function loadChallenge() {
             showEmpty();
         }
 
-        // Check admin
-        checkAdmin();
+        // Повторно показываем админ-панель (showActive/showFinished могут перезаписать)
+        if (isAdmin) {
+            document.getElementById('gcAdmin').style.display = '';
+        }
     } catch (e) {
         console.error('Load challenge error:', e);
+        showDebugInfo('Error', e.message);
         document.getElementById('gcLoading').style.display = 'none';
         showEmpty();
-        checkAdmin();
+        if (isAdmin) {
+            document.getElementById('gcAdmin').style.display = '';
+        }
     }
 }
 
 async function checkAdmin() {
-    if (!myTelegramId) return;
+    if (!myTelegramId) {
+        showDebugInfo('Admin', '❌ myTelegramId = 0, пропуск проверки');
+        console.log('[GC-Admin] Skipped: myTelegramId is 0');
+        return;
+    }
     try {
+        console.log('[GC-Admin] Checking admin for:', myTelegramId);
         const resp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
         const data = await resp.json();
+        console.log('[GC-Admin] API response:', JSON.stringify(data));
+        showDebugInfo('Admin API', `is_admin=${data.is_admin}, nick=${data.wot_nickname || '—'}, tg_id=${data.telegram_id}`);
         if (data.is_admin) {
             isAdmin = true;
             document.getElementById('gcAdmin').style.display = '';
+            showDebugInfo('Admin', '✅ Панель показана!');
             loadSubscribers();
+        } else {
+            showDebugInfo('Admin', '❌ API ответил is_admin=false');
         }
-    } catch (e) { }
+    } catch (e) {
+        console.error('[GC-Admin] Error:', e);
+        showDebugInfo('Admin Error', e.message);
+    }
+}
+
+// Debug panel
+function showDebugInfo(label, text) {
+    let panel = document.getElementById('gcDebugPanel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'gcDebugPanel';
+        panel.style.cssText = 'position:fixed;bottom:60px;left:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;font-size:10px;padding:6px 10px;z-index:9999;max-height:120px;overflow-y:auto;font-family:monospace;border-top:1px solid #0f0';
+        document.body.appendChild(panel);
+    }
+    panel.innerHTML += `<div><b>${label}:</b> ${text}</div>`;
+    panel.scrollTop = panel.scrollHeight;
 }
 
 // ============================================================
