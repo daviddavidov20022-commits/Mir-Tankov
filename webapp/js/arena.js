@@ -69,11 +69,23 @@ async function loadMyProfile() {
     }
     badge.textContent = `👤 ID: ${myTelegramId}`;
     try {
-        const resp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
+        // Передаём WoT данные из localStorage чтобы сервер мог восстановить после редеплоя
+        let meUrl = `${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`;
+        const savedNick = localStorage.getItem('wot_nickname');
+        const savedAccId = localStorage.getItem('wot_account_id');
+        if (savedNick) meUrl += `&wot_nickname=${encodeURIComponent(savedNick)}`;
+        if (savedAccId) meUrl += `&wot_account_id=${encodeURIComponent(savedAccId)}`;
+        
+        const resp = await fetch(meUrl);
         const data = await resp.json();
         if (data.wot_nickname) {
             badge.textContent = `👤 ${data.wot_nickname}`;
             document.title = `Арена — ${data.wot_nickname}`;
+            // Сохраняем в localStorage для использования при создании/вступлении в челлендж
+            localStorage.setItem('wot_nickname', data.wot_nickname);
+            if (data.wot_account_id) {
+                localStorage.setItem('wot_account_id', String(data.wot_account_id));
+            }
         } else if (data.first_name) {
             badge.textContent = `👤 ${data.first_name}`;
         }

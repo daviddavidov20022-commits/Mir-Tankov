@@ -3152,10 +3152,26 @@ async def api_me(request):
             telegram_id = int(telegram_id)
             user = get_user_by_telegram_id(telegram_id)
 
-            # Если пользователь не найден, но это админ — авто-создаём
-            if not user and ADMIN_ID and telegram_id == ADMIN_ID:
-                logger.info(f"Auto-creating admin user: {telegram_id}")
-                user = get_or_create_user(telegram_id, username="admin", first_name="Admin")
+            # Если пользователь не найден — авто-создаём
+            if not user:
+                if ADMIN_ID and telegram_id == ADMIN_ID:
+                    logger.info(f"Auto-creating admin user: {telegram_id}")
+                    user = get_or_create_user(telegram_id)
+                else:
+                    # Обычный пользователь — тоже создаём
+                    user = get_or_create_user(telegram_id)
+
+            # Восстанавливаем WoT данные из query params (клиент может передать из CloudStorage)
+            q_nick = request.query.get("wot_nickname", "").strip()
+            q_acc = request.query.get("wot_account_id", "").strip()
+            if user and q_nick and not user.get("wot_nickname"):
+                from database import update_user_wot
+                acc_id = int(q_acc) if q_acc else None
+                if acc_id:
+                    update_user_wot(telegram_id, q_nick, acc_id)
+                    user["wot_nickname"] = q_nick
+                    user["wot_account_id"] = acc_id
+                    logger.info(f"Restored WoT via /api/me: {q_nick} for tg={telegram_id}")
 
         if not user:
             account_id = request.query.get("wot_account_id")
@@ -3193,6 +3209,7 @@ async def api_me(request):
         return cors_response({
             "telegram_id": user_tg_id,
             "wot_nickname": user.get("wot_nickname"),
+            "wot_account_id": user.get("wot_account_id"),
             "first_name": user.get("first_name"),
             "username": user.get("username"),
             "avatar": user.get("avatar"),
