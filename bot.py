@@ -4662,10 +4662,18 @@ async def api_global_challenge_join(request):
 
         user = get_user_by_telegram_id(tg_id)
         if not user:
-            return cors_response({"error": "Пользователь не найден"}, 404)
+            # Автоматически создаём пользователя если не существует
+            from database import get_or_create_user
+            user = get_or_create_user(tg_id)
+        
+        if not user:
+            return cors_response({"error": "Не удалось найти пользователя. Нажмите /start в боте."}, 404)
 
         nickname = user.get("wot_nickname") or user.get("first_name") or user.get("username") or "Танкист"
         account_id = user.get("wot_account_id")
+
+        if not account_id:
+            return cors_response({"error": "Сначала привяжите аккаунт Мир Танков в профиле!"}, 400)
 
         from database import get_db
         from datetime import datetime
