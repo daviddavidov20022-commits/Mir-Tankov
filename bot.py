@@ -5683,6 +5683,134 @@ async def api_stream_channels_save(request):
 donate_events = collections.deque(maxlen=50)
 music_queue = []
 DONATE_MIN = 10  # минимальный донат
+AI_DONATE_MIN = 50  # минимальный AI донат (дороже из-за API)
+XAI_API_KEY = os.getenv("XAI_API_KEY", "")
+
+
+async def api_stream_donate_ai(request):
+    """POST /api/stream/donate/ai  {telegram_id, username, prompt, amount}"""
+    try:
+        data = await request.json()
+        tg_id = int(data.get("telegram_id", 0))
+        username = data.get("username", "Аноним").strip()
+        amount = int(data.get("amount", 0))
+        prompt = data.get("prompt", "").strip()[:300]
+
+        if not XAI_API_KEY:
+            return cors_response({"error": "AI не настроен. Добавьте XAI_API_KEY в .env"}, 400)
+
+        if not prompt:
+            return cors_response({"error": "Напишите промт для генерации"}, 400)
+
+        if amount < AI_DONATE_MIN:
+            return cors_response({"error": f"Минимум {AI_DONATE_MIN} 🧀 для AI доната"}, 400)
+
+        if not tg_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+
+        # Проверить и списать сыр
+        is_admin = (ADMIN_ID and tg_id == ADMIN_ID)
+        profile_file = os.path.join(os.path.dirname(__file__), 'profiles', f'{tg_id}.json')
+
+        if not os.path.exists(profile_file):
+            if is_admin:
+                os.makedirs(os.path.join(os.path.dirname(__file__), 'profiles'), exist_ok=True)
+                profile = {'cheese': 99999, 'username': username}
+                with open(profile_file, 'w', encoding='utf-8') as f:
+                    json.dump(profile, f, ensure_ascii=False, indent=2)
+            else:
+                return cors_response({"error": "Профиль не найден"}, 404)
+
+        with open(profile_file, 'r', encoding='utf-8') as f:
+            profile = json.load(f)
+
+        current_cheese = profile.get('cheese', 0)
+        if not is_admin and current_cheese < amount:
+            return cors_response({"error": f"Недостаточно Сыра! У вас {current_cheese} 🧀"}, 400)
+
+        # Генерируем картинку через xAI Grok API
+        logger.info(f"[AI Donate] Generating image for {username}: {prompt}")
+        image_url = None
+        image_b64 = None
+        try:
+            import aiohttp
+            timeout = aiohttp.ClientTimeout(total=30)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                resp = await session.post(
+                    "https://api.x.ai/v1/images/generations",
+                    headers={
+                        "Authorization": f"Bearer {XAI_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "grok-2-image",
+                        "prompt": prompt,
+                        "n": 1,
+                        "response_format": "b64_json",
+                    }
+                )
+                result = await resp.json()
+
+                if resp.status != 200:
+                    error_msg = result.get("error", {}).get("message", "Ошибка API")
+                    logger.error(f"[AI Donate] xAI API error: {error_msg}")
+                    return cors_response({"error": f"AI ошибка: {error_msg}"}, 500)
+
+                if result.get("data") and len(result["data"]) > 0:
+                    image_b64 = result["data"][0].get("b64_json")
+                    if result["data"][0].get("url"):
+                        image_url = result["data"][0]["url"]
+
+        except asyncio.TimeoutError:
+            return cors_response({"error": "AI генерация занимает слишком долго, попробуйте позже"}, 500)
+        except Exception as e:
+            logger.error(f"[AI Donate] Generation error: {e}")
+            return cors_response({"error": f"Ошибка генерации: {str(e)}"}, 500)
+
+        if not image_b64 and not image_url:
+            return cors_response({"error": "AI не смог сгенерировать картинку"}, 500)
+
+        # Списать сыр
+        if not is_admin:
+            profile['cheese'] = current_cheese - amount
+            with open(profile_file, 'w', encoding='utf-8') as f:
+                json.dump(profile, f, ensure_ascii=False, indent=2)
+
+        # Создать событие доната с картинкой
+        event = {
+            "id": str(_uuid.uuid4())[:8],
+            "telegram_id": tg_id,
+            "username": username,
+            "amount": amount,
+            "message": f"🤖 AI: {prompt}",
+            "timestamp": _time.time(),
+            "shown": False,
+            "ai_image": f"data:image/png;base64,{image_b64}" if image_b64 else image_url,
+            "ai_prompt": prompt,
+        }
+        donate_events.append(event)
+
+        # Добавить в чат
+        stream_chat_messages.append({
+            "id": event["id"],
+            "platform": "donate",
+            "username": f"🤖 {username}",
+            "text": f"[AI ДОНАТ {amount} 🧀] {prompt}",
+            "color": "#9C27B0",
+            "timestamp": _time.time(),
+            "telegram_id": tg_id,
+        })
+
+        logger.info(f"[AI Donate] {username} сгенерировал за {amount} сыра: {prompt}")
+        return cors_response({"success": True, "event": {
+            "id": event["id"],
+            "amount": amount,
+            "prompt": prompt,
+            "has_image": True,
+        }, "new_balance": profile['cheese']})
+    except Exception as e:
+        logger.error(f"[AI Donate] Error: {e}")
+        return cors_response({"error": str(e)}, 500)
 
 async def api_stream_donate(request):
     """POST /api/stream/donate  {telegram_id, username, amount, message}"""
@@ -6206,6 +6334,7 @@ def create_api_app():
 
     # Donate & Music API
     app.router.add_post("/api/stream/donate", api_stream_donate)
+    app.router.add_post("/api/stream/donate/ai", api_stream_donate_ai)
     app.router.add_get("/api/stream/donate/latest", api_stream_donate_latest)
     app.router.add_get("/api/stream/donate/history", api_stream_donate_history)
     app.router.add_post("/api/stream/music/request", api_stream_music_request)

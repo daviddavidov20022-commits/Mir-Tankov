@@ -1315,6 +1315,139 @@ async function sendTestDonate() {
     } catch(e) { showToast('❌', 'Ошибка сети'); }
 }
 
+// ==========================================
+// AI ДОНАТ (Grok генерация)
+// ==========================================
+async function openAiDonateModal() {
+    // Создаём модалку если нет
+    let modal = document.getElementById('aiDonateModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'aiDonateModal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-card" style="max-width:420px; position:relative">
+                <button class="modal-close" onclick="closeAiDonateModal()">✕</button>
+                <div class="modal-title">🤖 AI Донат</div>
+                <div class="modal-subtitle" id="aiDonateBalance">Баланс: ... 🧀</div>
+                
+                <div class="modal-label" style="margin-top:16px">✨ Промт для генерации</div>
+                <textarea id="aiDonatePrompt" class="modal-input" 
+                    placeholder="Опиши что нарисовать... Например: Танк Т-34 летит в космосе на фоне галактики" 
+                    rows="3" maxlength="300" style="resize:vertical; min-height:70px"></textarea>
+                <div style="font-size:0.6rem; color:#5A6577; text-align:right; margin-top:2px">
+                    <span id="aiPromptCounter">0</span>/300
+                </div>
+                
+                <div class="modal-label">🧀 Стоимость</div>
+                <div class="donate-presets" style="display:flex; gap:6px; margin-bottom:8px">
+                    <button class="donate-preset-btn" onclick="setAiDonateAmount(50)">50 🧀</button>
+                    <button class="donate-preset-btn" onclick="setAiDonateAmount(100)">100 🧀</button>
+                    <button class="donate-preset-btn" onclick="setAiDonateAmount(200)">200 🧀</button>
+                </div>
+                <input type="number" id="aiDonateAmount" class="modal-input" value="50" min="50">
+                
+                <button class="modal-action-btn" id="aiDonateSendBtn" onclick="sendAiDonate()" 
+                    style="margin-top:12px; background: linear-gradient(135deg, #9C27B0, #7B1FA2)">
+                    🤖 Сгенерировать и отправить
+                </button>
+                
+                <div id="aiDonatePreview" style="display:none; margin-top:16px; text-align:center">
+                    <div style="color:#9C27B0; margin-bottom:8px">✨ Результат:</div>
+                    <img id="aiDonatePreviewImg" style="max-width:100%; border-radius:12px; border:1px solid rgba(156,39,176,0.3)">
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+
+        // Счётчик символов
+        document.getElementById('aiDonatePrompt').addEventListener('input', (e) => {
+            document.getElementById('aiPromptCounter').textContent = e.target.value.length;
+        });
+    }
+
+    modal.style.display = 'flex';
+    document.getElementById('aiDonatePreview').style.display = 'none';
+    
+    const balance = await getMyCheeseBalance();
+    if (isAdmin) {
+        document.getElementById('aiDonateBalance').textContent = 'Баланс: ∞ 🧀 (ADMIN)';
+    } else {
+        document.getElementById('aiDonateBalance').textContent = `Баланс: ${balance} 🧀`;
+    }
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
+}
+
+function closeAiDonateModal() {
+    const modal = document.getElementById('aiDonateModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function setAiDonateAmount(val) {
+    document.getElementById('aiDonateAmount').value = val;
+    try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch(e) {}
+}
+
+async function sendAiDonate() {
+    const prompt = document.getElementById('aiDonatePrompt').value.trim();
+    const amount = parseInt(document.getElementById('aiDonateAmount').value) || 0;
+
+    if (!prompt) {
+        showToast('❌', 'Напишите промт для генерации');
+        return;
+    }
+    if (amount < 50) {
+        showToast('❌', 'Минимум 50 🧀 для AI доната');
+        return;
+    }
+    if (!myTelegramId) {
+        showToast('❌', 'Нужна авторизация через Telegram');
+        return;
+    }
+
+    const btn = document.getElementById('aiDonateSendBtn');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Генерация... (5-15 сек)';
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/stream/donate/ai`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                telegram_id: myTelegramId,
+                username: myUsername || 'Танкист',
+                amount: amount,
+                prompt: prompt,
+            }),
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            showToast('🤖', `AI донат отправлен! ${amount} 🧀`);
+            document.getElementById('aiDonatePrompt').value = '';
+
+            // Обновить баланс
+            try {
+                const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
+                local.coins = data.new_balance;
+                localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
+            } catch(e) {}
+            
+            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
+            
+            // Закрываем через секунду
+            setTimeout(() => closeAiDonateModal(), 1500);
+        } else {
+            showToast('❌', data.error || 'Ошибка генерации');
+            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
+        }
+    } catch(e) {
+        showToast('❌', 'Ошибка сети');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '🤖 Сгенерировать и отправить';
+}
+
 async function sendTestMusic() {
     try {
         await fetch(`${BOT_API_URL}/api/stream/music/request`, {
@@ -1398,3 +1531,7 @@ window.sendTestMusic = sendTestMusic;
 window.openSettingsModal = openSettingsModal;
 window.closeSettingsModal = closeSettingsModal;
 window.switchSettingsTab = switchSettingsTab;
+window.openAiDonateModal = openAiDonateModal;
+window.closeAiDonateModal = closeAiDonateModal;
+window.setAiDonateAmount = setAiDonateAmount;
+window.sendAiDonate = sendAiDonate;

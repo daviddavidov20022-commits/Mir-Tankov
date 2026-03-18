@@ -302,6 +302,7 @@
             const username = document.getElementById('alertUsername');
             const amount = document.getElementById('alertAmount');
             const message = document.getElementById('alertMessage');
+            const mediaEl = document.getElementById('alertMedia');
 
             let tier = 'small';
             if (event.amount >= 200) tier = 'large';
@@ -317,29 +318,42 @@
                 message.style.display = 'none';
             }
 
-            // Звук (сначала — чтобы знать muted ли видео)
-            const hasCustomSound = playSound(tier);
-
-            // Медиа (видео/GIF)
-            // Если есть mp3 — видео muted; нет mp3 — видео со своим звуком
-            showMedia(tier, hasCustomSound);
+            // AI Донат — показываем сгенерированную картинку
+            if (event.ai_image) {
+                mediaEl.style.display = 'block';
+                mediaEl.innerHTML = `<img src="${event.ai_image}" alt="AI Generated" style="box-shadow: 0 0 30px rgba(156,39,176,0.5)">`;
+                username.style.color = '#CE93D8';
+                // Звук
+                playSound(tier);
+            } else {
+                username.style.color = '#FFC107';
+                // Звук (сначала — чтобы знать muted ли видео)
+                const hasCustomSound = playSound(tier);
+                // Медиа (видео/GIF)
+                showMedia(tier, hasCustomSound);
+            }
 
             // TTS
-            if (event.message) speakText(event.message, event.amount);
+            if (event.ai_prompt) {
+                speakText(`AI сгенерировал: ${event.ai_prompt}`, event.amount);
+            } else if (event.message) {
+                speakText(event.message, event.amount);
+            }
 
             // Показать
             wrap.classList.remove('hide');
             wrap.classList.add('show');
 
-            // Скрыть через N секунд
-            const duration = (tier === 'large' ? CONFIG.alertDuration * 1.5 : CONFIG.alertDuration) * 1000;
+            // AI донат показываем дольше (картинку хочется рассмотреть)
+            const baseDuration = event.ai_image ? CONFIG.alertDuration * 2 : CONFIG.alertDuration;
+            const duration = (tier === 'large' ? baseDuration * 1.5 : baseDuration) * 1000;
             setTimeout(() => {
                 wrap.classList.remove('show');
                 wrap.classList.add('hide');
                 window.speechSynthesis?.cancel();
                 setTimeout(() => {
                     wrap.classList.remove('hide');
-                    document.getElementById('alertMedia').style.display = 'none';
+                    mediaEl.style.display = 'none';
                     isShowing = false;
                 }, 500);
             }, duration);
