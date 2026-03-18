@@ -4493,7 +4493,7 @@ async def api_global_challenge_create(request):
     """POST /api/global-challenge/create — админ создаёт общий челлендж"""
     try:
         data = await request.json()
-        admin_tg = data.get("admin_telegram_id")
+        admin_tg = int(data.get("admin_telegram_id", 0))
 
         if not is_admin_user(admin_tg):
             return cors_response({"error": "Нет доступа"}, 403)
@@ -4654,8 +4654,8 @@ async def api_global_challenge_join(request):
     """POST /api/global-challenge/join — присоединиться к общему челленджу"""
     try:
         data = await request.json()
-        tg_id = data.get("telegram_id")
-        challenge_id = data.get("challenge_id")
+        tg_id = int(data.get("telegram_id", 0))
+        challenge_id = int(data.get("challenge_id", 0))
 
         if not tg_id or not challenge_id:
             return cors_response({"error": "Не указаны параметры"}, 400)
@@ -4765,8 +4765,8 @@ async def api_global_challenge_finish(request):
     """POST /api/global-challenge/finish — завершить челлендж (админ)"""
     try:
         data = await request.json()
-        admin_tg = data.get("admin_telegram_id")
-        challenge_id = data.get("challenge_id")
+        admin_tg = int(data.get("admin_telegram_id", 0))
+        challenge_id = int(data.get("challenge_id", 0))
 
         if not is_admin_user(admin_tg):
             return cors_response({"error": "Нет доступа"}, 403)
@@ -4818,8 +4818,8 @@ async def api_global_challenge_delete(request):
     """POST /api/global-challenge/delete — удалить челлендж (админ)"""
     try:
         data = await request.json()
-        admin_tg = data.get("admin_telegram_id")
-        challenge_id = data.get("challenge_id")
+        admin_tg = int(data.get("admin_telegram_id", 0))
+        challenge_id = int(data.get("challenge_id", 0))
 
         if not is_admin_user(admin_tg):
             return cors_response({"error": "Нет доступа"}, 403)
