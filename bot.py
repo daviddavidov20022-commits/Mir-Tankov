@@ -5125,25 +5125,37 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
     battle_num = existing_count + 1
     with get_db() as conn:
         for b in new_battles_list:
-            # Средний урон за бой на этом танке
-            avg_damage = b["damage_delta"] // b["new_battles"] if b["new_battles"] > 0 else 0
-            
-            # Сколько боёв на этом танке ещё не записано
-            already_logged = conn.execute(
-                "SELECT COUNT(*) as cnt FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? AND tank_id = ?",
+            # Сколько боёв и урона на этом танке УЖЕ записано
+            already = conn.execute(
+                "SELECT COUNT(*) as cnt, COALESCE(SUM(damage), 0) as total_dmg FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? AND tank_id = ?",
                 (challenge_id, telegram_id, b["tank_id"])
             ).fetchone()
-            logged_count = already_logged["cnt"] if already_logged else 0
+            logged_count = already["cnt"] if already else 0
+            logged_damage = already["total_dmg"] if already else 0
             new_count = b["new_battles"] - logged_count
 
-            for _ in range(max(0, new_count)):
+            if new_count <= 0:
+                continue
+
+            # Оставшийся урон = общая дельта минус уже записанный
+            remaining_damage = b["damage_delta"] - logged_damage
+            # Урон за каждый новый бой (если несколько — делим оставшееся)
+            per_battle_damage = remaining_damage // new_count if new_count > 0 else 0
+
+            for j in range(new_count):
+                # Последний бой получает остаток (чтобы сумма совпала точно)
+                if j == new_count - 1:
+                    dmg = remaining_damage - per_battle_damage * (new_count - 1)
+                else:
+                    dmg = per_battle_damage
+                
                 conn.execute("""
                     INSERT INTO gc_battle_log 
                     (challenge_id, telegram_id, battle_num, tank_id, tank_name, tank_tier, tank_type, damage, detected_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (challenge_id, telegram_id, battle_num, b["tank_id"],
                       b.get("tank_name", ""), b.get("tank_tier", 0), b.get("tank_type", ""),
-                      avg_damage, datetime.now()))
+                      max(0, dmg), datetime.now()))
                 battle_num += 1
 
 

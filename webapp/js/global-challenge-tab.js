@@ -21,6 +21,7 @@ let gcAllSubscribers = [];
 let _gcLastDataHash = null;
 let _gcIsFirstLoad = true;
 let _gcLoadInProgress = false;
+let _gcLastRefreshTime = 0; // throttle refresh-stats
 
 // ============================================================
 // LOAD CHALLENGE
@@ -50,13 +51,17 @@ async function gcLoadChallenge(forceRefresh) {
             if (adminPanel) adminPanel.style.display = '';
         }
 
-        // Обновляем статистику в фоне (НЕ блокируем загрузку!)
-        const refreshController = new AbortController();
-        setTimeout(() => refreshController.abort(), 10000); // 10 сек таймаут
-        fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { 
-            method: 'POST', 
-            signal: refreshController.signal 
-        }).catch(() => {});
+        // Обновляем статистику в фоне НЕ ЧАЩЕ раз в 30 секунд
+        const now = Date.now();
+        if (now - _gcLastRefreshTime > 30000) {
+            _gcLastRefreshTime = now;
+            const refreshController = new AbortController();
+            setTimeout(() => refreshController.abort(), 10000);
+            fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { 
+                method: 'POST', 
+                signal: refreshController.signal 
+            }).catch(() => {});
+        }
 
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
         const data = await resp.json();
