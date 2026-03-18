@@ -4507,8 +4507,8 @@ async def api_global_challenge_create(request):
         reward_description = data.get("reward_description", f"{reward_coins} 🧀")
 
         from database import get_db
-        from datetime import datetime, timedelta
-        ends_at = datetime.now() + timedelta(minutes=duration_minutes)
+        from datetime import datetime, timedelta, timezone
+        ends_at = datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)
 
         with get_db() as conn:
             # Закрываем старые активные
@@ -4564,20 +4564,22 @@ async def api_global_challenge_active(request):
     """GET /api/global-challenge/active — получить активный общий челлендж"""
     try:
         from database import get_db
-        from datetime import datetime
+        from datetime import datetime, timezone
+
+        now_utc = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
         with get_db() as conn:
             ch = conn.execute("""
                 SELECT * FROM global_challenges 
                 WHERE status = 'active' AND ends_at > ?
                 ORDER BY created_at DESC LIMIT 1
-            """, (datetime.now(),)).fetchone()
+            """, (now_utc,)).fetchone()
 
             if not ch:
                 # Проверяем и закрываем просроченные
                 expired = conn.execute(
                     "SELECT id FROM global_challenges WHERE status = 'active' AND ends_at <= ?",
-                    (datetime.now(),)
+                    (now_utc,)
                 ).fetchall()
                 for ex in expired:
                     # Автоматически завершаем
@@ -4637,6 +4639,10 @@ async def api_global_challenge_active(request):
 
             ch["participants_count"] = participants
             ch["leaderboard"] = [dict(r) for r in top]
+
+            # Добавляем Z (UTC marker) к ends_at чтобы JS правильно интерпретировал
+            if ch.get("ends_at") and not str(ch["ends_at"]).endswith("Z") and "+" not in str(ch["ends_at"]):
+                ch["ends_at"] = str(ch["ends_at"]) + "Z"
 
         return cors_response({"challenge": ch, "status": "active"})
     except Exception as e:

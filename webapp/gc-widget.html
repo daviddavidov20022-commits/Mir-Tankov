@@ -838,7 +838,7 @@
     </div>
 
     <script>
-        const BOT_API_URL = localStorage.getItem('bot_api_url') || 'http://localhost:8081';
+        const BOT_API_URL = localStorage.getItem('bot_api_url') || 'https://mir-tankov-production.up.railway.app';
         const P = new URLSearchParams(window.location.search);
         const myId = P.get('telegram_id') ? parseInt(P.get('telegram_id')) : null;
         const layout = parseInt(P.get('layout')) || 1;
