@@ -4854,20 +4854,45 @@ async def api_global_challenge_refresh_stats(request):
         for p in participants:
             p = dict(p)
             user = get_user_by_telegram_id(p["telegram_id"])
-            if not user:
-                continue
 
-            account_id = user.get("wot_account_id")
+            account_id = user.get("wot_account_id") if user else None
+
+            # Если нет account_id — пробуем найти по нику участника через Lesta API
+            if not account_id and p.get("nickname"):
+                try:
+                    import aiohttp as _aiohttp
+                    async with _aiohttp.ClientSession() as session:
+                        url = (
+                            f"https://api.tanki.su/wot/account/list/"
+                            f"?application_id={LESTA_APP_ID}"
+                            f"&search={p['nickname']}&limit=1&type=exact"
+                        )
+                        async with session.get(url, timeout=_aiohttp.ClientTimeout(total=10)) as resp:
+                            result = await resp.json()
+                            if result.get("status") == "ok" and result.get("data"):
+                                account_id = result["data"][0]["account_id"]
+                                # Сохраняем в users
+                                if user:
+                                    from database import update_user_wot
+                                    update_user_wot(p["telegram_id"], p["nickname"], account_id)
+                                logger.info(f"GC refresh: auto-found account_id={account_id} for {p['nickname']}")
+                except Exception as e:
+                    logger.warning(f"GC refresh lookup error: {e}")
+
             if not account_id:
+                logger.warning(f"GC refresh: no account_id for {p['nickname']} (tg={p['telegram_id']}), skipping")
                 continue
 
             stat = await gc_fetch_player_stat(account_id, ch["condition"])
             if not stat:
+                logger.warning(f"GC refresh: no stat from Lesta for account_id={account_id}")
                 continue
 
             # Считаем дельту от базового уровня
             new_value = max(0, stat["value"] - p["baseline_value"])
             new_battles = max(0, stat["battles"] - p["baseline_battles"])
+
+            logger.info(f"GC refresh: {p['nickname']} value={stat['value']} baseline={p['baseline_value']} delta={new_value} battles_delta={new_battles}")
 
             with get_db() as conn:
                 conn.execute("""
@@ -4877,7 +4902,8 @@ async def api_global_challenge_refresh_stats(request):
                 """, (new_value, new_battles, datetime.now(), ch["id"], p["telegram_id"]))
                 updated += 1
 
-        return cors_response({"success": True, "updated": updated})
+        logger.info(f"GC refresh-stats: updated {updated}/{len(participants)} participants")
+        return cors_response({"success": True, "updated": updated, "total": len(participants)})
     except Exception as e:
         logger.error(f"API global_challenge_refresh error: {e}")
         return cors_response({"error": str(e)}, 500)
