@@ -2,15 +2,21 @@
 // OBS LINK FUNCTIONS for Global Challenge
 // ============================================================
 
+function _gcGetWidgetBase() {
+    const pathParts = window.location.pathname.split('/');
+    pathParts[pathParts.length - 1] = 'gc-widget.html';
+    return window.location.origin + pathParts.join('/');
+}
+
 function gcCopyObsLink() {
-    const base = window.location.origin + window.location.pathname.replace('challenges.html', 'gc-widget.html');
+    const base = _gcGetWidgetBase();
     const url = myTelegramId ? base + '?telegram_id=' + myTelegramId : base;
     _gcCopyText(url, 'OBS ссылка скопирована! Добавьте как Browser Source в OBS.');
 }
 
 function gcCopyObsLinkWithConfig() {
     const config = gcGetWidgetConfig();
-    const base = window.location.origin + window.location.pathname.replace('challenges.html', 'gc-widget.html');
+    const base = _gcGetWidgetBase();
     const params = new URLSearchParams();
     if (myTelegramId) params.set('telegram_id', myTelegramId);
     params.set('layout', config.layout);

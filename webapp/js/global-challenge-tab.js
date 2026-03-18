@@ -50,12 +50,10 @@ async function gcLoadChallenge(forceRefresh) {
             if (adminPanel) adminPanel.style.display = '';
         }
 
-        // Обновляем статистику через API (только при первой загрузке или forceRefresh)
-        if (_gcIsFirstLoad || forceRefresh) {
-            try {
-                await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
-            } catch (e) { /* ignore */ }
-        }
+        // Обновляем статистику через API каждый раз (для реалтайм турнирной таблицы)
+        try {
+            await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
+        } catch (e) { /* ignore */ }
 
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
         const data = await resp.json();
@@ -154,7 +152,8 @@ function gcShowActive(ch) {
 
     // Join button
     const joinBtn = document.getElementById('gcJoinBtn');
-    const isParticipant = (ch.leaderboard || []).some(p => p.telegram_id === myTelegramId);
+    const myId = parseInt(myTelegramId);
+    const isParticipant = (ch.leaderboard || []).some(p => parseInt(p.telegram_id) === myId);
 
     if (isParticipant) {
         joinBtn.disabled = true;
@@ -188,7 +187,10 @@ function gcShowActive(ch) {
             obsSection.style.display = '';
             const obsUrl = document.getElementById('gcObsUrl');
             if (obsUrl) {
-                const base = window.location.origin + window.location.pathname.replace('challenges.html', 'gc-widget.html');
+                // Строим URL корректно для любой страницы (challenges.html или global-challenge.html)
+                const pathParts = window.location.pathname.split('/');
+                pathParts[pathParts.length - 1] = 'gc-widget.html';
+                const base = window.location.origin + pathParts.join('/');
                 const url = myTelegramId ? `${base}?telegram_id=${myTelegramId}` : base;
                 obsUrl.textContent = url;
             }
@@ -329,7 +331,7 @@ function gcRenderLeaderboard(leaders) {
         else if (i === 2) cls = 'gc-lb-item--3rd';
         else cls = 'gc-lb-item--other';
 
-        const isMe = p.telegram_id === myTelegramId;
+        const isMe = parseInt(p.telegram_id) === parseInt(myTelegramId);
         if (isMe) cls += ' gc-lb-item--me';
 
         const rankCls = i < 3 ? ['gc-lb-rank--1st', 'gc-lb-rank--2nd', 'gc-lb-rank--3rd'][i] : 'gc-lb-rank--other';
@@ -662,20 +664,17 @@ function gcLaunchConfetti() {
 // ============================================================
 
 // Auto-refresh данных каждые 15 секунд (без мерцания)
+// Работает и на challenges.html (вкладка global) и на standalone global-challenge.html
 setInterval(() => {
     const globalTab = document.getElementById('tab-global');
-    if (globalTab && globalTab.classList.contains('tab-content--active')) {
+    // Если вкладка global активна ИЛИ мы на standalone странице (нет tab-global)
+    const isGlobalTabActive = globalTab ? globalTab.classList.contains('tab-content--active') : true;
+    if (isGlobalTabActive && gcCurrentChallenge) {
         gcLoadChallenge(false);
     }
 }, 15000);
 
-// Background refresh stats через API каждые 30 секунд (отдельно от UI)
-setInterval(() => {
-    const globalTab = document.getElementById('tab-global');
-    if (globalTab && globalTab.classList.contains('tab-content--active') && gcCurrentChallenge) {
-        fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' }).catch(() => {});
-    }
-}, 30000);
+// Данные обновляются внутри gcLoadChallenge — отдельный refresh убран (был дублирующим)
 
 // Check URL for ?tab=global on load
 document.addEventListener('DOMContentLoaded', () => {
@@ -964,7 +963,9 @@ function gcGetWidgetConfig() {
 
 function gcCopyCustomWidgetLink() {
     const config = gcGetWidgetConfig();
-    const base = window.location.origin + window.location.pathname.replace('challenges.html', 'gc-widget.html');
+    const pathParts = window.location.pathname.split('/');
+    pathParts[pathParts.length - 1] = 'gc-widget.html';
+    const base = window.location.origin + pathParts.join('/');
     const params = new URLSearchParams();
     if (myTelegramId) params.set('telegram_id', myTelegramId);
     params.set('layout', config.layout);
