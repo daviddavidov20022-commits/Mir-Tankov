@@ -50,10 +50,13 @@ async function gcLoadChallenge(forceRefresh) {
             if (adminPanel) adminPanel.style.display = '';
         }
 
-        // Обновляем статистику через API каждый раз (для реалтайм турнирной таблицы)
-        try {
-            await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
-        } catch (e) { /* ignore */ }
+        // Обновляем статистику в фоне (НЕ блокируем загрузку!)
+        const refreshController = new AbortController();
+        setTimeout(() => refreshController.abort(), 10000); // 10 сек таймаут
+        fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { 
+            method: 'POST', 
+            signal: refreshController.signal 
+        }).catch(() => {});
 
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
         const data = await resp.json();

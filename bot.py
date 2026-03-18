@@ -4482,7 +4482,8 @@ async def gc_fetch_player_stat(account_id, condition):
     stat_field = GC_CONDITION_TO_STAT.get(condition, "damage_dealt")
 
     try:
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/account/info/"
                    f"?application_id={LESTA_APP_ID}&account_id={account_id}"
                    f"&fields=statistics.all.{stat_field},statistics.all.battles")
@@ -4832,6 +4833,18 @@ async def api_global_challenge_join(request):
 
 async def api_global_challenge_refresh_stats(request):
     """POST /api/global-challenge/refresh-stats — обновить стату всех участников через Lesta API"""
+    import asyncio
+    try:
+        return await asyncio.wait_for(_do_refresh_stats(), timeout=25)
+    except asyncio.TimeoutError:
+        logger.error("GC refresh-stats: TIMEOUT (25s)")
+        return cors_response({"error": "Timeout", "updated": 0}, 200)
+    except Exception as e:
+        logger.error(f"API global_challenge_refresh error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+async def _do_refresh_stats():
+    """Внутренняя логика обновления статистики"""
     try:
         from database import get_db
         from datetime import datetime
