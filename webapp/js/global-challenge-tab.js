@@ -28,30 +28,20 @@ async function gcLoadChallenge() {
         // На случай если arena.js loadMyProfile() ещё не успел отработать
         if (!isAdmin && myTelegramId) {
             try {
-                console.log('[GC] Checking admin status for telegram_id:', myTelegramId);
                 const meResp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
                 const meData = await meResp.json();
-                console.log('[GC] API /api/me response:', meData);
                 if (meData.is_admin) {
                     isAdmin = true;
-                    console.log('[GC] ✅ Admin confirmed!');
                     const adminTab = document.getElementById('adminTab');
                     if (adminTab) adminTab.style.display = '';
-                } else {
-                    console.log('[GC] ❌ Not admin according to API');
                 }
-            } catch(e) {
-                console.error('[GC] Admin check failed:', e);
-            }
+            } catch(e) {}
         }
 
         // Показываем админ-панель СРАЗУ если админ (до загрузки данных челленджа)
         if (isAdmin) {
             const adminPanel = document.getElementById('gcAdminPanel');
-            if (adminPanel) {
-                adminPanel.style.display = '';
-                console.log('[GC] Admin panel shown');
-            }
+            if (adminPanel) adminPanel.style.display = '';
         }
 
         // Обновляем статистику через API
