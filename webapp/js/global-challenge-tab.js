@@ -24,7 +24,37 @@ let gcAllSubscribers = [];
 // ============================================================
 async function gcLoadChallenge() {
     try {
-        // Сначала обновляем стату через API
+        // Всегда проверяем админ-статус ПЕРВЫМ ДЕЛОМ (до загрузки челленджа)
+        // На случай если arena.js loadMyProfile() ещё не успел отработать
+        if (!isAdmin && myTelegramId) {
+            try {
+                console.log('[GC] Checking admin status for telegram_id:', myTelegramId);
+                const meResp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
+                const meData = await meResp.json();
+                console.log('[GC] API /api/me response:', meData);
+                if (meData.is_admin) {
+                    isAdmin = true;
+                    console.log('[GC] ✅ Admin confirmed!');
+                    const adminTab = document.getElementById('adminTab');
+                    if (adminTab) adminTab.style.display = '';
+                } else {
+                    console.log('[GC] ❌ Not admin according to API');
+                }
+            } catch(e) {
+                console.error('[GC] Admin check failed:', e);
+            }
+        }
+
+        // Показываем админ-панель СРАЗУ если админ (до загрузки данных челленджа)
+        if (isAdmin) {
+            const adminPanel = document.getElementById('gcAdminPanel');
+            if (adminPanel) {
+                adminPanel.style.display = '';
+                console.log('[GC] Admin panel shown');
+            }
+        }
+
+        // Обновляем статистику через API
         try {
             await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
         } catch (e) { /* ignore */ }
@@ -42,26 +72,20 @@ async function gcLoadChallenge() {
             gcShowEmpty();
         }
 
-        // Show admin panel if admin
-        // Если isAdmin ещё не определён — пробуем проверить напрямую
-        if (!isAdmin && myTelegramId) {
-            try {
-                const meResp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
-                const meData = await meResp.json();
-                if (meData.is_admin) {
-                    isAdmin = true;
-                    const adminTab = document.getElementById('adminTab');
-                    if (adminTab) adminTab.style.display = '';
-                }
-            } catch(e) {}
-        }
+        // Повторно убеждаемся что админ-панель показана (gcShowActive/gcShowFinished могут сбросить)
         if (isAdmin) {
-            document.getElementById('gcAdminPanel').style.display = '';
+            const adminPanel = document.getElementById('gcAdminPanel');
+            if (adminPanel) adminPanel.style.display = '';
         }
     } catch (e) {
         console.error('GC load error:', e);
         document.getElementById('gcLoading').style.display = 'none';
         gcShowEmpty();
+        // Даже при ошибке — всё равно показываем admin panel если мы админ
+        if (isAdmin) {
+            const adminPanel = document.getElementById('gcAdminPanel');
+            if (adminPanel) adminPanel.style.display = '';
+        }
     }
 }
 
