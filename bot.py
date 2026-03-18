@@ -4672,8 +4672,55 @@ async def api_global_challenge_join(request):
         nickname = user.get("wot_nickname") or user.get("first_name") or user.get("username") or "Танкист"
         account_id = user.get("wot_account_id")
 
-        if not account_id:
-            return cors_response({"error": "Сначала привяжите аккаунт Мир Танков в профиле!"}, 400)
+        logger.info(f"GC Join: tg_id={tg_id}, nickname={nickname}, account_id={account_id}, wot_nickname={user.get('wot_nickname')}")
+
+        # Если есть ник но нет account_id — пробуем найти через Lesta API
+        if not account_id and user.get("wot_nickname"):
+            try:
+                import aiohttp as _aiohttp
+                async with _aiohttp.ClientSession() as session:
+                    url = (
+                        f"https://api.tanki.su/wot/account/list/"
+                        f"?application_id={LESTA_APP_ID}"
+                        f"&search={user['wot_nickname']}&limit=1&type=exact"
+                    )
+                    async with session.get(url, timeout=_aiohttp.ClientTimeout(total=10)) as resp:
+                        result = await resp.json()
+                        if result.get("status") == "ok" and result.get("data"):
+                            account_id = result["data"][0]["account_id"]
+                            nickname = result["data"][0].get("nickname", nickname)
+                            # Сохраняем найденный account_id
+                            from database import update_user_wot
+                            update_user_wot(tg_id, nickname, account_id)
+                            logger.info(f"Auto-found account_id={account_id} for {nickname}")
+            except Exception as e:
+                logger.warning(f"Lesta API lookup in join: {e}")
+
+        # Если нет wot_nickname и нет account_id — пробуем поискать по нику через Lesta 
+        # (может пользователь использует свой ник от игры в качестве Telegram имени)
+        if not account_id and not user.get("wot_nickname"):
+            try_nick = user.get("first_name") or user.get("username")
+            if try_nick:
+                try:
+                    import aiohttp as _aiohttp
+                    async with _aiohttp.ClientSession() as session:
+                        url = (
+                            f"https://api.tanki.su/wot/account/list/"
+                            f"?application_id={LESTA_APP_ID}"
+                            f"&search={try_nick}&limit=1&type=exact"
+                        )
+                        async with session.get(url, timeout=_aiohttp.ClientTimeout(total=10)) as resp:
+                            result = await resp.json()
+                            if result.get("status") == "ok" and result.get("data"):
+                                account_id = result["data"][0]["account_id"]
+                                nickname = result["data"][0].get("nickname", nickname)
+                                from database import update_user_wot
+                                update_user_wot(tg_id, nickname, account_id)
+                                logger.info(f"Auto-found by first_name: account_id={account_id} for {nickname}")
+                except Exception as e:
+                    logger.warning(f"Lesta API try-lookup: {e}")
+
+        # Разрешаем вступить даже без account_id (статистика просто не будет отслеживаться)
 
         from database import get_db
         from datetime import datetime
