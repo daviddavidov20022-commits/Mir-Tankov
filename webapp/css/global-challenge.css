@@ -1668,3 +1668,221 @@
     border-radius: 2px;
     opacity: .25;
 }
+
+/* ==========================================
+   MODAL OVERLAY (детали игрока / таблица)
+   ========================================== */
+.gc-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: modalFade 0.2s ease;
+}
+
+@keyframes modalFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.gc-modal {
+    background: linear-gradient(145deg, #111820, #0d1117);
+    border: 1px solid rgba(200, 170, 110, 0.2);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalSlide 0.3s ease;
+}
+
+.gc-modal--wide {
+    max-width: 520px;
+}
+
+@keyframes modalSlide {
+    from { transform: translateY(30px) scale(0.95); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.gc-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(200, 170, 110, 0.1);
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.9rem;
+    color: #C8AA6E;
+}
+
+.gc-modal__close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: #9AA4B5;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.gc-modal__close:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.gc-modal__body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* ==========================================
+   BATTLE LOG (побоевая разбивка)
+   ========================================== */
+.gc-battles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.gc-battle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.gc-battle-row:hover {
+    background: rgba(200, 170, 110, 0.05);
+    border-color: rgba(200, 170, 110, 0.15);
+}
+
+.gc-battle-num {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.7rem;
+    color: #5A6577;
+    width: 28px;
+    flex-shrink: 0;
+}
+
+.gc-battle-tank {
+    flex: 1;
+    font-size: 0.78rem;
+    color: #E8E6E3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gc-battle-tier {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.6rem;
+    color: #C8AA6E;
+    background: rgba(200, 170, 110, 0.12);
+    padding: 2px 6px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.gc-battle-dmg {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.8rem;
+    color: #ef4444;
+    flex-shrink: 0;
+}
+
+.gc-battles-total {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(200, 170, 110, 0.08), rgba(200, 170, 110, 0.02));
+    border: 1px solid rgba(200, 170, 110, 0.15);
+    border-radius: 12px;
+    font-size: 0.82rem;
+    color: #E8E6E3;
+    text-align: center;
+}
+
+.gc-battles-total b {
+    color: #C8AA6E;
+}
+
+/* ==========================================
+   FULL TABLE (турнирная таблица)
+   ========================================== */
+.gc-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gc-table thead th {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.6rem;
+    color: #5A6577;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 6px;
+    text-align: left;
+    border-bottom: 1px solid rgba(200, 170, 110, 0.1);
+}
+
+.gc-table thead th:last-child {
+    text-align: right;
+}
+
+.gc-table__row {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.gc-table__row:hover {
+    background: rgba(200, 170, 110, 0.06);
+}
+
+.gc-table__row td {
+    padding: 10px 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    font-size: 0.78rem;
+}
+
+.gc-table__rank {
+    font-family: 'Russo One', sans-serif;
+    color: #5A6577;
+    width: 30px;
+}
+
+.gc-table__name {
+    color: #E8E6E3;
+    font-family: 'Russo One', sans-serif;
+}
+
+.gc-table__battles {
+    color: #5A6577;
+    font-size: 0.72rem;
+}
+
+.gc-table__value {
+    font-family: 'Russo One', sans-serif;
+    color: #C8AA6E;
+    text-align: right;
+}

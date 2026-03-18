@@ -4471,7 +4471,7 @@ GC_CONDITION_TO_STAT = {
     "frags": "frags",
     "xp": "xp",
     "spotting": "spotted",
-    "blocked": "damage_received",  # blocked damage
+    "blocked": "damage_received",
     "wins": "wins",
 }
 
@@ -4507,6 +4507,90 @@ async def gc_fetch_player_stat(account_id, condition):
         return None
 
 
+async def gc_fetch_tank_stats(account_id):
+    """Получить стату по каждому танку игрока из Lesta API"""
+    import aiohttp
+    try:
+        timeout = aiohttp.ClientTimeout(total=15)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            url = (f"https://api.tanki.su/wot/tanks/stats/"
+                   f"?application_id={LESTA_APP_ID}&account_id={account_id}"
+                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.xp,all.wins")
+            async with session.get(url) as resp:
+                data = await resp.json()
+            if data.get("status") != "ok":
+                return None
+            return data["data"].get(str(account_id)) or []
+    except Exception as e:
+        logger.error(f"GC fetch tank stats error for {account_id}: {e}")
+        return None
+
+
+async def gc_save_tank_baselines(challenge_id, telegram_id, account_id):
+    """Сохранить baseline по-танковой статы при вступлении в челлендж"""
+    tanks = await gc_fetch_tank_stats(account_id)
+    if not tanks:
+        return
+    
+    # Нужна энциклопедия танков для имён
+    tank_info = await gc_get_tank_names([t["tank_id"] for t in tanks])
+    
+    from database import get_db
+    with get_db() as conn:
+        for t in tanks:
+            all_stats = t.get("all", {})
+            tid = t["tank_id"]
+            info = tank_info.get(tid, {})
+            try:
+                conn.execute("""
+                    INSERT OR REPLACE INTO gc_tank_baselines
+                    (challenge_id, telegram_id, tank_id, tank_name, tank_tier, tank_type,
+                     baseline_battles, baseline_damage)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (challenge_id, telegram_id, tid,
+                      info.get("name", f"Tank {tid}"),
+                      info.get("tier", 0),
+                      info.get("type", ""),
+                      all_stats.get("battles", 0),
+                      all_stats.get("damage_dealt", 0)))
+            except Exception:
+                pass
+    logger.info(f"GC saved {len(tanks)} tank baselines for tg={telegram_id}")
+
+
+async def gc_get_tank_names(tank_ids):
+    """Получить имена танков из кеша или Lesta API"""
+    if not tank_ids:
+        return {}
+    # Кешируем в глобальной переменной
+    if not hasattr(gc_get_tank_names, '_cache'):
+        gc_get_tank_names._cache = {}
+    
+    missing = [tid for tid in tank_ids if tid not in gc_get_tank_names._cache]
+    if missing:
+        import aiohttp
+        try:
+            timeout = aiohttp.ClientTimeout(total=15)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                # API позволяет до 100 танков за раз
+                for i in range(0, len(missing), 100):
+                    batch = missing[i:i+100]
+                    ids_str = ",".join(str(x) for x in batch)
+                    url = (f"https://api.tanki.su/wot/encyclopedia/vehicles/"
+                           f"?application_id={LESTA_APP_ID}&tank_id={ids_str}"
+                           f"&fields=name,tier,type")
+                    async with session.get(url) as resp:
+                        data = await resp.json()
+                    if data.get("status") == "ok" and data.get("data"):
+                        for tid_str, info in data["data"].items():
+                            if info:
+                                gc_get_tank_names._cache[int(tid_str)] = info
+        except Exception as e:
+            logger.warning(f"GC tank names lookup error: {e}")
+    
+    return {tid: gc_get_tank_names._cache.get(tid, {}) for tid in tank_ids}
+
+
 async def api_global_challenge_create(request):
     """POST /api/global-challenge/create — админ создаёт общий челлендж"""
     try:
@@ -4521,6 +4605,7 @@ async def api_global_challenge_create(request):
         icon = data.get("icon", "🔥")
         condition = data.get("condition", "damage")
         duration_minutes = int(data.get("duration_minutes", 60))
+        max_battles = int(data.get("max_battles", 0))
         reward_coins = int(data.get("reward_coins", 500))
         reward_description = data.get("reward_description", f"{reward_coins} 🧀")
 
@@ -4536,10 +4621,10 @@ async def api_global_challenge_create(request):
             )
             cursor = conn.execute("""
                 INSERT INTO global_challenges 
-                (title, description, icon, condition, duration_minutes, 
+                (title, description, icon, condition, duration_minutes, max_battles,
                  reward_coins, reward_description, status, created_by, ends_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)
-            """, (title, description, icon, condition, duration_minutes,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)
+            """, (title, description, icon, condition, duration_minutes, max_battles,
                   reward_coins, reward_description, admin_tg, ends_at))
             challenge_id = cursor.lastrowid
 
@@ -4593,6 +4678,13 @@ async def api_global_challenge_create(request):
                 """, (challenge_id, admin_tg, admin_nick, baseline_value, baseline_battles))
             except sqlite3.IntegrityError:
                 pass
+
+        # Сохраняем baseline по танкам для детализации
+        if admin_account_id:
+            try:
+                await gc_save_tank_baselines(challenge_id, admin_tg, admin_account_id)
+            except Exception as e:
+                logger.warning(f"Failed to save admin tank baselines: {e}")
 
         return cors_response({
             "success": True, 
@@ -4821,6 +4913,13 @@ async def api_global_challenge_join(request):
             except sqlite3.IntegrityError:
                 return cors_response({"error": "Вы уже участвуете!"}, 400)
 
+        # Сохраняем baseline по танкам
+        if account_id:
+            try:
+                await gc_save_tank_baselines(challenge_id, tg_id, account_id)
+            except Exception as e:
+                logger.warning(f"Failed to save tank baselines for {tg_id}: {e}")
+
         return cors_response({
             "success": True, 
             "nickname": nickname,
@@ -4862,29 +4961,31 @@ async def _do_refresh_stats():
                 (ch["id"],)
             ).fetchall()
 
+        stat_field = GC_CONDITION_TO_STAT.get(ch["condition"], "damage_dealt")
+        max_battles = ch.get("max_battles", 0) or 0
+
         # Обновляем стату каждого участника
         updated = 0
         for p in participants:
             p = dict(p)
             user = get_user_by_telegram_id(p["telegram_id"])
-
             account_id = user.get("wot_account_id") if user else None
 
-            # Если нет account_id — пробуем найти по нику участника через Lesta API
+            # Если нет account_id — пробуем найти по нику
             if not account_id and p.get("nickname"):
                 try:
                     import aiohttp as _aiohttp
-                    async with _aiohttp.ClientSession() as session:
+                    timeout = _aiohttp.ClientTimeout(total=10)
+                    async with _aiohttp.ClientSession(timeout=timeout) as session:
                         url = (
                             f"https://api.tanki.su/wot/account/list/"
                             f"?application_id={LESTA_APP_ID}"
                             f"&search={p['nickname']}&limit=1&type=exact"
                         )
-                        async with session.get(url, timeout=_aiohttp.ClientTimeout(total=10)) as resp:
+                        async with session.get(url) as resp:
                             result = await resp.json()
                             if result.get("status") == "ok" and result.get("data"):
                                 account_id = result["data"][0]["account_id"]
-                                # Сохраняем в users
                                 if user:
                                     from database import update_user_wot
                                     update_user_wot(p["telegram_id"], p["nickname"], account_id)
@@ -4893,19 +4994,36 @@ async def _do_refresh_stats():
                     logger.warning(f"GC refresh lookup error: {e}")
 
             if not account_id:
-                logger.warning(f"GC refresh: no account_id for {p['nickname']} (tg={p['telegram_id']}), skipping")
                 continue
 
+            # Общая стата
             stat = await gc_fetch_player_stat(account_id, ch["condition"])
             if not stat:
-                logger.warning(f"GC refresh: no stat from Lesta for account_id={account_id}")
                 continue
 
-            # Считаем дельту от базового уровня
             new_value = max(0, stat["value"] - p["baseline_value"])
             new_battles = max(0, stat["battles"] - p["baseline_battles"])
 
-            logger.info(f"GC refresh: {p['nickname']} value={stat['value']} baseline={p['baseline_value']} delta={new_value} battles_delta={new_battles}")
+            # Лимит боёв
+            if max_battles > 0 and new_battles > max_battles:
+                new_battles = max_battles
+
+            # Обнаружение отдельных боёв по танкам
+            try:
+                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles)
+            except Exception as e:
+                logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
+
+            # Если лимит боёв — пересчитываем урон только из gc_battle_log
+            if max_battles > 0:
+                with get_db() as conn:
+                    rows = conn.execute(
+                        "SELECT damage FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? ORDER BY battle_num LIMIT ?",
+                        (ch["id"], p["telegram_id"], max_battles)
+                    ).fetchall()
+                    if rows:
+                        new_value = sum(r["damage"] for r in rows)
+                        new_battles = len(rows)
 
             with get_db() as conn:
                 conn.execute("""
@@ -4919,6 +5037,151 @@ async def _do_refresh_stats():
         return cors_response({"success": True, "updated": updated, "total": len(participants)})
     except Exception as e:
         logger.error(f"API global_challenge_refresh error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field, total_new_battles):
+    """Обнаружить новые бои путём сравнения по-танковой статы с baseline"""
+    from database import get_db
+    from datetime import datetime
+
+    # Получаем текущую стату по танкам
+    tanks = await gc_fetch_tank_stats(account_id)
+    if not tanks:
+        return
+
+    # Загружаем сохранённые baselines
+    with get_db() as conn:
+        baselines = conn.execute(
+            "SELECT * FROM gc_tank_baselines WHERE challenge_id = ? AND telegram_id = ?",
+            (challenge_id, telegram_id)
+        ).fetchall()
+        existing_logs = conn.execute(
+            "SELECT COUNT(*) as cnt FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ?",
+            (challenge_id, telegram_id)
+        ).fetchone()
+
+    baseline_map = {b["tank_id"]: dict(b) for b in baselines}
+    existing_count = existing_logs["cnt"] if existing_logs else 0
+
+    # Если нет baselines — пропускаем
+    if not baseline_map:
+        return
+
+    # Находим танки с новыми боями
+    new_battles_list = []
+    for t in tanks:
+        tid = t["tank_id"]
+        all_stats = t.get("all", {})
+        current_battles = all_stats.get("battles", 0)
+        current_damage = all_stats.get(stat_field, 0) if stat_field == "damage_dealt" else all_stats.get("damage_dealt", 0)
+
+        base = baseline_map.get(tid)
+        if not base:
+            # Танк, которого не было в baseline (новый для игрока) — считаем всё как новое
+            if current_battles > 0:
+                new_battles_list.append({
+                    "tank_id": tid,
+                    "new_battles": current_battles,
+                    "damage_delta": current_damage,
+                })
+            continue
+
+        delta_battles = current_battles - base["baseline_battles"]
+        delta_damage = current_damage - base["baseline_damage"]
+
+        if delta_battles > 0:
+            new_battles_list.append({
+                "tank_id": tid,
+                "tank_name": base.get("tank_name", ""),
+                "tank_tier": base.get("tank_tier", 0),
+                "tank_type": base.get("tank_type", ""),
+                "new_battles": delta_battles,
+                "damage_delta": delta_damage,
+            })
+
+    if not new_battles_list:
+        return
+
+    # Получаем имена для танков без имени
+    need_names = [b["tank_id"] for b in new_battles_list if not b.get("tank_name")]
+    if need_names:
+        names = await gc_get_tank_names(need_names)
+        for b in new_battles_list:
+            if not b.get("tank_name"):
+                info = names.get(b["tank_id"], {})
+                b["tank_name"] = info.get("name", f"Tank {b['tank_id']}")
+                b["tank_tier"] = info.get("tier", 0)
+                b["tank_type"] = info.get("type", "")
+
+    # Считаем сколько боёв нужно записать (исключая уже записанные)
+    total_detected = sum(b["new_battles"] for b in new_battles_list)
+    to_log = total_detected - existing_count
+
+    if to_log <= 0:
+        return
+
+    # Записываем новые бои в лог (каждый бой отдельно)
+    battle_num = existing_count + 1
+    with get_db() as conn:
+        for b in new_battles_list:
+            # Средний урон за бой на этом танке
+            avg_damage = b["damage_delta"] // b["new_battles"] if b["new_battles"] > 0 else 0
+            
+            # Сколько боёв на этом танке ещё не записано
+            already_logged = conn.execute(
+                "SELECT COUNT(*) as cnt FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? AND tank_id = ?",
+                (challenge_id, telegram_id, b["tank_id"])
+            ).fetchone()
+            logged_count = already_logged["cnt"] if already_logged else 0
+            new_count = b["new_battles"] - logged_count
+
+            for _ in range(max(0, new_count)):
+                conn.execute("""
+                    INSERT INTO gc_battle_log 
+                    (challenge_id, telegram_id, battle_num, tank_id, tank_name, tank_tier, tank_type, damage, detected_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (challenge_id, telegram_id, battle_num, b["tank_id"],
+                      b.get("tank_name", ""), b.get("tank_tier", 0), b.get("tank_type", ""),
+                      avg_damage, datetime.now()))
+                battle_num += 1
+
+
+async def api_global_challenge_battle_log(request):
+    """GET /api/global-challenge/battle-log?challenge_id=X&telegram_id=Y"""
+    try:
+        from database import get_db
+        challenge_id = int(request.query.get("challenge_id", 0))
+        telegram_id = int(request.query.get("telegram_id", 0))
+
+        if not challenge_id:
+            return cors_response({"error": "challenge_id required"}, 400)
+
+        with get_db() as conn:
+            if telegram_id:
+                rows = conn.execute(
+                    "SELECT * FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? ORDER BY battle_num",
+                    (challenge_id, telegram_id)
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM gc_battle_log WHERE challenge_id = ? ORDER BY telegram_id, battle_num",
+                    (challenge_id,)
+                ).fetchall()
+
+        battles = [{
+            "battle_num": r["battle_num"],
+            "telegram_id": r["telegram_id"],
+            "tank_name": r["tank_name"],
+            "tank_tier": r["tank_tier"],
+            "tank_type": r["tank_type"],
+            "damage": r["damage"],
+            "detected_at": r["detected_at"],
+        } for r in rows]
+
+        return cors_response({"battles": battles, "total": len(battles)})
+    except Exception as e:
+        logger.error(f"API battle-log error: {e}")
         return cors_response({"error": str(e)}, 500)
 
 
@@ -5945,6 +6208,7 @@ def create_api_app():
     app.router.add_post("/api/global-challenge/refresh-stats", api_global_challenge_refresh_stats)
     app.router.add_post("/api/global-challenge/finish", api_global_challenge_finish)
     app.router.add_post("/api/global-challenge/delete", api_global_challenge_delete)
+    app.router.add_get("/api/global-challenge/battle-log", api_global_challenge_battle_log)
 
     # Раздача OBS виджетов через HTTP (file:// не работает с YouTube API)
     obs_dir = os.path.join(os.path.dirname(__file__), 'webapp', 'obs')

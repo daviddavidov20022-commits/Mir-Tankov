@@ -334,6 +334,7 @@ def init_db():
                 icon TEXT DEFAULT '🔥',
                 condition TEXT DEFAULT 'damage',
                 duration_minutes INTEGER DEFAULT 60,
+                max_battles INTEGER DEFAULT 0,
                 reward_coins INTEGER DEFAULT 500,
                 reward_description TEXT,
                 status TEXT DEFAULT 'active',
@@ -362,18 +363,51 @@ def init_db():
                 UNIQUE(challenge_id, telegram_id)
             );
 
+            -- Базовая стата по танкам (снимок при вступлении)
+            CREATE TABLE IF NOT EXISTS gc_tank_baselines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                challenge_id INTEGER NOT NULL,
+                telegram_id INTEGER NOT NULL,
+                tank_id INTEGER NOT NULL,
+                tank_name TEXT,
+                tank_tier INTEGER,
+                tank_type TEXT,
+                baseline_battles INTEGER DEFAULT 0,
+                baseline_damage INTEGER DEFAULT 0,
+                UNIQUE(challenge_id, telegram_id, tank_id)
+            );
+
+            -- Лог обнаруженных боёв
+            CREATE TABLE IF NOT EXISTS gc_battle_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                challenge_id INTEGER NOT NULL,
+                telegram_id INTEGER NOT NULL,
+                battle_num INTEGER DEFAULT 1,
+                tank_id INTEGER,
+                tank_name TEXT,
+                tank_tier INTEGER,
+                tank_type TEXT,
+                damage INTEGER DEFAULT 0,
+                detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
             CREATE INDEX IF NOT EXISTS idx_gc_status ON global_challenges(status);
             CREATE INDEX IF NOT EXISTS idx_gcp_challenge ON global_challenge_participants(challenge_id);
             CREATE INDEX IF NOT EXISTS idx_gcp_tg ON global_challenge_participants(telegram_id);
+            CREATE INDEX IF NOT EXISTS idx_gc_bl_challenge ON gc_battle_log(challenge_id, telegram_id);
         """)
 
-        # Миграция: добавить новые колонки если их нет
+        # Миграции: добавить колонки если их нет
+        for col, default in [
+            ("baseline_value", "INTEGER DEFAULT 0"),
+            ("baseline_battles", "INTEGER DEFAULT 0"),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE global_challenge_participants ADD COLUMN {col} {default}")
+            except Exception:
+                pass
         try:
-            conn.execute("ALTER TABLE global_challenge_participants ADD COLUMN baseline_value INTEGER DEFAULT 0")
-        except Exception:
-            pass  # колонка уже существует
-        try:
-            conn.execute("ALTER TABLE global_challenge_participants ADD COLUMN baseline_battles INTEGER DEFAULT 0")
+            conn.execute("ALTER TABLE global_challenges ADD COLUMN max_battles INTEGER DEFAULT 0")
         except Exception:
             pass
 

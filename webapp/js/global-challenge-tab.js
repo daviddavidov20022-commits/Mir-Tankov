@@ -325,6 +325,7 @@ function gcRenderLeaderboard(leaders) {
     }
 
     const medals = ['🥇', '🥈', '🥉'];
+    const maxBattles = gcCurrentChallenge?.max_battles || 0;
 
     list.innerHTML = leaders.map((p, i) => {
         const medal = medals[i] || `${i + 1}`;
@@ -338,17 +339,144 @@ function gcRenderLeaderboard(leaders) {
         if (isMe) cls += ' gc-lb-item--me';
 
         const rankCls = i < 3 ? ['gc-lb-rank--1st', 'gc-lb-rank--2nd', 'gc-lb-rank--3rd'][i] : 'gc-lb-rank--other';
+        const battlesText = maxBattles > 0 
+            ? `${p.battles_played || 0}/${maxBattles} боёв` 
+            : `${p.battles_played || 0} боёв`;
 
         return `
-            <div class="gc-lb-item ${cls}" style="animation-delay:${i * 0.06}s">
+            <div class="gc-lb-item ${cls}" style="animation-delay:${i * 0.06}s; cursor:pointer" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || 'Танкист').replace(/'/g, "\\'")}')">
                 <div class="gc-lb-rank ${rankCls}">${medal}</div>
                 <div class="gc-lb-info">
                     <div class="gc-lb-name">${isMe ? '⭐ ' : ''}${p.nickname || 'Танкист'}</div>
-                    <div class="gc-lb-battles">${p.battles_played || 0} боёв</div>
+                    <div class="gc-lb-battles">${battlesText}</div>
                 </div>
                 <div class="gc-lb-value">${(p.current_value || 0).toLocaleString('ru')}</div>
             </div>`;
     }).join('');
+
+    // Кнопка подробной таблицы
+    list.innerHTML += `
+        <div class="gc-detail-btn" onclick="gcShowFullTable()" style="text-align:center; margin-top:12px; cursor:pointer;">
+            <span style="background:rgba(255,255,255,0.1); padding:8px 20px; border-radius:12px; font-size:14px; display:inline-block">
+                📊 Подробная таблица
+            </span>
+        </div>`;
+}
+
+// ============================================================
+// DETAIL: Модалка деталей игрока (побоевая разбивка)
+// ============================================================
+async function gcShowPlayerDetail(telegramId, nickname) {
+    if (!gcCurrentChallenge) return;
+
+    // Создаём модалку если нет
+    let modal = document.getElementById('gcDetailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'gcDetailModal';
+        modal.className = 'gc-modal-overlay';
+        document.body.appendChild(modal);
+    }
+
+    const cond = GC_CONDITION_MAP[gcCurrentChallenge.condition] || GC_CONDITION_MAP.damage;
+
+    modal.innerHTML = `
+        <div class="gc-modal">
+            <div class="gc-modal__header">
+                <span>🎯 ${nickname}</span>
+                <button class="gc-modal__close" onclick="document.getElementById('gcDetailModal').style.display='none'">✕</button>
+            </div>
+            <div class="gc-modal__body" id="gcDetailBody">
+                <div style="text-align:center; padding:20px; color:#aaa">⏳ Загрузка боёв...</div>
+            </div>
+        </div>`;
+    modal.style.display = 'flex';
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/battle-log?challenge_id=${gcCurrentChallenge.id}&telegram_id=${telegramId}`);
+        const data = await resp.json();
+
+        const body = document.getElementById('gcDetailBody');
+        if (!data.battles || data.battles.length === 0) {
+            body.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa">Боёв пока не обнаружено. Данные обновляются каждые 15 сек.</div>';
+            return;
+        }
+
+        const tierLabels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+        let totalDmg = 0;
+        let html = '<div class="gc-battles-list">';
+        data.battles.forEach(b => {
+            totalDmg += b.damage;
+            const tierStr = tierLabels[b.tank_tier] || b.tank_tier;
+            html += `
+                <div class="gc-battle-row">
+                    <div class="gc-battle-num">#${b.battle_num}</div>
+                    <div class="gc-battle-tank">
+                        <span class="gc-battle-tier">${tierStr}</span>
+                        ${b.tank_name}
+                    </div>
+                    <div class="gc-battle-dmg">${(b.damage || 0).toLocaleString('ru')} ${cond.unit}</div>
+                </div>`;
+        });
+        html += '</div>';
+        html += `<div class="gc-battles-total">Итого: <b>${totalDmg.toLocaleString('ru')}</b> ${cond.unit} за <b>${data.battles.length}</b> боёв</div>`;
+        body.innerHTML = html;
+    } catch (e) {
+        document.getElementById('gcDetailBody').innerHTML = '<div style="color:red; padding:20px">❌ Ошибка загрузки</div>';
+    }
+}
+
+// ============================================================
+// FULL TABLE: Полная таблица всех участников
+// ============================================================
+async function gcShowFullTable() {
+    if (!gcCurrentChallenge) return;
+    const ch = gcCurrentChallenge;
+    const leaders = ch.leaderboard || [];
+    const cond = GC_CONDITION_MAP[ch.condition] || GC_CONDITION_MAP.damage;
+    const maxBattles = ch.max_battles || 0;
+
+    let modal = document.getElementById('gcDetailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'gcDetailModal';
+        modal.className = 'gc-modal-overlay';
+        document.body.appendChild(modal);
+    }
+
+    let html = `
+        <div class="gc-modal gc-modal--wide">
+            <div class="gc-modal__header">
+                <span>📊 Турнирная таблица</span>
+                <button class="gc-modal__close" onclick="document.getElementById('gcDetailModal').style.display='none'">✕</button>
+            </div>
+            <div class="gc-modal__body">
+                <table class="gc-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Игрок</th>
+                            <th>Боёв</th>
+                            <th>${cond.name}</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+    const sorted = [...leaders].sort((a, b) => (b.current_value || 0) - (a.current_value || 0));
+    sorted.forEach((p, i) => {
+        const battlesText = maxBattles > 0 ? `${p.battles_played || 0}/${maxBattles}` : `${p.battles_played || 0}`;
+        html += `
+            <tr class="gc-table__row" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || '').replace(/'/g, "\\'")}')">
+                <td class="gc-table__rank">${i + 1}</td>
+                <td class="gc-table__name">${p.nickname || 'Танкист'}</td>
+                <td class="gc-table__battles">${battlesText}</td>
+                <td class="gc-table__value">${(p.current_value || 0).toLocaleString('ru')}</td>
+            </tr>`;
+    });
+
+    html += `</tbody></table></div></div>`;
+    modal.innerHTML = html;
+    modal.style.display = 'flex';
 }
 
 // ============================================================
@@ -513,6 +641,7 @@ async function gcLaunchChallenge() {
     const desc = document.getElementById('adminGcDesc').value || '';
     const duration = parseInt(document.getElementById('adminGcDuration').value) || 60;
     const reward = parseInt(document.getElementById('adminGcReward').value) || 500;
+    const maxBattles = parseInt(document.getElementById('adminGcMaxBattles')?.value) || 0;
 
     const btn = document.getElementById('adminGcLaunchBtn');
     btn.disabled = true;
@@ -529,6 +658,7 @@ async function gcLaunchChallenge() {
                 icon: '🔥',
                 condition: gcAdminCondition,
                 duration_minutes: duration,
+                max_battles: maxBattles,
                 reward_coins: reward,
                 reward_description: `${reward} 🧀`,
                 wot_nickname: localStorage.getItem('wot_nickname') || '',
