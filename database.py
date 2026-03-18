@@ -18,7 +18,15 @@ from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "ecosystem.db")
+# Используем постоянное хранилище Railway Volume если доступно
+# В Railway Dashboard нужно добавить Volume с путём /data
+_volume_path = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "")
+if _volume_path and os.path.isdir(_volume_path):
+    DB_PATH = os.path.join(_volume_path, "ecosystem.db")
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "ecosystem.db")
+
+logger.info(f"Database path: {DB_PATH}")
 
 
 @contextmanager

@@ -362,14 +362,26 @@ async function gcJoinChallenge() {
     btn.disabled = true;
     btn.textContent = '⏳ Вступаем...';
 
+    // Передаём WoT данные из localStorage чтобы сервер мог обновить БД
+    const joinData = {
+        telegram_id: myTelegramId,
+        challenge_id: gcCurrentChallenge.id,
+        wot_nickname: localStorage.getItem('wot_nickname') || '',
+        wot_account_id: localStorage.getItem('wot_account_id') || ''
+    };
+
+    // Имя из Telegram
+    const tg = window.Telegram?.WebApp;
+    if (tg?.initDataUnsafe?.user) {
+        joinData.first_name = tg.initDataUnsafe.user.first_name || '';
+        joinData.username = tg.initDataUnsafe.user.username || '';
+    }
+
     try {
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/join`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                telegram_id: myTelegramId,
-                challenge_id: gcCurrentChallenge.id
-            })
+            body: JSON.stringify(joinData)
         });
         const data = await resp.json();
 
@@ -515,7 +527,9 @@ async function gcLaunchChallenge() {
                 condition: gcAdminCondition,
                 duration_minutes: duration,
                 reward_coins: reward,
-                reward_description: `${reward} 🧀`
+                reward_description: `${reward} 🧀`,
+                wot_nickname: localStorage.getItem('wot_nickname') || '',
+                wot_account_id: localStorage.getItem('wot_account_id') || ''
             })
         });
         const data = await resp.json();

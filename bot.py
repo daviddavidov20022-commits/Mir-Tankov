@@ -4527,28 +4527,54 @@ async def api_global_challenge_create(request):
 
         # Админ автоматически вступает
         admin_user = get_user_by_telegram_id(admin_tg)
-        if admin_user:
-            admin_nick = admin_user.get("wot_nickname") or admin_user.get("first_name") or "Админ"
-            admin_account_id = admin_user.get("wot_account_id")
-            baseline_value = 0
-            baseline_battles = 0
+        if not admin_user:
+            from database import get_or_create_user
+            admin_user = get_or_create_user(admin_tg)
 
-            if admin_account_id:
-                stat = await gc_fetch_player_stat(admin_account_id, condition)
-                if stat:
-                    baseline_value = stat["value"]
-                    baseline_battles = stat["battles"]
+        # Восстанавливаем WoT данные из клиента если на сервере нет
+        client_wot_nick = data.get("wot_nickname", "").strip()
+        client_wot_id = data.get("wot_account_id", "")
+        
+        admin_nick = admin_user.get("wot_nickname") if admin_user else None
+        admin_account_id = admin_user.get("wot_account_id") if admin_user else None
 
-            with get_db() as conn:
-                import sqlite3
-                try:
-                    conn.execute("""
-                        INSERT INTO global_challenge_participants 
-                        (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, current_value, battles_played)
-                        VALUES (?, ?, ?, ?, ?, 0, 0)
-                    """, (challenge_id, admin_tg, admin_nick, baseline_value, baseline_battles))
-                except sqlite3.IntegrityError:
-                    pass
+        if not admin_nick and client_wot_nick:
+            admin_nick = client_wot_nick
+        if not admin_account_id and client_wot_id:
+            try:
+                admin_account_id = int(client_wot_id)
+            except (ValueError, TypeError):
+                pass
+
+        # Сохраняем восстановленные данные
+        if admin_nick and admin_account_id and admin_user:
+            if admin_nick != admin_user.get("wot_nickname") or admin_account_id != admin_user.get("wot_account_id"):
+                from database import update_user_wot
+                update_user_wot(admin_tg, admin_nick, admin_account_id)
+                logger.info(f"Restored admin WoT data: {admin_nick} (ID: {admin_account_id})")
+
+        if not admin_nick:
+            admin_nick = (admin_user.get("first_name") if admin_user else None) or "Админ"
+
+        baseline_value = 0
+        baseline_battles = 0
+
+        if admin_account_id:
+            stat = await gc_fetch_player_stat(admin_account_id, condition)
+            if stat:
+                baseline_value = stat["value"]
+                baseline_battles = stat["battles"]
+
+        with get_db() as conn:
+            import sqlite3
+            try:
+                conn.execute("""
+                    INSERT INTO global_challenge_participants 
+                    (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, current_value, battles_played)
+                    VALUES (?, ?, ?, ?, ?, 0, 0)
+                """, (challenge_id, admin_tg, admin_nick, baseline_value, baseline_battles))
+            except sqlite3.IntegrityError:
+                pass
 
         return cors_response({
             "success": True, 
@@ -4657,22 +4683,46 @@ async def api_global_challenge_join(request):
         tg_id = int(data.get("telegram_id", 0))
         challenge_id = int(data.get("challenge_id", 0))
 
+        # WoT данные из localStorage клиента (на случай если БД сброшена после редеплоя)
+        client_wot_nickname = data.get("wot_nickname", "").strip()
+        client_wot_account_id = data.get("wot_account_id", "")
+        client_first_name = data.get("first_name", "")
+        client_username = data.get("username", "")
+
         if not tg_id or not challenge_id:
             return cors_response({"error": "Не указаны параметры"}, 400)
 
         user = get_user_by_telegram_id(tg_id)
         if not user:
-            # Автоматически создаём пользователя если не существует
+            # Автоматически создаём пользователя с данными от клиента
             from database import get_or_create_user
-            user = get_or_create_user(tg_id)
+            user = get_or_create_user(tg_id, username=client_username, first_name=client_first_name)
         
         if not user:
             return cors_response({"error": "Не удалось найти пользователя. Нажмите /start в боте."}, 404)
 
-        nickname = user.get("wot_nickname") or user.get("first_name") or user.get("username") or "Танкист"
+        # Восстанавливаем WoT данные из клиента если на сервере нет
         account_id = user.get("wot_account_id")
+        wot_nick = user.get("wot_nickname")
 
-        logger.info(f"GC Join: tg_id={tg_id}, nickname={nickname}, account_id={account_id}, wot_nickname={user.get('wot_nickname')}")
+        if not wot_nick and client_wot_nickname:
+            wot_nick = client_wot_nickname
+        if not account_id and client_wot_account_id:
+            try:
+                account_id = int(client_wot_account_id)
+            except (ValueError, TypeError):
+                pass
+
+        # Сохраняем восстановленные данные в БД
+        if (wot_nick or account_id) and (wot_nick != user.get("wot_nickname") or account_id != user.get("wot_account_id")):
+            from database import update_user_wot
+            if wot_nick and account_id:
+                update_user_wot(tg_id, wot_nick, account_id)
+                logger.info(f"Restored WoT data from client: {wot_nick} (ID: {account_id}) for tg={tg_id}")
+
+        nickname = wot_nick or user.get("first_name") or user.get("username") or "Танкист"
+
+        logger.info(f"GC Join: tg_id={tg_id}, nickname={nickname}, account_id={account_id}, wot_nickname={wot_nick}")
 
         # Если есть ник но нет account_id — пробуем найти через Lesta API
         if not account_id and user.get("wot_nickname"):
