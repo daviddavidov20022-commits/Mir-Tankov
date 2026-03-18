@@ -3149,7 +3149,13 @@ async def api_me(request):
 
         telegram_id = request.query.get("telegram_id")
         if telegram_id:
-            user = get_user_by_telegram_id(int(telegram_id))
+            telegram_id = int(telegram_id)
+            user = get_user_by_telegram_id(telegram_id)
+
+            # Если пользователь не найден, но это админ — авто-создаём
+            if not user and ADMIN_ID and telegram_id == ADMIN_ID:
+                logger.info(f"Auto-creating admin user: {telegram_id}")
+                user = get_or_create_user(telegram_id, username="admin", first_name="Admin")
 
         if not user:
             account_id = request.query.get("wot_account_id")

@@ -140,7 +140,7 @@ function switchTab(tabId, btn) {
     if (tabId === 'active') loadChallenges();
     if (tabId === 'history') loadChallenges();
     if (tabId === 'admin') loadAdminUsers();
-    if (tabId === 'global' && typeof gcLoadChallenge === 'function') gcLoadChallenge();
+    if (tabId === 'global' && typeof gcLoadChallenge === 'function') gcLoadChallenge(true);
 }
 
 // ============================================================
@@ -370,8 +370,9 @@ async function checkChallengeResults(id) {
                 </div>`;
         }
 
-        // OBS overlay link (admin only)
-        const overlayBtn = isAdmin ? `
+        // OBS overlay link + Cancel button — показываем для админов И создателя челленджа
+        const canManage = isAdmin || (ch && ch.from_telegram_id === myTelegramId);
+        const overlayBtn = canManage ? `
             <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
                 <button onclick="copyOverlayLink(${id})" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(200,170,110,0.2);
                     background:rgba(200,170,110,0.05);color:#C8AA6E;font-size:0.7rem;font-weight:600;cursor:pointer">

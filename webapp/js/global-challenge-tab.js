@@ -18,14 +18,20 @@ let gcCurrentChallenge = null;
 let gcTimerInterval = null;
 let gcAdminCondition = 'damage';
 let gcAllSubscribers = [];
+let _gcLastDataHash = null;
+let _gcIsFirstLoad = true;
+let _gcLoadInProgress = false;
 
 // ============================================================
 // LOAD CHALLENGE
 // ============================================================
-async function gcLoadChallenge() {
+async function gcLoadChallenge(forceRefresh) {
+    // Предотвращаем параллельные запросы (причина мерцания)
+    if (_gcLoadInProgress) return;
+    _gcLoadInProgress = true;
+
     try {
         // Всегда проверяем админ-статус ПЕРВЫМ ДЕЛОМ (до загрузки челленджа)
-        // На случай если arena.js loadMyProfile() ещё не успел отработать
         if (!isAdmin && myTelegramId) {
             try {
                 const meResp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
@@ -38,44 +44,76 @@ async function gcLoadChallenge() {
             } catch(e) {}
         }
 
-        // Показываем админ-панель СРАЗУ если админ (до загрузки данных челленджа)
+        // Показываем админ-панель СРАЗУ если админ
         if (isAdmin) {
             const adminPanel = document.getElementById('gcAdminPanel');
             if (adminPanel) adminPanel.style.display = '';
         }
 
-        // Обновляем статистику через API
-        try {
-            await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
-        } catch (e) { /* ignore */ }
+        // Обновляем статистику через API (только при первой загрузке или forceRefresh)
+        if (_gcIsFirstLoad || forceRefresh) {
+            try {
+                await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' });
+            } catch (e) { /* ignore */ }
+        }
 
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
         const data = await resp.json();
 
-        document.getElementById('gcLoading').style.display = 'none';
+        // Anti-flicker: проверяем изменились ли данные
+        const dataHash = JSON.stringify({
+            status: data.status,
+            id: data.challenge?.id,
+            participants: data.challenge?.participants_count,
+            leaderboard: data.challenge?.leaderboard?.map(p => `${p.telegram_id}:${p.current_value}:${p.battles_played}`),
+        });
 
-        if (data.status === 'active' && data.challenge) {
-            gcShowActive(data.challenge);
-        } else if (data.status === 'finished' && data.challenge) {
-            gcShowFinished(data.challenge);
-        } else {
-            gcShowEmpty();
+        const isFirstLoad = _gcIsFirstLoad;
+        _gcIsFirstLoad = false;
+
+        // Скрываем загрузку при первом рендере
+        if (isFirstLoad) {
+            document.getElementById('gcLoading').style.display = 'none';
         }
 
-        // Повторно убеждаемся что админ-панель показана (gcShowActive/gcShowFinished могут сбросить)
+        // Если данные НЕ изменились — обновляем только таймер, лидерборд не трогаем
+        if (!isFirstLoad && !forceRefresh && _gcLastDataHash === dataHash) {
+            // Данные не изменились — ничего не перерисовываем 
+        } else {
+            _gcLastDataHash = dataHash;
+
+            if (isFirstLoad) {
+                document.getElementById('gcLoading').style.display = 'none';
+            }
+
+            if (data.status === 'active' && data.challenge) {
+                gcShowActive(data.challenge);
+            } else if (data.status === 'finished' && data.challenge) {
+                gcShowFinished(data.challenge);
+            } else {
+                gcShowEmpty();
+            }
+        }
+
+        // Повторно убеждаемся что админ-панель показана
         if (isAdmin) {
             const adminPanel = document.getElementById('gcAdminPanel');
             if (adminPanel) adminPanel.style.display = '';
         }
     } catch (e) {
         console.error('GC load error:', e);
-        document.getElementById('gcLoading').style.display = 'none';
-        gcShowEmpty();
-        // Даже при ошибке — всё равно показываем admin panel если мы админ
+        if (_gcIsFirstLoad) {
+            _gcIsFirstLoad = false;
+            document.getElementById('gcLoading').style.display = 'none';
+            gcShowEmpty();
+        }
+        // Даже при ошибке — показываем admin panel
         if (isAdmin) {
             const adminPanel = document.getElementById('gcAdminPanel');
             if (adminPanel) adminPanel.style.display = '';
         }
+    } finally {
+        _gcLoadInProgress = false;
     }
 }
 
@@ -143,6 +181,18 @@ function gcShowActive(ch) {
             deleteBtn.setAttribute('data-id', ch.id);
         }
         document.getElementById('adminGcLaunchBtn').style.display = 'none';
+
+        // OBS link section
+        const obsSection = document.getElementById('gcObsSection');
+        if (obsSection) {
+            obsSection.style.display = '';
+            const obsUrl = document.getElementById('gcObsUrl');
+            if (obsUrl) {
+                const base = window.location.origin + window.location.pathname.replace('challenges.html', 'gc-widget.html');
+                const url = myTelegramId ? `${base}?telegram_id=${myTelegramId}` : base;
+                obsUrl.textContent = url;
+            }
+        }
     }
 }
 
@@ -194,6 +244,9 @@ function gcShowFinished(ch) {
             deleteBtn.style.display = '';
             deleteBtn.setAttribute('data-id', ch.id);
         }
+        // Скрываем OBS секцию когда челлендж завершён
+        const obsSection = document.getElementById('gcObsSection');
+        if (obsSection) obsSection.style.display = 'none';
     }
 
     // Confetti!
@@ -608,19 +661,26 @@ function gcLaunchConfetti() {
 // AUTO-REFRESH & URL TAB SWITCHING
 // ============================================================
 
-// Auto-refresh stats every 15 seconds when on global tab
+// Auto-refresh данных каждые 15 секунд (без мерцания)
 setInterval(() => {
     const globalTab = document.getElementById('tab-global');
     if (globalTab && globalTab.classList.contains('tab-content--active')) {
-        gcLoadChallenge();
+        gcLoadChallenge(false);
     }
 }, 15000);
+
+// Background refresh stats через API каждые 30 секунд (отдельно от UI)
+setInterval(() => {
+    const globalTab = document.getElementById('tab-global');
+    if (globalTab && globalTab.classList.contains('tab-content--active') && gcCurrentChallenge) {
+        fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' }).catch(() => {});
+    }
+}, 30000);
 
 // Check URL for ?tab=global on load
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'global') {
-        // Auto-switch to global tab
         const globalBtn = document.querySelector('.arena-tab[onclick*="global"]');
         if (globalBtn) {
             switchTab('global', globalBtn);
