@@ -1418,68 +1418,126 @@ async function sendAiDonate() {
     const prompt = document.getElementById('aiDonatePrompt').value.trim();
     const amount = parseInt(document.getElementById('aiDonateAmount').value) || 0;
 
-    if (!prompt) {
-        showToast('❌', 'Напишите промт для генерации');
-        return;
-    }
-    if (amount < 50) {
-        showToast('❌', 'Минимум 50 🧀 для AI доната');
-        return;
-    }
-    if (!myTelegramId) {
-        showToast('❌', 'Нужна авторизация через Telegram');
-        return;
-    }
+    if (!prompt) { showToast('❌', 'Напишите промт для генерации'); return; }
+    if (amount < 50) { showToast('❌', 'Минимум 50 🧀 для AI доната'); return; }
+    if (!myTelegramId) { showToast('❌', 'Нужна авторизация через Telegram'); return; }
 
     const btn = document.getElementById('aiDonateSendBtn');
     btn.disabled = true;
     btn.style.opacity = '0.7';
-    btn.innerHTML = '⏳ Генерация... (до 30 сек)';
+    btn.innerHTML = '⏳ Генерация картинки...';
     document.getElementById('aiDonatePreview').style.display = 'none';
 
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
+    let image_b64 = '';
+    let mime = 'image/png';
+    let provider = 'local';
 
+    try {
+        // 1. Получаем API ключи с сервера
+        btn.innerHTML = '🔑 Получаем ключ...';
+        const cfgResp = await fetch(`${BOT_API_URL}/api/ai/config`);
+        const cfg = await cfgResp.json();
+
+        // 2. Генерируем картинку ПРЯМО В БРАУЗЕРЕ через Gemini
+        if (cfg.gemini_key) {
+            btn.innerHTML = '🎨 Gemini генерирует...';
+            try {
+                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.gemini_model}:generateContent?key=${cfg.gemini_key}`;
+                const geminiResp = await fetch(geminiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Generate an image: ${prompt}` }] }],
+                        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
+                    }),
+                });
+                if (geminiResp.ok) {
+                    const data = await geminiResp.json();
+                    const parts = data?.candidates?.[0]?.content?.parts || [];
+                    for (const p of parts) {
+                        if (p.inlineData) {
+                            image_b64 = p.inlineData.data;
+                            mime = p.inlineData.mimeType || 'image/png';
+                            provider = 'gemini';
+                            break;
+                        }
+                    }
+                }
+                if (!image_b64) console.warn('[AI] Gemini не вернул картинку');
+            } catch (e) {
+                console.warn('[AI] Gemini error:', e);
+            }
+        }
+
+        // 3. Fallback: HuggingFace из браузера
+        if (!image_b64 && cfg.hf_token) {
+            btn.innerHTML = '🎨 HuggingFace генерирует...';
+            try {
+                const hfResp = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${cfg.hf_token}`,
+                    },
+                    body: JSON.stringify({ inputs: prompt }),
+                });
+                if (hfResp.ok) {
+                    const ct = hfResp.headers.get('Content-Type') || '';
+                    if (ct.includes('image')) {
+                        const blob = await hfResp.blob();
+                        const reader = new FileReader();
+                        const b64 = await new Promise((resolve) => {
+                            reader.onload = () => resolve(reader.result.split(',')[1]);
+                            reader.readAsDataURL(blob);
+                        });
+                        image_b64 = b64;
+                        mime = ct.split(';')[0];
+                        provider = 'huggingface';
+                    }
+                }
+            } catch (e) {
+                console.warn('[AI] HuggingFace error:', e);
+            }
+        }
+
+        // 4. Показываем превью если картинка есть
+        if (image_b64) {
+            const preview = document.getElementById('aiDonatePreview');
+            const previewImg = document.getElementById('aiDonatePreviewImg');
+            previewImg.src = `data:${mime};base64,${image_b64}`;
+            preview.style.display = 'block';
+        }
+
+        // 5. Отправляем донат на сервер (с готовой картинкой)
+        btn.innerHTML = '📤 Отправляем донат...';
         const resp = await fetch(`${BOT_API_URL}/api/stream/donate/ai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            signal: controller.signal,
             body: JSON.stringify({
                 telegram_id: myTelegramId,
                 username: myUsername || 'Танкист',
-                amount: amount,
-                prompt: prompt,
+                amount, prompt, image_b64, mime, provider,
             }),
         });
-        clearTimeout(timeoutId);
         const data = await resp.json();
 
         if (data.success) {
-            showToast('🤖', `AI донат отправлен! ${amount} 🧀 (${data.event?.provider || 'AI'})`);
+            showToast('🤖', `AI донат ${amount} 🧀 (${provider})!`);
             document.getElementById('aiDonatePrompt').value = '';
-
-            // Обновить баланс
             try {
                 const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
                 local.coins = data.new_balance;
                 localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
             } catch(e) {}
-            
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
-            
-            // Закрываем через секунду
-            setTimeout(() => closeAiDonateModal(), 1500);
+            setTimeout(() => closeAiDonateModal(), 2000);
         } else {
-            showToast('❌', data.error || 'Ошибка генерации');
+            showToast('❌', data.error || 'Ошибка');
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
         }
-    } catch(e) {
-        if (e.name === 'AbortError') {
-            showToast('❌', 'Таймаут — попробуйте ещё раз');
-        } else {
-            showToast('❌', 'Ошибка сети');
-        }
+    } catch (e) {
+        console.error('[AI Donate]', e);
+        showToast('❌', 'Ошибка: ' + (e.message || 'сеть'));
     }
 
     btn.disabled = false;

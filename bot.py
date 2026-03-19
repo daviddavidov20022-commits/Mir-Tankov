@@ -5683,23 +5683,21 @@ async def api_stream_channels_save(request):
 donate_events = collections.deque(maxlen=50)
 music_queue = []
 DONATE_MIN = 10  # минимальный донат
-AI_DONATE_MIN = 50  # минимальный AI донат (дороже из-за API)
+AI_DONATE_MIN = 50  # минимальный AI донат
 
-# AI провайдеры для генерации изображений (по приоритету)
-# 1. HuggingFace — основной (бесплатный, надёжный)
-# 2. Gemini — бесплатный с API ключом
-# 3. Pollinations.ai — бесплатный, без ключа
-# 4. Локальный генератор — гарантированный fallback (работает ВСЕГДА)
-_HF_TOKEN = os.getenv("HF_TOKEN", "")
+# AI ключи (фронтенд генерирует картинку прямо из браузера)
 _GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-_GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta"
-_GEMINI_IMG_MODEL = "gemini-2.5-flash-image"
+_HF_TOKEN = os.getenv("HF_TOKEN", "")
 
-# HuggingFace модели (по приоритету: быстрая → качественная)
-_HF_MODELS = [
-    "black-forest-labs/FLUX.1-schnell",
-    "stabilityai/stable-diffusion-xl-base-1.0",
-]
+
+async def api_ai_config(request):
+    """GET /api/ai/config — отдаёт ключи для генерации картинок из браузера."""
+    return cors_response({
+        "gemini_key": _GEMINI_API_KEY,
+        "gemini_model": "gemini-2.5-flash-image",
+        "hf_token": _HF_TOKEN,
+    })
+
 
 
 async def _generate_image_huggingface(prompt: str) -> dict:
@@ -5892,27 +5890,28 @@ def _generate_image_local(prompt: str) -> dict:
 
 
 async def api_stream_donate_ai(request):
-    """POST /api/stream/donate/ai  {telegram_id, username, prompt, amount}"""
+    """POST /api/stream/donate/ai  {telegram_id, username, prompt, amount, image_b64?, mime?, provider?}"""
     try:
         data = await request.json()
         tg_id = int(data.get("telegram_id", 0))
         username = data.get("username", "Аноним").strip()
         amount = int(data.get("amount", 0))
         prompt = data.get("prompt", "").strip()[:300]
+        # Картинка от фронтенда (браузер генерирует напрямую через Gemini API)
+        image_b64 = data.get("image_b64", "")
+        mime = data.get("mime", "image/png")
+        provider = data.get("provider", "browser")
 
         if not prompt:
             return cors_response({"error": "Напишите промт для генерации"}, 400)
-
         if amount < AI_DONATE_MIN:
             return cors_response({"error": f"Минимум {AI_DONATE_MIN} 🧀 для AI доната"}, 400)
-
         if not tg_id:
             return cors_response({"error": "telegram_id required"}, 400)
 
         # Проверить и списать сыр
         is_admin = (ADMIN_ID and tg_id == ADMIN_ID)
         profile_file = os.path.join(os.path.dirname(__file__), 'profiles', f'{tg_id}.json')
-
         if not os.path.exists(profile_file):
             if is_admin:
                 os.makedirs(os.path.join(os.path.dirname(__file__), 'profiles'), exist_ok=True)
@@ -5921,38 +5920,41 @@ async def api_stream_donate_ai(request):
                     json.dump(profile, f, ensure_ascii=False, indent=2)
             else:
                 return cors_response({"error": "Профиль не найден"}, 404)
-
         with open(profile_file, 'r', encoding='utf-8') as f:
             profile = json.load(f)
-
         current_cheese = profile.get('cheese', 0)
         if not is_admin and current_cheese < amount:
             return cors_response({"error": f"Недостаточно Сыра! У вас {current_cheese} 🧀"}, 400)
 
-        # === Генерируем картинку по цепочке провайдеров ===
-        logger.info(f"[AI Donate] Generating image for {username}: {prompt}")
-
-        # 1. HuggingFace (основной, бесплатный)
-        result = await _generate_image_huggingface(prompt)
-
-        # 2. Gemini (fallback)
-        if not result["success"]:
-            logger.warning(f"[AI Donate] HuggingFace failed: {result['error']}")
-            result = await _generate_image_gemini(prompt)
-
-        # 3. Pollinations (fallback)
-        if not result["success"]:
-            logger.warning(f"[AI Donate] Gemini failed: {result['error']}")
-            result = await _generate_image_pollinations(prompt)
-
-        # 4. Локальный генератор (ГАРАНТИРОВАННЫЙ fallback — работает всегда)
-        if not result["success"]:
-            logger.warning(f"[AI Donate] Pollinations failed: {result['error']}, using local generator")
-            result = _generate_image_local(prompt)
-
-        image_b64 = result["image_b64"]
-        mime = result.get("mime", "image/png")
-        provider = result.get("provider", "unknown")
+        # Если фронтенд не прислал картинку — быстрый локальный fallback
+        if not image_b64:
+            import struct, zlib, hashlib
+            W, H = 512, 512
+            h = hashlib.md5(prompt.encode()).hexdigest()
+            r1, g1, b1 = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+            r2, g2, b2 = int(h[6:8], 16), int(h[8:10], 16), int(h[10:12], 16)
+            rows = []
+            for y in range(H):
+                row = bytearray([0])
+                t = y / H
+                for x in range(W):
+                    f = (t + x / W) / 2
+                    r, g, b = int(r1*(1-f)+r2*f), int(g1*(1-f)+g2*f), int(b1*(1-f)+b2*f)
+                    cx, cy = abs(x-W//2), abs(y-H//2)
+                    d = (cx*cx+cy*cy)**0.5
+                    if d < 150:
+                        bl = max(0, 1-d/150)
+                        r, g, b = min(255,int(r+(255-r)*bl*0.5)), min(255,int(g+(255-g)*bl*0.5)), min(255,int(b+(255-b)*bl*0.5))
+                    if (x+y) % 40 < 2:
+                        r, g, b = min(255,r+30), min(255,g+30), min(255,b+30)
+                    row.extend([r, g, b])
+                rows.append(bytes(row))
+            raw = b''.join(rows)
+            def mc(ct, d):
+                c = ct+d; return struct.pack('>I',len(d))+c+struct.pack('>I',zlib.crc32(c)&0xffffffff)
+            png = b'\x89PNG\r\n\x1a\n'+mc(b'IHDR',struct.pack('>IIBBBBB',W,H,8,2,0,0,0))+mc(b'IDAT',zlib.compress(raw,6))+mc(b'IEND',b'')
+            image_b64 = base64.b64encode(png).decode()
+            mime, provider = "image/png", "local"
         logger.info(f"[AI Donate] Image generated via {provider}")
 
         # Списать сыр
@@ -6520,6 +6522,7 @@ def create_api_app():
     app.router.add_get("/api/stream/media/{key}", api_stream_media_get)
 
     # Donate & Music API
+    app.router.add_get("/api/ai/config", api_ai_config)
     app.router.add_post("/api/stream/donate", api_stream_donate)
     app.router.add_post("/api/stream/donate/ai", api_stream_donate_ai)
     app.router.add_get("/api/stream/donate/latest", api_stream_donate_latest)
