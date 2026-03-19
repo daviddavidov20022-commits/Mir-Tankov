@@ -5690,7 +5690,8 @@ AI_DONATE_MIN = 50  # минимальный AI донат (дороже из-з
 # 2. Pollinations.ai — fallback (полностью бесплатный, без ключа)
 _GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 _GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta"
-_GEMINI_IMG_MODEL = "gemini-2.0-flash-exp"  # поддерживает генерацию изображений
+# Список моделей для попытки (первая рабочая будет использована)
+_GEMINI_IMG_MODELS = ["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-3-pro-image-preview"]
 
 
 async def _generate_image_gemini(prompt: str) -> dict:
@@ -5698,75 +5699,105 @@ async def _generate_image_gemini(prompt: str) -> dict:
     if not _GEMINI_API_KEY:
         return {"success": False, "error": "GEMINI_API_KEY не настроен"}
 
-    url = f"{_GEMINI_API_URL}/models/{_GEMINI_IMG_MODEL}:generateContent?key={_GEMINI_API_KEY}"
-    payload = {
-        "contents": [{"parts": [{"text": f"Generate an image: {prompt}"}]}],
-        "generationConfig": {
-            "responseModalities": ["TEXT", "IMAGE"],
+    last_error = ""
+    for model in _GEMINI_IMG_MODELS:
+        url = f"{_GEMINI_API_URL}/models/{model}:generateContent?key={_GEMINI_API_KEY}"
+        payload = {
+            "contents": [{"parts": [{"text": f"Generate an image: {prompt}"}]}],
+            "generationConfig": {
+                "responseModalities": ["TEXT", "IMAGE"],
+            }
         }
-    }
 
-    try:
-        timeout = aiohttp.ClientTimeout(total=60)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(url, json=payload) as resp:
-                if resp.status != 200:
-                    error_text = await resp.text()
-                    logger.error(f"[AI Donate] Gemini API error: {resp.status} - {error_text}")
-                    return {"success": False, "error": f"Gemini ошибка: {resp.status}"}
+        # До 2 ретраев при 429 (rate limit)
+        for attempt in range(3):
+            try:
+                timeout = aiohttp.ClientTimeout(total=60)
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    async with session.post(url, json=payload) as resp:
+                        if resp.status == 429:
+                            wait = 3 * (attempt + 1)
+                            logger.warning(f"[AI Donate] Gemini {model} rate limited, retry in {wait}s ({attempt+1}/3)")
+                            await asyncio.sleep(wait)
+                            continue
 
-                data = await resp.json()
-                candidates = data.get("candidates", [])
-                if not candidates:
-                    return {"success": False, "error": "Gemini не вернул результат"}
+                        if resp.status != 200:
+                            error_text = await resp.text()
+                            logger.warning(f"[AI Donate] Gemini model {model} error: {resp.status} - {error_text[:200]}")
+                            last_error = f"Gemini {model} ошибка: {resp.status}"
+                            break  # эта модель не работает, пробуем следующую
 
-                for part in candidates[0].get("content", {}).get("parts", []):
-                    if "inlineData" in part:
-                        image_b64 = part["inlineData"]["data"]
-                        mime = part["inlineData"].get("mimeType", "image/png")
-                        return {
-                            "success": True,
-                            "image_b64": image_b64,
-                            "mime": mime,
-                            "provider": "gemini",
-                        }
+                        data = await resp.json()
+                        candidates = data.get("candidates", [])
+                        if not candidates:
+                            last_error = f"Gemini {model} не вернул результат"
+                            break
 
-                return {"success": False, "error": "Gemini не вернул изображение"}
-    except asyncio.TimeoutError:
-        return {"success": False, "error": "Gemini таймаут"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+                        for part in candidates[0].get("content", {}).get("parts", []):
+                            if "inlineData" in part:
+                                image_b64 = part["inlineData"]["data"]
+                                mime = part["inlineData"].get("mimeType", "image/png")
+                                logger.info(f"[AI Donate] Gemini model {model} succeeded")
+                                return {
+                                    "success": True,
+                                    "image_b64": image_b64,
+                                    "mime": mime,
+                                    "provider": f"gemini/{model}",
+                                }
+
+                        last_error = f"Gemini {model} не вернул изображение"
+                        break
+            except asyncio.TimeoutError:
+                last_error = f"Gemini {model} таймаут"
+                break
+            except Exception as e:
+                last_error = str(e)
+                break
+
+    return {"success": False, "error": last_error or "Все Gemini модели не сработали"}
 
 
 async def _generate_image_pollinations(prompt: str) -> dict:
     """Генерация изображения через Pollinations.ai (полностью бесплатный, без ключа)."""
     import urllib.parse
+    import random
     encoded_prompt = urllib.parse.quote(prompt)
-    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&nologo=true"
+    seed = random.randint(1, 999999)
 
-    try:
-        timeout = aiohttp.ClientTimeout(total=45)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(image_url) as resp:
-                if resp.status != 200:
-                    return {"success": False, "error": f"Pollinations ошибка: {resp.status}"}
+    # Попытка с ретраем при 429
+    for attempt in range(3):
+        try:
+            image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&nologo=true&seed={seed + attempt}"
+            timeout = aiohttp.ClientTimeout(total=60)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(image_url) as resp:
+                    if resp.status == 429:
+                        wait = 3 * (attempt + 1)
+                        logger.warning(f"[AI Donate] Pollinations 429, retry in {wait}s (attempt {attempt+1}/3)")
+                        await asyncio.sleep(wait)
+                        continue
 
-                image_bytes = await resp.read()
-                if len(image_bytes) < 1000:
-                    return {"success": False, "error": "Pollinations вернул пустое изображение"}
+                    if resp.status != 200:
+                        return {"success": False, "error": f"Pollinations ошибка: {resp.status}"}
 
-                image_b64 = base64.b64encode(image_bytes).decode()
-                content_type = resp.headers.get("Content-Type", "image/jpeg")
-                return {
-                    "success": True,
-                    "image_b64": image_b64,
-                    "mime": content_type.split(";")[0],
-                    "provider": "pollinations",
-                }
-    except asyncio.TimeoutError:
-        return {"success": False, "error": "Pollinations таймаут"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+                    image_bytes = await resp.read()
+                    if len(image_bytes) < 1000:
+                        return {"success": False, "error": "Pollinations вернул пустое изображение"}
+
+                    image_b64 = base64.b64encode(image_bytes).decode()
+                    content_type = resp.headers.get("Content-Type", "image/jpeg")
+                    return {
+                        "success": True,
+                        "image_b64": image_b64,
+                        "mime": content_type.split(";")[0],
+                        "provider": "pollinations",
+                    }
+        except asyncio.TimeoutError:
+            return {"success": False, "error": "Pollinations таймаут"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    return {"success": False, "error": "Pollinations: слишком много запросов, попробуйте позже"}
 
 
 async def api_stream_donate_ai(request):
