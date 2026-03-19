@@ -4,6 +4,7 @@ import base64
 import json
 import logging
 import os
+import aiohttp
 from aiohttp import web
 from dotenv import load_dotenv
 
