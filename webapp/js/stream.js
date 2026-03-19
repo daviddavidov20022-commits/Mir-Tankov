@@ -1462,8 +1462,11 @@ async function sendAiDonate() {
                             break;
                         }
                     }
+                    if (!image_b64) console.warn('[AI] Gemini OK but no image in response:', JSON.stringify(data).substring(0, 300));
+                } else {
+                    const errBody = await geminiResp.text();
+                    console.warn('[AI] Gemini HTTP', geminiResp.status, errBody.substring(0, 300));
                 }
-                if (!image_b64) console.warn('[AI] Gemini не вернул картинку');
             } catch (e) {
                 console.warn('[AI] Gemini error:', e);
             }

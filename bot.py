@@ -5927,36 +5927,87 @@ async def api_stream_donate_ai(request):
         if not is_admin and current_cheese < amount:
             return cors_response({"error": f"Недостаточно Сыра! У вас {current_cheese} 🧀"}, 400)
 
-        # Если фронтенд не прислал картинку — быстрый локальный fallback
+        # Если фронтенд не прислал картинку — генерим на сервере
         if not image_b64:
-            import struct, zlib, hashlib
-            W, H = 512, 512
-            h = hashlib.md5(prompt.encode()).hexdigest()
-            r1, g1, b1 = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-            r2, g2, b2 = int(h[6:8], 16), int(h[8:10], 16), int(h[10:12], 16)
-            rows = []
-            for y in range(H):
-                row = bytearray([0])
-                t = y / H
-                for x in range(W):
-                    frac = (t + x / W) / 2
-                    r, g, b = int(r1*(1-frac)+r2*frac), int(g1*(1-frac)+g2*frac), int(b1*(1-frac)+b2*frac)
-                    cx, cy = abs(x-W//2), abs(y-H//2)
-                    d = (cx*cx+cy*cy)**0.5
-                    if d < 150:
-                        bl = max(0, 1-d/150)
-                        r, g, b = min(255,int(r+(255-r)*bl*0.5)), min(255,int(g+(255-g)*bl*0.5)), min(255,int(b+(255-b)*bl*0.5))
-                    if (x+y) % 40 < 2:
-                        r, g, b = min(255,r+30), min(255,g+30), min(255,b+30)
-                    row.extend([r, g, b])
-                rows.append(bytes(row))
-            raw = b''.join(rows)
-            def mc(ct, d):
-                c = ct+d; return struct.pack('>I',len(d))+c+struct.pack('>I',zlib.crc32(c)&0xffffffff)
-            png = b'\x89PNG\r\n\x1a\n'+mc(b'IHDR',struct.pack('>IIBBBBB',W,H,8,2,0,0,0))+mc(b'IDAT',zlib.compress(raw,6))+mc(b'IEND',b'')
-            image_b64 = base64.b64encode(png).decode()
-            mime, provider = "image/png", "local"
-        logger.info(f"[AI Donate] Image generated via {provider}")
+            logger.info(f"[AI Donate] Browser didn't generate image, trying server-side...")
+
+            # Попробуем Gemini на сервере
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={_GEMINI_API_KEY}"
+            if _GEMINI_API_KEY:
+                try:
+                    timeout = aiohttp.ClientTimeout(total=25)
+                    async with aiohttp.ClientSession(timeout=timeout) as session:
+                        async with session.post(gemini_url, json={
+                            "contents": [{"parts": [{"text": f"Generate an image: {prompt}"}]}],
+                            "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}
+                        }) as resp:
+                            if resp.status == 200:
+                                gdata = await resp.json()
+                                for part in gdata.get("candidates", [{}])[0].get("content", {}).get("parts", []):
+                                    if "inlineData" in part:
+                                        image_b64 = part["inlineData"]["data"]
+                                        mime = part["inlineData"].get("mimeType", "image/png")
+                                        provider = "gemini-server"
+                                        break
+                            else:
+                                logger.warning(f"[AI Donate] Server Gemini: {resp.status}")
+                except Exception as e:
+                    logger.warning(f"[AI Donate] Server Gemini error: {e}")
+
+            # Попробуем HuggingFace на сервере
+            if not image_b64 and _HF_TOKEN:
+                try:
+                    timeout = aiohttp.ClientTimeout(total=20)
+                    async with aiohttp.ClientSession(timeout=timeout) as session:
+                        async with session.post(
+                            "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+                            headers={"Authorization": f"Bearer {_HF_TOKEN}", "Content-Type": "application/json"},
+                            json={"inputs": prompt}
+                        ) as resp:
+                            if resp.status == 200:
+                                ct = resp.headers.get("Content-Type", "")
+                                if "image" in ct:
+                                    img_bytes = await resp.read()
+                                    if len(img_bytes) > 500:
+                                        image_b64 = base64.b64encode(img_bytes).decode()
+                                        mime = ct.split(";")[0]
+                                        provider = "huggingface-server"
+                            else:
+                                logger.warning(f"[AI Donate] Server HF: {resp.status}")
+                except Exception as e:
+                    logger.warning(f"[AI Donate] Server HF error: {e}")
+
+            # Локальный fallback (гарантированный)
+            if not image_b64:
+                import struct, zlib, hashlib
+                W, H = 512, 512
+                hh = hashlib.md5(prompt.encode()).hexdigest()
+                r1, g1, b1 = int(hh[0:2], 16), int(hh[2:4], 16), int(hh[4:6], 16)
+                r2, g2, b2 = int(hh[6:8], 16), int(hh[8:10], 16), int(hh[10:12], 16)
+                rows = []
+                for y in range(H):
+                    row = bytearray([0])
+                    t = y / H
+                    for x in range(W):
+                        frac = (t + x / W) / 2
+                        r, g, b = int(r1*(1-frac)+r2*frac), int(g1*(1-frac)+g2*frac), int(b1*(1-frac)+b2*frac)
+                        cx, cy = abs(x-W//2), abs(y-H//2)
+                        dd = (cx*cx+cy*cy)**0.5
+                        if dd < 150:
+                            bl = max(0, 1-dd/150)
+                            r, g, b = min(255,int(r+(255-r)*bl*0.5)), min(255,int(g+(255-g)*bl*0.5)), min(255,int(b+(255-b)*bl*0.5))
+                        if (x+y) % 40 < 2:
+                            r, g, b = min(255,r+30), min(255,g+30), min(255,b+30)
+                        row.extend([r, g, b])
+                    rows.append(bytes(row))
+                raw = b''.join(rows)
+                def mc(ct2, d2):
+                    c2 = ct2+d2; return struct.pack('>I',len(d2))+c2+struct.pack('>I',zlib.crc32(c2)&0xffffffff)
+                png = b'\x89PNG\r\n\x1a\n'+mc(b'IHDR',struct.pack('>IIBBBBB',W,H,8,2,0,0,0))+mc(b'IDAT',zlib.compress(raw,6))+mc(b'IEND',b'')
+                image_b64 = base64.b64encode(png).decode()
+                mime, provider = "image/png", "local"
+
+        logger.info(f"[AI Donate] Image via {provider}")
 
         # Списать сыр
         if not is_admin:
