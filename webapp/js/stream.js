@@ -15,8 +15,9 @@ const BOT_API_URL = (() => {
     const params = new URLSearchParams(window.location.search);
     const host = params.get('api') || localStorage.getItem('api_host');
     if (host) return host;
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return `http://${window.location.hostname}:8081`;
+    const isLocalFile = window.location.protocol === 'file:';
+    if (isLocalFile || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return `http://127.0.0.1:8081`;
     }
     const savedApi = localStorage.getItem('api_url');
     if (savedApi) return savedApi;
