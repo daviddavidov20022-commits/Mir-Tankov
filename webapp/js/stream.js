@@ -1519,6 +1519,13 @@ async function sendAiDonate() {
                 amount, prompt, image_b64, mime, provider,
             }),
         });
+        if (!resp.ok) {
+            const errText = await resp.text();
+            console.error('[AI Donate] Server error:', resp.status, errText);
+            showToast('❌', `Сервер: ${resp.status} ${errText.substring(0, 100)}`);
+            btn.disabled = false; btn.style.opacity = '1'; btn.innerHTML = '🤖 Сгенерировать и отправить';
+            return;
+        }
         const data = await resp.json();
 
         if (data.success) {

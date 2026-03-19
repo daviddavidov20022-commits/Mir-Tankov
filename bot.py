@@ -5938,8 +5938,8 @@ async def api_stream_donate_ai(request):
                 row = bytearray([0])
                 t = y / H
                 for x in range(W):
-                    f = (t + x / W) / 2
-                    r, g, b = int(r1*(1-f)+r2*f), int(g1*(1-f)+g2*f), int(b1*(1-f)+b2*f)
+                    frac = (t + x / W) / 2
+                    r, g, b = int(r1*(1-frac)+r2*frac), int(g1*(1-frac)+g2*frac), int(b1*(1-frac)+b2*frac)
                     cx, cy = abs(x-W//2), abs(y-H//2)
                     d = (cx*cx+cy*cy)**0.5
                     if d < 150:
@@ -5998,7 +5998,8 @@ async def api_stream_donate_ai(request):
             "provider": provider,
         }, "new_balance": profile['cheese']})
     except Exception as e:
-        logger.error(f"[AI Donate] Error: {e}")
+        import traceback
+        logger.error(f"[AI Donate] Error: {e}\n{traceback.format_exc()}")
         return cors_response({"error": str(e)}, 500)
 
 async def api_stream_donate(request):
