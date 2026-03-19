@@ -5712,7 +5712,7 @@ async def _generate_image_huggingface(prompt: str) -> dict:
     }
 
     for model in _HF_MODELS:
-        url = f"https://api-inference.huggingface.co/models/{model}"
+        url = f"https://router.huggingface.co/hf-inference/models/{model}"
         try:
             timeout = aiohttp.ClientTimeout(total=10)
             async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -5960,7 +5960,7 @@ async def api_stream_donate_ai(request):
                     timeout = aiohttp.ClientTimeout(total=20)
                     async with aiohttp.ClientSession(timeout=timeout) as session:
                         async with session.post(
-                            "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+                            "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
                             headers={"Authorization": f"Bearer {_HF_TOKEN}", "Content-Type": "application/json"},
                             json={"inputs": prompt}
                         ) as resp:

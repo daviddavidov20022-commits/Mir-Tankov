@@ -1476,7 +1476,7 @@ async function sendAiDonate() {
         if (!image_b64 && cfg.hf_token) {
             btn.innerHTML = '🎨 HuggingFace генерирует...';
             try {
-                const hfResp = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
+                const hfResp = await fetch('https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
