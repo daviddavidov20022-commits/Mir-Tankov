@@ -5704,14 +5704,18 @@ _HF_MODELS = [
 
 async def _generate_image_huggingface(prompt: str) -> dict:
     """Генерация изображения через HuggingFace Inference API (бесплатный)."""
-    headers = {"Content-Type": "application/json"}
-    if _HF_TOKEN:
-        headers["Authorization"] = f"Bearer {_HF_TOKEN}"
+    if not _HF_TOKEN:
+        return {"success": False, "error": "HF_TOKEN не настроен (нужен для HuggingFace)"}
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {_HF_TOKEN}",
+    }
 
     for model in _HF_MODELS:
         url = f"https://api-inference.huggingface.co/models/{model}"
         try:
-            timeout = aiohttp.ClientTimeout(total=30)
+            timeout = aiohttp.ClientTimeout(total=10)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(url, headers=headers, json={"inputs": prompt}) as resp:
                     if resp.status == 503:
@@ -5770,7 +5774,7 @@ async def _generate_image_gemini(prompt: str) -> dict:
     }
 
     try:
-        timeout = aiohttp.ClientTimeout(total=15)
+        timeout = aiohttp.ClientTimeout(total=10)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.post(url, json=payload) as resp:
                 if resp.status != 200:
