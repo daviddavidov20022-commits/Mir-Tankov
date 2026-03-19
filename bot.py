@@ -5684,7 +5684,89 @@ donate_events = collections.deque(maxlen=50)
 music_queue = []
 DONATE_MIN = 10  # минимальный донат
 AI_DONATE_MIN = 50  # минимальный AI донат (дороже из-за API)
-XAI_API_KEY = os.getenv("XAI_API_KEY", "")
+
+# AI провайдеры для генерации изображений (по приоритету)
+# 1. Gemini — основной (бесплатный с API ключом)
+# 2. Pollinations.ai — fallback (полностью бесплатный, без ключа)
+_GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+_GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta"
+_GEMINI_IMG_MODEL = "gemini-2.0-flash-exp"  # поддерживает генерацию изображений
+
+
+async def _generate_image_gemini(prompt: str) -> dict:
+    """Генерация изображения через Google Gemini API (бесплатный)."""
+    if not _GEMINI_API_KEY:
+        return {"success": False, "error": "GEMINI_API_KEY не настроен"}
+
+    url = f"{_GEMINI_API_URL}/models/{_GEMINI_IMG_MODEL}:generateContent?key={_GEMINI_API_KEY}"
+    payload = {
+        "contents": [{"parts": [{"text": f"Generate an image: {prompt}"}]}],
+        "generationConfig": {
+            "responseModalities": ["TEXT", "IMAGE"],
+        }
+    }
+
+    try:
+        timeout = aiohttp.ClientTimeout(total=60)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, json=payload) as resp:
+                if resp.status != 200:
+                    error_text = await resp.text()
+                    logger.error(f"[AI Donate] Gemini API error: {resp.status} - {error_text}")
+                    return {"success": False, "error": f"Gemini ошибка: {resp.status}"}
+
+                data = await resp.json()
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    return {"success": False, "error": "Gemini не вернул результат"}
+
+                for part in candidates[0].get("content", {}).get("parts", []):
+                    if "inlineData" in part:
+                        image_b64 = part["inlineData"]["data"]
+                        mime = part["inlineData"].get("mimeType", "image/png")
+                        return {
+                            "success": True,
+                            "image_b64": image_b64,
+                            "mime": mime,
+                            "provider": "gemini",
+                        }
+
+                return {"success": False, "error": "Gemini не вернул изображение"}
+    except asyncio.TimeoutError:
+        return {"success": False, "error": "Gemini таймаут"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+async def _generate_image_pollinations(prompt: str) -> dict:
+    """Генерация изображения через Pollinations.ai (полностью бесплатный, без ключа)."""
+    import urllib.parse
+    encoded_prompt = urllib.parse.quote(prompt)
+    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&nologo=true"
+
+    try:
+        timeout = aiohttp.ClientTimeout(total=45)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(image_url) as resp:
+                if resp.status != 200:
+                    return {"success": False, "error": f"Pollinations ошибка: {resp.status}"}
+
+                image_bytes = await resp.read()
+                if len(image_bytes) < 1000:
+                    return {"success": False, "error": "Pollinations вернул пустое изображение"}
+
+                image_b64 = base64.b64encode(image_bytes).decode()
+                content_type = resp.headers.get("Content-Type", "image/jpeg")
+                return {
+                    "success": True,
+                    "image_b64": image_b64,
+                    "mime": content_type.split(";")[0],
+                    "provider": "pollinations",
+                }
+    except asyncio.TimeoutError:
+        return {"success": False, "error": "Pollinations таймаут"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 async def api_stream_donate_ai(request):
@@ -5695,9 +5777,6 @@ async def api_stream_donate_ai(request):
         username = data.get("username", "Аноним").strip()
         amount = int(data.get("amount", 0))
         prompt = data.get("prompt", "").strip()[:300]
-
-        if not XAI_API_KEY:
-            return cors_response({"error": "AI не настроен. Добавьте XAI_API_KEY в .env"}, 400)
 
         if not prompt:
             return cors_response({"error": "Напишите промт для генерации"}, 400)
@@ -5728,47 +5807,22 @@ async def api_stream_donate_ai(request):
         if not is_admin and current_cheese < amount:
             return cors_response({"error": f"Недостаточно Сыра! У вас {current_cheese} 🧀"}, 400)
 
-        # Генерируем картинку через xAI Grok API
+        # Генерируем картинку: сначала Gemini, потом Pollinations как fallback
         logger.info(f"[AI Donate] Generating image for {username}: {prompt}")
-        image_url = None
-        image_b64 = None
-        try:
-            import aiohttp
-            timeout = aiohttp.ClientTimeout(total=30)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                resp = await session.post(
-                    "https://api.x.ai/v1/images/generations",
-                    headers={
-                        "Authorization": f"Bearer {XAI_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": "grok-2-image",
-                        "prompt": prompt,
-                        "n": 1,
-                        "response_format": "b64_json",
-                    }
-                )
-                result = await resp.json()
 
-                if resp.status != 200:
-                    error_msg = result.get("error", {}).get("message", "Ошибка API")
-                    logger.error(f"[AI Donate] xAI API error: {error_msg}")
-                    return cors_response({"error": f"AI ошибка: {error_msg}"}, 500)
+        result = await _generate_image_gemini(prompt)
+        if not result["success"]:
+            logger.warning(f"[AI Donate] Gemini failed: {result['error']}, trying Pollinations...")
+            result = await _generate_image_pollinations(prompt)
 
-                if result.get("data") and len(result["data"]) > 0:
-                    image_b64 = result["data"][0].get("b64_json")
-                    if result["data"][0].get("url"):
-                        image_url = result["data"][0]["url"]
+        if not result["success"]:
+            logger.error(f"[AI Donate] All providers failed: {result['error']}")
+            return cors_response({"error": f"AI ошибка: {result['error']}"}, 500)
 
-        except asyncio.TimeoutError:
-            return cors_response({"error": "AI генерация занимает слишком долго, попробуйте позже"}, 500)
-        except Exception as e:
-            logger.error(f"[AI Donate] Generation error: {e}")
-            return cors_response({"error": f"Ошибка генерации: {str(e)}"}, 500)
-
-        if not image_b64 and not image_url:
-            return cors_response({"error": "AI не смог сгенерировать картинку"}, 500)
+        image_b64 = result["image_b64"]
+        mime = result.get("mime", "image/png")
+        provider = result.get("provider", "unknown")
+        logger.info(f"[AI Donate] Image generated via {provider}")
 
         # Списать сыр
         if not is_admin:
@@ -5785,8 +5839,9 @@ async def api_stream_donate_ai(request):
             "message": f"🤖 AI: {prompt}",
             "timestamp": _time.time(),
             "shown": False,
-            "ai_image": f"data:image/png;base64,{image_b64}" if image_b64 else image_url,
+            "ai_image": f"data:{mime};base64,{image_b64}",
             "ai_prompt": prompt,
+            "ai_provider": provider,
         }
         donate_events.append(event)
 
@@ -5801,12 +5856,13 @@ async def api_stream_donate_ai(request):
             "telegram_id": tg_id,
         })
 
-        logger.info(f"[AI Donate] {username} сгенерировал за {amount} сыра: {prompt}")
+        logger.info(f"[AI Donate] {username} сгенерировал за {amount} сыра: {prompt} (via {provider})")
         return cors_response({"success": True, "event": {
             "id": event["id"],
             "amount": amount,
             "prompt": prompt,
             "has_image": True,
+            "provider": provider,
         }, "new_balance": profile['cheese']})
     except Exception as e:
         logger.error(f"[AI Donate] Error: {e}")
