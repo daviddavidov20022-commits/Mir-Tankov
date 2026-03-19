@@ -1325,36 +1325,63 @@ async function openAiDonateModal() {
         modal = document.createElement('div');
         modal.id = 'aiDonateModal';
         modal.className = 'modal-overlay';
+        modal.onclick = (e) => { if (e.target === modal) closeAiDonateModal(); };
         modal.innerHTML = `
-            <div class="modal-card" style="max-width:420px; position:relative">
-                <button class="modal-close" onclick="closeAiDonateModal()">✕</button>
-                <div class="modal-title">🤖 AI Донат</div>
-                <div class="modal-subtitle" id="aiDonateBalance">Баланс: ... 🧀</div>
+            <div class="modal-dialog" style="max-width:400px">
+                <div class="modal-dialog__title" style="display:flex; align-items:center; justify-content:space-between;">
+                    <span>🤖 AI Донат</span>
+                    <button onclick="closeAiDonateModal()" style="background:none; border:none; color:#5A6577; font-size:1.1rem; cursor:pointer; width:30px; height:30px; border-radius:50%; transition:all 0.15s;"
+                        onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.color='#e8e6e3'"
+                        onmouseout="this.style.background='none'; this.style.color='#5A6577'">✕</button>
+                </div>
+                <div class="modal-dialog__balance" id="aiDonateBalance">Баланс: ... 🧀</div>
                 
-                <div class="modal-label" style="margin-top:16px">✨ Промт для генерации</div>
-                <textarea id="aiDonatePrompt" class="modal-input" 
-                    placeholder="Опиши что нарисовать... Например: Танк Т-34 летит в космосе на фоне галактики" 
-                    rows="3" maxlength="300" style="resize:vertical; min-height:70px"></textarea>
-                <div style="font-size:0.6rem; color:#5A6577; text-align:right; margin-top:2px">
-                    <span id="aiPromptCounter">0</span>/300
+                <!-- Промт -->
+                <div style="margin-bottom:12px">
+                    <div style="font-size:0.7rem; color:#B388FF; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:4px">
+                        ✨ Промт для генерации
+                    </div>
+                    <textarea id="aiDonatePrompt" class="modal-input modal-textarea"
+                        placeholder="Опиши что нарисовать...&#10;Например: Танк Т-34 летит в космосе" 
+                        rows="3" maxlength="300"
+                        style="min-height:70px; border-color:rgba(179,136,255,0.15); resize:vertical"
+                        onfocus="this.style.borderColor='rgba(179,136,255,0.4)'"
+                        onblur="this.style.borderColor='rgba(179,136,255,0.15)'"
+                    ></textarea>
+                    <div style="font-size:0.55rem; color:#5A6577; text-align:right; margin-top:2px">
+                        <span id="aiPromptCounter">0</span>/300
+                    </div>
                 </div>
                 
-                <div class="modal-label">🧀 Стоимость</div>
-                <div class="donate-presets" style="display:flex; gap:6px; margin-bottom:8px">
-                    <button class="donate-preset-btn" onclick="setAiDonateAmount(50)">50 🧀</button>
-                    <button class="donate-preset-btn" onclick="setAiDonateAmount(100)">100 🧀</button>
-                    <button class="donate-preset-btn" onclick="setAiDonateAmount(200)">200 🧀</button>
+                <!-- Стоимость -->
+                <div style="margin-bottom:14px">
+                    <div style="font-size:0.7rem; color:#FFC107; font-weight:600; margin-bottom:6px">🧀 Стоимость</div>
+                    <div class="donate-amounts" style="margin-bottom:8px">
+                        <button class="donate-amount-btn" onclick="setAiDonateAmount(50)" style="border-color:rgba(179,136,255,0.2); color:#B388FF; background:rgba(179,136,255,0.05)">50 🧀</button>
+                        <button class="donate-amount-btn" onclick="setAiDonateAmount(100)" style="border-color:rgba(179,136,255,0.2); color:#B388FF; background:rgba(179,136,255,0.05)">100 🧀</button>
+                        <button class="donate-amount-btn" onclick="setAiDonateAmount(200)" style="border-color:rgba(179,136,255,0.2); color:#B388FF; background:rgba(179,136,255,0.05)">200 🧀</button>
+                    </div>
+                    <input type="number" id="aiDonateAmount" class="modal-input" value="50" min="50"
+                        style="border-color:rgba(179,136,255,0.15); text-align:center; font-size:0.85rem; font-weight:600"
+                        onfocus="this.style.borderColor='rgba(179,136,255,0.4)'"
+                        onblur="this.style.borderColor='rgba(179,136,255,0.15)'">
                 </div>
-                <input type="number" id="aiDonateAmount" class="modal-input" value="50" min="50">
-                
-                <button class="modal-action-btn" id="aiDonateSendBtn" onclick="sendAiDonate()" 
-                    style="margin-top:12px; background: linear-gradient(135deg, #9C27B0, #7B1FA2)">
+
+                <!-- Кнопка -->
+                <button class="modal-btn" id="aiDonateSendBtn" onclick="sendAiDonate()"
+                    style="background:linear-gradient(135deg, #9C27B0, #7B1FA2); color:#fff; border:none; font-size:0.85rem; letter-spacing:0.5px">
                     🤖 Сгенерировать и отправить
                 </button>
-                
-                <div id="aiDonatePreview" style="display:none; margin-top:16px; text-align:center">
-                    <div style="color:#9C27B0; margin-bottom:8px">✨ Результат:</div>
-                    <img id="aiDonatePreviewImg" style="max-width:100%; border-radius:12px; border:1px solid rgba(156,39,176,0.3)">
+
+                <!-- Превью -->
+                <div id="aiDonatePreview" style="display:none; margin-top:14px; text-align:center; padding:12px; border-radius:10px; background:rgba(156,39,176,0.06); border:1px solid rgba(156,39,176,0.15)">
+                    <div style="color:#B388FF; font-size:0.7rem; margin-bottom:8px; font-weight:600">✨ Результат:</div>
+                    <img id="aiDonatePreviewImg" style="max-width:100%; max-height:250px; border-radius:10px; border:1px solid rgba(156,39,176,0.2)">
+                </div>
+
+                <!-- Инфо о провайдерах -->
+                <div style="margin-top:12px; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); font-size:0.55rem; color:#5A6577; line-height:1.6">
+                    ⚡ AI провайдеры: HuggingFace → Gemini → Pollinations → Local
                 </div>
             </div>`;
         document.body.appendChild(modal);
@@ -1406,7 +1433,9 @@ async function sendAiDonate() {
 
     const btn = document.getElementById('aiDonateSendBtn');
     btn.disabled = true;
+    btn.style.opacity = '0.7';
     btn.innerHTML = '⏳ Генерация... (до 30 сек)';
+    document.getElementById('aiDonatePreview').style.display = 'none';
 
     try {
         const controller = new AbortController();
@@ -1454,6 +1483,7 @@ async function sendAiDonate() {
     }
 
     btn.disabled = false;
+    btn.style.opacity = '1';
     btn.innerHTML = '🤖 Сгенерировать и отправить';
 }
 
