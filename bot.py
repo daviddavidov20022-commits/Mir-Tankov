@@ -5686,12 +5686,76 @@ DONATE_MIN = 10  # минимальный донат
 AI_DONATE_MIN = 50  # минимальный AI донат (дороже из-за API)
 
 # AI провайдеры для генерации изображений (по приоритету)
-# 1. Gemini — основной (бесплатный с API ключом)
-# 2. Pollinations.ai — fallback (бесплатный, без ключа)
-# 3. Локальный генератор — гарантированный fallback (работает ВСЕГДА)
+# 1. HuggingFace — основной (бесплатный, надёжный)
+# 2. Gemini — бесплатный с API ключом
+# 3. Pollinations.ai — бесплатный, без ключа
+# 4. Локальный генератор — гарантированный fallback (работает ВСЕГДА)
+_HF_TOKEN = os.getenv("HF_TOKEN", "")
 _GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 _GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta"
 _GEMINI_IMG_MODEL = "gemini-2.5-flash-image"
+
+# HuggingFace модели (по приоритету: быстрая → качественная)
+_HF_MODELS = [
+    "black-forest-labs/FLUX.1-schnell",
+    "stabilityai/stable-diffusion-xl-base-1.0",
+]
+
+
+async def _generate_image_huggingface(prompt: str) -> dict:
+    """Генерация изображения через HuggingFace Inference API (бесплатный)."""
+    headers = {"Content-Type": "application/json"}
+    if _HF_TOKEN:
+        headers["Authorization"] = f"Bearer {_HF_TOKEN}"
+
+    for model in _HF_MODELS:
+        url = f"https://api-inference.huggingface.co/models/{model}"
+        try:
+            timeout = aiohttp.ClientTimeout(total=30)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.post(url, headers=headers, json={"inputs": prompt}) as resp:
+                    if resp.status == 503:
+                        # Модель загружается — пробуем следующую
+                        logger.warning(f"[AI Donate] HF model {model} загружается, пробуем следующую")
+                        continue
+                    if resp.status == 429:
+                        logger.warning(f"[AI Donate] HF rate limit на {model}")
+                        continue
+                    if resp.status != 200:
+                        error_text = await resp.text()
+                        logger.warning(f"[AI Donate] HF {model}: {resp.status} - {error_text[:150]}")
+                        continue
+
+                    content_type = resp.headers.get("Content-Type", "")
+                    if "image" in content_type:
+                        # Успех! Ответ — бинарная картинка
+                        image_bytes = await resp.read()
+                        if len(image_bytes) < 500:
+                            continue
+                        logger.info(f"[AI Donate] HuggingFace {model} succeeded, {len(image_bytes)} bytes")
+                        return {
+                            "success": True,
+                            "image_b64": base64.b64encode(image_bytes).decode(),
+                            "mime": content_type.split(";")[0],
+                            "provider": f"huggingface/{model.split('/')[-1]}",
+                        }
+                    else:
+                        # JSON ответ — вероятно ошибка
+                        try:
+                            data = await resp.json()
+                            error = data.get("error", str(data)[:100])
+                            logger.warning(f"[AI Donate] HF {model}: {error}")
+                        except:
+                            pass
+                        continue
+        except asyncio.TimeoutError:
+            logger.warning(f"[AI Donate] HF {model} таймаут")
+            continue
+        except Exception as e:
+            logger.warning(f"[AI Donate] HF {model}: {e}")
+            continue
+
+    return {"success": False, "error": "HuggingFace: все модели недоступны"}
 
 
 async def _generate_image_gemini(prompt: str) -> dict:
@@ -5706,7 +5770,7 @@ async def _generate_image_gemini(prompt: str) -> dict:
     }
 
     try:
-        timeout = aiohttp.ClientTimeout(total=30)
+        timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.post(url, json=payload) as resp:
                 if resp.status != 200:
@@ -5732,7 +5796,7 @@ async def _generate_image_pollinations(prompt: str) -> dict:
     url = f"https://image.pollinations.ai/prompt/{encoded}?width=512&height=512&nologo=true&seed={int(_time.time())}"
 
     try:
-        timeout = aiohttp.ClientTimeout(total=20)
+        timeout = aiohttp.ClientTimeout(total=10)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.get(url) as resp:
                 if resp.status != 200:
@@ -5864,15 +5928,20 @@ async def api_stream_donate_ai(request):
         # === Генерируем картинку по цепочке провайдеров ===
         logger.info(f"[AI Donate] Generating image for {username}: {prompt}")
 
-        # 1. Gemini (основной)
-        result = await _generate_image_gemini(prompt)
+        # 1. HuggingFace (основной, бесплатный)
+        result = await _generate_image_huggingface(prompt)
 
-        # 2. Pollinations (fallback)
+        # 2. Gemini (fallback)
+        if not result["success"]:
+            logger.warning(f"[AI Donate] HuggingFace failed: {result['error']}")
+            result = await _generate_image_gemini(prompt)
+
+        # 3. Pollinations (fallback)
         if not result["success"]:
             logger.warning(f"[AI Donate] Gemini failed: {result['error']}")
             result = await _generate_image_pollinations(prompt)
 
-        # 3. Локальный генератор (ГАРАНТИРОВАННЫЙ fallback — работает всегда)
+        # 4. Локальный генератор (ГАРАНТИРОВАННЫЙ fallback — работает всегда)
         if not result["success"]:
             logger.warning(f"[AI Donate] Pollinations failed: {result['error']}, using local generator")
             result = _generate_image_local(prompt)

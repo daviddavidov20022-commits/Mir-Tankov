@@ -1406,12 +1406,16 @@ async function sendAiDonate() {
 
     const btn = document.getElementById('aiDonateSendBtn');
     btn.disabled = true;
-    btn.innerHTML = '⏳ Генерация... (5-15 сек)';
+    btn.innerHTML = '⏳ Генерация... (до 30 сек)';
 
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+
         const resp = await fetch(`${BOT_API_URL}/api/stream/donate/ai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
             body: JSON.stringify({
                 telegram_id: myTelegramId,
                 username: myUsername || 'Танкист',
@@ -1419,10 +1423,11 @@ async function sendAiDonate() {
                 prompt: prompt,
             }),
         });
+        clearTimeout(timeoutId);
         const data = await resp.json();
 
         if (data.success) {
-            showToast('🤖', `AI донат отправлен! ${amount} 🧀`);
+            showToast('🤖', `AI донат отправлен! ${amount} 🧀 (${data.event?.provider || 'AI'})`);
             document.getElementById('aiDonatePrompt').value = '';
 
             // Обновить баланс
@@ -1441,7 +1446,11 @@ async function sendAiDonate() {
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
         }
     } catch(e) {
-        showToast('❌', 'Ошибка сети');
+        if (e.name === 'AbortError') {
+            showToast('❌', 'Таймаут — попробуйте ещё раз');
+        } else {
+            showToast('❌', 'Ошибка сети');
+        }
     }
 
     btn.disabled = false;
