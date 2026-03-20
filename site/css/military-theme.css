@@ -853,3 +853,74 @@ body {
     background: rgba(100, 180, 100, 0.15) !important;
     border-color: rgba(100, 180, 100, 0.4) !important;
 }
+
+/* ==========================================
+   DESKTOP LAYOUT — Ограничение ширины
+   ========================================== */
+.app-wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* На десктопе — плеер и чат рядом */
+@media (min-width: 768px) {
+    .content-area {
+        padding: 16px 20px;
+    }
+
+    /* Двухколоночная сетка: плеер слева, чат справа */
+    .stream-player {
+        max-width: 100%;
+    }
+
+    .stream-chat {
+        max-height: 500px;
+    }
+
+    .stream-chat__messages {
+        max-height: 350px;
+    }
+
+    .platform-tabs {
+        max-width: 600px;
+    }
+
+    .stream-actions {
+        max-width: 700px;
+    }
+
+    .stream-header {
+        max-width: 100%;
+    }
+
+    /* Модалки — не растягиваются */
+    .modal-dialog {
+        max-width: 480px;
+    }
+
+    .settings-modal {
+        max-width: 560px;
+    }
+
+    /* Нижняя навигация — по центру */
+    .bottom-nav {
+        max-width: 1100px;
+        margin: 0 auto;
+        left: 0;
+        right: 0;
+    }
+}
+
+/* Ещё больше — двухколоночный layout */
+@media (min-width: 960px) {
+    .content-area {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    /* Группируем плеер и чат в строку */
+    .stream-player {
+        grid-column: 1;
+    }
+}
