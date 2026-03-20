@@ -1103,16 +1103,22 @@ async function sendMusicRequest() {
     const url = document.getElementById('musicUrl').value.trim();
     
     if (!url) {
-        showToast('❌', 'Вставь ссылку на видео');
+        alert('❌ Вставь ссылку на видео');
         return;
     }
     
     if (!myTelegramId) {
-        showToast('❌', 'Нужна авторизация через Telegram');
+        alert('❌ Нужна авторизация! telegram_id не определён.\n\nВойди через главную страницу (index.html) и перейди в Стрим.');
+        console.error('sendMusicRequest: myTelegramId =', myTelegramId);
         return;
     }
     
+    // Визуальная обратная связь
+    const btn = document.querySelector('.modal-btn--primary');
+    if (btn) { btn.textContent = '⏳ Отправка...'; btn.disabled = true; }
+    
     try {
+        console.log('sendMusicRequest: sending to', BOT_API_URL, 'telegram_id=', myTelegramId);
         const resp = await fetch(`${BOT_API_URL}/api/stream/music/request`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1136,11 +1142,14 @@ async function sendMusicRequest() {
             } catch(e) {}
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
         } else {
-            showToast('❌', data.error || 'Ошибка заказа');
+            alert('❌ ' + (data.error || 'Ошибка заказа'));
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
         }
     } catch(e) {
-        showToast('❌', 'Ошибка сети');
+        console.error('sendMusicRequest error:', e);
+        alert('❌ Ошибка сети: ' + e.message);
+    } finally {
+        if (btn) { btn.textContent = '🎵 Заказать (50 🧀)'; btn.disabled = false; }
     }
 }
 
