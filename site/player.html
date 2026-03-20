@@ -389,10 +389,114 @@
             </a>
         </nav>
 
-        <div class="watermark">@Mir_tankov_privat_bot</div>
+    <!-- Hidden YouTube Music Player -->
+    <div id="musicPlayerBar" style="display:none; position:fixed; bottom:60px; left:0; right:0; z-index:999; background:linear-gradient(180deg, rgba(20,15,30,0.98), rgba(10,8,20,0.98)); border-top:2px solid #9146FF; padding:8px 16px; display:none;">
+        <div style="display:flex; align-items:center; gap:12px; max-width:900px; margin:0 auto;">
+            <div style="font-size:1.3rem; animation:pulse 2s infinite;">🎵</div>
+            <div style="flex:1; min-width:0;">
+                <div id="mpTitle" style="font-size:0.8rem; color:#E040FB; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</div>
+                <div id="mpUser" style="font-size:0.65rem; color:#888;">—</div>
+            </div>
+            <button id="mpSkipBtn" onclick="skipMusicTrack()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:4px 12px; border-radius:8px; cursor:pointer; font-size:0.7rem; display:none;">⏭ Пропустить</button>
+        </div>
     </div>
+    <div id="ytMusicPlayer" style="position:absolute; top:-9999px; width:1px; height:1px;"></div>
 
     <script src="js/stream.js"></script>
+    
+    <!-- YouTube Music Player Script -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+    (function() {
+        let ytPlayer = null;
+        let ytReady = false;
+        let musicPlaying = false;
+        let musicPollTimer = null;
+
+        window.onYouTubeIframeAPIReady = function() {
+            ytPlayer = new YT.Player('ytMusicPlayer', {
+                height: '1', width: '1',
+                playerVars: { autoplay: 1, controls: 0 },
+                events: {
+                    onReady: function() { ytReady = true; console.log('[Music] YT ready'); startMusicPoll(); },
+                    onStateChange: function(e) {
+                        if (e.data === YT.PlayerState.ENDED) {
+                            console.log('[Music] Track ended');
+                            musicPlaying = false;
+                            hideMusicBar();
+                            setTimeout(pollMusicQueue, 2000);
+                        }
+                    },
+                    onError: function(e) {
+                        console.log('[Music] YT error:', e.data);
+                        musicPlaying = false;
+                        hideMusicBar();
+                        setTimeout(pollMusicQueue, 3000);
+                    }
+                }
+            });
+        };
+
+        function startMusicPoll() {
+            pollMusicQueue();
+            musicPollTimer = setInterval(function() {
+                if (!musicPlaying) pollMusicQueue();
+            }, 5000);
+        }
+
+        async function pollMusicQueue() {
+            if (musicPlaying) return;
+            try {
+                const resp = await fetch(`${BOT_API_URL}/api/stream/music/next`);
+                const data = await resp.json();
+                const track = data.track || data;
+                if (track && track.url) {
+                    playMusicTrack(track);
+                }
+            } catch(e) { console.log('[Music] Poll error:', e); }
+        }
+
+        function extractYTId(url) {
+            const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/v\/)([a-zA-Z0-9_-]{11})/);
+            return m ? m[1] : null;
+        }
+
+        function playMusicTrack(track) {
+            const vid = extractYTId(track.url);
+            if (!vid) { console.log('[Music] Bad URL:', track.url); return; }
+            musicPlaying = true;
+            document.getElementById('mpTitle').textContent = track.url.replace(/https?:\/\/(www\.)?youtube\.com\/watch\?v=/, '');
+            document.getElementById('mpUser').textContent = '🧀 Заказал: ' + (track.username || 'Аноним');
+            showMusicBar();
+            if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
+                ytPlayer.loadVideoById(vid);
+            }
+            console.log('[Music] ▶ Playing:', vid);
+        }
+
+        function showMusicBar() {
+            const bar = document.getElementById('musicPlayerBar');
+            bar.style.display = 'block';
+            if (window.isAdmin) document.getElementById('mpSkipBtn').style.display = 'block';
+        }
+
+        function hideMusicBar() {
+            document.getElementById('musicPlayerBar').style.display = 'none';
+        }
+
+        window.skipMusicTrack = function() {
+            if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+            musicPlaying = false;
+            hideMusicBar();
+            setTimeout(pollMusicQueue, 1000);
+        };
+
+        // Fallback если YT API не загрузился
+        setTimeout(function() {
+            if (!ytReady) { console.warn('[Music] YT API timeout'); ytReady = true; startMusicPoll(); }
+        }, 8000);
+    })();
+    </script>
 </body>
 
 </html>
