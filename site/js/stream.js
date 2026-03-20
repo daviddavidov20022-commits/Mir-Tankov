@@ -185,11 +185,11 @@ function initPlayer() {
         iframe.src = `https://player.twitch.tv/?channel=${ch}&parent=${parent}&parent=daviddavidov20022-commits.github.io&parent=localhost&muted=false`;
         currentChannel = ch;
     } else if (currentPlatform === 'vk') {
-        // VK Video Live embed — iserveri
-        iframe.src = `https://live.vkvideo.ru/iserveri/embed`;
+        // VK Video Live embed
+        iframe.src = `https://live.vkvideo.ru/app/embed/iserveri?autoplay=true`;
     } else if (currentPlatform === 'youtube') {
-        // YouTube embed — канал @ISERVERI
-        iframe.src = `https://www.youtube.com/embed?listType=user_uploads&list=ISERVERI&autoplay=1`;
+        // YouTube live — встраиваем через @handle/live  
+        iframe.src = `https://www.youtube.com/@ISERVERI/live`;
     }
     
     // Обновляем заголовок стрима
