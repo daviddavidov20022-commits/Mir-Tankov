@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>МИР ТАНКОВ — Конструктор дизайна</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/military-theme.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="js/site-page.js"></script>
+    <link rel="stylesheet" href="css/site.css">
+    <style>
+        /* ==========================================
+           DESIGN EDITOR STYLES
+           ========================================== */
+        body {
+            background: #0a0f0a !important;
+            color: #c8d8c8;
+            font-family: 'Roboto', sans-serif;
+            padding-bottom: 40px;
+        }
+
+        .editor-header {
+            background: linear-gradient(135deg, #1a2a1a, #0f1a0f);
+            border-bottom: 2px solid rgba(200, 170, 110, 0.3);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .editor-header__left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .editor-header__icon {
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(200, 170, 110, 0.4));
+        }
+
+        .editor-header__title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.1rem;
+            color: #c8aa6e;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .editor-header__subtitle {
+            font-size: 0.65rem;
+            color: #5a7a5a;
+            letter-spacing: 1px;
+        }
+
+        .editor-back-btn {
+            background: rgba(100, 180, 100, 0.08);
+            border: 1px solid rgba(100, 180, 100, 0.2);
+            color: #7a9a7a;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .editor-back-btn:hover {
+            background: rgba(100, 180, 100, 0.15);
+            color: #a0c0a0;
+        }
+
+        /* Live Preview */
+        .live-preview {
+            margin: 20px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 2px solid rgba(200, 170, 110, 0.2);
+            position: relative;
+        }
+
+        .live-preview__label {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #c8aa6e;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            z-index: 5;
+            backdrop-filter: blur(4px);
+        }
+
+        .live-preview__iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            background: #0a0f0a;
+        }
+
+        .live-preview__reload {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: rgba(200, 170, 110, 0.15);
+            border: 1px solid rgba(200, 170, 110, 0.3);
+            color: #c8aa6e;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.7rem;
+            cursor: pointer;
+            z-index: 5;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .live-preview__reload:hover {
+            background: rgba(200, 170, 110, 0.25);
+        }
+
+        /* Section Headers */
+        .editor-section {
+            margin: 24px 20px 0;
+        }
+
+        .editor-section__title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            color: #c8aa6e;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .editor-section__desc {
+            font-size: 0.7rem;
+            color: #5a7a5a;
+            margin-bottom: 14px;
+        }
+
+        /* Asset Cards Grid */
+        .assets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+            margin: 0 20px 20px;
+        }
+
+        .asset-card {
+            background: linear-gradient(145deg, #1a2a1a, #0f170f);
+            border: 1px solid rgba(100, 180, 100, 0.12);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .asset-card:hover {
+            border-color: rgba(200, 170, 110, 0.35);
+            box-shadow: 0 4px 20px rgba(200, 170, 110, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .asset-card__preview {
+            width: 100%;
+            height: 140px;
+            background: #0a0f0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .asset-card__preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .asset-card__overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .asset-card:hover .asset-card__overlay {
+            opacity: 1;
+        }
+
+        .asset-card__overlay-text {
+            color: #c8aa6e;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            padding: 8px 20px;
+            border: 1px dashed rgba(200, 170, 110, 0.5);
+            border-radius: 8px;
+        }
+
+        .asset-card__info {
+            padding: 12px 14px;
+        }
+
+        .asset-card__name {
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.85rem;
+            color: #e8e6e3;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .asset-card__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .asset-card__tag {
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .tag--size {
+            background: rgba(100, 180, 100, 0.1);
+            color: #7a9a7a;
+            border: 1px solid rgba(100, 180, 100, 0.15);
+        }
+
+        .tag--format {
+            background: rgba(145, 70, 255, 0.1);
+            color: #b090ff;
+            border: 1px solid rgba(145, 70, 255, 0.15);
+        }
+
+        .tag--role {
+            background: rgba(200, 170, 110, 0.1);
+            color: #c8aa6e;
+            border: 1px solid rgba(200, 170, 110, 0.15);
+        }
+
+        .asset-card__path {
+            font-size: 0.55rem;
+            color: #3a4a3a;
+            margin-top: 4px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        /* Upload Modal */
+        .upload-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5, 10, 5, 0.9);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .upload-modal-overlay.active {
+            display: flex;
+        }
+
+        .upload-modal {
+            background: linear-gradient(145deg, #1a2a1a, #0f170f);
+            border: 1px solid rgba(200, 170, 110, 0.25);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: scaleIn 0.3s ease;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .upload-modal__header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(100, 180, 100, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .upload-modal__title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.1rem;
+            color: #c8aa6e;
+            letter-spacing: 1px;
+        }
+
+        .upload-modal__close {
+            background: none;
+            border: none;
+            color: #5a7a5a;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .upload-modal__body {
+            padding: 20px;
+        }
+
+        .upload-modal__current {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .upload-modal__current img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 180, 100, 0.15);
+        }
+
+        .upload-modal__specs {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 180, 100, 0.1);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .upload-modal__specs-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.75rem;
+            color: #8aaa8a;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.78rem;
+            border-bottom: 1px solid rgba(100, 180, 100, 0.04);
+        }
+
+        .spec-row__label {
+            color: #5a7a5a;
+        }
+
+        .spec-row__value {
+            color: #c8d8c8;
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(200, 170, 110, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .upload-zone:hover {
+            border-color: rgba(200, 170, 110, 0.6);
+            background: rgba(200, 170, 110, 0.04);
+        }
+
+        .upload-zone.drag-over {
+            border-color: #c8aa6e;
+            background: rgba(200, 170, 110, 0.08);
+        }
+
+        .upload-zone__icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-zone__text {
+            font-family: 'Oswald', sans-serif;
+            color: #c8aa6e;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .upload-zone__hint {
+            color: #4a5a4a;
+            font-size: 0.65rem;
+            margin-top: 4px;
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-preview {
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .upload-preview img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 8px;
+            border: 2px solid rgba(100, 200, 100, 0.3);
+        }
+
+        .upload-preview__label {
+            font-size: 0.7rem;
+            color: #7a9a7a;
+            margin-top: 6px;
+        }
+
+        .upload-modal__actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .upload-btn-save {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #c8aa6e, #a08040);
+            color: #0a0f0a;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-btn-save:hover {
+            box-shadow: 0 4px 20px rgba(200, 170, 110, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .upload-btn-save:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .upload-btn-cancel {
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 180, 100, 0.2);
+            background: transparent;
+            color: #7a9a7a;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-btn-cancel:hover {
+            background: rgba(100, 180, 100, 0.06);
+        }
+
+        /* Status Toast */
+        .editor-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: rgba(26, 42, 26, 0.95);
+            border: 1px solid rgba(100, 180, 100, 0.3);
+            color: #c8d8c8;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.85rem;
+            z-index: 2000;
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .editor-toast.visible {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .assets-grid {
+                grid-template-columns: 1fr;
+            }
+            .live-preview__iframe {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="editor-header">
+        <div class="editor-header__left">
+            <span class="editor-header__icon">🎨</span>
+            <div>
+                <div class="editor-header__title">Конструктор дизайна</div>
+                <div class="editor-header__subtitle">Нажми на элемент → загрузи новый → дизайн обновится</div>
+            </div>
+        </div>
+        <a class="editor-back-btn" href="player.html">← Назад</a>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="live-preview">
+        <div class="live-preview__label">👁 LIVE PREVIEW</div>
+        <button class="live-preview__reload" onclick="reloadPreview()">🔄 ОБНОВИТЬ</button>
+        <iframe id="livePreview" class="live-preview__iframe" src="player.html"></iframe>
+    </div>
+
+    <!-- SECTION: Header -->
+    <div class="editor-section">
+        <div class="editor-section__title">🎯 Шапка</div>
+        <div class="editor-section__desc">Фон шапки с камуфляжем и эмблема-прицел</div>
+    </div>
+    <div class="assets-grid" id="sectionHeader"></div>
+
+    <!-- SECTION: Player -->
+    <div class="editor-section">
+        <div class="editor-section__title">📺 Видеоплеер</div>
+        <div class="editor-section__desc">Рамка \"Operator Console\" вокруг плеера</div>
+    </div>
+    <div class="assets-grid" id="sectionPlayer"></div>
+
+    <!-- SECTION: Chat -->
+    <div class="editor-section">
+        <div class="editor-section__title">💬 Чат</div>
+        <div class="editor-section__desc">Фон чата и аватар сообщений</div>
+    </div>
+    <div class="assets-grid" id="sectionChat"></div>
+
+    <!-- SECTION: Action Buttons -->
+    <div class="editor-section">
+        <div class="editor-section__title">🎖️ Кнопки действий</div>
+        <div class="editor-section__desc">Текстуры для Доната, AI Доната и Музыки</div>
+    </div>
+    <div class="assets-grid" id="sectionActions"></div>
+
+    <!-- SECTION: Navigation -->
+    <div class="editor-section">
+        <div class="editor-section__title">⬇️ Навигация</div>
+        <div class="editor-section__desc">Нижняя металлическая панель</div>
+    </div>
+    <div class="assets-grid" id="sectionNav"></div>
+
+    <!-- Upload Modal -->
+    <div class="upload-modal-overlay" id="uploadModal" onclick="if(event.target===this) closeUploadModal()">
+        <div class="upload-modal">
+            <div class="upload-modal__header">
+                <div class="upload-modal__title" id="modalTitle">🎨 Заменить элемент</div>
+                <button class="upload-modal__close" onclick="closeUploadModal()">✕</button>
+            </div>
+            <div class="upload-modal__body">
+                <!-- Current Image -->
+                <div class="upload-modal__current" id="modalCurrentImage">
+                    <img src="" alt="Current" id="modalCurrentImg">
+                </div>
+
+                <!-- Specs -->
+                <div class="upload-modal__specs">
+                    <div class="upload-modal__specs-title">📐 Требования</div>
+                    <div class="spec-row">
+                        <span class="spec-row__label">Рекомендуемый размер</span>
+                        <span class="spec-row__value" id="specSize">—</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-row__label">Формат</span>
+                        <span class="spec-row__value" id="specFormat">—</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-row__label">Макс. вес</span>
+                        <span class="spec-row__value" id="specMaxSize">—</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-row__label">Элемент</span>
+                        <span class="spec-row__value" id="specElement">—</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-row__label">CSS-селектор</span>
+                        <span class="spec-row__value" id="specSelector" style="font-size:0.65rem;word-break:break-all;">—</span>
+                    </div>
+                </div>
+
+                <!-- Upload Zone -->
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-zone__icon">📂</div>
+                    <div class="upload-zone__text">НАЖМИ ИЛИ ПЕРЕТАЩИ ФАЙЛ</div>
+                    <div class="upload-zone__hint">PNG, JPG, WEBP — макс 2 МБ</div>
+                    <input type="file" id="uploadFileInput" accept="image/png,image/jpeg,image/webp" onchange="handleFileSelect(event)">
+                </div>
+
+                <!-- New Image Preview -->
+                <div class="upload-preview" id="uploadPreview">
+                    <img src="" alt="New" id="uploadPreviewImg">
+                    <div class="upload-preview__label">✅ Новое изображение загружено</div>
+                </div>
+
+                <!-- Actions -->
+                <div class="upload-modal__actions">
+                    <button class="upload-btn-save" id="uploadSaveBtn" disabled onclick="saveAsset()">💾 СОХРАНИТЬ</button>
+                    <button class="upload-btn-cancel" onclick="closeUploadModal()">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="editor-toast" id="editorToast"></div>
+
+    <script>
+        // ==========================================
+        // DESIGN ASSETS REGISTRY
+        // Each asset = { id, name, path, section, size, format, maxKb, element, selector }
+        // ==========================================
+        const DESIGN_ASSETS = [
+            // Header
+            {
+                id: 'header_bg',
+                name: 'Фон шапки',
+                path: 'img/military/header_bg.png',
+                section: 'sectionHeader',
+                size: '800×120',
+                format: 'PNG / JPG',
+                maxKb: 500,
+                element: 'Фон шапки (background-image)',
+                selector: '.app-header',
+                desc: 'Камуфляжный паттерн с танковыми силуэтами. Растягивается на всю ширину.'
+            },
+            {
+                id: 'scope_emblem',
+                name: 'Эмблема-прицел',
+                path: 'img/military/scope_emblem.png',
+                section: 'sectionHeader',
+                size: '200×200',
+                format: 'PNG (прозрачный фон)',
+                maxKb: 300,
+                element: 'Центральная эмблема в шапке',
+                selector: '.app-header::before',
+                desc: 'Золотой прицел/логотип. Показывается полупрозрачно в центре шапки.'
+            },
+            // Player
+            {
+                id: 'console_frame',
+                name: 'Рамка консоли',
+                path: 'img/military/console_frame.png',
+                section: 'sectionPlayer',
+                size: '800×500',
+                format: 'PNG (прозрачный фон)',
+                maxKb: 500,
+                element: 'Рамка вокруг видеоплеера',
+                selector: '.stream-player::before',
+                desc: 'Металлическая рамка "Operator Console". Наложена поверх плеера.'
+            },
+            // Chat
+            {
+                id: 'chat_bg',
+                name: 'Фон чата',
+                path: 'img/military/chat_bg.png',
+                section: 'sectionChat',
+                size: '600×800',
+                format: 'PNG / JPG',
+                maxKb: 400,
+                element: 'Фон секции чата (тактический HUD)',
+                selector: '.stream-chat',
+                desc: 'Тёмная текстура с радарными линиями. Показывается под затемнением.'
+            },
+            {
+                id: 'tank_avatar',
+                name: 'Аватар танка',
+                path: 'img/military/tank_avatar.png',
+                section: 'sectionChat',
+                size: '64×64',
+                format: 'PNG (прозрачный фон)',
+                maxKb: 100,
+                element: 'Иконка при каждом сообщении',
+                selector: '.chat-msg::before',
+                desc: 'Маленькая иконка танка перед каждым сообщением в чате.'
+            },
+            // Action Buttons
+            {
+                id: 'btn_donate',
+                name: 'Текстура «Донат»',
+                path: 'img/military/btn_donate.png',
+                section: 'sectionActions',
+                size: '400×120',
+                format: 'PNG / JPG',
+                maxKb: 300,
+                element: 'Фон кнопки Доната',
+                selector: '.stream-action-btn--donate',
+                desc: 'Бронзовая металлическая текстура для кнопки доната.'
+            },
+            {
+                id: 'btn_ai',
+                name: 'Текстура «AI Донат»',
+                path: 'img/military/btn_ai.png',
+                section: 'sectionActions',
+                size: '400×120',
+                format: 'PNG / JPG',
+                maxKb: 300,
+                element: 'Фон кнопки AI Доната',
+                selector: '.stream-action-btn--ai',
+                desc: 'Стальная металлическая текстура для кнопки AI доната.'
+            },
+            {
+                id: 'btn_music',
+                name: 'Текстура «Музыка»',
+                path: 'img/military/btn_music.png',
+                section: 'sectionActions',
+                size: '400×120',
+                format: 'PNG / JPG',
+                maxKb: 300,
+                element: 'Фон кнопки Музыки',
+                selector: '.stream-action-btn--music',
+                desc: 'Фиолетовая текстура со звуковыми волнами.'
+            },
+            // Navigation
+            {
+                id: 'nav_bg',
+                name: 'Фон навигации',
+                path: 'img/military/nav_bg.png',
+                section: 'sectionNav',
+                size: '800×80',
+                format: 'PNG / JPG',
+                maxKb: 300,
+                element: 'Нижняя навигационная панель',
+                selector: '.bottom-nav',
+                desc: 'Металлическая текстура для нижней панели. Показывается под затемнением.'
+            },
+        ];
+
+        // API
+        const BOT_API_URL = (() => {
+            const params = new URLSearchParams(window.location.search);
+            const host = params.get('api') || localStorage.getItem('api_host');
+            if (host) return host;
+            if (window.location.protocol === 'file:' || window.location.hostname === 'localhost') return 'http://127.0.0.1:8081';
+            return localStorage.getItem('api_url') || 'https://mir-tankov-production.up.railway.app';
+        })();
+
+        let currentAsset = null;
+        let selectedFile = null;
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAssets();
+            setupDragDrop();
+        });
+
+        function renderAssets() {
+            for (const asset of DESIGN_ASSETS) {
+                const container = document.getElementById(asset.section);
+                if (!container) continue;
+
+                const card = document.createElement('div');
+                card.className = 'asset-card';
+                card.onclick = () => openUploadModal(asset);
+                card.innerHTML = `
+                    <div class="asset-card__preview">
+                        <img src="${asset.path}" alt="${asset.name}" onerror="this.style.display='none'">
+                        <div class="asset-card__overlay">
+                            <div class="asset-card__overlay-text">📂 ЗАМЕНИТЬ</div>
+                        </div>
+                    </div>
+                    <div class="asset-card__info">
+                        <div class="asset-card__name">${asset.name}</div>
+                        <div class="asset-card__meta">
+                            <span class="asset-card__tag tag--size">📐 ${asset.size}</span>
+                            <span class="asset-card__tag tag--format">🖼 ${asset.format}</span>
+                            <span class="asset-card__tag tag--role">${asset.element.split('(')[0].trim()}</span>
+                        </div>
+                        <div class="asset-card__path">${asset.path}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        // ==========================================
+        // UPLOAD MODAL
+        // ==========================================
+        function openUploadModal(asset) {
+            currentAsset = asset;
+            selectedFile = null;
+
+            document.getElementById('modalTitle').textContent = `🎨 ${asset.name}`;
+            document.getElementById('modalCurrentImg').src = asset.path;
+            document.getElementById('specSize').textContent = asset.size + ' px';
+            document.getElementById('specFormat').textContent = asset.format;
+            document.getElementById('specMaxSize').textContent = asset.maxKb + ' КБ';
+            document.getElementById('specElement').textContent = asset.element;
+            document.getElementById('specSelector').textContent = asset.selector;
+
+            // Reset upload state
+            document.getElementById('uploadPreview').style.display = 'none';
+            document.getElementById('uploadZone').style.display = 'block';
+            document.getElementById('uploadSaveBtn').disabled = true;
+            document.getElementById('uploadFileInput').value = '';
+
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+            currentAsset = null;
+            selectedFile = null;
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate
+            if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+                showEditorToast('❌ Только PNG, JPG или WEBP');
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                showEditorToast('❌ Файл больше 2 МБ');
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('uploadPreviewImg').src = e.target.result;
+                document.getElementById('uploadPreview').style.display = 'block';
+                document.getElementById('uploadZone').style.display = 'none';
+                document.getElementById('uploadSaveBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveAsset() {
+            if (!currentAsset || !selectedFile) return;
+
+            const saveBtn = document.getElementById('uploadSaveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = '⏳ СОХРАНЕНИЕ...';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('asset_id', currentAsset.id);
+                formData.append('asset_path', currentAsset.path);
+                formData.append('telegram_id', localStorage.getItem('my_telegram_id') || '');
+
+                const resp = await fetch(`${BOT_API_URL}/api/design/upload`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (resp.ok) {
+                    showEditorToast('✅ Дизайн обновлён!');
+                    closeUploadModal();
+                    // Refresh previews
+                    setTimeout(() => {
+                        reloadPreview();
+                        reloadAssetCards();
+                    }, 500);
+                } else {
+                    // Fallback: save locally (for file:// protocol or local dev)
+                    saveLocally();
+                }
+            } catch (e) {
+                console.warn('API upload failed, saving locally:', e);
+                saveLocally();
+            }
+        }
+
+        function saveLocally() {
+            // For local file:// testing: download the file with correct name
+            if (selectedFile && currentAsset) {
+                const url = URL.createObjectURL(selectedFile);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentAsset.path.split('/').pop();
+                a.click();
+                URL.revokeObjectURL(url);
+                showEditorToast('📥 Файл скачан — положи его в site/' + currentAsset.path);
+                closeUploadModal();
+            }
+        }
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        function reloadPreview() {
+            const iframe = document.getElementById('livePreview');
+            iframe.src = iframe.src;
+            showEditorToast('🔄 Превью обновлено');
+        }
+
+        function reloadAssetCards() {
+            // Force reload images by adding cache buster
+            const bust = Date.now();
+            document.querySelectorAll('.asset-card__preview img').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src) img.src = src.split('?')[0] + '?t=' + bust;
+            });
+        }
+
+        function showEditorToast(text) {
+            const toast = document.getElementById('editorToast');
+            toast.textContent = text;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        }
+
+        function setupDragDrop() {
+            const zone = document.getElementById('uploadZone');
+            if (!zone) return;
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    document.getElementById('uploadFileInput').files = e.dataTransfer.files;
+                    handleFileSelect({ target: { files: e.dataTransfer.files } });
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

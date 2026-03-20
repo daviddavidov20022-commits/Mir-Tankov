@@ -6613,10 +6613,59 @@ def create_api_app():
                 return web.FileResponse(filepath)
             return web.Response(text="Not found", status=404)
         
+        # Design asset upload endpoint
+        async def upload_design_asset(request):
+            """Загрузка картинки для дизайна (только для админов)"""
+            try:
+                reader = await request.multipart()
+                
+                asset_path = None
+                telegram_id = None
+                file_data = None
+                
+                while True:
+                    part = await reader.next()
+                    if part is None:
+                        break
+                    if part.name == 'asset_path':
+                        asset_path = (await part.read()).decode('utf-8')
+                    elif part.name == 'telegram_id':
+                        telegram_id = (await part.read()).decode('utf-8')
+                    elif part.name == 'file':
+                        file_data = await part.read()
+                
+                if not asset_path or not file_data:
+                    return web.json_response({'error': 'Missing asset_path or file'}, status=400)
+                
+                # Security: path must be within site/img/
+                if '..' in asset_path or not asset_path.startswith('img/'):
+                    return web.json_response({'error': 'Invalid path'}, status=403)
+                
+                # Max 2MB
+                if len(file_data) > 2 * 1024 * 1024:
+                    return web.json_response({'error': 'File too large (max 2MB)'}, status=400)
+                
+                # Write file
+                target = os.path.join(site_dir, asset_path)
+                target_dir = os.path.dirname(target)
+                os.makedirs(target_dir, exist_ok=True)
+                
+                with open(target, 'wb') as f:
+                    f.write(file_data)
+                
+                logger.info(f"Design asset uploaded: {asset_path} ({len(file_data)} bytes)")
+                return web.json_response({'ok': True, 'path': asset_path, 'size': len(file_data)})
+            except Exception as e:
+                logger.error(f"Design upload error: {e}")
+                return web.json_response({'error': str(e)}, status=500)
+        
+        app.router.add_post('/api/design/upload', upload_design_asset)
+        
         app.router.add_get('/site', serve_site_index)
         app.router.add_get('/site/', serve_site_index)
         app.router.add_get('/site/{filename:.*}', serve_site_file)
         logger.info("Site directory served at /site/")
+
     
     # Раздача webapp файлов (quiz.html и др.)
     webapp_dir = os.path.join(os.path.dirname(__file__), 'webapp')
