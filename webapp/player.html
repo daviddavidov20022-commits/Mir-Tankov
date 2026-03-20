@@ -36,18 +36,18 @@
         <div class="content-area">
             <button class="btn-back" onclick="goBack()">← Назад</button>
 
-            <!-- Platform Tabs -->
+            <!-- Platform Tabs — открывают стрим в браузере -->
             <div class="platform-tabs" id="platformTabs">
-                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="switchPlatform('twitch')">
-                    <span class="platform-tab__icon">📺</span>
+                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="openStreamLink('twitch')">
+                    <span class="platform-tab__icon">💜</span>
                     <span class="platform-tab__name">TWITCH</span>
                 </button>
-                <button class="platform-tab" data-platform="vk" onclick="switchPlatform('vk')">
-                    <span class="platform-tab__icon">📺</span>
+                <button class="platform-tab" data-platform="vk" onclick="openStreamLink('vk')">
+                    <span class="platform-tab__icon">🔵</span>
                     <span class="platform-tab__name">VK PLAY</span>
                 </button>
-                <button class="platform-tab" data-platform="youtube" onclick="switchPlatform('youtube')">
-                    <span class="platform-tab__icon">📺</span>
+                <button class="platform-tab" data-platform="youtube" onclick="openStreamLink('youtube')">
+                    <span class="platform-tab__icon">🔴</span>
                     <span class="platform-tab__name">YOUTUBE</span>
                 </button>
             </div>
@@ -79,13 +79,21 @@
                 </div>
             </div>
 
-            <!-- Universal Player -->
+            <!-- Stream Preview (iframe не работает в Telegram WebView) -->
             <div class="stream-player" id="streamPlayer">
-                <div class="stream-player__aspect">
-                    <iframe id="streamPlayerIframe" 
-                            allowfullscreen
-                            frameborder="0">
-                    </iframe>
+                <div class="stream-player__preview" id="streamPreview">
+                    <div class="stream-preview__bg">
+                        <div class="stream-preview__glow"></div>
+                    </div>
+                    <div class="stream-preview__content">
+                        <div class="stream-preview__icon" id="previewIcon">💜</div>
+                        <div class="stream-preview__channel" id="previewChannel">SERVERENOK</div>
+                        <div class="stream-preview__platform" id="previewPlatform">twitch.tv</div>
+                        <button class="stream-preview__btn" id="previewBtn" onclick="openStreamLink('twitch')">
+                            ▶ СМОТРЕТЬ СТРИМ
+                        </button>
+                        <div class="stream-preview__hint">Откроется в браузере</div>
+                    </div>
                 </div>
             </div>
 

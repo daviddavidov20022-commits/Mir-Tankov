@@ -825,6 +825,34 @@ function openGame(url) {
 }
 
 // ==========================================
+// ОТКРЫТИЕ СТРИМА В БРАУЗЕРЕ
+// ==========================================
+const STREAM_LINKS = {
+    twitch: 'https://www.twitch.tv/serverenok',
+    vk: 'https://live.vkvideo.ru/iserveri',
+    youtube: 'https://www.youtube.com/@ISERVERI'
+};
+
+function openStreamLink(platform) {
+    const url = STREAM_LINKS[platform];
+    if (!url) return;
+    
+    // Подсветим нажатую кнопку
+    document.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.classList.toggle('platform-tab--active', tab.dataset.platform === platform);
+    });
+    
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch(e) {}
+    
+    // Открываем в браузере
+    if (window.Telegram?.WebApp?.openLink) {
+        window.Telegram.WebApp.openLink(url);
+    } else {
+        window.open(url, '_blank');
+    }
+}
+
+// ==========================================
 // КОНФИГ ТРАНСЛЯЦИИ (АДМИН)
 // ==========================================
 let currentStreamConfig = {}; // Глобально хранит конфиг

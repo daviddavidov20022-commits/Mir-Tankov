@@ -162,46 +162,24 @@ function createParticles() {
 // МУЛЬТИПЛАТФОРМЕННЫЙ ПЛЕЕР
 // ==========================================
 function initPlayer() {
-    const iframe = document.getElementById('streamPlayerIframe');
-    if (!iframe) return;
-    const parent = window.location.hostname || 'localhost';
+    // В webapp используем превью-карточку вместо iframe
+    // (iframe Twitch не работает в Telegram WebView)
+    const preview = document.getElementById('streamPreview');
+    if (preview) {
+        updateStreamPreview(currentPlatform);
+    }
     
     // Берём канал из конфига (сохранённого админом)
     const platformConfig = currentStreamConfig[currentPlatform] || {};
     const configChannel = platformConfig.channel || '';
-
-    if (currentPlatform === 'twitch') {
-        const ch = configChannel || currentChannel;
-        iframe.src = `https://player.twitch.tv/?channel=${ch}&parent=${parent}&muted=false`;
-        // Обновляем currentChannel для Twitch IRC
-        if (configChannel) currentChannel = configChannel;
-    } else if (currentPlatform === 'vk') {
-        if (configChannel) {
-            // Если полная ссылка — используем как есть
-            if (configChannel.startsWith('http')) {
-                iframe.src = configChannel;
-            } else {
-                iframe.src = `https://vk.com/video_ext.php?oid=${configChannel}&hd=2&autoplay=1`;
-            }
-        } else {
-            iframe.src = '';
-        }
-    } else if (currentPlatform === 'youtube') {
-        if (configChannel) {
-            if (configChannel.startsWith('http')) {
-                iframe.src = configChannel;
-            } else {
-                iframe.src = `https://www.youtube.com/embed/live_stream?channel=${configChannel}&autoplay=1`;
-            }
-        } else {
-            iframe.src = '';
-        }
+    
+    if (currentPlatform === 'twitch' && configChannel) {
+        currentChannel = configChannel;
     }
     
     // Обновляем заголовок стрима
     const titleEl = document.getElementById('streamTitle');
     if (titleEl && configChannel) {
-        // Показываем красивое имя
         const displayName = configChannel.replace(/^https?:\/\//, '').split('/').pop() || configChannel;
         titleEl.textContent = displayName.toUpperCase();
     }
@@ -823,6 +801,69 @@ function openGame(url) {
     if (myId) { const sep = url.includes('?') ? '&' : '?'; url += `${sep}telegram_id=${myId}`; }
     window.location.href = url;
 }
+
+// ==========================================
+// ОТКРЫТИЕ СТРИМА В БРАУЗЕРЕ
+// ==========================================
+const STREAM_LINKS = {
+    twitch: 'https://www.twitch.tv/serverenok',
+    vk: 'https://live.vkvideo.ru/iserveri',
+    youtube: 'https://www.youtube.com/@ISERVERI'
+};
+
+const STREAM_PREVIEW_DATA = {
+    twitch: { icon: '💜', channel: 'SERVERENOK', platform: 'twitch.tv', color: '#9146FF', gradient: 'linear-gradient(135deg, #9146FF, #7B2FFF)' },
+    vk: { icon: '🔵', channel: 'ISERVERI', platform: 'vk video', color: '#0077FF', gradient: 'linear-gradient(135deg, #0077FF, #0055CC)' },
+    youtube: { icon: '🔴', channel: 'ISERVERI', platform: 'youtube.com', color: '#FF0000', gradient: 'linear-gradient(135deg, #FF0000, #CC0000)' }
+};
+
+function openStreamLink(platform) {
+    const url = STREAM_LINKS[platform];
+    if (!url) return;
+    
+    // Подсветим нажатую кнопку
+    document.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.classList.toggle('platform-tab--active', tab.dataset.platform === platform);
+    });
+    
+    // Обновим превью-карточку
+    updateStreamPreview(platform);
+    
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch(e) {}
+    
+    // Открываем в браузере
+    if (window.Telegram?.WebApp?.openLink) {
+        window.Telegram.WebApp.openLink(url);
+    } else {
+        window.open(url, '_blank');
+    }
+}
+
+function updateStreamPreview(platform) {
+    const data = STREAM_PREVIEW_DATA[platform];
+    if (!data) return;
+    
+    const icon = document.getElementById('previewIcon');
+    const channel = document.getElementById('previewChannel');
+    const platLabel = document.getElementById('previewPlatform');
+    const btn = document.getElementById('previewBtn');
+    const glow = document.querySelector('.stream-preview__glow');
+    
+    if (icon) icon.textContent = data.icon;
+    if (channel) channel.textContent = data.channel;
+    if (platLabel) {
+        platLabel.textContent = data.platform;
+        platLabel.style.color = data.color;
+    }
+    if (btn) {
+        btn.style.background = data.gradient;
+        btn.onclick = () => openStreamLink(platform);
+    }
+    if (glow) {
+        glow.style.background = `radial-gradient(circle, ${data.color}26, transparent 70%)`;
+    }
+}
+
 
 // ==========================================
 // КОНФИГ ТРАНСЛЯЦИИ (АДМИН)

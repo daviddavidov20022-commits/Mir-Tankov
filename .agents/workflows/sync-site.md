@@ -8,25 +8,29 @@ description: Синхронизация site/ → webapp/ после любых 
 - `site/` — автономный сайт (использует `site-page.js` для мока Telegram SDK)
 - `webapp/` — Telegram WebApp (использует настоящий `telegram-web-app.js`)
 
+## ⚠️ ФАЙЛЫ С ОТЛИЧИЯМИ (НЕ перезаписывать!)
+
+Следующие файлы **ОТЛИЧАЮТСЯ** между site и webapp. Их нельзя просто копировать:
+- `player.html` — webapp использует preview-карточку вместо iframe (Twitch embed не работает в Telegram WebView)
+- `js/stream.js` — webapp имеет `updateStreamPreview()` и модифицированный `initPlayer()` (без iframe)
+- `css/stream.css` — webapp имеет CSS для `.stream-preview__*` элементов
+
+При изменении этих файлов в `site/` — нужно **вручную** перенести логику в webapp, адаптировав под preview-карточку.
+
 ## Файлы для синхронизации
 
 Всегда синхронизировать ЭТИ файлы из `site/` → `webapp/`:
 
-### HTML файлы (нужна замена скрипта!)
-- `site/player.html` → `webapp/player.html` **⚠️ ПОСЛЕ копирования заменить:**
-  - `<script src="js/site-page.js"></script>` → `<script src="https://telegram.org/js/telegram-web-app.js"></script>`
-  - Убрать `<link rel="stylesheet" href="css/site.css">` (она только для standalone сайта)
-- `site/design-editor.html` → `webapp/design-editor.html` (аналогичная замена)
-
-### JS файлы (копировать как есть)
-- `site/js/stream.js` → `webapp/js/stream.js`
-
 ### CSS файлы (копировать как есть)
 - `site/css/military-theme.css` → `webapp/css/military-theme.css`
-- `site/css/stream.css` → `webapp/css/stream.css`
 
 ### Картинки (копировать как есть)
 - `site/img/military/*` → `webapp/img/military/*`
+
+### HTML файлы (нужна замена скрипта!)
+- `site/design-editor.html` → `webapp/design-editor.html` **⚠️ ПОСЛЕ копирования заменить:**
+  - `<script src="js/site-page.js"></script>` → `<script src="https://telegram.org/js/telegram-web-app.js"></script>`
+  - Убрать `<link rel="stylesheet" href="css/site.css">`
 
 ## Как выполнять
 
@@ -44,16 +48,15 @@ cd d:\mir-tankov-bot && git add -A && git commit -m "Sync site -> webapp" && git
 
 ## Когда выполнять
 
-- **ВСЕГДА** после изменений в `site/player.html`
-- **ВСЕГДА** после изменений в `site/js/stream.js`
-- **ВСЕГДА** после изменений в `site/css/military-theme.css` или `site/css/stream.css`
+- **ВСЕГДА** после изменений в `site/css/military-theme.css`
 - **ВСЕГДА** после добавления/замены картинок в `site/img/`
+- **ВСЕГДА** после изменений в `site/design-editor.html`
+- **РУЧНОЙ ПЕРЕНОС** после изменений в `site/player.html`, `site/js/stream.js`, `site/css/stream.css`
 - **НЕ НУЖНО** для файлов которые есть ТОЛЬКО в `site/` (например `site/css/site.css`, `site/js/site-page.js`)
 
 ## ⚠️ ВАЖНО: Разные лейауты!
 
-- **`site/`** = Десктопный сайт. Полноэкранный layout на весь экран. Стили в `site.css` (НЕ синхронизируется).
+- **`site/`** = Десктопный сайт. Полноэкранный layout. Стили в `site.css` (НЕ синхронизируется).
 - **`webapp/`** = Telegram WebApp. Мобильный layout. Не имеет `site.css`.
-- **`military-theme.css`** = Общий военный дизайн, используется обоими. НЕ добавлять сюда десктопные max-width/layout стили!
+- **`military-theme.css`** = Общий военный дизайн, используется обоими.
 - Десктопные стили → ТОЛЬКО в `site/css/site.css`
-

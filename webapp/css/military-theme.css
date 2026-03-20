@@ -216,8 +216,22 @@ body {
     overflow: visible;
 }
 
-/* Console frame overlay */
+/* Console frame overlay — рамка с прозрачным центром */
 .stream-player::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    background: #000;
+    border-radius: 14px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Frame image on top of black background */
+.stream-player::after {
     content: '';
     position: absolute;
     top: -6px;
@@ -227,28 +241,10 @@ body {
     background: url('../img/military/console_frame.png') center/cover no-repeat;
     border-radius: 14px;
     pointer-events: none;
-    z-index: 3;
-    opacity: 0.7;
+    z-index: 4;
+    opacity: 0.75;
 }
 
-/* Console label */
-.stream-player::after {
-    content: '⚙ Operator Console';
-    position: absolute;
-    top: -1px;
-    left: 16px;
-    padding: 4px 14px;
-    background: linear-gradient(180deg, #2a3a2a, #1a2a1a);
-    border: 1px solid rgba(100, 180, 100, 0.25);
-    border-top: none;
-    border-radius: 0 0 8px 8px;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.65rem;
-    color: #7a9a7a;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    z-index: 5;
-}
 
 /* Tactical corner brackets */
 .stream-player .stream-player__aspect::before {

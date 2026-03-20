@@ -459,89 +459,204 @@
     .content-area {
         display: grid;
         grid-template-columns: 1fr 360px;
-        grid-template-rows: auto auto 1fr auto;
+        grid-template-rows: auto auto auto 1fr auto;
         gap: 16px;
         padding: 20px 32px;
         align-items: start;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
-    /* Platform tabs — span full width */
-    .platform-tabs {
+    /* Back button — top left */
+    .btn-back {
         grid-column: 1 / -1;
         grid-row: 1;
-        max-width: 500px;
+    }
+
+    /* Platform tabs — full width, centered */
+    .platform-tabs {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        max-width: 600px;
+        gap: 10px;
+        padding: 8px;
+    }
+
+    .platform-tab {
+        padding: 14px 28px;
+        font-size: 0.95rem;
+        border-radius: 12px;
+        gap: 10px;
+    }
+
+    .platform-tab__icon {
+        font-size: 1.2rem;
+    }
+
+    .platform-tab__name {
+        font-size: 0.95rem;
+        letter-spacing: 1.5px;
     }
 
     /* Stream header — left column */
     .stream-header {
         grid-column: 1;
-        grid-row: 2;
+        grid-row: 3;
+        padding: 16px 24px;
+        gap: 16px;
+    }
+
+    .stream-header__title {
+        font-size: 1.4rem;
+    }
+
+    .stream-header__viewers {
+        font-size: 0.8rem;
+    }
+
+    .stream-header__live {
+        padding: 6px 16px;
+        font-size: 0.85rem;
+    }
+
+    .stream-header__settings {
+        padding: 12px;
+        font-size: 1.3rem;
     }
 
     /* Player — left column */
     .stream-player {
         grid-column: 1;
-        grid-row: 3;
+        grid-row: 4;
         margin-bottom: 0;
+        border-radius: 16px;
     }
 
     .stream-player__aspect {
         padding-bottom: 56.25% !important; /* Strict 16:9 */
     }
 
-    /* Chat — right column, spans rows 2-3 */
+    /* Chat — right column, spans rows 3-4 */
     .stream-chat {
         grid-column: 2;
-        grid-row: 2 / 4;
+        grid-row: 3 / 5;
         height: auto;
         display: flex;
         flex-direction: column;
+        border-radius: 16px;
+        min-height: 500px;
+    }
+
+    .stream-chat__header {
+        padding: 14px 18px;
+    }
+
+    .stream-chat__title {
+        font-size: 0.95rem;
     }
 
     .stream-chat__messages {
         flex: 1;
         height: auto;
-        min-height: 400px;
+        min-height: 380px;
+        padding: 12px 16px;
+    }
+
+    .stream-chat__input-area {
+        padding: 12px 16px;
+        gap: 10px;
+    }
+
+    .stream-chat__input {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
+
+    .stream-chat__send {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+        border-radius: 10px;
+    }
+
+    .stream-chat__platform-info {
+        font-size: 0.65rem;
+    }
+
+    .chat-platform-badge {
+        font-size: 0.7rem;
+        padding: 5px 12px;
+    }
+
+    .chat-msg {
+        font-size: 0.88rem;
+        padding: 4px 0;
+    }
+
+    .chat-msg__name {
+        font-size: 0.82rem;
+    }
+
+    .chat-msg__text {
+        font-size: 0.85rem;
+    }
+
+    /* Chat mode toggle */
+    .stream-chat__mode-toggle {
+        padding: 8px 12px;
+    }
+
+    .chat-mode-btn {
+        font-size: 0.75rem;
+        padding: 8px 12px;
     }
 
     /* Channel settings — below player */
     .channel-settings {
         grid-column: 1;
+        padding: 18px;
+        border-radius: 14px;
     }
 
-    /* Action buttons — below player, compact */
-    .stream-actions {
-        grid-column: 1;
-        grid-row: 4;
-        max-width: 500px;
-        gap: 14px;
-    }
-
-    .stream-action-btn {
-        padding: 18px 16px;
-        max-width: 160px;
-    }
-
-    .stream-action-btn__icon {
-        font-size: 1.6rem;
-    }
-
-    .stream-action-btn__text {
-        font-size: 0.85rem;
-    }
-
-    .platform-tab {
-        padding: 14px 24px;
+    .channel-settings__input {
+        padding: 12px 16px;
         font-size: 0.9rem;
     }
 
-    .stream-header__title {
-        font-size: 1.3rem;
+    .channel-settings__btn {
+        padding: 12px 20px;
+        font-size: 0.85rem;
     }
 
-    /* Back button — top left */
-    .btn-back {
+    /* Action buttons — below player, nice cards */
+    .stream-actions {
         grid-column: 1 / -1;
+        grid-row: 5;
+        max-width: 100%;
+        gap: 16px;
+        margin: 8px 0;
+    }
+
+    .stream-action-btn {
+        padding: 20px 24px;
+        max-width: none;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        gap: 10px;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .stream-action-btn__icon {
+        font-size: 1.8rem;
+    }
+
+    .stream-action-btn__text {
+        font-size: 0.9rem;
+    }
+
+    .stream-action-btn__sub {
+        font-size: 0.65rem !important;
     }
 
     /* Admin gear */
@@ -550,36 +665,65 @@
         top: 80px;
         right: 20px;
         z-index: 50;
+        width: 52px;
+        height: 52px;
+        font-size: 1.4rem;
     }
 }
 
 /* Full HD+ */
 @media (min-width: 1200px) {
     .content-area {
-        grid-template-columns: 1fr 400px;
+        grid-template-columns: 1fr 420px;
         padding: 24px 48px;
-        gap: 20px;
+        gap: 24px;
+    }
+
+    .stream-chat {
+        min-height: 550px;
     }
 
     .stream-chat__messages {
-        min-height: 450px;
+        min-height: 420px;
     }
 
     .stream-header__title {
         font-size: 1.5rem;
+    }
+
+    .platform-tab {
+        padding: 16px 32px;
+        font-size: 1rem;
+    }
+
+    .stream-action-btn {
+        padding: 24px 28px;
+    }
+
+    .stream-action-btn__icon {
+        font-size: 2rem;
+    }
+
+    .stream-action-btn__text {
+        font-size: 0.95rem;
     }
 }
 
 /* 2K+ Ultra-wide */
 @media (min-width: 1600px) {
     .content-area {
-        grid-template-columns: 1fr 440px;
+        grid-template-columns: 1fr 480px;
         padding: 32px 64px;
-        gap: 24px;
+        gap: 28px;
+        max-width: 1600px;
+    }
+
+    .stream-chat {
+        min-height: 600px;
     }
 
     .stream-chat__messages {
-        min-height: 500px;
+        min-height: 480px;
     }
 
     .stream-header__title {
@@ -587,10 +731,19 @@
     }
 
     .platform-tab {
-        padding: 16px 32px;
-        font-size: 1rem;
+        padding: 18px 36px;
+        font-size: 1.05rem;
+    }
+
+    .stream-action-btn {
+        padding: 28px 32px;
+    }
+
+    .stream-action-btn__icon {
+        font-size: 2.2rem;
     }
 }
+
 
 
 /* ==========================================

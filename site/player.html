@@ -37,18 +37,18 @@
         <div class="content-area">
             <button class="btn-back" onclick="goBack()">← Назад</button>
 
-            <!-- Platform Tabs -->
+            <!-- Platform Tabs — открывают стрим в браузере -->
             <div class="platform-tabs" id="platformTabs">
-                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="switchPlatform('twitch')">
-                    <span class="platform-tab__icon">📺</span>
+                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="openStreamLink('twitch')">
+                    <span class="platform-tab__icon">💜</span>
                     <span class="platform-tab__name">TWITCH</span>
                 </button>
-                <button class="platform-tab" data-platform="vk" onclick="switchPlatform('vk')">
-                    <span class="platform-tab__icon">📺</span>
+                <button class="platform-tab" data-platform="vk" onclick="openStreamLink('vk')">
+                    <span class="platform-tab__icon">🔵</span>
                     <span class="platform-tab__name">VK PLAY</span>
                 </button>
-                <button class="platform-tab" data-platform="youtube" onclick="switchPlatform('youtube')">
-                    <span class="platform-tab__icon">📺</span>
+                <button class="platform-tab" data-platform="youtube" onclick="openStreamLink('youtube')">
+                    <span class="platform-tab__icon">🔴</span>
                     <span class="platform-tab__name">YOUTUBE</span>
                 </button>
             </div>

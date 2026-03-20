@@ -11,18 +11,17 @@ WEBAPP = os.path.join(ROOT, 'webapp')
 
 # ==========================================
 # Файлы для прямого копирования (без изменений)
+# ⚠️ НЕ включать stream.js и stream.css — webapp имеет свои версии!
 # ==========================================
 DIRECT_COPY = [
-    'js/stream.js',
     'css/military-theme.css',
-    'css/stream.css',
 ]
 
 # ==========================================
 # HTML файлы (нужна замена SDK)
+# ⚠️ НЕ включать player.html — webapp имеет свою версию (preview вместо iframe)!
 # ==========================================
 HTML_FILES = [
-    'player.html',
     'design-editor.html',
 ]
 

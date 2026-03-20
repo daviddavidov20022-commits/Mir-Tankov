@@ -104,6 +104,42 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
 .shake{animation:shake .35s ease}.pop{animation:pop .25s ease}
+
+/* Multiplayer styles */
+.player-select{margin-bottom:24px}
+.player-select label{display:block;color:var(--dim);font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.p-badge{padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:8px;display:inline-block}
+.p1-bg{background:var(--accent);color:#000}
+.p2-bg{background:#3498db;color:#fff}
+.p3-bg{background:#2ecc71;color:#fff}
+.p4-bg{background:#9b59b6;color:#fff}
+.p1-border{border-color:var(--accent)!important}
+.p2-border{border-color:#3498db!important}
+.p3-border{border-color:#2ecc71!important}
+.p4-border{border-color:#9b59b6!important}
+
+.p-mark{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;margin-left:4px;border:2px solid rgba(255,255,255,0.2)}
+
+.turn-indicator{text-align:center;margin-bottom:10px;animation:pop .3s ease}
+.results-table{width:100%;border-collapse:collapse;margin-top:15px;background:var(--card2);border-radius:12px;overflow:hidden}
+.results-table th{background:rgba(255,255,255,.05);padding:10px;font-size:.7rem;color:var(--dim);text-align:left}
+.results-table td{padding:12px 10px;border-top:1px solid rgba(255,255,255,.05);font-size:.9rem}
+.results-table tr.winner{background:rgba(200,170,110,.1)}
+
+/* Mode styles */
+.mode-select{margin-bottom:24px}
+.mode-select label{display:block;color:var(--dim);font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.mode-inputs{margin-top:16px;display:grid;gap:10px;animation:fadeIn .3s ease}
+.mode-input-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:10px}
+.mode-input-item input{background:transparent;border:none;color:var(--text);font-size:0.9rem;width:100%;outline:none}
+.mode-input-item input::placeholder{color:var(--dim);opacity:0.5}
+
+.timer-box{position:relative;width:100%;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;margin-bottom:10px;overflow:hidden;display:none}
+.timer-box.active{display:block}
+.timer-fill{height:100%;background:var(--accent);width:100%;transition:width 0.1s linear}
+.timer-text{font-size:0.75rem;color:var(--accent);font-weight:700;margin-bottom:4px;text-align:right}
+
+.stake-info{background:rgba(200,170,110,0.1);border:1px dashed var(--accent);border-radius:10px;padding:10px;margin-bottom:20px;text-align:center;font-size:0.9rem;color:var(--accent2)}
 </style>
     <link rel="stylesheet" href="css/site.css">
 </head>
@@ -127,6 +163,27 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle
       <div class="q-opt" onclick="pickCount(50)" data-n="50"><div class="num">50</div><div class="lbl">Хардкор</div></div>
     </div>
   </div>
+
+  <div class="player-select">
+    <label>Количество участников</label>
+    <div class="q-options">
+      <div class="q-opt active" onclick="pickPlayers(1)" data-p="1"><div class="num">1</div><div class="lbl">Один</div></div>
+      <div class="q-opt" onclick="pickPlayers(2)" data-p="2"><div class="num">2</div><div class="lbl">Дуэль</div></div>
+      <div class="q-opt" onclick="pickPlayers(3)" data-p="3"><div class="num">3</div><div class="lbl">Трио</div></div>
+      <div class="q-opt" onclick="pickPlayers(4)" data-p="4"><div class="num">4</div><div class="lbl">Квартет</div></div>
+    </div>
+  </div>
+
+  <div class="mode-select" id="modeSelect">
+    <label>На что соревнуемся?</label>
+    <div class="q-options">
+      <div class="q-opt active" onclick="pickMode('fun')" data-m="fun"><div class="num">😊</div><div class="lbl">Интерес</div></div>
+      <div class="q-opt" onclick="pickMode('desire')" data-m="desire"><div class="num">🎁</div><div class="lbl">Желание</div></div>
+      <div class="q-opt" onclick="pickMode('cheese')" data-m="cheese"><div class="num">🧀</div><div class="lbl">Сыр</div></div>
+    </div>
+    <div id="modeInputs" class="mode-inputs hidden"></div>
+  </div>
+
   <button class="btn-start" onclick="startQuiz()">НАЧАТЬ ВИКТОРИНУ</button>
 </div>
 
@@ -137,6 +194,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle
     <div class="score-display"><span class="score-correct">✅ <span id="correctCount">0</span></span><span class="score-wrong">❌ <span id="wrongCount">0</span></span></div>
   </div>
   <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div id="quizTimerBox" class="timer-box">
+    <div class="timer-text" id="timerText">15с</div>
+    <div class="timer-fill" id="timerFill"></div>
+  </div>
+  <div id="turnIndicator" class="turn-indicator hidden"></div>
   <div class="question-card" id="questionCard"><div class="q-cat" id="qCategory"></div><div class="q-text" id="qText"></div></div>
   <div class="answers" id="answersContainer"></div>
   <div class="explanation" id="explanation"></div>
@@ -150,11 +212,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle
     <div class="results-title" id="rTitle"></div>
     <div class="results-subtitle" id="rSub"></div>
   </div>
+  <div id="resultsStake" class="stake-info hidden"></div>
   <div class="results-score">
     <div class="results-stat good"><div class="big" id="fCorrect">0</div><div class="lbl">Верно</div></div>
     <div class="results-stat bad"><div class="big" id="fWrong">0</div><div class="lbl">Ошибок</div></div>
     <div class="results-stat percent"><div class="big" id="fPct">0%</div><div class="lbl">Точность</div></div>
   </div>
+  <div id="multiplayerResults" class="hidden"></div>
   <div class="share-section">
     <button class="btn-share" onclick="shareResult()">📤 Поделиться результатом</button>
     <div class="share-hint">Отправь в чат и покажи свои знания!</div>
@@ -224,7 +288,54 @@ const byClass=c=>names.filter(n=>T[n].c===c);
 const fullC={ТТ:"Тяжёлый танк",СТ:"Средний танк",ЛТ:"Лёгкий танк",ПТ:"ПТ-САУ"};
 const clsTag=c=>({ТТ:'ht',СТ:'mt',ЛТ:'lt',ПТ:'td'}[c]||'ht');
 
-let chosenCount=20, questions=[], curQ=0, correct=0, wrong=0, answered=false, results=[];
+let chosenCount=20, playerCount=1, players=[], curTurn=0, questions=[], curQ=0, answered=false, results=[], pendingAnswers=[];
+let quizMode='fun', cheeseBet=0, playerDesires=[], timerVal=15, timerInterval=null;
+
+function pickPlayers(p){
+  playerCount=p;
+  document.querySelectorAll('.player-select .q-opt').forEach(el=>{
+    el.classList.toggle('active',+el.dataset.p===p);
+  });
+  updateModeInputs();
+}
+
+function pickMode(m){
+  quizMode=m;
+  document.querySelectorAll('.mode-select .q-opt').forEach(el=>{
+    el.classList.toggle('active',el.dataset.m===m);
+  });
+  updateModeInputs();
+}
+
+function updateModeInputs(){
+  const box = document.getElementById('modeInputs');
+  box.innerHTML = '';
+  
+  if(quizMode === 'desire' && playerCount > 1) {
+    box.classList.remove('hidden');
+    for(let i=1; i<=playerCount; i++) {
+        const item = document.createElement('div');
+        item.className = 'mode-input-item';
+        item.innerHTML = `<span class="p-badge p${i}-bg">P${i}</span><input type="text" placeholder="Желание игрока ${i}" id="desireP${i}">`;
+        box.appendChild(item);
+    }
+  } else if(quizMode === 'cheese') {
+    box.classList.remove('hidden');
+    const item = document.createElement('div');
+    item.className = 'mode-input-item';
+    item.innerHTML = `<span class="num">🧀</span><input type="number" placeholder="Ставка сыра" id="cheeseBetInput" value="100">`;
+    box.appendChild(item);
+  } else {
+    box.classList.add('hidden');
+  }
+}
+
+function pickCount(n){
+  chosenCount=n;
+  document.querySelectorAll('.q-select .q-opt').forEach(el=>{
+    el.classList.toggle('active',+el.dataset.n===n);
+  });
+}
 
 function goBack(){
   if(!document.getElementById('startScreen').classList.contains('hidden')){
@@ -305,9 +416,11 @@ function getTemplates(){
     const a=names[Math.floor(Math.random()*names.length)],b=names[Math.floor(Math.random()*names.length)];
     if(a===b||T[a].dmg===T[b].dmg)continue;
     tpls.push(()=>{
-      const winner=T[a].dmg>T[b].dmg?a:b;
-      const opts=shuffle([a,b,...shuffle(names.filter(n=>n!==a&&n!==b)).slice(0,2)]);
-      return{cat:"СРАВНЕНИЕ • УРОН",text:`У кого БОЛЬШЕ разовый урон?`,correct:winner,opts,expl:`${a} — ${T[a].dmg}, ${b} — ${T[b].dmg}.`};
+      const extras=shuffle(names.filter(n=>n!==a&&n!==b)).slice(0,2);
+      const opts=shuffle([a,b,...extras]);
+      const winner=opts.reduce((best,n)=>T[n].dmg>T[best].dmg?n:best,opts[0]);
+      const loser=opts.reduce((worst,n)=>T[n].dmg<T[worst].dmg?n:worst,opts[0]);
+      return{cat:"СРАВНЕНИЕ • УРОН",text:`У кого БОЛЬШЕ разовый урон?`,correct:winner,opts,expl:`${winner} — ${T[winner].dmg}, ${loser} — ${T[loser].dmg}.`};
     });
   }
   return tpls;
@@ -329,80 +442,273 @@ function generateQuestions(){
 }
 
 function startQuiz(){
+  // Gather mode data
+  if(quizMode === 'desire' && playerCount > 1) {
+    playerDesires = [];
+    for(let i=1; i<=playerCount; i++) {
+        const val = document.getElementById(`desireP${i}`).value || 'Желание игрока '+i;
+        playerDesires.push(val);
+    }
+  } else if(quizMode === 'cheese') {
+    cheeseBet = parseInt(document.getElementById('cheeseBetInput').value) || 0;
+  }
+
   questions=generateQuestions();
-  if(questions.length<chosenCount){questions=generateQuestions();}
-  curQ=0;correct=0;wrong=0;answered=false;results=[];
+  curQ=0; curTurn=0; answered=false; results=[];
+  players = [];
+  for(let i=0; i<playerCount; i++) {
+    players.push({ id: i+1, correct: 0, wrong: 0, desire: playerDesires[i] || '' });
+  }
+  
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('resultsScreen').style.display='none';
   document.getElementById('quizScreen').classList.remove('hidden');
   document.getElementById('qTotal').textContent=questions.length;
+  
+  const ti = document.getElementById('turnIndicator');
+  if(playerCount > 1) ti.classList.remove('hidden'); else ti.classList.add('hidden');
+  
+  const timerBox = document.getElementById('quizTimerBox');
+  if(quizMode === 'cheese') timerBox.classList.add('active'); else timerBox.classList.remove('active');
+
   showQuestion();
 }
 
+function startTimer() {
+    if(quizMode !== 'cheese' || answered) return;
+    clearInterval(timerInterval);
+    timerVal = 15;
+    const fill = document.getElementById('timerFill');
+    const txt = document.getElementById('timerText');
+    
+    fill.style.width = '100%';
+    txt.textContent = '15с';
+    
+    timerInterval = setInterval(() => {
+        timerVal -= 0.1;
+        if(timerVal <= 0) {
+            timerVal = 0;
+            clearInterval(timerInterval);
+            selectAnswer(-1); // Timeout
+        }
+        fill.style.width = (timerVal / 15 * 100) + '%';
+        txt.textContent = Math.ceil(timerVal) + 'с';
+    }, 100);
+}
+
 function showQuestion(){
-  if(curQ>=questions.length){showResults();return;}
+  if(curQ >= questions.length){showResults();return;}
   answered=false;
+  pendingAnswers = []; 
+  curTurn = 0;
+  
   const q=questions[curQ];
-  document.getElementById('qNum').textContent=curQ+1;
-  document.getElementById('correctCount').textContent=correct;
-  document.getElementById('wrongCount').textContent=wrong;
-  document.getElementById('progressFill').style.width=((curQ/questions.length)*100)+'%';
+  document.getElementById('qNum').textContent = curQ + 1;
+  document.getElementById('progressFill').style.width = ((curQ/questions.length)*100)+'%';
+  
+  updateTurnUI();
+  
+  const card = document.getElementById('questionCard');
   document.getElementById('qCategory').textContent=q.category;
   document.getElementById('qText').innerHTML=q.text;
   document.getElementById('explanation').classList.remove('show');
   document.getElementById('btnNext').classList.remove('show');
+  
+  renderAnswers();
+  
+  card.style.animation='none';
+  card.offsetHeight;
+  card.style.animation='fadeIn .35s ease';
+  
+  startTimer();
+}
+
+function updateTurnUI() {
+  const p = players[curTurn];
+  
+  const ti = document.getElementById('turnIndicator');
+  if(playerCount > 1) {
+    ti.innerHTML = `<span class="p-badge p${p.id}-bg">Ход Игрока ${p.id}</span>`;
+    document.getElementById('questionCard').className = `question-card p${p.id}-border`;
+    
+    // В мультиплеере показываем общий счет в хедере или счет текущего игрока
+    document.getElementById('correctCount').textContent = p.correct;
+    document.getElementById('wrongCount').textContent = p.wrong;
+  } else {
+    document.getElementById('correctCount').textContent = p.correct;
+    document.getElementById('wrongCount').textContent = p.wrong;
+  }
+}
+
+function renderAnswers(){
+  const q=questions[curQ];
   const box=document.getElementById('answersContainer');
   box.innerHTML='';
   const L=['А','Б','В','Г'];
+  
   q.options.forEach((o,i)=>{
     const b=document.createElement('button');
     b.className='answer-btn';
-    b.innerHTML=`<span class="answer-letter">${L[i]}</span><span>${o}</span>`;
+    b.innerHTML=`<span class="answer-letter">${L[i]}</span><span class="o-text">${o}</span><span class="p-marks"></span>`;
     b.onclick=()=>selectAnswer(i);
     box.appendChild(b);
   });
-  document.getElementById('questionCard').style.animation='none';
-  document.getElementById('questionCard').offsetHeight;
-  document.getElementById('questionCard').style.animation='fadeIn .35s ease';
 }
 
 function selectAnswer(idx){
-  if(answered)return;answered=true;
-  const q=questions[curQ];
-  const btns=document.querySelectorAll('.answer-btn');
-  const sel=q.options[idx];
-  const ok=sel===q.correct;
-  btns.forEach((b,i)=>{b.classList.add('disabled');if(q.options[i]===q.correct)b.classList.add('correct');});
-  if(ok){correct++;btns[idx].classList.add('pop');}else{wrong++;btns[idx].classList.add('wrong','shake');}
-  results.push({question:q.text.replace(/<[^>]+>/g,''),correct:q.correct,selected:sel,isCorrect:ok});
-  document.getElementById('correctCount').textContent=correct;
-  document.getElementById('wrongCount').textContent=wrong;
-  document.getElementById('explanation').innerHTML=(ok?'✅ ':'❌ ')+q.explanation;
-  document.getElementById('explanation').classList.add('show');
-  document.getElementById('btnNext').classList.add('show');
+  if(answered)return;
+  
+  pendingAnswers[curTurn] = idx;
+  
+  if(curTurn < playerCount - 1) {
+    curTurn++;
+    updateTurnUI();
+    // Визуальный фидбек переключения хода
+    const card = document.getElementById('questionCard');
+    card.style.transform = 'scale(0.98)';
+    card.style.opacity = '0.7';
+    setTimeout(()=> {
+      card.style.transform = 'scale(1)';
+      card.style.opacity = '1';
+    }, 150);
+    startTimer();
+  } else {
+    clearInterval(timerInterval);
+    revealAnswers();
+  }
 }
 
-function nextQuestion(){curQ++;showQuestion();}
+function revealAnswers() {
+  clearInterval(timerInterval);
+  answered = true;
+  const q = questions[curQ];
+  const btns = document.querySelectorAll('.answer-btn');
+  
+  pendingAnswers.forEach((ansIdx, pIdx) => {
+    const p = players[pIdx];
+    const isCorrect = ansIdx !== -1 && q.options[ansIdx] === q.correct;
+    
+    if(isCorrect) p.correct++; else p.wrong++;
+    
+    // Добавляем метку игрока на выбранную им кнопку
+    if(ansIdx !== -1) {
+        const mark = document.createElement('span');
+        mark.className = `p-mark p${p.id}-bg`;
+        mark.textContent = p.id;
+        btns[ansIdx].querySelector('.p-marks').appendChild(mark);
+    }
+  });
+  
+  btns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if(q.options[i] === q.correct) {
+      b.classList.add('correct');
+    } else if(pendingAnswers.includes(i)) {
+      b.classList.add('wrong');
+    }
+  });
+  
+  if(playerCount === 1) {
+    const ok = q.options[pendingAnswers[0]] === q.correct;
+    results.push({question:q.text.replace(/<[^>]+>/g,''),correct:q.correct,selected:q.options[pendingAnswers[0]],isCorrect:ok});
+  }
+  
+  document.getElementById('turnIndicator').innerHTML = `<span class="p-badge">Результат раунда</span>`;
+  document.getElementById('explanation').innerHTML=q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  
+  // Обновляем счет после раскрытия
+  if(playerCount > 1) {
+     // Показываем счет первого игрока или средний? В мультивере лучше просто "Раунд окончен"
+  }
+}
+
+function nextQuestion(){
+  curQ++;
+  showQuestion();
+}
 
 function showResults(){
   document.getElementById('quizScreen').classList.add('hidden');
   document.getElementById('resultsScreen').style.display='block';
-  const pct=Math.round((correct/questions.length)*100);
-  document.getElementById('fCorrect').textContent=correct;
-  document.getElementById('fWrong').textContent=wrong;
+  
+  const sorted = [...players].sort((a,b) => b.correct - a.correct);
+  const best = sorted[0];
+  const isMulti = playerCount > 1;
+  const mainP = players[0];
+  const pct=Math.round((mainP.correct/chosenCount)*100);
+  
+  document.getElementById('fCorrect').textContent=mainP.correct;
+  document.getElementById('fWrong').textContent=mainP.wrong;
   document.getElementById('fPct').textContent=pct+'%';
-  if(pct>=90){document.getElementById('rIcon').textContent='🏆';document.getElementById('rTitle').textContent='ТАНКОВЫЙ ЭКСПЕРТ!';document.getElementById('rSub').textContent='Ты знаешь технику как свои 5 пальцев!';}
-  else if(pct>=70){document.getElementById('rIcon').textContent='⭐';document.getElementById('rTitle').textContent='Отличный результат!';document.getElementById('rSub').textContent='Хорошо разбираешься в технике';}
-  else if(pct>=50){document.getElementById('rIcon').textContent='🎯';document.getElementById('rTitle').textContent='Неплохо!';document.getElementById('rSub').textContent='Есть куда расти, командир';}
-  else{document.getElementById('rIcon').textContent='📚';document.getElementById('rTitle').textContent='Нужна подготовка';document.getElementById('rSub').textContent='Изучи танкопедию и попробуй снова';}
+  
+  const stakeDiv = document.getElementById('resultsStake');
+  if(quizMode === 'desire' && playerCount > 1) {
+    stakeDiv.classList.remove('hidden');
+    stakeDiv.textContent = 'Соревнование на желания! Выполнит проигравший.';
+  } else if(quizMode === 'cheese') {
+    stakeDiv.classList.remove('hidden');
+    stakeDiv.textContent = `Турнир на сыр! Общий банк: 🧀 ${cheeseBet * playerCount}`;
+  } else {
+    stakeDiv.classList.add('hidden');
+  }
+
+  const multDiv = document.getElementById('multiplayerResults');
+  if(isMulti) {
+    multDiv.classList.remove('hidden');
+    document.querySelector('.results-score').classList.add('hidden');
+    
+    let html = `<table class="results-table">
+      <tr><th>ИГРОК</th><th>ВЕРНО</th><th>ОШИБОК</th><th>%</th></tr>`;
+    
+    players.forEach(p => {
+      const pPct = Math.round((p.correct/chosenCount)*100);
+      const isWinner = p.correct === best.correct && best.correct > 0;
+      html += `<tr class="${isWinner ? 'winner' : ''}">
+        <td><span class="p-badge p${p.id}-bg">Игрок ${p.id}</span> ${isWinner ? '👑' : ''}</td>
+        <td><b>${p.correct}</b></td>
+        <td>${p.wrong}</td>
+        <td>${pPct}%</td>
+      </tr>`;
+    });
+    html += `</table>`;
+    multDiv.innerHTML = html;
+    
+    document.getElementById('rIcon').textContent = '🏆';
+    document.getElementById('rTitle').textContent = best.correct > 0 ? `ПОБЕДА ИГРОКА ${best.id}!` : 'НИЧЬЯ!';
+    
+    if(quizMode === 'desire') {
+        document.getElementById('rSub').textContent = `ПОБЕДИТЕЛЬ ПОЛУЧАЕТ: ${best.desire}`;
+    } else if(quizMode === 'cheese') {
+        document.getElementById('rSub').textContent = `ВЫИГРЫШ: 🧀 ${cheeseBet * playerCount}`;
+    } else {
+        document.getElementById('rSub').textContent = 'Отличное соревнование!';
+    }
+  } else {
+    multDiv.classList.add('hidden');
+    document.querySelector('.results-score').classList.remove('hidden');
+    
+    if(pct>=90){document.getElementById('rIcon').textContent='🏆';document.getElementById('rTitle').textContent='ТАНКОВЫЙ ЭКСПЕРТ!';document.getElementById('rSub').textContent='Ты знаешь технику как свои 5 пальцев!';}
+    else if(pct>=70){document.getElementById('rIcon').textContent='⭐';document.getElementById('rTitle').textContent='Отличный результат!';document.getElementById('rSub').textContent='Хорошо разбираешься в технике';}
+    else if(pct>=50){document.getElementById('rIcon').textContent='🎯';document.getElementById('rTitle').textContent='Неплохо!';document.getElementById('rSub').textContent='Есть куда расти, командир';}
+    else{document.getElementById('rIcon').textContent='📚';document.getElementById('rTitle').textContent='Нужна подготовка';document.getElementById('rSub').textContent='Изучи танкопедию и попробуй снова';}
+  }
+
   const list=document.getElementById('reviewList');
   list.innerHTML='';list.classList.remove('show');
-  results.forEach((r,i)=>{
-    const d=document.createElement('div');
-    d.className='review-item '+(r.isCorrect?'ok':'fail');
-    d.innerHTML=`<span class="review-icon">${r.isCorrect?'✅':'❌'}</span><div><div class="review-q">${i+1}. ${r.question}</div><div class="review-a">${r.isCorrect?'':'Ваш: '+r.selected+' | '}Ответ: <span>${r.correct}</span></div></div>`;
-    list.appendChild(d);
-  });
+  
+  if(!isMulti) {
+    results.forEach((r,i)=>{
+      const d=document.createElement('div');
+      d.className='review-item '+(r.isCorrect?'ok':'fail');
+      d.innerHTML=`<span class="review-icon">${r.isCorrect?'✅':'❌'}</span><div><div class="review-q">${i+1}. ${r.question}</div><div class="review-a">${r.isCorrect?'':'Ваш: '+r.selected+' | '}Ответ: <span>${r.correct}</span></div></div>`;
+      list.appendChild(d);
+    });
+    document.querySelector('.review-toggle').style.display = 'block';
+  } else {
+    document.querySelector('.review-toggle').style.display = 'none';
+  }
 }
 
 function toggleReview(){document.getElementById('reviewList').classList.toggle('show');}
