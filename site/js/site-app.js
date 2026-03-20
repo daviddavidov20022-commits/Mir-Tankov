@@ -229,35 +229,61 @@ async function doLogin() {
     if (errorEl) errorEl.textContent = '';
 
     try {
-        // Пробуем как telegram_id (число)
         const isNumber = /^\d+$/.test(value);
-        let url = isNumber 
-            ? `${API_BASE}/api/me?telegram_id=${value}`
-            : `${API_BASE}/api/me?nickname=${encodeURIComponent(value)}`;
         
-        const resp = await fetch(url);
-        const data = await resp.json();
-        
-        if (data.telegram_id) {
-            siteAuth.login(data.telegram_id, data.nickname || data.wot_nickname || value);
-            const loginOverlay = document.getElementById('loginOverlay');
-            const mainApp = document.getElementById('mainApp');
-            if (loginOverlay) loginOverlay.style.display = 'none';
-            if (mainApp) mainApp.style.display = 'block';
+        if (isNumber) {
+            // Telegram ID — API автоматически создаёт пользователя
+            const resp = await fetch(`${API_BASE}/api/me?telegram_id=${value}`);
+            const data = await resp.json();
+            console.log('[Login] API response:', data);
             
-            initUser();
-            loadBalanceFromAPI();
-            showToast('✅', `Добро пожаловать, ${siteAuth.username}!`);
+            if (data.telegram_id) {
+                const name = data.wot_nickname || data.first_name || data.username || 'Танкист';
+                siteAuth.login(data.telegram_id, name);
+                
+                const loginOverlay = document.getElementById('loginOverlay');
+                const mainApp = document.getElementById('mainApp');
+                if (loginOverlay) loginOverlay.style.display = 'none';
+                if (mainApp) mainApp.style.display = 'block';
+                
+                initUser();
+                loadBalanceFromAPI();
+                showToast('✅', `Добро пожаловать, ${siteAuth.username}!`);
+            } else {
+                if (errorEl) errorEl.textContent = data.error || 'Не удалось войти. Попробуйте ещё раз.';
+            }
         } else {
-            if (errorEl) errorEl.textContent = 'Пользователь не найден. Сначала зарегистрируйтесь через Telegram бот @Mir_tankov_bot';
+            // Никнейм — ищем через search API
+            const resp = await fetch(`${API_BASE}/api/users/search?q=${encodeURIComponent(value)}`);
+            const data = await resp.json();
+            console.log('[Login] Search response:', data);
+            
+            if (data.users && data.users.length > 0) {
+                // Нашли — берём первого совпавшего
+                const user = data.users[0];
+                siteAuth.login(user.telegram_id, user.wot_nickname || user.first_name || value);
+                
+                const loginOverlay = document.getElementById('loginOverlay');
+                const mainApp = document.getElementById('mainApp');
+                if (loginOverlay) loginOverlay.style.display = 'none';
+                if (mainApp) mainApp.style.display = 'block';
+                
+                initUser();
+                loadBalanceFromAPI();
+                showToast('✅', `Добро пожаловать, ${siteAuth.username}!`);
+            } else {
+                if (errorEl) errorEl.textContent = 'Игрок с таким никнеймом не найден. Попробуйте ввести Telegram ID (число).';
+            }
         }
     } catch (e) {
+        console.error('[Login] Error:', e);
         if (errorEl) errorEl.textContent = 'Ошибка подключения к серверу. Попробуйте позже.';
     }
 
     btn.disabled = false;
     btn.textContent = '🚀 Войти';
 }
+
 
 // ==========================================
 // ФОНОВЫЕ ЧАСТИЦЫ
