@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Колесо Фортуны — Мир Танков</title>
+    <meta name="description" content="Крути Колесо Фортуны и выигрывай награды в Мире Танков!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="js/site-page.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/wheel.css">
+    <link rel="stylesheet" href="css/site.css">
+</head>
+
+<body>
+    <!-- Background -->
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <!-- Header with back button -->
+    <header class="wheel-header">
+        <button class="back-btn" id="backBtn" onclick="goBack()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+        <div class="wheel-header__title">
+            <h1>🎰 Колесо Фортуны</h1>
+        </div>
+        <div class="wheel-header__coins">
+            <span>🧀</span>
+            <span id="coinsDisplay">0</span>
+        </div>
+    </header>
+
+    <!-- Spins counter -->
+    <div class="spins-info">
+        <div class="spins-counter">
+            <div class="spins-counter__label">Бесплатные вращения</div>
+            <div class="spins-counter__value">
+                <span id="freeSpinsCount">3</span>
+                <span class="spins-counter__max">/ 3</span>
+            </div>
+        </div>
+        <div class="spins-timer" id="spinsTimer" style="display: none;">
+            <span>⏱️</span>
+            <span id="timerText">00:00</span>
+        </div>
+    </div>
+
+    <!-- Wheel Container -->
+    <div class="wheel-container">
+        <!-- Top pointer -->
+        <div class="wheel-pointer">
+            <svg width="36" height="44" viewBox="0 0 36 44" fill="none">
+                <path d="M18 44L2 8C0.5 4.5 3 0 7 0H29C33 0 35.5 4.5 34 8L18 44Z" fill="url(#pointerGrad)" />
+                <defs>
+                    <linearGradient id="pointerGrad" x1="18" y1="0" x2="18" y2="44">
+                        <stop offset="0%" stop-color="#E8D5A3" />
+                        <stop offset="100%" stop-color="#C8AA6E" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <!-- The wheel -->
+        <div class="wheel-wrapper">
+            <div class="wheel-outer-ring">
+                <div class="wheel-lights" id="wheelLights"></div>
+            </div>
+            <canvas id="wheelCanvas" width="320" height="320"></canvas>
+            <div class="wheel-center">
+                <div class="wheel-center__inner">
+                    <span>🏆</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spin button -->
+    <div class="spin-section">
+        <button class="spin-btn" id="spinBtn" onclick="spinWheel()">
+            <span class="spin-btn__text">КРУТИТЬ</span>
+            <span class="spin-btn__sub">Бесплатно</span>
+        </button>
+        <button class="spin-btn spin-btn--coins" id="spinBtnCoins" onclick="spinWheelPaid()" style="display: none;">
+            <span class="spin-btn__text">КРУТИТЬ</span>
+            <span class="spin-btn__sub">🧀 50 сыр</span>
+        </button>
+        <button class="spin-btn spin-btn--stars" id="buySpinsBtn" onclick="buySpins()">
+            <span class="spin-btn__text">КУПИТЬ 5</span>
+            <span class="spin-btn__sub">⭐ 5 Stars</span>
+        </button>
+    </div>
+
+    <!-- History -->
+    <div class="history-section" id="historySection">
+        <h3 class="history-title">📜 Последние выигрыши</h3>
+        <div class="history-list" id="historyList">
+            <div class="history-empty">Пока нет результатов. Крути колесо!</div>
+        </div>
+    </div>
+
+    <!-- Prize modal -->
+    <div class="prize-modal" id="prizeModal">
+        <div class="prize-modal__overlay" onclick="closePrizeModal()"></div>
+        <div class="prize-modal__content">
+            <div class="prize-modal__particles" id="prizeParticles"></div>
+            <div class="prize-modal__icon" id="prizeIcon">🎁</div>
+            <h2 class="prize-modal__title" id="prizeTitle">Поздравляем!</h2>
+            <p class="prize-modal__desc" id="prizeDesc">Вы выиграли</p>
+            <div class="prize-modal__value" id="prizeValue">100 сыр</div>
+            <button class="prize-modal__btn" onclick="closePrizeModal()">Отлично!</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/wheel.js"></script>
+</body>
+
+</html>

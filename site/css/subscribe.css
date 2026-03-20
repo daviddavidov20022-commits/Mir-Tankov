@@ -1,0 +1,731 @@
+/* =============================================
+   SUBSCRIBE PAGE — Tribute-style Design
+   ============================================= */
+
+.sub-page {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 120px;
+    position: relative;
+    z-index: 1;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #9AA4B5;
+    text-decoration: none;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+    transition: color 0.2s;
+}
+
+.back-btn:hover {
+    color: #C8AA6E;
+}
+
+/* Hero */
+.sub-hero {
+    text-align: center;
+    margin-bottom: 28px;
+    animation: fadeInUp 0.4s ease;
+}
+
+.sub-hero__avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 10px;
+    box-shadow: 0 4px 20px rgba(200, 170, 110, 0.3);
+    animation: heroPulse 3s ease-in-out infinite;
+}
+
+@keyframes heroPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 20px rgba(200, 170, 110, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 4px 35px rgba(200, 170, 110, 0.5);
+    }
+}
+
+.sub-hero__badges {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.sub-badge {
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+}
+
+.sub-badge--gold {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #1a1a1a;
+}
+
+.sub-badge--fire {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: white;
+}
+
+.sub-hero__title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.3rem;
+    color: #E8E6E3;
+    margin-bottom: 6px;
+}
+
+.sub-hero__desc {
+    font-size: 0.8rem;
+    color: #9AA4B5;
+    line-height: 1.5;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+/* Section label */
+.sub-section-label {
+    font-size: 0.7rem;
+    color: #5A6577;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    padding-left: 4px;
+}
+
+/* Period cards */
+.periods-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.period-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(145deg, #1a2332, #161d28);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    animation: fadeInUp 0.4s ease backwards;
+}
+
+.period-card:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.period-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.period-card:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.period-card:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.period-card:hover {
+    border-color: rgba(200, 170, 110, 0.2);
+    transform: translateX(4px);
+}
+
+.period-card--selected {
+    border-color: rgba(200, 170, 110, 0.5) !important;
+    background: linear-gradient(145deg, #25201a, #1d1810) !important;
+    box-shadow: 0 0 20px rgba(200, 170, 110, 0.1);
+}
+
+.period-card--selected::after {
+    content: '✓';
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
+    color: #0a0e14;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.period-card__left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.period-card__name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.9rem;
+    color: #E8E6E3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.period-card__promo-tag {
+    background: linear-gradient(135deg, #22c55e, #4ade80);
+    color: white;
+    font-size: 0.5rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.period-card__monthly {
+    font-size: 0.65rem;
+    color: #5A6577;
+}
+
+.period-card--selected .period-card__monthly {
+    color: #9AA4B5;
+}
+
+.period-card__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 36px;
+}
+
+.period-card__price {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1rem;
+    color: #C8AA6E;
+}
+
+.period-card__discount {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+}
+
+.period-card__old-price {
+    font-size: 0.7rem;
+    color: #5A6577;
+    text-decoration: line-through;
+}
+
+.period-card--best {
+    border-color: rgba(74, 222, 128, 0.3);
+    background: linear-gradient(145deg, #1a2d1e, #162018);
+}
+
+.period-card--best .period-card__best-badge {
+    position: absolute;
+    top: -10px;
+    left: 18px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    font-size: 0.5rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Promo card — green gradient like Tribute */
+.period-card--promo {
+    background: linear-gradient(135deg, #a3e635, #4ade80) !important;
+    border-color: transparent !important;
+}
+
+.period-card--promo .period-card__name {
+    color: #1a1a1a;
+}
+
+.period-card--promo .period-card__monthly {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.period-card--promo .period-card__price {
+    color: #1a1a1a;
+}
+
+.period-card--promo.period-card--selected::after {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+}
+
+/* Multi-currency hint */
+.sub-multicurrency {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #5A9CF6;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    animation: fadeInUp 0.4s ease 0.22s backwards;
+}
+
+.currency-icons {
+    display: flex;
+    gap: 4px;
+}
+
+.ci {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+}
+
+.ci--stars {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.ci--rub {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    color: white;
+    font-weight: 800;
+    font-size: 0.6rem;
+}
+
+.ci--wallet {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+}
+
+/* Summary */
+.sub-summary {
+    background: linear-gradient(145deg, rgba(200, 170, 110, 0.08), rgba(200, 170, 110, 0.02));
+    border: 1px solid rgba(200, 170, 110, 0.12);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeInUp 0.4s ease 0.28s backwards;
+}
+
+.sub-summary__label {
+    font-size: 0.75rem;
+    color: #9AA4B5;
+}
+
+.sub-summary__price {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.2rem;
+    color: #C8AA6E;
+}
+
+.sub-summary__savings {
+    font-size: 0.65rem;
+    color: #4ade80;
+    margin-top: 2px;
+}
+
+/* Payment tabs (Tribute-style) */
+.payment-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+    animation: fadeInUp 0.4s ease 0.3s backwards;
+}
+
+.pay-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(145deg, #1a2332, #161d28);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.pay-tab:hover {
+    border-color: rgba(200, 170, 110, 0.2);
+    transform: translateY(-2px);
+}
+
+.pay-tab--active {
+    border-color: rgba(200, 170, 110, 0.5) !important;
+    background: linear-gradient(145deg, #25201a, #1d1810) !important;
+    box-shadow: 0 0 15px rgba(200, 170, 110, 0.1);
+}
+
+.pay-tab__icon {
+    font-size: 1.4rem;
+}
+
+.pay-tab__label {
+    font-size: 0.6rem;
+    color: #9AA4B5;
+    font-weight: 600;
+}
+
+.pay-tab--active .pay-tab__label {
+    color: #C8AA6E;
+}
+
+/* CTA Button */
+.sub-cta {
+    margin-bottom: 20px;
+    animation: fadeInUp 0.4s ease 0.35s backwards;
+}
+
+.sub-cta__btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
+    color: #0a0e14;
+    position: relative;
+    overflow: hidden;
+}
+
+.sub-cta__btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.sub-cta__btn:hover::before {
+    left: 100%;
+}
+
+.sub-cta__btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(200, 170, 110, 0.3);
+}
+
+.sub-cta__btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.sub-cta__hint {
+    text-align: center;
+    font-size: 0.65rem;
+    color: #5A6577;
+    margin-top: 10px;
+}
+
+/* Features */
+.features-section {
+    margin-bottom: 28px;
+    animation: fadeInUp 0.4s ease 0.4s backwards;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.feature-item__icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.feature-item__text {
+    font-size: 0.7rem;
+    color: #9AA4B5;
+    line-height: 1.3;
+}
+
+/* Info */
+.sub-info {
+    padding: 14px 16px;
+    background: rgba(66, 153, 225, 0.06);
+    border: 1px solid rgba(66, 153, 225, 0.1);
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: #5A6577;
+    line-height: 1.6;
+    text-align: center;
+    animation: fadeInUp 0.4s ease 0.45s backwards;
+}
+
+.sub-info strong {
+    color: #9AA4B5;
+}
+
+/* =============================================
+   PAYMENT MODAL (Tribute-style overlay)
+   ============================================= */
+.pay-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.pay-modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.pay-modal {
+    width: 100%;
+    max-width: 480px;
+    background: linear-gradient(180deg, #1a2332, #0f1520);
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 36px;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.pay-modal-overlay.active .pay-modal {
+    transform: translateY(0);
+}
+
+.pay-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.pay-modal__title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.1rem;
+    color: #E8E6E3;
+}
+
+.pay-modal__close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: #9AA4B5;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pay-modal__close:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* Plan info in modal */
+.pay-modal__plan {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, rgba(200, 170, 110, 0.1), rgba(200, 170, 110, 0.04));
+    border: 1px solid rgba(200, 170, 110, 0.15);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+}
+
+.pay-modal__plan-icon {
+    font-size: 2rem;
+}
+
+.pay-modal__plan-name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.9rem;
+    color: #E8E6E3;
+}
+
+.pay-modal__plan-price {
+    font-size: 0.75rem;
+    color: #C8AA6E;
+    margin-top: 2px;
+}
+
+.pay-modal__section-label {
+    font-size: 0.65rem;
+    color: #5A6577;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    padding-left: 2px;
+}
+
+/* Modal payment methods */
+.pay-modal__methods {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.modal-method {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(145deg, #1a2332, #161d28);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.modal-method:hover {
+    border-color: rgba(200, 170, 110, 0.2);
+    transform: translateX(4px);
+}
+
+.modal-method--active {
+    border-color: rgba(200, 170, 110, 0.5) !important;
+    background: linear-gradient(145deg, #25201a, #1d1810) !important;
+    box-shadow: 0 0 15px rgba(200, 170, 110, 0.08);
+}
+
+.modal-method__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.modal-method__info {
+    flex: 1;
+}
+
+.modal-method__name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #E8E6E3;
+}
+
+.modal-method__desc {
+    font-size: 0.65rem;
+    color: #5A6577;
+    margin-top: 2px;
+}
+
+.modal-method__price {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    color: #C8AA6E;
+    flex-shrink: 0;
+}
+
+/* Modal CTA */
+.pay-modal__btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
+    color: #0a0e14;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.pay-modal__btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(200, 170, 110, 0.3);
+}
+
+.pay-modal__btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.pay-modal__secure {
+    text-align: center;
+    font-size: 0.6rem;
+    color: #5A6577;
+    letter-spacing: 0.5px;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

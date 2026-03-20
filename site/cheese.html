@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Обменник СЫР — Мир Танков</title>
+    <meta name="description" content="Обменяй рубли на внутреннюю валюту СЫР 🧀">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="js/site-page.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .cheese-page {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px 16px 120px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .cheese-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .cheese-back {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #9AA4B5;
+        }
+
+        .cheese-back:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .cheese-header__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.1rem;
+            color: #E8E6E3;
+        }
+
+        .cheese-header__balance {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.12), rgba(255, 152, 0, 0.08));
+            border: 1px solid rgba(255, 193, 7, 0.25);
+            border-radius: 12px;
+            padding: 8px 14px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.95rem;
+            color: #FFC107;
+        }
+
+        /* Hero Card */
+        .cheese-hero {
+            text-align: center;
+            background: linear-gradient(145deg, #1a2332, #161d28);
+            border: 1px solid rgba(255, 193, 7, 0.15);
+            border-radius: 20px;
+            padding: 28px 20px;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cheese-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255, 193, 7, 0.05) 0%, transparent 70%);
+            animation: heroGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes heroGlow {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .cheese-hero__icon {
+            font-size: 4rem;
+            margin-bottom: 12px;
+            position: relative;
+            display: inline-block;
+            animation: cheeseBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes cheeseBounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .cheese-hero__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.5rem;
+            color: #E8E6E3;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .cheese-hero__rate {
+            font-size: 1rem;
+            color: #FFC107;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .cheese-hero__desc {
+            font-size: 0.8rem;
+            color: #9AA4B5;
+            line-height: 1.5;
+            max-width: 300px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Balance Display */
+        .cheese-balance {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.06));
+            border: 1px solid rgba(255, 193, 7, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: fadeInUp 0.4s ease 0.1s backwards;
+        }
+
+        .cheese-balance__info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cheese-balance__label {
+            font-size: 0.7rem;
+            color: #9AA4B5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .cheese-balance__amount {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2rem;
+            color: #FFC107;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cheese-balance__amount span {
+            font-size: 1.8rem;
+        }
+
+        .cheese-balance__rub {
+            font-size: 0.75rem;
+            color: #5A6577;
+            margin-top: 2px;
+        }
+
+        /* Packages Grid */
+        .section-label {
+            font-size: 0.7rem;
+            color: #5A6577;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .cheese-packages {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .cheese-pkg {
+            background: linear-gradient(145deg, #1a2332, #161d28);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 18px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            animation: fadeInUp 0.4s ease backwards;
+        }
+
+        .cheese-pkg:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .cheese-pkg:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .cheese-pkg:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .cheese-pkg:nth-child(4) {
+            animation-delay: 0.25s;
+        }
+
+        .cheese-pkg:nth-child(5) {
+            animation-delay: 0.3s;
+        }
+
+        .cheese-pkg:nth-child(6) {
+            animation-delay: 0.35s;
+        }
+
+        .cheese-pkg:hover {
+            border-color: rgba(255, 193, 7, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .cheese-pkg--selected {
+            border-color: rgba(255, 193, 7, 0.6) !important;
+            background: linear-gradient(145deg, #2a2010, #1d1810) !important;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.15);
+        }
+
+        .cheese-pkg__emoji {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .cheese-pkg__amount {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.2rem;
+            color: #FFC107;
+            margin-bottom: 2px;
+        }
+
+        .cheese-pkg__price {
+            font-size: 0.75rem;
+            color: #9AA4B5;
+            font-weight: 600;
+        }
+
+        .cheese-pkg__bonus {
+            position: absolute;
+            top: -8px;
+            right: -4px;
+            background: linear-gradient(135deg, #ef4444, #FF6B35);
+            color: white;
+            font-size: 0.5rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .cheese-pkg--popular::after {
+            content: 'ТОП';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ef4444, #FFC107);
+            color: white;
+            font-size: 0.45rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+        }
+
+        /* Custom amount */
+        .cheese-custom {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.4s ease 0.4s backwards;
+        }
+
+        .cheese-custom__input {
+            flex: 1;
+            background: #1a2332;
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 0.9rem;
+            color: #E8E6E3;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+            text-align: center;
+        }
+
+        .cheese-custom__input::placeholder {
+            color: #5A6577;
+        }
+
+        .cheese-custom__input:focus {
+            border-color: rgba(255, 193, 7, 0.4);
+        }
+
+        /* CTA Button */
+        .cheese-cta {
+            margin-bottom: 28px;
+            animation: fadeInUp 0.4s ease 0.45s backwards;
+        }
+
+        .cheese-cta__btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #FFC107, #FF9800);
+            color: #1a1a1a;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
+        }
+
+        .cheese-cta__btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cheese-cta__btn:hover::before {
+            left: 100%;
+        }
+
+        .cheese-cta__btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 193, 7, 0.4);
+        }
+
+        .cheese-cta__btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .cheese-cta__hint {
+            text-align: center;
+            font-size: 0.65rem;
+            color: #5A6577;
+            margin-top: 10px;
+        }
+
+        /* How it works */
+        .cheese-how {
+            background: linear-gradient(145deg, #1a2332, #161d28);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.4s ease 0.5s backwards;
+        }
+
+        .cheese-how__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.85rem;
+            color: #E8E6E3;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cheese-how__steps {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .cheese-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cheese-step__num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.05));
+            border: 1px solid rgba(255, 193, 7, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.75rem;
+            color: #FFC107;
+            flex-shrink: 0;
+        }
+
+        .cheese-step__text {
+            font-size: 0.78rem;
+            color: #9AA4B5;
+            line-height: 1.4;
+        }
+
+        .cheese-step__text strong {
+            color: #FFC107;
+        }
+
+        /* What to spend on */
+        .cheese-spend {
+            margin-bottom: 24px;
+            animation: fadeInUp 0.4s ease 0.55s backwards;
+        }
+
+        .spend-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .spend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: rgba(255, 193, 7, 0.04);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 193, 7, 0.08);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .spend-item:hover {
+            background: rgba(255, 193, 7, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .spend-item__icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .spend-item__info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spend-item__name {
+            font-size: 0.75rem;
+            color: #E8E6E3;
+            font-weight: 600;
+        }
+
+        .spend-item__cost {
+            font-size: 0.65rem;
+            color: #FFC107;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <div class="cheese-page">
+        <!-- Header -->
+        <div class="cheese-header">
+            <button class="cheese-back" onclick="goBack()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <div class="cheese-header__title">🧀 Обменник</div>
+            <div class="cheese-header__balance">
+                <span>🧀</span>
+                <span id="balanceDisplay">0</span>
+            </div>
+        </div>
+
+        <!-- Hero -->
+        <div class="cheese-hero">
+            <div class="cheese-hero__icon">🧀</div>
+            <div class="cheese-hero__title">Купить СЫР</div>
+            <div class="cheese-hero__rate">1 ₽ = 1 🧀</div>
+            <div class="cheese-hero__desc">
+                Внутренняя валюта для игр, ставок на Арене
+                и вращений Колеса Фортуны!
+            </div>
+        </div>
+
+        <!-- Balance -->
+        <div class="cheese-balance">
+            <div class="cheese-balance__info">
+                <div class="cheese-balance__label">Твой баланс</div>
+                <div class="cheese-balance__amount">
+                    <span>🧀</span>
+                    <span id="balanceLarge">0</span>
+                </div>
+                <div class="cheese-balance__rub">≈ <span id="balanceRub">0</span> ₽</div>
+            </div>
+        </div>
+
+        <!-- Packages -->
+        <div class="section-label">Выбери пакет</div>
+        <div class="cheese-packages" id="cheesePackages">
+            <div class="cheese-pkg" data-amount="50" onclick="selectPackage(this)">
+                <div class="cheese-pkg__emoji">🧀</div>
+                <div class="cheese-pkg__amount">50</div>
+                <div class="cheese-pkg__price">50 ₽</div>
+            </div>
+            <div class="cheese-pkg cheese-pkg--selected cheese-pkg--popular" data-amount="100"
+                onclick="selectPackage(this)">
+                <div class="cheese-pkg__emoji">🧀🧀</div>
+                <div class="cheese-pkg__amount">100</div>
+                <div class="cheese-pkg__price">100 ₽</div>
+            </div>
+            <div class="cheese-pkg" data-amount="250" onclick="selectPackage(this)">
+                <div class="cheese-pkg__emoji">🧀🧀🧀</div>
+                <div class="cheese-pkg__amount">250</div>
+                <div class="cheese-pkg__price">250 ₽</div>
+            </div>
+            <div class="cheese-pkg" data-amount="500" onclick="selectPackage(this)">
+                <div class="cheese-pkg__bonus">🔥 Выгодно</div>
+                <div class="cheese-pkg__emoji">🏆</div>
+                <div class="cheese-pkg__amount">500</div>
+                <div class="cheese-pkg__price">500 ₽</div>
+            </div>
+            <div class="cheese-pkg" data-amount="1000" onclick="selectPackage(this)">
+                <div class="cheese-pkg__bonus">💎 Лучшее</div>
+                <div class="cheese-pkg__emoji">👑</div>
+                <div class="cheese-pkg__amount">1 000</div>
+                <div class="cheese-pkg__price">1 000 ₽</div>
+            </div>
+            <div class="cheese-pkg" data-amount="2500" onclick="selectPackage(this)">
+                <div class="cheese-pkg__bonus">🚀 МАКС</div>
+                <div class="cheese-pkg__emoji">💰</div>
+                <div class="cheese-pkg__amount">2 500</div>
+                <div class="cheese-pkg__price">2 500 ₽</div>
+            </div>
+        </div>
+
+        <!-- Custom -->
+        <div class="cheese-custom">
+            <input type="number" class="cheese-custom__input" id="customAmount" placeholder="Своя сумма (₽ = 🧀)"
+                min="10" max="50000" oninput="handleCustom(this)">
+        </div>
+
+        <!-- CTA -->
+        <div class="cheese-cta">
+            <button class="cheese-cta__btn" id="buyBtn" onclick="buyCheese()">
+                🧀 Купить 100 СЫР — 100 ₽
+            </button>
+            <div class="cheese-cta__hint">Оплата через Telegram Stars ⭐ или через бот</div>
+        </div>
+
+        <!-- How it works -->
+        <div class="cheese-how">
+            <div class="cheese-how__title">📋 Как это работает?</div>
+            <div class="cheese-how__steps">
+                <div class="cheese-step">
+                    <div class="cheese-step__num">1</div>
+                    <div class="cheese-step__text">
+                        Выбери <strong>сколько СЫР</strong> хочешь купить
+                    </div>
+                </div>
+                <div class="cheese-step">
+                    <div class="cheese-step__num">2</div>
+                    <div class="cheese-step__text">
+                        <strong>Оплати</strong> через Telegram Stars или переведи на карту
+                    </div>
+                </div>
+                <div class="cheese-step">
+                    <div class="cheese-step__num">3</div>
+                    <div class="cheese-step__text">
+                        <strong>СЫР зачислится</strong> мгновенно на твой баланс!
+                    </div>
+                </div>
+                <div class="cheese-step">
+                    <div class="cheese-step__num">4</div>
+                    <div class="cheese-step__text">
+                        <strong>Трать</strong> на Колесо, Арену, подписки и любые фишки!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Where to spend -->
+        <div class="cheese-spend">
+            <div class="section-label">На что потратить?</div>
+            <div class="spend-grid">
+                <div class="spend-item" onclick="location.href='wheel.html'">
+                    <div class="spend-item__icon">🎰</div>
+                    <div class="spend-item__info">
+                        <div class="spend-item__name">Колесо Фортуны</div>
+                        <div class="spend-item__cost">50 🧀 / вращение</div>
+                    </div>
+                </div>
+                <div class="spend-item" onclick="location.href='challenges.html'">
+                    <div class="spend-item__icon">⚔️</div>
+                    <div class="spend-item__info">
+                        <div class="spend-item__name">Арена PvP</div>
+                        <div class="spend-item__cost">от 10 🧀 ставка</div>
+                    </div>
+                </div>
+                <div class="spend-item" onclick="location.href='subscribe.html'">
+                    <div class="spend-item__icon">💎</div>
+                    <div class="spend-item__info">
+                        <div class="spend-item__name">Подписка</div>
+                        <div class="spend-item__cost">от 490 🧀</div>
+                    </div>
+                </div>
+                <div class="spend-item">
+                    <div class="spend-item__icon">🎁</div>
+                    <div class="spend-item__info">
+                        <div class="spend-item__name">Будущие фишки</div>
+                        <div class="spend-item__cost">Скоро!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </div>
+        <div class="nav-item" onclick="location.href='challenges.html'">
+            <span class="nav-icon">⚔️</span>
+            <span class="nav-label">Арена</span>
+        </div>
+        <div class="nav-item nav-item--active">
+            <span class="nav-icon">🧀</span>
+            <span class="nav-label">Обменник</span>
+        </div>
+        <div class="nav-item" onclick="location.href='profile.html'">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
+        </div>
+    </nav>
+
+    <script src="js/app.js"></script>
+    <script>
+        // ==========================================
+        // CHEESE EXCHANGE LOGIC
+        // ==========================================
+        let selectedAmount = 100;
+
+        // Update balance display
+        function updateBalance() {
+            const coins = userData ? userData.get('coins') : 0;
+            const balDisplay = document.getElementById('balanceDisplay');
+            const balLarge = document.getElementById('balanceLarge');
+            const balRub = document.getElementById('balanceRub');
+
+            if (balDisplay) balDisplay.textContent = coins.toLocaleString();
+            if (balLarge) balLarge.textContent = coins.toLocaleString();
+            if (balRub) balRub.textContent = coins.toLocaleString();
+        }
+
+        // Select package
+        function selectPackage(el) {
+            document.querySelectorAll('.cheese-pkg').forEach(p =>
+                p.classList.remove('cheese-pkg--selected')
+            );
+            el.classList.add('cheese-pkg--selected');
+            selectedAmount = parseInt(el.dataset.amount);
+            document.getElementById('customAmount').value = '';
+            updateButton();
+        }
+
+        // Custom amount
+        function handleCustom(input) {
+            const val = parseInt(input.value);
+            if (val >= 10) {
+                document.querySelectorAll('.cheese-pkg').forEach(p =>
+                    p.classList.remove('cheese-pkg--selected')
+                );
+                selectedAmount = val;
+                updateButton();
+            }
+        }
+
+        // Update buy button
+        function updateButton() {
+            const btn = document.getElementById('buyBtn');
+            btn.textContent = `🧀 Купить ${selectedAmount.toLocaleString()} СЫР — ${selectedAmount.toLocaleString()} ₽`;
+        }
+
+        // Buy cheese
+        function buyCheese() {
+            const amount = selectedAmount;
+
+            // Try via Telegram WebApp
+            try {
+                if (window.Telegram && Telegram.WebApp) {
+                    // Send buy request to bot
+                    Telegram.WebApp.sendData(JSON.stringify({
+                        type: 'buy_cheese',
+                        amount: amount,
+                    }));
+
+                    // Also update local balance (optimistic)
+                    if (userData) {
+                        userData.addCoins(amount);
+                        updateBalance();
+                    }
+
+                    showBuySuccess(amount);
+                    return;
+                }
+            } catch (e) {
+                console.error('Telegram WebApp error:', e);
+            }
+
+            // Fallback: show instructions
+            alert(
+                `🧀 Покупка: ${amount.toLocaleString()} СЫР\n\n` +
+                `Отправьте команду в бот:\n` +
+                `/cheese ${amount}\n\n` +
+                `Курс: 1 ₽ = 1 🧀`
+            );
+        }
+
+        function showBuySuccess(amount) {
+            // Create success modal
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.85); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px; animation: fadeInUp 0.3s ease;
+            `;
+            overlay.innerHTML = `
+                <div style="background: linear-gradient(145deg, #1a2332, #161d28);
+                    border: 1px solid rgba(255,193,7,0.3); border-radius: 24px;
+                    padding: 32px; text-align: center; max-width: 320px; width: 100%;">
+                    <div style="font-size: 4rem; margin-bottom: 12px; animation: cheeseBounce 1s ease-in-out infinite;">🧀</div>
+                    <div style="font-family: 'Russo One', sans-serif; font-size: 1.3rem;
+                        color: #FFC107; margin-bottom: 8px;">
+                        +${amount.toLocaleString()} СЫР
+                    </div>
+                    <div style="font-size: 0.85rem; color: #9AA4B5; margin-bottom: 20px;">
+                        Успешно зачислено на ваш баланс!
+                    </div>
+                    <button onclick="this.closest('div[style]').parentElement.remove()"
+                        style="width: 100%; padding: 14px; border: none; border-radius: 14px;
+                        font-family: 'Russo One', sans-serif; font-size: 0.9rem;
+                        background: linear-gradient(135deg, #FFC107, #FF9800);
+                        color: #1a1a1a; cursor: pointer;">
+                        Отлично! 🎉
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.remove();
+            });
+
+            // Haptic
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        // Navigation
+        function goBack() {
+            if (window.Telegram?.WebApp?.BackButton) {
+                window.Telegram.WebApp.BackButton.hide();
+            }
+            window.location.href = 'index.html';
+        }
+
+        // Telegram back button
+        if (window.Telegram?.WebApp?.BackButton) {
+            window.Telegram.WebApp.BackButton.show();
+            window.Telegram.WebApp.BackButton.onClick(goBack);
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            updateBalance();
+            updateButton();
+        });
+
+        // Particles
+        (function () {
+            const container = document.getElementById('bgParticles');
+            if (!container) return;
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'bg-particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = (8 + Math.random() * 12) + 's';
+                p.style.animationDelay = Math.random() * 10 + 's';
+                p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+                container.appendChild(p);
+            }
+        })();
+    </script>
+</body>
+
+</html>

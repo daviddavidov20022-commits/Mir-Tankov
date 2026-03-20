@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>МИР ТАНКОВ — Стрим</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/stream.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="js/site-page.js"></script>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="app-header__left">
+                <div class="app-header__logo">🎮</div>
+                <div class="app-header__info">
+                    <div class="app-header__title">МИР ТАНКОВ</div>
+                    <div class="app-header__subtitle">СТРИМ</div>
+                </div>
+            </div>
+            <div class="app-header__right">
+                <div class="profile-badge" onclick="openGame('profile.html')">
+                    <span class="profile-badge__icon">👤</span>
+                    <span class="profile-badge__name" id="userName">Танкист</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <button class="btn-back" onclick="goBack()">← Назад</button>
+
+            <!-- Platform Tabs -->
+            <div class="platform-tabs" id="platformTabs">
+                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="switchPlatform('twitch')">
+                    <span class="platform-tab__icon">💜</span>
+                    <span class="platform-tab__name">Twitch</span>
+                </button>
+                <button class="platform-tab" data-platform="vk" onclick="switchPlatform('vk')">
+                    <span class="platform-tab__icon">🔵</span>
+                    <span class="platform-tab__name">VK</span>
+                </button>
+                <button class="platform-tab" data-platform="youtube" onclick="switchPlatform('youtube')">
+                    <span class="platform-tab__icon">🔴</span>
+                    <span class="platform-tab__name">YouTube</span>
+                </button>
+            </div>
+
+            <!-- Stream Info -->
+            <div class="stream-header">
+                <div class="stream-header__live" id="streamLiveBadge">
+                    <span class="stream-header__dot"></span>
+                    <span>LIVE</span>
+                </div>
+                <div class="stream-header__info">
+                    <div class="stream-header__title" id="streamTitle">ISERVERI</div>
+                    <div class="stream-header__viewers" id="streamViewers">Загрузка...</div>
+                </div>
+                <button class="stream-header__settings" onclick="toggleChannelSettings()" title="Сменить канал">⚙️</button>
+            </div>
+
+            <!-- Channel Settings (hidden by default) -->
+            <div class="channel-settings" id="channelSettings" style="display: none;">
+                <div class="channel-settings__title">Сменить канал</div>
+                <div class="channel-settings__input-group">
+                    <input type="text" id="channelInput" class="channel-settings__input" 
+                           placeholder="Имя канала или ссылка..." value="iserveri" autocomplete="off"
+                           onkeydown="if(event.key==='Enter')changeChannel()">
+                    <button class="channel-settings__btn" onclick="changeChannel()">Подключить</button>
+                </div>
+                <div class="channel-settings__popular" id="popularChannels">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Universal Player -->
+            <div class="stream-player" id="streamPlayer">
+                <div class="stream-player__aspect">
+                    <iframe id="streamPlayerIframe" 
+                            allowfullscreen
+                            frameborder="0">
+                    </iframe>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="stream-chat">
+                <div class="stream-chat__header">
+                    <div class="stream-chat__title">💬 Общий чат</div>
+                    <div class="stream-chat__platforms">
+                        <span class="chat-platform-badge chat-platform-badge--twitch" id="chatBadgeTwitch">💜 Twitch</span>
+                        <span class="chat-platform-badge chat-platform-badge--telegram" id="chatBadgeTelegram">📱 Telegram</span>
+                    </div>
+                </div>
+
+                <div class="stream-chat__messages" id="chatMessages">
+                    <div class="chat-system-msg">
+                        <span class="chat-system-msg__icon">🎮</span>
+                        <span>Подключение к чату...</span>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="stream-chat__input-area">
+                    <div class="stream-chat__platform-info" id="chatPlatformInfo">
+                        💜 → Twitch
+                    </div>
+                    <input type="text" class="stream-chat__input" id="chatInput" 
+                           placeholder="Написать сообщение..." 
+                           autocomplete="off" 
+                           maxlength="500">
+                    <button class="stream-chat__send" id="chatSendBtn" onclick="sendChatMessage()">➤</button>
+                </div>
+            </div>
+
+            <!-- Donate & Music Buttons -->
+            <div class="stream-actions">
+                <button class="stream-action-btn stream-action-btn--donate" onclick="openDonateModal()">
+                    <span class="stream-action-btn__icon">🧀</span>
+                    <span class="stream-action-btn__text">Донат</span>
+                </button>
+                <button class="stream-action-btn stream-action-btn--ai" onclick="openAiDonateModal()" style="background: linear-gradient(135deg, rgba(156,39,176,0.15), rgba(156,39,176,0.05)); border-color: rgba(156,39,176,0.3)">
+                    <span class="stream-action-btn__icon">🤖</span>
+                    <span class="stream-action-btn__text">AI Донат</span>
+                </button>
+                <button class="stream-action-btn stream-action-btn--music" onclick="openMusicModal()">
+                    <span class="stream-action-btn__icon">🎵</span>
+                    <span class="stream-action-btn__text">Музыка</span>
+                </button>
+            </div>
+
+            <!-- Donate Modal -->
+            <div class="modal-overlay" id="donateModal" style="display:none;" onclick="if(event.target===this)closeDonateModal()">
+                <div class="modal-dialog">
+                    <div class="modal-dialog__title">🧀 Донат на стрим</div>
+                    <div class="modal-dialog__balance" id="donateBalance">Баланс: ... 🧀</div>
+                    
+                    <div class="donate-amounts">
+                        <button class="donate-amount-btn" onclick="setDonateAmount(10)">10 🧀</button>
+                        <button class="donate-amount-btn" onclick="setDonateAmount(50)">50 🧀</button>
+                        <button class="donate-amount-btn" onclick="setDonateAmount(100)">100 🧀</button>
+                        <button class="donate-amount-btn" onclick="setDonateAmount(500)">500 🧀</button>
+                    </div>
+                    
+                    <input type="number" id="donateAmount" class="modal-input" placeholder="Сумма (мин. 10)" min="10" value="50">
+                    <textarea id="donateMessage" class="modal-input modal-textarea" placeholder="Сообщение на стрим (необязательно)" maxlength="200" rows="2"></textarea>
+                    
+                    <button class="modal-btn modal-btn--primary" onclick="sendDonate()">
+                        🧀 Отправить донат
+                    </button>
+                    <button class="modal-btn modal-btn--secondary" onclick="closeDonateModal()">Отмена</button>
+                </div>
+            </div>
+
+            <!-- Music Modal -->
+            <div class="modal-overlay" id="musicModal" style="display:none;" onclick="if(event.target===this)closeMusicModal()">
+                <div class="modal-dialog">
+                    <div class="modal-dialog__title">🎵 Заказ музыки</div>
+                    <div class="modal-dialog__balance" id="musicBalance">Баланс: ... 🧀</div>
+                    <div class="modal-dialog__cost">Стоимость: 50 🧀</div>
+                    
+                    <input type="text" id="musicUrl" class="modal-input" placeholder="Ссылка на YouTube видео" autocomplete="off">
+                    
+                    <button class="modal-btn modal-btn--primary" onclick="sendMusicRequest()">
+                        🎵 Заказать (50 🧀)
+                    </button>
+                    <button class="modal-btn modal-btn--secondary" onclick="closeMusicModal()">Отмена</button>
+                </div>
+            </div>
+
+            <!-- ⚙️ Admin Gear Button (только для админов) -->
+            <button class="admin-gear-btn" id="adminGearBtn" onclick="openSettingsModal()" style="display:none;">⚙️</button>
+
+            <!-- Settings Modal -->
+            <div class="settings-overlay" id="settingsModal" style="display:none;" onclick="if(event.target===this)closeSettingsModal()">
+                <div class="settings-modal">
+                    <div class="settings-modal__header">
+                        <span class="settings-modal__title">⚙️ Настройки стрима</span>
+                        <button class="settings-modal__close" onclick="closeSettingsModal()">✕</button>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="settings-tabs">
+                        <button class="settings-tab settings-tab--active" onclick="switchSettingsTab('broadcast', this)">📺 Трансляция</button>
+                        <button class="settings-tab" onclick="switchSettingsTab('music', this)">🎵 Музыка</button>
+                        <button class="settings-tab" onclick="switchSettingsTab('donates', this)">🧀 Донаты</button>
+                    </div>
+
+                    <!-- Tab: Broadcast -->
+                    <div class="settings-panel" id="settingsTab_broadcast">
+                        <div class="sp-group">
+                            <div class="sp-group__title">Платформы</div>
+                            <div class="sp-row">
+                                <label class="sp-toggle"><input type="checkbox" id="adminTwitchEnabled" checked onchange="updateStreamConfig()"><span>💜 Twitch</span></label>
+                                <input type="text" id="adminTwitchChannel" class="sp-input" placeholder="Канал" autocomplete="off">
+                            </div>
+                            <div class="sp-row">
+                                <label class="sp-toggle"><input type="checkbox" id="adminYoutubeEnabled" onchange="updateStreamConfig()"><span>🔴 YouTube</span></label>
+                                <input type="text" id="adminYoutubeChannel" class="sp-input" placeholder="ID/ссылка" autocomplete="off">
+                            </div>
+                            <div class="sp-row">
+                                <label class="sp-toggle"><input type="checkbox" id="adminVkEnabled" onchange="updateStreamConfig()"><span>🔵 VK</span></label>
+                                <input type="text" id="adminVkChannel" class="sp-input" placeholder="Ссылка VK" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="sp-group">
+                            <div class="sp-group__title">Быстрые каналы</div>
+                            <div class="sp-row">
+                                <input type="text" id="adminChName" class="sp-input" placeholder="Название" autocomplete="off">
+                                <select id="adminChPlatform" class="sp-select">
+                                    <option value="twitch">💜 Twitch</option>
+                                    <option value="youtube">🔴 YouTube</option>
+                                    <option value="vk">🔵 VK</option>
+                                </select>
+                            </div>
+                            <div class="sp-row">
+                                <input type="text" id="adminChUrl" class="sp-input" placeholder="Канал/ссылка" autocomplete="off">
+                                <button class="sp-btn-add" onclick="addChannel()">➕</button>
+                            </div>
+                            <div id="adminChannelList"></div>
+                        </div>
+                        <button class="sp-save-btn" onclick="saveStreamConfig()">💾 Сохранить</button>
+                    </div>
+
+                    <!-- Tab: Music -->
+                    <div class="settings-panel" id="settingsTab_music" style="display:none;">
+                        <div class="sp-group">
+                            <div class="sp-group__title">Параметры</div>
+                            <div class="sp-row"><span class="sp-label">💰 Стоимость заказа</span><input type="number" id="adminMusicCost" class="sp-input-sm" value="50" min="0"><span class="sp-unit">🧀</span></div>
+                            <div class="sp-row"><span class="sp-label">👁 Мин. просмотров</span><input type="number" id="adminMusicMinViews" class="sp-input-sm" value="1000" min="0"></div>
+                            <div class="sp-row"><span class="sp-label">⏱ Макс. длительность</span><input type="number" id="adminMusicMaxDuration" class="sp-input-sm" value="300" min="30"><span class="sp-unit">сек</span></div>
+                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminMusicPaused"><span>⏸ Пауза очереди</span></label></div>
+                        </div>
+                        <button class="sp-save-btn" onclick="saveMusicSettings()">💾 Сохранить</button>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">📋 Очередь <button class="sp-refresh" onclick="refreshMusicQueue()">🔄</button></div>
+                            <div id="musicQueueList" class="sp-list"><div class="sp-list__empty">Загрузка...</div></div>
+                        </div>
+
+                        <button class="sp-test-btn sp-test-btn--music" onclick="sendTestMusic()">🎵 Тест алерта музыки</button>
+                    </div>
+
+                    <!-- Tab: Donates -->
+                    <div class="settings-panel" id="settingsTab_donates" style="display:none;">
+                        <div class="sp-group">
+                            <div class="sp-group__title">⏱ Основное</div>
+                            <div class="sp-row"><span class="sp-label">💰 Мин. сумма</span><input type="number" id="adminDonateMin" class="sp-input-sm" value="10" min="1"><span class="sp-unit">🧀</span></div>
+                            <div class="sp-row"><span class="sp-label">⏱ Длительность</span><input type="number" id="adminAlertDuration" class="sp-input-sm" value="7" min="1" max="30"><span class="sp-unit">сек</span></div>
+                        </div>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">🔊 Звуки доната</div>
+                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminSoundEnabled" checked><span>Звук при донате</span></label></div>
+                            <div class="sp-row"><span class="sp-label">Громкость</span><input type="range" id="adminSoundVolume" min="0" max="100" value="70" class="sp-range"><span class="sp-unit" id="adminSoundVolumeVal">70%</span></div>
+                            <div class="sp-upload-row">
+                                <span class="sp-label">🔹 Малый (10+)</span>
+                                <input type="file" id="fileSound_small" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_small')">
+                                <button class="sp-upload-btn" onclick="document.getElementById('fileSound_small').click()">📂 Загрузить .mp3</button>
+                                <span class="sp-upload-status" id="statusSound_small">нет файла</span>
+                            </div>
+                            <div class="sp-upload-row">
+                                <span class="sp-label">🔸 Средний (50+)</span>
+                                <input type="file" id="fileSound_medium" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_medium')">
+                                <button class="sp-upload-btn" onclick="document.getElementById('fileSound_medium').click()">📂 Загрузить .mp3</button>
+                                <span class="sp-upload-status" id="statusSound_medium">нет файла</span>
+                            </div>
+                            <div class="sp-upload-row">
+                                <span class="sp-label">🔶 Большой (200+)</span>
+                                <input type="file" id="fileSound_large" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_large')">
+                                <button class="sp-upload-btn" onclick="document.getElementById('fileSound_large').click()">📂 Загрузить .mp3</button>
+                                <span class="sp-upload-status" id="statusSound_large">нет файла</span>
+                            </div>
+                        </div>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">✨ Анимация</div>
+                            <div class="sp-row">
+                                <span class="sp-label">Стиль</span>
+                                <select id="adminAnimStyle" class="sp-select">
+                                    <option value="particles">🎆 Частицы</option>
+                                    <option value="cheese">🧀 Сырный дождь</option>
+                                    <option value="explosion">💥 Взрыв</option>
+                                    <option value="flash">⚡ Вспышка</option>
+                                    <option value="all" selected>🌟 Всё сразу</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">🎬 Видео/GIF при донате</div>
+                            <div class="sp-upload-row">
+                                <span class="sp-label">🔹 Малый (10+)</span>
+                                <input type="file" id="fileMedia_small" accept="image/gif,video/*" style="display:none" onchange="handleFileUpload(this,'media_small')">
+                                <button class="sp-upload-btn" onclick="document.getElementById('fileMedia_small').click()">📂 Загрузить</button>
+                                <span class="sp-upload-status" id="statusMedia_small">нет файла</span>
+                            </div>
+                            <div class="sp-upload-row">
+                                <span class="sp-label">🔸 Средний (50+)</span>
+                                <input type="file" id="fileMedia_medium" accept="image/gif,video/*" style="display:none" onchange="handleFileUpload(this,'media_medium')">
+                                <button class="sp-upload-btn" onclick="document.getElementById('fileMedia_medium').click()">📂 Загрузить</button>
+                                <span class="sp-upload-status" id="statusMedia_medium">нет файла</span>
+                            </div>
+                            <div class="sp-upload-row">
+                                <span class="sp-label">🔶 Большой (200+)</span>
+                                <input type="file" id="fileMedia_large" accept="image/gif,video/*" style="display:none" onchange="handleFileUpload(this,'media_large')">
+                                <button class="sp-upload-btn" onclick="document.getElementById('fileMedia_large').click()">📂 Загрузить</button>
+                                <span class="sp-upload-status" id="statusMedia_large">нет файла</span>
+                            </div>
+                            <div class="sp-hint">Макс. 1 МБ. Форматы: .gif .mp4 .webm</div>
+                        </div>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">🗣 Озвучка текста (TTS)</div>
+                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminTtsEnabled" checked><span>Озвучка сообщений</span></label></div>
+                            <div class="sp-row"><span class="sp-label">Скорость</span><input type="range" id="adminTtsSpeed" min="50" max="200" value="100" class="sp-range"><span class="sp-unit" id="adminTtsSpeedVal">1.0x</span></div>
+                            <div class="sp-row"><span class="sp-label">Мин. для TTS</span><input type="number" id="adminTtsMinAmount" class="sp-input-sm" value="30" min="0"><span class="sp-unit">🧀</span></div>
+                        </div>
+
+                        <button class="sp-save-btn" onclick="saveDonateSettings()">💾 Сохранить настройки</button>
+                        <button class="sp-test-btn sp-test-btn--donate" onclick="sendTestDonate()">🧀 Тест алерта доната</button>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">📺 Для OBS</div>
+                            <div class="sp-hint" style="font-size:0.72rem;line-height:1.5;color:rgba(255,255,255,0.5);">
+                                Добавь в OBS → Source → Browser:<br>
+                                <span style="color:#C8AA6E;word-break:break-all;" id="obsAlertUrl"></span><br>
+                                Ширина: 600 | Высота: 400
+                            </div>
+                        </div>
+
+                        <div class="sp-group">
+                            <div class="sp-group__title">📊 Последние донаты <button class="sp-refresh" onclick="refreshDonateHistory()">🔄</button></div>
+                            <div id="donateHistoryList" class="sp-list"><div class="sp-list__empty">Загрузка...</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <nav class="bottom-nav">
+            <a class="bottom-nav__item" onclick="openGame('index.html')">
+                <span class="bottom-nav__icon">🏠</span>
+                <span class="bottom-nav__label">ГЛАВНАЯ</span>
+            </a>
+            <a class="bottom-nav__item" onclick="openGame('top.html')">
+                <span class="bottom-nav__icon">🏆</span>
+                <span class="bottom-nav__label">ТОП</span>
+            </a>
+            <a class="bottom-nav__item bottom-nav__item--active">
+                <span class="bottom-nav__icon">📺</span>
+                <span class="bottom-nav__label">СТРИМ</span>
+            </a>
+            <a class="bottom-nav__item" onclick="openGame('friends.html')">
+                <span class="bottom-nav__icon">👥</span>
+                <span class="bottom-nav__label">ДРУЗЬЯ</span>
+            </a>
+            <a class="bottom-nav__item" onclick="openGame('profile.html')">
+                <span class="bottom-nav__icon">👤</span>
+                <span class="bottom-nav__label">ПРОФИЛЬ</span>
+            </a>
+        </nav>
+
+        <div class="watermark">@Mir_tankov_privat_bot</div>
+    </div>
+
+    <script src="js/stream.js"></script>
+</body>
+
+</html>

@@ -6600,6 +6600,24 @@ def create_api_app():
     if os.path.isdir(obs_dir):
         app.router.add_static('/obs/', obs_dir)
     
+    # Раздача автономного сайта (site/)
+    site_dir = os.path.join(os.path.dirname(__file__), 'site')
+    if os.path.isdir(site_dir):
+        async def serve_site_index(request):
+            return web.FileResponse(os.path.join(site_dir, 'index.html'))
+        
+        async def serve_site_file(request):
+            filename = request.match_info.get('filename', '')
+            filepath = os.path.join(site_dir, filename)
+            if '..' not in filename and os.path.isfile(filepath):
+                return web.FileResponse(filepath)
+            return web.Response(text="Not found", status=404)
+        
+        app.router.add_get('/site', serve_site_index)
+        app.router.add_get('/site/', serve_site_index)
+        app.router.add_get('/site/{filename:.*}', serve_site_file)
+        logger.info("Site directory served at /site/")
+    
     # Раздача webapp файлов (quiz.html и др.)
     webapp_dir = os.path.join(os.path.dirname(__file__), 'webapp')
     
@@ -6614,6 +6632,7 @@ def create_api_app():
     app.router.add_get('/quiz.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'quiz.html')))
     
     return app
+
 
 
 async def main():

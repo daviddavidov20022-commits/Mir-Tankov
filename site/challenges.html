@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Арена — Мир Танков</title>
+    <meta name="description" content="PvP Арена — вызови на бой!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="js/site-page.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="stylesheet" href="css/arena.css?v=2">
+    <link rel="stylesheet" href="css/global-challenge.css?v=6">
+    <link rel="stylesheet" href="css/site.css">
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <div class="arena-page">
+        <a href="index.html" class="back-btn">← Назад</a>
+
+        <!-- Arena Header -->
+        <div class="arena-hero">
+            <div class="arena-hero__icon">⚔️</div>
+            <h1 class="arena-hero__title">АРЕНА</h1>
+            <p class="arena-hero__subtitle">Вызови соперника на дуэль!</p>
+            <div class="account-badge" id="accountBadge"
+                style="margin-top:8px;padding:4px 12px;background:rgba(200,170,110,0.15);border-radius:8px;display:inline-block;font-size:0.7rem;color:#C8AA6E;font-weight:700">
+                👤 Загрузка...
+            </div>
+        </div>
+
+        <!-- How it works -->
+        <div class="arena-info" onclick="this.classList.toggle('arena-info--open')"
+            style="margin-bottom:10px;padding:10px 14px;background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.1);border-radius:12px;cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">❓ Как работают челленджи?</span>
+                <span style="font-size:0.6rem;color:#5A6577">▼</span>
+            </div>
+            <div class="arena-info__body"
+                style="display:none;margin-top:10px;font-size:0.65rem;color:#8a94a6;line-height:1.6">
+                <b style="color:#E8E6E3">1.</b> Выбери соперника, технику и условие<br>
+                <b style="color:#E8E6E3">2.</b> Поставь 🧀 Сыр — ставка замораживается<br>
+                <b style="color:#E8E6E3">3.</b> Соперник получает вызов и может принять или отклонить<br>
+                <b style="color:#E8E6E3">4.</b> При принятии — его ставка тоже замораживается<br>
+                <b style="color:#E8E6E3">5.</b> Оба играют нужное количество боёв на выбранной технике<br>
+                <b style="color:#E8E6E3">6.</b> Побеждает тот, у кого лучше результат по условию<br>
+                <b style="color:#E8E6E3">7.</b> Победитель забирает 🧀 обе ставки!<br>
+                <span style="color:#ef4444;margin-top:4px;display:inline-block">⚠️ При отклонении ставка возвращается
+                    создателю</span>
+            </div>
+        </div>
+        <script>
+            document.querySelector('.arena-info').addEventListener('click', function () {
+                const body = this.querySelector('.arena-info__body');
+                body.style.display = body.style.display === 'none' ? 'block' : 'none';
+            });
+        </script>
+
+        <!-- Balance -->
+        <div class="cheese-bar">
+            <div class="cheese-bar__left">
+                <div class="cheese-bar__icon">🧀</div>
+                <div>
+                    <div class="cheese-bar__label">Баланс СЫР</div>
+                    <div class="cheese-bar__amount" id="cheeseBalance">0</div>
+                </div>
+            </div>
+            <button class="cheese-bar__buy" onclick="buyCheese()">+ Купить</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="arena-tabs">
+            <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">⚔️ Создать</button>
+            <button class="arena-tab" onclick="switchTab('global', this)">🔥 Общий</button>
+            <button class="arena-tab" onclick="switchTab('active', this)">📋 Мои <span class="arena-badge"
+                    id="activeBadge" style="display:none">0</span></button>
+            <button class="arena-tab" onclick="switchTab('history', this)">📜 История</button>
+            <button class="arena-tab" onclick="switchTab('admin', this)" id="adminTab" style="display:none">🛡
+                Админ</button>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: CREATE CHALLENGE           -->
+        <!-- ============================== -->
+        <div class="tab-content tab-content--active" id="tab-create">
+
+            <!-- Step 1: Opponent -->
+            <div class="create-step" id="step-opponent">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Выбери соперника</div>
+                </div>
+                <div class="search-box">
+                    <input type="text" class="search-box__input" id="opponentSearch" placeholder="Введи ник игрока..."
+                        onkeydown="if(event.key==='Enter')searchOpponent()">
+                    <button class="search-box__btn" onclick="searchOpponent()">🔍</button>
+                </div>
+                <div id="opponentResults"></div>
+                <div class="selected-opponent" id="selectedOpponent" style="display:none">
+                    <div class="selected-opponent__info">
+                        <div class="selected-opponent__name" id="selectedOpponentName"></div>
+                        <div class="selected-opponent__status" id="selectedOpponentStatus"></div>
+                    </div>
+                    <button class="selected-opponent__change" onclick="changeOpponent()">✏️ Изменить</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Tank -->
+            <div class="create-step create-step--locked" id="step-tank">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Техника</div>
+                </div>
+
+                <!-- Mode toggle -->
+                <div class="tank-mode-toggle">
+                    <button class="mode-btn mode-btn--active" id="modeClass" onclick="setTankMode('class')">📋 Класс +
+                        Уровень</button>
+                    <button class="mode-btn" id="modeSpecific" onclick="setTankMode('specific')">🪖 Конкретный
+                        танк</button>
+                </div>
+
+                <!-- Mode: Class + Tier -->
+                <div id="tankModeClass">
+                    <div class="tank-filters">
+                        <label class="form-label">Класс техники</label>
+                        <div class="tank-class-filter">
+                            <button class="class-btn class-btn--active" data-type="any"
+                                onclick="selectClass('any', this)">🔄 Любой</button>
+                            <button class="class-btn" data-type="heavyTank" onclick="selectClass('heavyTank', this)">🛡️
+                                ТТ</button>
+                            <button class="class-btn" data-type="mediumTank"
+                                onclick="selectClass('mediumTank', this)">⚙️ СТ</button>
+                            <button class="class-btn" data-type="lightTank" onclick="selectClass('lightTank', this)">🏎️
+                                ЛТ</button>
+                            <button class="class-btn" data-type="AT-SPG" onclick="selectClass('AT-SPG', this)">🎯
+                                ПТ</button>
+                            <button class="class-btn" data-type="SPG" onclick="selectClass('SPG', this)">💣 САУ</button>
+                        </div>
+                        <label class="form-label" style="margin-top:12px">Уровень</label>
+                        <div class="tank-tier-filter">
+                            <button class="tier-btn" data-tier="6" onclick="selectTier(6, this)">VI</button>
+                            <button class="tier-btn" data-tier="7" onclick="selectTier(7, this)">VII</button>
+                            <button class="tier-btn" data-tier="8" onclick="selectTier(8, this)">VIII</button>
+                            <button class="tier-btn" data-tier="9" onclick="selectTier(9, this)">IX</button>
+                            <button class="tier-btn tier-btn--active" data-tier="10"
+                                onclick="selectTier(10, this)">X</button>
+                        </div>
+                        <div class="selected-tank-summary" id="selectedTankSummary"
+                            style="margin-top:12px;text-align:center;font-size:0.8rem;color:#C8AA6E;font-family:'Russo One',sans-serif">
+                            🔄 Любой танк · X уровень
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode: Specific tank -->
+                <div id="tankModeSpecific" style="display:none">
+                    <div class="tank-filters">
+                        <div class="tank-class-filter">
+                            <button class="class-btn2 class-btn2--active" data-type="all"
+                                onclick="filterTanks('all', this)">🔄 Все</button>
+                            <button class="class-btn2" data-type="heavyTank"
+                                onclick="filterTanks('heavyTank', this)">🛡️ ТТ</button>
+                            <button class="class-btn2" data-type="mediumTank"
+                                onclick="filterTanks('mediumTank', this)">⚙️ СТ</button>
+                            <button class="class-btn2" data-type="lightTank"
+                                onclick="filterTanks('lightTank', this)">🏎️ ЛТ</button>
+                            <button class="class-btn2" data-type="AT-SPG" onclick="filterTanks('AT-SPG', this)">🎯
+                                ПТ</button>
+                            <button class="class-btn2" data-type="SPG" onclick="filterTanks('SPG', this)">💣
+                                САУ</button>
+                        </div>
+                        <div class="tank-tier-filter">
+                            <button class="tier-btn2" data-tier="6" onclick="filterTier(6, this)">VI</button>
+                            <button class="tier-btn2" data-tier="7" onclick="filterTier(7, this)">VII</button>
+                            <button class="tier-btn2" data-tier="8" onclick="filterTier(8, this)">VIII</button>
+                            <button class="tier-btn2" data-tier="9" onclick="filterTier(9, this)">IX</button>
+                            <button class="tier-btn2 tier-btn2--active" data-tier="10"
+                                onclick="filterTier(10, this)">X</button>
+                        </div>
+                        <input type="text" class="tank-search-input" id="tankSearchInput"
+                            placeholder="🔍 Поиск танка..." oninput="filterTanksByName(this.value)">
+                    </div>
+                    <div class="tank-list" id="tankList">
+                        <div class="tank-loading" id="tankLoading">Загружаем танки...</div>
+                    </div>
+                    <div class="selected-tank" id="selectedTank" style="display:none">
+                        <img id="selectedTankIcon" src="" alt="" class="selected-tank__icon">
+                        <div class="selected-tank__name" id="selectedTankName"></div>
+                        <button class="selected-tank__change" onclick="changeTank()">✏️</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Condition -->
+            <div class="create-step create-step--locked" id="step-condition">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Условие</div>
+                </div>
+                <div class="condition-grid" id="conditionGrid">
+                    <button class="condition-card" data-cond="damage" onclick="selectCondition('damage', this)">
+                        <div class="condition-card__icon">💥</div>
+                        <div class="condition-card__name">Урон</div>
+                        <div class="condition-card__desc">Средний урон за серию</div>
+                    </button>
+                    <button class="condition-card" data-cond="spotting" onclick="selectCondition('spotting', this)">
+                        <div class="condition-card__icon">👁</div>
+                        <div class="condition-card__name">Засвет</div>
+                        <div class="condition-card__desc">Средний засвет за серию</div>
+                    </button>
+                    <button class="condition-card" data-cond="blocked" onclick="selectCondition('blocked', this)">
+                        <div class="condition-card__icon">🛡️</div>
+                        <div class="condition-card__name">Блок</div>
+                        <div class="condition-card__desc">Средний заблокированный</div>
+                    </button>
+                    <button class="condition-card" data-cond="frags" onclick="selectCondition('frags', this)">
+                        <div class="condition-card__icon">🎯</div>
+                        <div class="condition-card__name">Фраги</div>
+                        <div class="condition-card__desc">Среднее убийств</div>
+                    </button>
+                    <button class="condition-card" data-cond="xp" onclick="selectCondition('xp', this)">
+                        <div class="condition-card__icon">⭐</div>
+                        <div class="condition-card__name">Опыт</div>
+                        <div class="condition-card__desc">Средний опыт за бой</div>
+                    </button>
+                    <button class="condition-card" data-cond="wins" onclick="selectCondition('wins', this)">
+                        <div class="condition-card__icon">🏆</div>
+                        <div class="condition-card__name">Победы</div>
+                        <div class="condition-card__desc">Процент побед за серию</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Battles -->
+            <div class="create-step create-step--locked" id="step-battles">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Количество боёв</div>
+                </div>
+                <div class="battles-selector" id="battlesSelector">
+                    <button class="battles-btn" data-val="1" onclick="selectBattles(1, this)">1</button>
+                    <button class="battles-btn battles-btn--selected" data-val="5" onclick="selectBattles(5, this)">5
+                    </button>
+                    <button class="battles-btn" data-val="10" onclick="selectBattles(10, this)">10</button>
+                    <button class="battles-btn" data-val="15" onclick="selectBattles(15, this)">15</button>
+                    <button class="battles-btn" data-val="20" onclick="selectBattles(20, this)">20</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Wager -->
+            <div class="create-step create-step--locked" id="step-wager">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Ставка 🧀</div>
+                </div>
+                <div class="wager-input-wrap">
+                    <div class="wager-currency">🧀</div>
+                    <input type="number" class="form-input" id="wagerAmount" value="100" min="10" max="10000">
+                </div>
+                <div class="wager-presets">
+                    <button class="wager-preset" onclick="setWager(50)">50</button>
+                    <button class="wager-preset" onclick="setWager(100)">100</button>
+                    <button class="wager-preset" onclick="setWager(250)">250</button>
+                    <button class="wager-preset" onclick="setWager(500)">500</button>
+                    <button class="wager-preset" onclick="setWager(1000)">1000</button>
+                </div>
+            </div>
+
+            <!-- Summary & Send -->
+            <div class="challenge-summary-full" id="challengeSummaryFull" style="display:none">
+                <div class="summary-title">📋 Сводка</div>
+                <div class="summary-row">
+                    <span class="summary-key">Соперник</span>
+                    <span class="summary-val" id="sumOpponent">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">Танк</span>
+                    <span class="summary-val" id="sumTank">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">Условие</span>
+                    <span class="summary-val" id="sumCondition">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">Боёв</span>
+                    <span class="summary-val" id="sumBattles">5</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">Ставка</span>
+                    <span class="summary-val" id="sumWager">🧀 100</span>
+                </div>
+                <div class="summary-row summary-row--prize">
+                    <span class="summary-key">Приз победителю</span>
+                    <span class="summary-val" id="sumPrize" style="color:#4ade80">🧀 200</span>
+                </div>
+                <button class="challenge-send-btn" id="sendChallengeBtn" onclick="sendChallenge()">
+                    ⚔️ ОТПРАВИТЬ ВЫЗОВ
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: ACTIVE / INCOMING          -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-active">
+            <div class="section-lbl">📩 Входящие вызовы</div>
+            <div id="incomingDuels"></div>
+            <div class="section-lbl" style="margin-top:20px">🔥 Активные челленджи</div>
+            <div id="activeDuels"></div>
+            <div class="empty-state" id="noActiveDuels">
+                <div class="empty-state__icon">⚔️</div>
+                <div class="empty-state__text">Нет активных дуэлей.<br>Создай челлендж!</div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: HISTORY                    -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-history">
+            <div class="section-lbl">📜 История дуэлей</div>
+            <div id="historyList">
+                <div class="empty-state">
+                    <div class="empty-state__icon">📜</div>
+                    <div class="empty-state__text">История пока пуста</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: ADMIN PANEL               -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-admin">
+            <div class="section-lbl">🛡 Панель управления</div>
+            <div style="margin-bottom:12px">
+                <input type="text" id="adminSearchInput" placeholder="🔍 Поиск по нику, ID или имени..."
+                    oninput="filterAdminUsers()" style="width:100%;padding:10px 14px;border-radius:10px;
+                    background:rgba(255,255,255,0.04);border:1px solid rgba(200,170,110,0.15);
+                    color:#E8E6E3;font-size:0.75rem;outline:none">
+            </div>
+            <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px" id="adminUserCount">Загрузка...</div>
+            <div id="adminUsersList"></div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: GLOBAL CHALLENGE          -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-global">
+
+            <!-- Main Widget -->
+            <div class="gc-widget" id="gcWidget">
+                <!-- Loading state -->
+                <div class="gc-loading" id="gcLoading">
+                    <div class="gc-loading__spinner"></div>
+                    <div class="gc-loading__text">Загрузка челленджа...</div>
+                </div>
+
+                <!-- No challenge state -->
+                <div class="gc-empty" id="gcEmpty" style="display:none">
+                    <div class="gc-empty__icon">⚔️</div>
+                    <div class="gc-empty__title">Нет активных челленджей</div>
+                    <div class="gc-empty__desc">Админ пока не запустил общий челлендж.<br>Следи за обновлениями!</div>
+                </div>
+
+                <!-- Active challenge -->
+                <div class="gc-active" id="gcActive" style="display:none">
+                    <div class="gc-header">
+                        <div class="gc-header__icon" id="gcIcon">🔥</div>
+                        <div class="gc-header__info">
+                            <h1 class="gc-header__title" id="gcTitle">Челлендж</h1>
+                            <p class="gc-header__desc" id="gcDesc">Описание челленджа</p>
+                        </div>
+                        <div class="gc-header__condition" id="gcCondition">💥</div>
+                    </div>
+
+                    <div class="gc-timer-section">
+                        <div class="gc-timer-ring">
+                            <svg class="gc-timer-svg" viewBox="0 0 200 200">
+                                <circle class="gc-timer-track" cx="100" cy="100" r="90" />
+                                <circle class="gc-timer-progress" id="gcTimerProgress" cx="100" cy="100" r="90" />
+                            </svg>
+                            <div class="gc-timer-inner">
+                                <div class="gc-timer-value" id="gcTimerValue">59:59</div>
+                                <div class="gc-timer-label">осталось</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gc-stats">
+                        <div class="gc-stat">
+                            <div class="gc-stat__value" id="gcParticipants">0</div>
+                            <div class="gc-stat__label">Участников</div>
+                        </div>
+                        <div class="gc-stat gc-stat--reward">
+                            <div class="gc-stat__value" id="gcReward">🧀 500</div>
+                            <div class="gc-stat__label">Приз</div>
+                        </div>
+                        <div class="gc-stat">
+                            <div class="gc-stat__value" id="gcCondLabel">Урон</div>
+                            <div class="gc-stat__label">Условие</div>
+                        </div>
+                    </div>
+
+                    <button class="gc-join-btn" id="gcJoinBtn" onclick="gcJoinChallenge()">
+                        ⚔️ ВСТУПИТЬ В ЧЕЛЛЕНДЖ
+                    </button>
+
+                    <div class="gc-leaderboard" id="gcLeaderboard">
+                        <div class="gc-lb-title">🏆 ТОП ЛИДЕРЫ</div>
+                        <div class="gc-lb-list" id="gcLbList">
+                            <div class="gc-lb-empty">Пока нет участников</div>
+                        </div>
+                    </div>
+
+                    <!-- Widget link -->
+                    <div class="gc-widget-link" id="gcWidgetLink" style="display:none">
+                        <button class="gc-widget-link__btn" onclick="gcCopyWidgetLink()">
+                            🔗 Скопировать ссылку на челлендж
+                        </button>
+                    </div>
+
+                    <div class="gc-auto-info">
+                        <div class="gc-auto-info__icon">🤖</div>
+                        <div class="gc-auto-info__text">Статистика обновляется автоматически через API Мир Танков каждые
+                            15 сек</div>
+                    </div>
+                </div>
+
+                <!-- Finished state -->
+                <div class="gc-finished" id="gcFinished" style="display:none">
+                    <div class="gc-winner-crown">👑</div>
+                    <div class="gc-winner-title">ЧЕЛЛЕНДЖ ЗАВЕРШЁН!</div>
+                    <div class="gc-winner-card" id="gcWinnerCard">
+                        <div class="gc-winner-medal">🥇</div>
+                        <div class="gc-winner-name" id="gcWinnerName">—</div>
+                        <div class="gc-winner-value" id="gcWinnerValue">0</div>
+                        <div class="gc-winner-label" id="gcWinnerLabel">урона</div>
+                    </div>
+                    <div class="gc-final-lb" id="gcFinalLb"></div>
+                </div>
+            </div>
+
+            <!-- Admin Panel for Global Challenge -->
+            <div class="gc-admin" id="gcAdminPanel" style="display:none">
+                <div class="gc-admin__title">🛡 Управление Челленджем</div>
+
+                <div class="gc-subs">
+                    <div class="gc-subs__header">
+                        <div class="gc-subs__title">👥 Подписчики <span class="gc-subs__count" id="subsCount">0</span>
+                        </div>
+                        <button class="gc-subs__refresh" onclick="gcLoadSubscribers()">🔄</button>
+                    </div>
+                    <div class="gc-subs__search">
+                        <input type="text" class="gc-admin__input" id="subsSearch" placeholder="🔍 Поиск по нику..."
+                            oninput="gcFilterSubscribers()">
+                    </div>
+                    <div class="gc-subs__list" id="subsList">
+                        <div class="gc-subs__loading">⏳ Загрузка подписчиков...</div>
+                    </div>
+                </div>
+
+                <div class="gc-admin__divider"></div>
+
+                <div class="gc-admin__form">
+                    <div class="gc-admin__form-title">⚙️ Настройки челленджа</div>
+
+                    <label class="gc-admin__label">Название</label>
+                    <input type="text" class="gc-admin__input" id="adminGcTitle" value="Кто нанесёт больше урона?"
+                        placeholder="Название">
+
+                    <label class="gc-admin__label">Описание</label>
+                    <input type="text" class="gc-admin__input" id="adminGcDesc"
+                        value="Нанеси максимум урона за один бой!" placeholder="Описание">
+
+                    <label class="gc-admin__label">Условие</label>
+                    <div class="gc-admin__conditions">
+                        <button class="gc-cond-btn gc-cond-btn--active" data-cond="damage"
+                            onclick="gcSelectCond('damage', this)">💥 Урон</button>
+                        <button class="gc-cond-btn" data-cond="frags" onclick="gcSelectCond('frags', this)">🎯
+                            Фраги</button>
+                        <button class="gc-cond-btn" data-cond="xp" onclick="gcSelectCond('xp', this)">⭐ Опыт</button>
+                        <button class="gc-cond-btn" data-cond="spotting" onclick="gcSelectCond('spotting', this)">👁
+                            Засвет</button>
+                        <button class="gc-cond-btn" data-cond="blocked" onclick="gcSelectCond('blocked', this)">🛡
+                            Блок</button>
+                    </div>
+
+                    <div class="gc-admin__row">
+                        <div>
+                            <label class="gc-admin__label">⏱ Таймер (мин)</label>
+                            <input type="number" class="gc-admin__input" id="adminGcDuration" value="60" min="5"
+                                max="1440">
+                        </div>
+                        <div>
+                            <label class="gc-admin__label">🧀 Приз</label>
+                            <input type="number" class="gc-admin__input" id="adminGcReward" value="500" min="0">
+                        </div>
+                    </div>
+
+                    <div class="gc-admin__row">
+                        <div>
+                            <label class="gc-admin__label">🎯 Кол-во боёв (0 = без лимита)</label>
+                            <input type="number" class="gc-admin__input" id="adminGcMaxBattles" value="0" min="0"
+                                max="100" placeholder="0 = без лимита">
+                        </div>
+                    </div>
+
+                    <div class="gc-admin__presets">
+                        <button class="gc-preset-btn" onclick="gcSetDuration(15)">15 мин</button>
+                        <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 мин</button>
+                        <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 час</button>
+                        <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 часа</button>
+                    </div>
+
+                    <!-- ====== WIDGET CONSTRUCTOR ====== -->
+                    <div class="wc-section">
+                        <div class="wc-section__header" onclick="gcToggleWidgetConstructor()">
+                            <span>🎨 Конструктор виджета</span>
+                            <span class="wc-section__arrow" id="wcArrow">▼</span>
+                        </div>
+
+                        <div class="wc-body" id="wcBody" style="display:none">
+                            <!-- Layout presets -->
+                            <div class="wc-label">📐 Макет расстановки</div>
+                            <div class="wc-themes">
+                                <div class="wc-theme wc-theme--active" id="wcLayout-1" onclick="gcSelectLayout(1)">
+                                    <div class="wc-theme__preview wc-theme__preview--gold">
+                                        <div class="wc-lp">
+                                            <div class="wc-lp__r" style="width:60%;height:3px;margin:0 auto"></div>
+                                            <div class="wc-lp__r" style="width:40%;height:8px;margin:2px auto"></div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                            <div class="wc-lp__r"
+                                                style="width:70%;height:10px;margin:2px auto;border:1px solid;opacity:.5">
+                                            </div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">📱 Классика</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-2" onclick="gcSelectLayout(2)">
+                                    <div class="wc-theme__preview wc-theme__preview--neon">
+                                        <div class="wc-lp">
+                                            <div style="display:flex;gap:4px;align-items:center">
+                                                <div class="wc-lp__r" style="width:35%;height:14px"></div>
+                                                <div style="flex:1">
+                                                    <div class="wc-lp__r" style="height:3px;margin-bottom:2px"></div>
+                                                    <div class="wc-lp__r"
+                                                        style="height:6px;border:1px solid;opacity:.5"></div>
+                                                </div>
+                                            </div>
+                                            <div style="display:flex;gap:2px;margin-top:3px">
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">📊 Компакт</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-3" onclick="gcSelectLayout(3)">
+                                    <div class="wc-theme__preview wc-theme__preview--military">
+                                        <div class="wc-lp"
+                                            style="display:flex;align-items:center;gap:3px;justify-content:center">
+                                            <div class="wc-lp__r" style="width:8px;height:8px;border-radius:50%"></div>
+                                            <div class="wc-lp__r" style="width:30px;height:3px"></div>
+                                            <div class="wc-lp__r" style="width:20px;height:6px"></div>
+                                            <div class="wc-lp__r" style="width:25px;height:3px"></div>
+                                            <div class="wc-lp__r" style="width:20px;height:3px"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">📏 Полоска</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-4" onclick="gcSelectLayout(4)">
+                                    <div class="wc-theme__preview wc-theme__preview--fire">
+                                        <div class="wc-lp">
+                                            <div class="wc-lp__r" style="width:50%;height:3px;margin:0 auto"></div>
+                                            <div class="wc-lp__r" style="width:40%;height:8px;margin:2px auto"></div>
+                                            <div style="border-top:1px solid rgba(255,255,255,.1);margin:3px 0"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">🏆 Табло</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-5" onclick="gcSelectLayout(5)">
+                                    <div class="wc-theme__preview wc-theme__preview--ice">
+                                        <div class="wc-lp">
+                                            <div style="display:flex;gap:3px">
+                                                <div class="wc-lp__r"
+                                                    style="flex:1;height:20px;border:1px solid;opacity:.4;border-radius:3px">
+                                                </div>
+                                                <div class="wc-lp__r"
+                                                    style="flex:1;height:20px;border:1px solid;opacity:.4;border-radius:3px">
+                                                </div>
+                                            </div>
+                                            <div style="display:flex;gap:2px;margin-top:3px">
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">🎮 HUD</div>
+                                </div>
+                            </div>
+
+                            <!-- Color Theme -->
+                            <div class="wc-label">🎨 Цветовая тема</div>
+                            <div class="wc-themes">
+                                <div class="wc-theme wc-theme--active" id="wcTheme-gold"
+                                    onclick="gcSelectTheme('gold')">
+                                    <div class="wc-theme__preview wc-theme__preview--gold" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">⚜️ Золото</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-neon" onclick="gcSelectTheme('neon')">
+                                    <div class="wc-theme__preview wc-theme__preview--neon" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">💜 Неон</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-military" onclick="gcSelectTheme('military')">
+                                    <div class="wc-theme__preview wc-theme__preview--military" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">🪖 Военный</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-fire" onclick="gcSelectTheme('fire')">
+                                    <div class="wc-theme__preview wc-theme__preview--fire" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">🔥 Инферно</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-ice" onclick="gcSelectTheme('ice')">
+                                    <div class="wc-theme__preview wc-theme__preview--ice" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">❄️ Арктика</div>
+                                </div>
+                            </div>
+
+                            <!-- Custom settings -->
+                            <div class="wc-settings">
+                                <div class="wc-label">Настройки</div>
+
+                                <!-- Accent color -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">🎨 Акцент</span>
+                                    <div class="wc-colors" id="wcColors">
+                                        <div class="wc-color wc-color--active" data-color="#f5d36e"
+                                            style="background:#f5d36e" onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#a855f7" style="background:#a855f7"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#22c55e" style="background:#22c55e"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#3b82f6" style="background:#3b82f6"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#ef4444" style="background:#ef4444"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#f97316" style="background:#f97316"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#ec4899" style="background:#ec4899"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#14b8a6" style="background:#14b8a6"
+                                            onclick="gcSetAccent(this)"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Background opacity -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">🌑 Фон</span>
+                                    <input type="range" class="wc-slider" id="wcBgOpacity" min="50" max="100" value="90"
+                                        oninput="gcUpdatePreview()">
+                                    <span class="wc-row__val" id="wcBgVal">90%</span>
+                                </div>
+
+                                <!-- Font size -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">🔤 Размер</span>
+                                    <input type="range" class="wc-slider" id="wcFontSize" min="80" max="130" value="100"
+                                        oninput="gcUpdatePreview()">
+                                    <span class="wc-row__val" id="wcFontVal">100%</span>
+                                </div>
+
+                                <!-- Border style -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">🖼 Рамка</span>
+                                    <div class="wc-toggles">
+                                        <button class="wc-toggle wc-toggle--active" data-border="gold"
+                                            onclick="gcSetBorder(this)">Золото</button>
+                                        <button class="wc-toggle" data-border="glow"
+                                            onclick="gcSetBorder(this)">Свечение</button>
+                                        <button class="wc-toggle" data-border="minimal"
+                                            onclick="gcSetBorder(this)">Минимум</button>
+                                        <button class="wc-toggle" data-border="none"
+                                            onclick="gcSetBorder(this)">Нет</button>
+                                    </div>
+                                </div>
+
+                                <!-- Show/hide toggles -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">👁 Элементы</span>
+                                    <div class="wc-checks">
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowTimer"
+                                                onchange="gcUpdatePreview()">
+                                            <span>Таймер</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowMyStats"
+                                                onchange="gcUpdatePreview()">
+                                            <span>Мой счёт</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowTop3" onchange="gcUpdatePreview()">
+                                            <span>Топ 3</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowLive" onchange="gcUpdatePreview()">
+                                            <span>LIVE</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- LIVE PREVIEW -->
+                            <div class="wc-label" style="margin-top:12px">👀 Предпросмотр</div>
+                            <div class="wc-preview-wrap">
+                                <div id="wcPreview"
+                                    style="display:flex;justify-content:center;align-items:center;min-height:120px">
+                                </div>
+                            </div>
+                            <script>if (typeof gcUpdatePreview === 'function') gcUpdatePreview();</script>
+
+                            <!-- Copy widget link -->
+                            <button class="wc-copy-link" onclick="gcCopyCustomWidgetLink()">
+                                🔗 Скопировать ссылку на виджет
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- OBS Link Section -->
+                    <div class="gc-obs-section" id="gcObsSection" style="display:none; margin-top:16px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                            <div style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#C8AA6E">
+                                📺 Ссылка для OBS
+                            </div>
+                            <div style="font-size:0.5rem;color:#4ade80;font-weight:700;display:flex;align-items:center;gap:4px">
+                                <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink 1.2s infinite"></span>
+                                READY
+                            </div>
+                        </div>
+                        <div style="background:#0a0e14;border:1px solid rgba(200,170,110,0.12);border-radius:10px;padding:10px 14px;font-size:0.6rem;color:#8a94a6;word-break:break-all;line-height:1.6;margin-bottom:8px" id="gcObsUrl">
+                            Загрузка...
+                        </div>
+                        <div style="display:flex;gap:6px">
+                            <button onclick="gcCopyObsLink()" style="flex:1;padding:10px;border-radius:10px;border:1px dashed rgba(200,170,110,0.2);background:rgba(200,170,110,0.04);color:#C8AA6E;font-size:0.7rem;font-weight:700;cursor:pointer;transition:all 0.2s">
+                                📋 Скопировать ссылку OBS
+                            </button>
+                            <button onclick="gcCopyObsLinkWithConfig()" style="flex:1;padding:10px;border-radius:10px;border:1px dashed rgba(168,85,247,0.2);background:rgba(168,85,247,0.04);color:#a855f7;font-size:0.7rem;font-weight:700;cursor:pointer;transition:all 0.2s">
+                                🎨 С конструктором
+                            </button>
+                        </div>
+                        <div style="margin-top:8px;font-size:0.55rem;color:#5A6577;line-height:1.5;padding:0 4px">
+                            💡 <b>Как добавить:</b> OBS → Источники → Браузер (Browser) → Новый → Вставьте URL<br>
+                            📐 <b>Размеры:</b> Ш: 400 × В: 500 (Классика) или 560×80 (Полоска)
+                        </div>
+                    </div>
+
+                    <div class="gc-admin__hint">
+                        💡 Подписчики увидят челлендж и сами вступят — выбирать никого не нужно!
+                    </div>
+
+                    <button class="gc-admin__launch" id="adminGcLaunchBtn" onclick="gcLaunchChallenge()">
+                        🚀 ЗАПУСТИТЬ ЧЕЛЛЕНДЖ
+                    </button>
+
+                    <button class="gc-admin__stop" id="adminGcStopBtn" onclick="gcStopChallenge()" style="display:none">
+                        ⛔ ЗАВЕРШИТЬ ДОСРОЧНО
+                    </button>
+
+                    <button class="gc-admin__delete" id="adminGcDeleteBtn" onclick="gcDeleteChallenge()"
+                        style="display:none">
+                        🗑 УДАЛИТЬ ЧЕЛЛЕНДЖ
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bottom nav -->
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </div>
+        <div class="nav-item nav-item--active">
+            <span class="nav-icon">⚔️</span>
+            <span class="nav-label">Арена</span>
+        </div>
+        <div class="nav-item" onclick="location.href='friends.html'">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Друзья</span>
+        </div>
+        <div class="nav-item" onclick="location.href='profile.html'">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
+        </div>
+    </nav>
+
+    <!-- Confetti canvas -->
+    <canvas id="confettiCanvas"
+        style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999"></canvas>
+
+    <script src="js/arena.js?v=13"></script>
+    <script src="js/global-challenge-tab.js?v=10"></script>
+    <script src="js/gc-obs-links.js?v=1"></script>
+</body>
+
+</html>

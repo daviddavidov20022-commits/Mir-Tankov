@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Мир Танков — Игроки</title>
+    <meta name="description" content="Мир Танков — Все игроки клуба. Рейтинги, онлайн-статус и вызовы!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="js/site-page.js"></script>
+    <link rel="stylesheet" href="css/top.css?v=14202">
+    <link rel="stylesheet" href="css/site.css">
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <!-- Header -->
+    <header class="top-header">
+        <button class="back-btn" onclick="goBack()">
+            <span>←</span>
+        </button>
+        <div class="header-title">
+            <h1>🏆 Игроки Клуба</h1>
+            <span class="header-sub" id="headerSub">Все участники</span>
+        </div>
+        <div class="header-count" id="headerCount">
+            <span class="count-num" id="totalCount">—</span>
+            <span class="count-label">игроков</span>
+        </div>
+    </header>
+
+    <!-- Category Tabs -->
+    <div class="category-tabs-wrap">
+        <div class="category-tabs" id="categoryTabs">
+            <button class="cat-tab cat-tab--active" data-cat="all" onclick="switchCategory('all')">
+                <span class="cat-tab__icon">👥</span>
+                <span class="cat-tab__label">Все</span>
+            </button>
+            <button class="cat-tab" data-cat="wn8" onclick="switchCategory('wn8')">
+                <span class="cat-tab__icon">🎖</span>
+                <span class="cat-tab__label">WN8</span>
+            </button>
+            <button class="cat-tab" data-cat="damage" onclick="switchCategory('damage')">
+                <span class="cat-tab__icon">💥</span>
+                <span class="cat-tab__label">Урон</span>
+            </button>
+            <button class="cat-tab" data-cat="veteran" onclick="switchCategory('veteran')">
+                <span class="cat-tab__icon">📅</span>
+                <span class="cat-tab__label">Ветеран</span>
+            </button>
+            <button class="cat-tab" data-cat="battles" onclick="switchCategory('battles')">
+                <span class="cat-tab__icon">⚔️</span>
+                <span class="cat-tab__label">Бои</span>
+            </button>
+            <button class="cat-tab" data-cat="playtime" onclick="switchCategory('playtime')">
+                <span class="cat-tab__icon">⏱</span>
+                <span class="cat-tab__label">Часы</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Search/Filter Bar -->
+    <div class="filter-bar">
+        <div class="search-wrap">
+            <span class="search-icon-sm">🔍</span>
+            <input type="text" id="filterInput" class="filter-input" placeholder="Поиск по нику..."
+                oninput="filterTable()">
+        </div>
+        <button class="online-toggle" id="onlineToggle" onclick="toggleOnlineFilter()" title="Только онлайн">
+            <span class="online-dot-filter"></span>
+            <span class="online-label">ОНЛАЙН</span>
+        </button>
+        <button class="refresh-btn" id="refreshBtn" onclick="loadAllPlayers()" title="Обновить">
+            <span class="refresh-icon">🔄</span>
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-full" id="loadingFull">
+        <div class="loading-spinner-lg"></div>
+        <p class="loading-text">Загрузка игроков...</p>
+        <p class="loading-sub" id="loadingStatus">Получаем данные из базы</p>
+    </div>
+
+    <!-- Player Cards List -->
+    <div class="players-list" id="playersList" style="display: none;">
+        <div class="players-list__inner" id="playersListInner">
+            <!-- Генерируется JS -->
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">📭</div>
+        <h3>Нет игроков</h3>
+        <p>Никто из подписчиков ещё не привязал аккаунт Мир Танков.<br>
+            Привяжите ник в профиле через /start → Профиль</p>
+    </div>
+
+    <script src="js/app.js?v=14202"></script>
+    <script>
+        // Динамическая загрузка с cache-bust
+        const s = document.createElement('script');
+        s.src = 'js/top-page.js?v=' + Date.now();
+        document.body.appendChild(s);
+    </script>
+</body>
+
+</html>
