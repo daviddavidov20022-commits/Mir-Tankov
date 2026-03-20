@@ -181,8 +181,8 @@ function initPlayer() {
     
     if (currentPlatform === 'twitch') {
         const ch = STREAMER_CHANNELS.twitch;
-        // Twitch требует parent= с доменом — добавляем и localhost и production
-        iframe.src = `https://player.twitch.tv/?channel=${ch}&parent=${parent}&parent=localhost&parent=mir-tankov-production.up.railway.app&muted=false`;
+        // Twitch требует parent= с доменом
+        iframe.src = `https://player.twitch.tv/?channel=${ch}&parent=${parent}&parent=daviddavidov20022-commits.github.io&parent=localhost&muted=false`;
         currentChannel = ch;
     } else if (currentPlatform === 'vk') {
         // VK Video Live embed — iserveri

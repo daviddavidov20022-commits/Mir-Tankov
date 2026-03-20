@@ -4,6 +4,8 @@ description: Синхронизация site/ → webapp/ после любых 
 
 # Sync Site to Webapp
 
+> ⚠️ **ТЕСТИРОВАНИЕ — ТОЛЬКО НА PRODUCTION!** После git push проверять на `https://mir-tankov-production.up.railway.app/site/...`. НИКОГДА не предлагать localhost или file:// — пользователь хочет видеть то же, что его подписчики.
+
 Эта процедура ОБЯЗАТЕЛЬНА после ЛЮБЫХ изменений в `site/`. Папки `site/` и `webapp/` содержат одинаковый контент, но с разными SDK:
 - `site/` — автономный сайт (использует `site-page.js` для мока Telegram SDK)
 - `webapp/` — Telegram WebApp (использует настоящий `telegram-web-app.js`)
