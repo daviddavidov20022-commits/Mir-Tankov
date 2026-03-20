@@ -49,3 +49,11 @@ cd d:\mir-tankov-bot && git add -A && git commit -m "Sync site -> webapp" && git
 - **ВСЕГДА** после изменений в `site/css/military-theme.css` или `site/css/stream.css`
 - **ВСЕГДА** после добавления/замены картинок в `site/img/`
 - **НЕ НУЖНО** для файлов которые есть ТОЛЬКО в `site/` (например `site/css/site.css`, `site/js/site-page.js`)
+
+## ⚠️ ВАЖНО: Разные лейауты!
+
+- **`site/`** = Десктопный сайт. Полноэкранный layout на весь экран. Стили в `site.css` (НЕ синхронизируется).
+- **`webapp/`** = Telegram WebApp. Мобильный layout. Не имеет `site.css`.
+- **`military-theme.css`** = Общий военный дизайн, используется обоими. НЕ добавлять сюда десктопные max-width/layout стили!
+- Десктопные стили → ТОЛЬКО в `site/css/site.css`
+

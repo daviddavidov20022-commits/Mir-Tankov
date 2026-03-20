@@ -383,14 +383,17 @@
 /* Desktop: side-by-side player + chat */
 @media (min-width: 768px) {
     .content-area {
-        max-width: 1200px;
         margin: 0 auto;
-        padding: 0 20px;
+        padding: 16px 24px;
     }
 
-    /* Stream layout grid */
+    /* Stream layout — player bigger on desktop */
     .stream-player {
         border-radius: 14px;
+    }
+
+    .stream-player__aspect {
+        padding-bottom: 50%; /* Wider aspect ratio for desktop */
     }
 
     .stream-chat {
@@ -474,15 +477,20 @@
     }
 }
 
-/* Large desktop: true side-by-side layout */
+/* Large desktop: TRUE FULLSCREEN two-column layout */
 @media (min-width: 960px) {
     .content-area {
-        max-width: 1400px;
+        padding: 20px 32px;
     }
 
-    /* Two-column grid: player left, chat right */
+    /* Плеер и чат — рядом в сетке */
     .stream-player {
         margin-bottom: 0;
+    }
+
+    /* Flex-row для плеера и чата */
+    .stream-chat {
+        min-height: 400px;
     }
 
     .stream-chat__messages {
@@ -501,19 +509,77 @@
     .stream-header__title {
         font-size: 1.5rem;
     }
+
+    /* Три кнопки действий — крупнее */
+    .stream-action-btn {
+        padding: 20px 24px;
+    }
+
+    .stream-action-btn__icon {
+        font-size: 1.6rem;
+    }
+
+    .stream-action-btn__text {
+        font-size: 0.95rem;
+    }
 }
 
-/* Very wide screens */
+/* Full HD+ screens: maximum use of space */
 @media (min-width: 1200px) {
     .content-area {
-        max-width: 1600px;
-        padding: 0 40px;
+        padding: 24px 48px;
     }
 
     .stream-chat__messages {
         height: 500px;
     }
+
+    .stream-player__aspect {
+        padding-bottom: 45%; /* Even wider on big screens */
+    }
+
+    .platform-tabs {
+        font-size: 1rem;
+    }
+
+    .stream-header {
+        padding: 18px 24px;
+    }
+
+    .stream-header__title {
+        font-size: 1.6rem;
+    }
+
+    .stream-action-btn {
+        padding: 24px 30px;
+        border-radius: 16px;
+    }
+
+    .stream-action-btn__icon {
+        font-size: 1.8rem;
+    }
 }
+
+/* Ultra-wide 2K+ screens */
+@media (min-width: 1600px) {
+    .content-area {
+        padding: 32px 64px;
+    }
+
+    .platform-tab {
+        padding: 16px 36px;
+        font-size: 1.05rem;
+    }
+
+    .stream-header__title {
+        font-size: 1.8rem;
+    }
+
+    .stream-chat__messages {
+        height: 600px;
+    }
+}
+
 
 /* ==========================================
    MODAL RESPONSIVE
@@ -610,6 +676,7 @@
 .app-wrapper {
     min-width: 0;
     max-width: 100%;
+    width: 100%;
 }
 
 /* ==========================================
