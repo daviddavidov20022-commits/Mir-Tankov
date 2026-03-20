@@ -885,6 +885,24 @@
             saveBtn.disabled = true;
             saveBtn.textContent = '⏳ СОХРАНЕНИЕ...';
 
+            // Проверяем размер
+            const maxBytes = (currentAsset.maxKb || 2048) * 1024;
+            if (selectedFile.size > maxBytes) {
+                showEditorToast(`❌ Файл слишком большой! Макс: ${currentAsset.maxKb} КБ, ваш: ${Math.round(selectedFile.size / 1024)} КБ`);
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 СОХРАНИТЬ';
+                return;
+            }
+
+            // Проверяем формат
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+            if (!allowedTypes.includes(selectedFile.type)) {
+                showEditorToast(`❌ Неверный формат! Нужен PNG, JPG или WEBP. Ваш: ${selectedFile.type}`);
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 СОХРАНИТЬ';
+                return;
+            }
+
             try {
                 const formData = new FormData();
                 formData.append('file', selectedFile);
@@ -892,42 +910,70 @@
                 formData.append('asset_path', currentAsset.path);
                 formData.append('telegram_id', localStorage.getItem('my_telegram_id') || '');
 
+                console.log(`[Design] Uploading to: ${BOT_API_URL}/api/design/upload`);
+                console.log(`[Design] Asset: ${currentAsset.id}, Path: ${currentAsset.path}, Size: ${selectedFile.size} bytes`);
+
                 const resp = await fetch(`${BOT_API_URL}/api/design/upload`, {
                     method: 'POST',
                     body: formData,
                 });
 
-                if (resp.ok) {
-                    showEditorToast('✅ Дизайн обновлён!');
+                const data = await resp.json().catch(() => null);
+
+                if (resp.ok && data?.ok) {
+                    showEditorToast(`✅ Дизайн обновлён! Сохранено в ${data.dirs || 1} папок (${Math.round(data.size / 1024)} КБ)`);
                     closeUploadModal();
-                    // Refresh previews
+                    // Обновляем превью
                     setTimeout(() => {
                         reloadPreview();
                         reloadAssetCards();
                     }, 500);
                 } else {
-                    // Fallback: save locally (for file:// protocol or local dev)
-                    saveLocally();
+                    // API вернул ошибку
+                    const errorMsg = data?.error || `HTTP ${resp.status}: ${resp.statusText}`;
+                    console.error('[Design] Upload error:', errorMsg);
+                    showEditorToast(`❌ Ошибка сервера: ${errorMsg}`);
+                    
+                    // Предлагаем скачать как fallback
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '📥 СКАЧАТЬ ВМЕСТО';
+                    saveBtn.onclick = () => {
+                        saveLocally();
+                        saveBtn.onclick = () => saveAsset(); // Восстановить обычное поведение
+                    };
                 }
             } catch (e) {
-                console.warn('API upload failed, saving locally:', e);
+                console.error('[Design] Network error:', e);
+                
+                let hint = '';
+                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+                    hint = '\n\n💡 Совет: откройте конструктор через серверный URL:\nhttps://mir-tankov-production.up.railway.app/site/design-editor.html';
+                }
+                
+                showEditorToast(`❌ Нет связи с сервером (${e.message.substring(0, 50)})`);
+                
+                // Показываем подробности
+                alert(`⚠️ Не удалось загрузить на сервер!\n\nОшибка: ${e.message}\n\nAPI: ${BOT_API_URL}/api/design/upload\nФайл: ${currentAsset.path}${hint}\n\nФайл будет скачан. Положите его вручную в:\nsite/${currentAsset.path}\nwebapp/${currentAsset.path}`);
+                
                 saveLocally();
             }
         }
 
         function saveLocally() {
-            // For local file:// testing: download the file with correct name
             if (selectedFile && currentAsset) {
                 const url = URL.createObjectURL(selectedFile);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = currentAsset.path.split('/').pop();
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                showEditorToast('📥 Файл скачан — положи его в site/' + currentAsset.path);
+                showEditorToast(`📥 Файл скачан! Положите в: site/${currentAsset.path} и webapp/${currentAsset.path}`);
                 closeUploadModal();
             }
         }
+
 
         // ==========================================
         // HELPERS
