@@ -1,0 +1,855 @@
+/* ==========================================
+   МИР ТАНКОВ — MILITARY STREAM THEME
+   С реальными текстурами и картинками
+   ========================================== */
+
+/* ==========================================
+   BODY — Military dark background
+   ========================================== */
+body {
+    background-color: #0a0f0a !important;
+    background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(60, 100, 60, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(45, 90, 39, 0.04) 0%, transparent 40%) !important;
+}
+
+/* ==========================================
+   HEADER — Camo texture + scope emblem
+   ========================================== */
+.app-header {
+    background: url('../img/military/header_bg.png') center/cover no-repeat !important;
+    border-bottom: 2px solid rgba(100, 180, 100, 0.3) !important;
+    position: relative;
+    overflow: hidden;
+    padding: 12px 16px !important;
+    min-height: 60px;
+}
+
+.app-header::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: url('../img/military/scope_emblem.png') center/contain no-repeat;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.app-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, rgba(10, 15, 10, 0.4), transparent 30%, transparent 70%, rgba(10, 15, 10, 0.4));
+    pointer-events: none;
+    z-index: 0;
+}
+
+.app-header > * {
+    position: relative;
+    z-index: 1;
+}
+
+.app-header__title {
+    font-family: 'Oswald', 'Russo One', sans-serif !important;
+    color: #c8aa6e !important;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    letter-spacing: 2px;
+}
+
+.app-header__subtitle {
+    color: #7a9a7a !important;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.app-header__logo {
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+
+/* Profile badge */
+.profile-badge {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(100, 180, 100, 0.3) !important;
+    backdrop-filter: blur(4px);
+}
+
+.profile-badge__name {
+    color: #a0c0a0 !important;
+}
+
+/* ==========================================
+   PLATFORM TABS — Console switches
+   ========================================== */
+.platform-tabs {
+    display: flex;
+    gap: 0 !important;
+    margin-bottom: 12px;
+    padding: 0 !important;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #1a2a1a, #0f1a0f) !important;
+    border: 1px solid rgba(100, 180, 100, 0.25) !important;
+    overflow: hidden;
+    position: relative;
+}
+
+.platform-tabs::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(100, 200, 255, 0.3), transparent);
+    z-index: 1;
+}
+
+.platform-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    color: #5a7a5a;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.platform-tab + .platform-tab {
+    border-left: 1px solid rgba(100, 180, 100, 0.1) !important;
+}
+
+.platform-tab:hover {
+    color: #8aaa8a;
+    background: rgba(100, 180, 100, 0.06) !important;
+}
+
+.platform-tab--active {
+    color: #fff !important;
+}
+
+.platform-tab--active[data-platform="twitch"] {
+    background: linear-gradient(180deg, rgba(100, 65, 164, 0.4), rgba(100, 65, 164, 0.15)) !important;
+    box-shadow: inset 0 -3px 0 #9146FF, 0 0 25px rgba(145, 70, 255, 0.2);
+    color: #d4c8ff !important;
+}
+
+.platform-tab--active[data-platform="vk"] {
+    background: linear-gradient(180deg, rgba(0, 80, 180, 0.4), rgba(0, 80, 180, 0.15)) !important;
+    box-shadow: inset 0 -3px 0 #0077FF, 0 0 25px rgba(0, 119, 255, 0.2);
+    color: #a8d4ff !important;
+}
+
+.platform-tab--active[data-platform="youtube"] {
+    background: linear-gradient(180deg, rgba(180, 0, 0, 0.4), rgba(180, 0, 0, 0.15)) !important;
+    box-shadow: inset 0 -3px 0 #e91916, 0 0 25px rgba(255, 0, 0, 0.15);
+    color: #ffb8b8 !important;
+}
+
+/* ==========================================
+   STREAM INFO BAR
+   ========================================== */
+.stream-header {
+    background: linear-gradient(135deg, #1a2a1a, #1f2f1f) !important;
+    border: 1px solid rgba(100, 180, 100, 0.2) !important;
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+}
+
+.stream-header__live {
+    background: #c41e1e !important;
+    border: 1px solid rgba(255, 100, 100, 0.4);
+    box-shadow: 0 0 16px rgba(196, 30, 30, 0.5);
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 2px;
+}
+
+.stream-header__title {
+    font-family: 'Oswald', sans-serif !important;
+    font-size: 1.2rem;
+    color: #e8e6e3;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.stream-header__viewers {
+    color: #7a9a7a !important;
+}
+
+.stream-header__settings {
+    background: rgba(100, 180, 100, 0.08) !important;
+    border: 1px solid rgba(100, 180, 100, 0.2) !important;
+}
+
+.stream-header__settings:hover {
+    background: rgba(100, 180, 100, 0.15) !important;
+    border-color: rgba(100, 180, 100, 0.4) !important;
+}
+
+/* ==========================================
+   STREAM PLAYER — Console frame with texture
+   ========================================== */
+.stream-player {
+    border: none !important;
+    border-radius: 10px;
+    position: relative;
+    background: #000 !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+    overflow: visible;
+}
+
+/* Console frame overlay */
+.stream-player::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    background: url('../img/military/console_frame.png') center/cover no-repeat;
+    border-radius: 14px;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0.7;
+}
+
+/* Console label */
+.stream-player::after {
+    content: '⚙ Operator Console';
+    position: absolute;
+    top: -1px;
+    left: 16px;
+    padding: 4px 14px;
+    background: linear-gradient(180deg, #2a3a2a, #1a2a1a);
+    border: 1px solid rgba(100, 180, 100, 0.25);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.65rem;
+    color: #7a9a7a;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    z-index: 5;
+}
+
+/* Tactical corner brackets */
+.stream-player .stream-player__aspect::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 30px;
+    height: 30px;
+    border-left: 2px solid rgba(100, 200, 100, 0.4);
+    border-top: 2px solid rgba(100, 200, 100, 0.4);
+    z-index: 4;
+    pointer-events: none;
+}
+
+.stream-player .stream-player__aspect::after {
+    content: '';
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-right: 2px solid rgba(100, 200, 100, 0.4);
+    border-bottom: 2px solid rgba(100, 200, 100, 0.4);
+    z-index: 4;
+    pointer-events: none;
+}
+
+/* ==========================================
+   CHAT — Communications Log with texture bg
+   ========================================== */
+.stream-chat {
+    background: url('../img/military/chat_bg.png') center/cover no-repeat !important;
+    border: 1px solid rgba(100, 180, 100, 0.15) !important;
+    border-radius: 10px;
+    position: relative;
+}
+
+/* Dark overlay on chat bg */
+.stream-chat::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 15, 10, 0.85);
+    border-radius: 10px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.stream-chat > * {
+    position: relative;
+    z-index: 1;
+}
+
+.stream-chat__header {
+    background: linear-gradient(135deg, rgba(26, 42, 26, 0.95), rgba(31, 47, 31, 0.95)) !important;
+    border-bottom: 1px solid rgba(100, 180, 100, 0.12) !important;
+    padding: 12px 16px;
+}
+
+.stream-chat__title {
+    font-family: 'Oswald', sans-serif !important;
+    color: #8aaa8a !important;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-size: 0.78rem !important;
+}
+
+.chat-platform-badge {
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.5px;
+    border-radius: 4px !important;
+}
+
+.chat-platform-badge--twitch {
+    background: rgba(145, 70, 255, 0.15) !important;
+    border: 1px solid rgba(145, 70, 255, 0.25) !important;
+    color: #b090ff !important;
+}
+
+.chat-platform-badge--telegram {
+    background: rgba(41, 182, 246, 0.12) !important;
+    border: 1px solid rgba(41, 182, 246, 0.2) !important;
+    color: #6bc4f7 !important;
+}
+
+/* Chat Messages */
+.stream-chat__messages {
+    scrollbar-color: rgba(100, 180, 100, 0.2) transparent !important;
+}
+
+.stream-chat__messages::-webkit-scrollbar-thumb {
+    background: rgba(100, 180, 100, 0.2) !important;
+}
+
+.chat-msg {
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(100, 180, 100, 0.04);
+}
+
+/* Tank avatar before each message */
+.chat-msg::before {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: url('../img/military/tank_avatar.png') center/contain no-repeat;
+    vertical-align: middle;
+    margin-right: 6px;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.chat-msg__name {
+    color: #c8aa6e;
+}
+
+.chat-msg__text {
+    color: #b8c8b8 !important;
+}
+
+.chat-msg__time {
+    color: #4a5a4a !important;
+    font-family: 'Oswald', monospace;
+}
+
+.chat-system-msg {
+    color: #5a7a5a !important;
+}
+
+/* Chat Input */
+.stream-chat__input-area {
+    background: linear-gradient(135deg, rgba(26, 42, 26, 0.95), rgba(21, 32, 21, 0.95)) !important;
+    border-top: 1px solid rgba(100, 180, 100, 0.1) !important;
+}
+
+.stream-chat__input {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(100, 180, 100, 0.15) !important;
+    color: #c8d8c8 !important;
+    border-radius: 6px !important;
+}
+
+.stream-chat__input:focus {
+    border-color: rgba(100, 200, 100, 0.4) !important;
+    box-shadow: 0 0 10px rgba(100, 200, 100, 0.1);
+}
+
+.stream-chat__input::placeholder {
+    color: #3a4a3a !important;
+}
+
+.stream-chat__platform-info {
+    color: #7a9a7a !important;
+    font-family: 'Oswald', sans-serif;
+}
+
+.stream-chat__send {
+    background: linear-gradient(135deg, #3a6a3a, #2a5a2a) !important;
+    border: 1px solid rgba(100, 180, 100, 0.3);
+    border-radius: 6px !important;
+}
+
+.stream-chat__send:hover {
+    background: linear-gradient(135deg, #4a7a4a, #3a6a3a) !important;
+    box-shadow: 0 4px 16px rgba(100, 180, 100, 0.2) !important;
+}
+
+/* ==========================================
+   CHAT MODE TOGGLE — Unified / Widget
+   ========================================== */
+.stream-chat__mode-toggle {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid rgba(100, 180, 100, 0.08);
+    background: rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+}
+
+.chat-mode-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: #4a5a4a;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chat-mode-btn:hover {
+    color: #7a9a7a;
+    background: rgba(100, 180, 100, 0.04);
+}
+
+.chat-mode-btn--active {
+    color: #c8aa6e !important;
+    background: rgba(200, 170, 110, 0.06) !important;
+    box-shadow: inset 0 -2px 0 rgba(200, 170, 110, 0.4);
+}
+
+/* Chat Widget Container */
+.stream-chat__widget {
+    height: 280px;
+    position: relative;
+    z-index: 1;
+    background: #000;
+}
+
+.stream-chat__widget iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+
+/* ==========================================
+   ACTION BUTTONS — Textured cards
+   ========================================== */
+.stream-actions {
+    display: flex !important;
+    gap: 8px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.stream-action-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 10px 10px !important;
+    border-radius: 10px !important;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    border: none !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* Donate — Bronze texture */
+.stream-action-btn--donate {
+    background: url('../img/military/btn_donate.png') center/cover no-repeat !important;
+    border: 1px solid rgba(200, 150, 80, 0.35) !important;
+    box-shadow: 0 4px 20px rgba(180, 120, 60, 0.2);
+}
+
+.stream-action-btn--donate::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(40, 30, 15, 0.4);
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+.stream-action-btn--donate:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(180, 120, 60, 0.3);
+}
+
+.stream-action-btn--donate .stream-action-btn__icon {
+    font-size: 1.4rem;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.stream-action-btn--donate .stream-action-btn__text {
+    font-family: 'Oswald', sans-serif;
+    color: #e8c880;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    position: relative;
+    z-index: 1;
+}
+
+/* AI Donate — Steel texture */
+.stream-action-btn--ai {
+    background: url('../img/military/btn_ai.png') center/cover no-repeat !important;
+    border: 1px solid rgba(150, 170, 200, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(100, 130, 170, 0.15);
+}
+
+.stream-action-btn--ai::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(20, 25, 35, 0.4);
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+.stream-action-btn--ai:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(100, 130, 170, 0.25);
+}
+
+.stream-action-btn--ai .stream-action-btn__icon {
+    font-size: 1.4rem;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.stream-action-btn--ai .stream-action-btn__text {
+    font-family: 'Oswald', sans-serif;
+    color: #b0c0d8;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    position: relative;
+    z-index: 1;
+}
+
+/* Music — Purple waveform texture */
+.stream-action-btn--music {
+    background: url('../img/military/btn_music.png') center/cover no-repeat !important;
+    border: 1px solid rgba(160, 100, 220, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(140, 80, 200, 0.15);
+}
+
+.stream-action-btn--music::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(25, 15, 35, 0.35);
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+.stream-action-btn--music:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(140, 80, 200, 0.25);
+}
+
+.stream-action-btn--music .stream-action-btn__icon {
+    font-size: 1.4rem;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.stream-action-btn--music .stream-action-btn__text {
+    font-family: 'Oswald', sans-serif;
+    color: #d0a0e8;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    position: relative;
+    z-index: 1;
+}
+
+/* Sub text on action btns */
+.stream-action-btn__sub {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* ==========================================
+   BOTTOM NAV — Metal texture
+   ========================================== */
+.bottom-nav {
+    background: url('../img/military/nav_bg.png') center/cover no-repeat !important;
+    border-top: 1px solid rgba(100, 180, 100, 0.2) !important;
+    position: relative;
+}
+
+.bottom-nav::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 15, 10, 0.6);
+    pointer-events: none;
+}
+
+.bottom-nav > * {
+    position: relative;
+    z-index: 1;
+}
+
+.bottom-nav__item,
+.bottom-nav a {
+    color: #5a7a5a !important;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.bottom-nav__item:hover,
+.bottom-nav a:hover {
+    color: #8aaa8a !important;
+}
+
+.bottom-nav__item--active,
+.bottom-nav a.bottom-nav__item--active {
+    color: #c8aa6e !important;
+}
+
+.bottom-nav__icon {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+.bottom-nav__label {
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px;
+    font-size: 0.6rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* ==========================================
+   CHANNEL SETTINGS — Tactical
+   ========================================== */
+.channel-settings {
+    background: linear-gradient(180deg, #141e14, #0f170f) !important;
+    border: 1px solid rgba(100, 180, 100, 0.15) !important;
+    border-radius: 10px;
+}
+
+.channel-settings__title {
+    font-family: 'Oswald', sans-serif;
+    color: #7a9a7a !important;
+    letter-spacing: 2px;
+}
+
+.channel-settings__input {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(100, 180, 100, 0.15) !important;
+    color: #c8d8c8 !important;
+}
+
+.channel-settings__input:focus {
+    border-color: rgba(100, 200, 100, 0.4) !important;
+}
+
+.channel-settings__btn {
+    background: linear-gradient(135deg, #3a6a3a, #2a5a2a) !important;
+    border: 1px solid rgba(100, 180, 100, 0.3) !important;
+    font-family: 'Oswald', sans-serif;
+}
+
+.popular-ch {
+    background: rgba(100, 180, 100, 0.04) !important;
+    border: 1px solid rgba(100, 180, 100, 0.1) !important;
+}
+
+.popular-ch:hover {
+    background: rgba(100, 180, 100, 0.1) !important;
+}
+
+.popular-ch__name {
+    color: #a0c0a0 !important;
+}
+
+.popular-ch__desc {
+    color: #4a5a4a !important;
+}
+
+/* ==========================================
+   MODALS — Military overlay
+   ========================================== */
+.modal-overlay,
+.settings-overlay {
+    background: rgba(5, 10, 5, 0.88) !important;
+}
+
+.modal-dialog {
+    background: linear-gradient(145deg, #1a2a1a, #152015) !important;
+    border: 1px solid rgba(100, 180, 100, 0.2) !important;
+    border-radius: 14px;
+}
+
+.modal-dialog__title {
+    font-family: 'Oswald', sans-serif;
+    color: #c8aa6e;
+    letter-spacing: 1px;
+}
+
+.modal-input {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(100, 180, 100, 0.15) !important;
+    color: #c8d8c8 !important;
+}
+
+.modal-input:focus {
+    border-color: rgba(100, 200, 100, 0.4) !important;
+}
+
+.modal-btn--primary {
+    background: linear-gradient(135deg, #c8aa6e, #a08040) !important;
+    color: #0a0e0a !important;
+    font-family: 'Oswald', sans-serif;
+}
+
+.modal-btn--secondary {
+    background: rgba(100, 180, 100, 0.08) !important;
+    border: 1px solid rgba(100, 180, 100, 0.15) !important;
+    color: #7a9a7a !important;
+}
+
+/* Settings modal */
+.settings-modal {
+    background: linear-gradient(145deg, #141e14, #0f170f) !important;
+    border: 1px solid rgba(100, 180, 100, 0.2) !important;
+}
+
+.settings-tab {
+    font-family: 'Oswald', sans-serif !important;
+}
+
+.sp-group__title {
+    color: #8aaa8a !important;
+    font-family: 'Oswald', sans-serif !important;
+}
+
+.sp-label {
+    color: #7a9a7a !important;
+}
+
+.sp-save-btn {
+    background: linear-gradient(135deg, #3a6a3a, #2a5a2a) !important;
+    border: 1px solid rgba(100, 180, 100, 0.3) !important;
+    color: #c8d8c8 !important;
+    font-family: 'Oswald', sans-serif;
+}
+
+/* ==========================================
+   MISC — Military accents
+   ========================================== */
+.btn-back {
+    color: #7a9a7a !important;
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px;
+}
+
+.btn-back:hover {
+    color: #a0c0a0 !important;
+}
+
+.watermark {
+    color: #3a4a3a !important;
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px;
+}
+
+.admin-gear-btn {
+    background: rgba(100, 180, 100, 0.1) !important;
+    border: 1px solid rgba(100, 180, 100, 0.2) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(100, 180, 100, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 180, 100, 0.35);
+}
+
+/* ==========================================
+   DONATE AMOUNT BUTTONS — Military
+   ========================================== */
+.donate-amounts {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.donate-amount-btn {
+    background: rgba(100, 180, 100, 0.08) !important;
+    border: 1px solid rgba(100, 180, 100, 0.2) !important;
+    color: #a0c0a0 !important;
+    font-family: 'Oswald', sans-serif;
+}
+
+.donate-amount-btn:hover {
+    background: rgba(100, 180, 100, 0.15) !important;
+    border-color: rgba(100, 180, 100, 0.4) !important;
+}

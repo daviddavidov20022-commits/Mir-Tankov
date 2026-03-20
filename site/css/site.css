@@ -231,7 +231,7 @@
 }
 
 /* ==========================================
-   DESKTOP LAYOUT
+   DESKTOP LAYOUT — Home
    ========================================== */
 @media (min-width: 768px) {
     body {
@@ -293,6 +293,326 @@
 }
 
 /* ==========================================
+   DESKTOP — Stream Page (player.html)
+   ========================================== */
+
+/* Content area stretches on all sizes */
+.content-area {
+    min-width: 0;
+}
+
+/* Platform Tabs — bigger toggles on desktop */
+@media (min-width: 520px) {
+    .platform-tabs {
+        gap: 8px;
+        padding: 6px;
+        border-radius: 14px;
+        max-width: 600px;
+    }
+
+    .platform-tab {
+        padding: 12px 20px;
+        font-size: 0.85rem;
+        border-radius: 10px;
+        gap: 8px;
+        position: relative;
+        transition: all 0.25s ease;
+    }
+
+    .platform-tab__icon {
+        font-size: 1.1rem;
+    }
+
+    .platform-tab__name {
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+    }
+
+    /* Active state — glowing pill */
+    .platform-tab--active {
+        box-shadow: 0 0 20px rgba(145, 70, 255, 0.15);
+        transform: scale(1.02);
+    }
+
+    .platform-tab--active[data-platform="twitch"] {
+        box-shadow: 0 0 20px rgba(145, 70, 255, 0.2);
+    }
+
+    .platform-tab--active[data-platform="vk"] {
+        box-shadow: 0 0 20px rgba(0, 119, 255, 0.2);
+    }
+
+    .platform-tab--active[data-platform="youtube"] {
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.15);
+    }
+
+    .platform-tab:hover:not(.platform-tab--active) {
+        background: rgba(255, 255, 255, 0.06);
+        transform: scale(1.01);
+    }
+}
+
+/* Stream Header — bigger */
+@media (min-width: 520px) {
+    .stream-header {
+        padding: 14px 20px;
+        gap: 16px;
+        border-radius: 14px;
+    }
+
+    .stream-header__live {
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        border-radius: 8px;
+    }
+
+    .stream-header__title {
+        font-size: 1.3rem;
+    }
+
+    .stream-header__viewers {
+        font-size: 0.75rem;
+    }
+
+    .stream-header__settings {
+        padding: 10px 12px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Desktop: side-by-side player + chat */
+@media (min-width: 768px) {
+    .content-area {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    /* Stream layout grid */
+    .stream-player {
+        border-radius: 14px;
+    }
+
+    .stream-chat {
+        border-radius: 14px;
+    }
+
+    .stream-chat__messages {
+        height: 350px;
+    }
+
+    /* Chat input bigger */
+    .stream-chat__input {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .stream-chat__send {
+        width: 42px;
+        height: 42px;
+        font-size: 1.1rem;
+    }
+
+    .stream-chat__platform-info {
+        font-size: 0.65rem;
+        padding: 0 10px;
+    }
+
+    /* Action buttons bigger */
+    .stream-actions {
+        gap: 12px;
+    }
+
+    .stream-action-btn {
+        padding: 14px 20px;
+        font-size: 0.9rem;
+        border-radius: 14px;
+    }
+
+    .stream-action-btn__icon {
+        font-size: 1.2rem;
+    }
+
+    .stream-action-btn__text {
+        font-size: 0.85rem;
+    }
+
+    /* Channel settings wider */
+    .channel-settings {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .channel-settings__input {
+        padding: 12px 16px;
+        font-size: 0.95rem;
+    }
+
+    .channel-settings__btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+
+    /* Chat badges bigger */
+    .chat-platform-badge {
+        font-size: 0.65rem;
+        padding: 4px 10px;
+    }
+
+    /* Chat messages bigger */
+    .chat-msg {
+        font-size: 0.85rem;
+        padding: 4px 0;
+    }
+
+    .chat-msg__name {
+        font-size: 0.82rem;
+    }
+
+    .chat-msg__text {
+        font-size: 0.85rem;
+    }
+}
+
+/* Large desktop: true side-by-side layout */
+@media (min-width: 960px) {
+    .content-area {
+        max-width: 1400px;
+    }
+
+    /* Two-column grid: player left, chat right */
+    .stream-player {
+        margin-bottom: 0;
+    }
+
+    .stream-chat__messages {
+        height: 400px;
+    }
+
+    .platform-tab {
+        padding: 14px 28px;
+        font-size: 0.95rem;
+    }
+
+    .platform-tab__icon {
+        font-size: 1.2rem;
+    }
+
+    .stream-header__title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Very wide screens */
+@media (min-width: 1200px) {
+    .content-area {
+        max-width: 1600px;
+        padding: 0 40px;
+    }
+
+    .stream-chat__messages {
+        height: 500px;
+    }
+}
+
+/* ==========================================
+   MODAL RESPONSIVE
+   ========================================== */
+@media (min-width: 520px) {
+    .modal-dialog {
+        max-width: 480px;
+        padding: 28px;
+    }
+
+    .modal-dialog__title {
+        font-size: 1.2rem;
+    }
+
+    .modal-input {
+        padding: 14px;
+        font-size: 0.95rem;
+    }
+
+    .modal-btn {
+        padding: 14px;
+        font-size: 0.9rem;
+    }
+
+    .donate-amount-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Settings modal bigger on desktop */
+@media (min-width: 520px) {
+    .settings-modal {
+        max-width: 560px;
+        max-height: 85vh;
+    }
+
+    .settings-tab {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+
+    .sp-row {
+        padding: 8px 0;
+    }
+
+    .sp-label {
+        font-size: 0.9rem;
+    }
+
+    .sp-toggle span {
+        font-size: 0.9rem;
+    }
+
+    .sp-input {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+
+    .sp-save-btn {
+        padding: 14px;
+        font-size: 0.9rem;
+        border-radius: 12px;
+    }
+}
+
+/* ==========================================
+   BOTTOM NAV on all pages responsive
+   ========================================== */
+@media (min-width: 768px) {
+    .bottom-nav {
+        max-width: 700px;
+    }
+
+    .bottom-nav__item,
+    .nav-item {
+        padding: 10px 0;
+    }
+
+    .bottom-nav__icon,
+    .nav-icon {
+        font-size: 1.3rem;
+    }
+
+    .bottom-nav__label,
+    .nav-label {
+        font-size: 0.7rem;
+    }
+}
+
+/* ==========================================
+   APP WRAPPER — allow resizing
+   ========================================== */
+.app-wrapper {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* ==========================================
    SHAKE ANIMATION (for login)
    ========================================== */
 @keyframes shake {
@@ -302,3 +622,4 @@
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
 }
+

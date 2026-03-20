@@ -3,13 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>МИР ТАНКОВ — Стрим</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/stream.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="js/site-page.js"></script>
     <link rel="stylesheet" href="css/site.css">
+    <link rel="stylesheet" href="css/military-theme.css">
 </head>
 
 <body>
@@ -39,16 +40,16 @@
             <!-- Platform Tabs -->
             <div class="platform-tabs" id="platformTabs">
                 <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="switchPlatform('twitch')">
-                    <span class="platform-tab__icon">💜</span>
-                    <span class="platform-tab__name">Twitch</span>
+                    <span class="platform-tab__icon">📺</span>
+                    <span class="platform-tab__name">TWITCH</span>
                 </button>
                 <button class="platform-tab" data-platform="vk" onclick="switchPlatform('vk')">
-                    <span class="platform-tab__icon">🔵</span>
-                    <span class="platform-tab__name">VK</span>
+                    <span class="platform-tab__icon">📺</span>
+                    <span class="platform-tab__name">VK PLAY</span>
                 </button>
                 <button class="platform-tab" data-platform="youtube" onclick="switchPlatform('youtube')">
-                    <span class="platform-tab__icon">🔴</span>
-                    <span class="platform-tab__name">YouTube</span>
+                    <span class="platform-tab__icon">📺</span>
+                    <span class="platform-tab__name">YOUTUBE</span>
                 </button>
             </div>
 
@@ -92,11 +93,22 @@
             <!-- Chat -->
             <div class="stream-chat">
                 <div class="stream-chat__header">
-                    <div class="stream-chat__title">💬 Общий чат</div>
+                    <div class="stream-chat__title">COMMUNICATIONS LOG</div>
                     <div class="stream-chat__platforms">
-                        <span class="chat-platform-badge chat-platform-badge--twitch" id="chatBadgeTwitch">💜 Twitch</span>
+                        <span class="chat-platform-badge chat-platform-badge--twitch" id="chatBadgeTwitch">📺 Twitch</span>
                         <span class="chat-platform-badge chat-platform-badge--telegram" id="chatBadgeTelegram">📱 Telegram</span>
                     </div>
+                </div>
+
+                <!-- Chat widget iframe (из админ-настроек) -->
+                <div class="stream-chat__widget" id="chatWidgetContainer" style="display:none;">
+                    <iframe id="chatWidgetIframe" style="width:100%;height:100%;border:none;border-radius:0;"></iframe>
+                </div>
+
+                <!-- Переключатель: виджет / наш чат -->
+                <div class="stream-chat__mode-toggle">
+                    <button class="chat-mode-btn chat-mode-btn--active" id="chatModeUnified" onclick="switchChatMode('unified')">📡 Общий чат</button>
+                    <button class="chat-mode-btn" id="chatModeWidget" onclick="switchChatMode('widget')">🔗 Виджет платформы</button>
                 </div>
 
                 <div class="stream-chat__messages" id="chatMessages">
@@ -122,16 +134,18 @@
             <!-- Donate & Music Buttons -->
             <div class="stream-actions">
                 <button class="stream-action-btn stream-action-btn--donate" onclick="openDonateModal()">
-                    <span class="stream-action-btn__icon">🧀</span>
+                    <span class="stream-action-btn__icon">🎖</span>
                     <span class="stream-action-btn__text">Донат</span>
+                    <span class="stream-action-btn__sub" id="topDonSub" style="font-size:0.55rem;color:#8a7a5a;margin-top:2px;">🏅 Топ дон: —</span>
                 </button>
-                <button class="stream-action-btn stream-action-btn--ai" onclick="openAiDonateModal()" style="background: linear-gradient(135deg, rgba(156,39,176,0.15), rgba(156,39,176,0.05)); border-color: rgba(156,39,176,0.3)">
+                <button class="stream-action-btn stream-action-btn--ai" onclick="openAiDonateModal()">
                     <span class="stream-action-btn__icon">🤖</span>
                     <span class="stream-action-btn__text">AI Донат</span>
                 </button>
                 <button class="stream-action-btn stream-action-btn--music" onclick="openMusicModal()">
                     <span class="stream-action-btn__icon">🎵</span>
                     <span class="stream-action-btn__text">Музыка</span>
+                    <span class="stream-action-btn__sub" id="trackSub" style="font-size:0.55rem;color:#7060a0;margin-top:2px;">🎶 Track: —</span>
                 </button>
             </div>
 
@@ -195,22 +209,45 @@
                     <!-- Tab: Broadcast -->
                     <div class="settings-panel" id="settingsTab_broadcast">
                         <div class="sp-group">
-                            <div class="sp-group__title">Платформы</div>
+                            <div class="sp-group__title">📺 Платформы — Стрим</div>
+                            <div class="sp-hint" style="margin-bottom:8px;">Ссылка на embed/iframe стрима каждой платформы</div>
                             <div class="sp-row">
                                 <label class="sp-toggle"><input type="checkbox" id="adminTwitchEnabled" checked onchange="updateStreamConfig()"><span>💜 Twitch</span></label>
-                                <input type="text" id="adminTwitchChannel" class="sp-input" placeholder="Канал" autocomplete="off">
+                                <input type="text" id="adminTwitchChannel" class="sp-input" placeholder="Имя канала (напр. iserveri)" autocomplete="off">
                             </div>
                             <div class="sp-row">
                                 <label class="sp-toggle"><input type="checkbox" id="adminYoutubeEnabled" onchange="updateStreamConfig()"><span>🔴 YouTube</span></label>
-                                <input type="text" id="adminYoutubeChannel" class="sp-input" placeholder="ID/ссылка" autocomplete="off">
+                                <input type="text" id="adminYoutubeChannel" class="sp-input" placeholder="Channel ID (UCxx...) или embed URL" autocomplete="off">
                             </div>
                             <div class="sp-row">
-                                <label class="sp-toggle"><input type="checkbox" id="adminVkEnabled" onchange="updateStreamConfig()"><span>🔵 VK</span></label>
-                                <input type="text" id="adminVkChannel" class="sp-input" placeholder="Ссылка VK" autocomplete="off">
+                                <label class="sp-toggle"><input type="checkbox" id="adminVkEnabled" onchange="updateStreamConfig()"><span>🔵 VK Play</span></label>
+                                <input type="text" id="adminVkChannel" class="sp-input" placeholder="Ссылка embed VK (vk.com/video_ext...)" autocomplete="off">
                             </div>
                         </div>
                         <div class="sp-group">
-                            <div class="sp-group__title">Быстрые каналы</div>
+                            <div class="sp-group__title">💬 Виджеты чатов</div>
+                            <div class="sp-hint" style="margin-bottom:8px;">Вставьте URL виджета/embed чата для каждой платформы. Все чаты будут видны в одном окне.</div>
+                            <div class="sp-row">
+                                <span class="sp-label">💜 Twitch чат</span>
+                            </div>
+                            <div class="sp-row">
+                                <input type="text" id="adminTwitchChatWidget" class="sp-input" placeholder="https://www.twitch.tv/embed/КАНАЛ/chat?parent=...&darkpopout" autocomplete="off">
+                            </div>
+                            <div class="sp-row">
+                                <span class="sp-label">🔴 YouTube чат</span>
+                            </div>
+                            <div class="sp-row">
+                                <input type="text" id="adminYoutubeChatWidget" class="sp-input" placeholder="https://www.youtube.com/live_chat?v=VIDEO_ID&embed_domain=..." autocomplete="off">
+                            </div>
+                            <div class="sp-row">
+                                <span class="sp-label">🔵 VK чат</span>
+                            </div>
+                            <div class="sp-row">
+                                <input type="text" id="adminVkChatWidget" class="sp-input" placeholder="URL виджета чата VK" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="sp-group">
+                            <div class="sp-group__title">⚡ Быстрые каналы</div>
                             <div class="sp-row">
                                 <input type="text" id="adminChName" class="sp-input" placeholder="Название" autocomplete="off">
                                 <select id="adminChPlatform" class="sp-select">
