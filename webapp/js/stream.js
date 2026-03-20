@@ -165,18 +165,55 @@ function initPlayer() {
     const iframe = document.getElementById('streamPlayerIframe');
     if (!iframe) return;
     const parent = window.location.hostname || 'localhost';
+    
+    // Берём канал из конфига (сохранённого админом)
+    const platformConfig = currentStreamConfig[currentPlatform] || {};
+    const configChannel = platformConfig.channel || '';
 
     if (currentPlatform === 'twitch') {
-        iframe.src = `https://player.twitch.tv/?channel=${currentChannel}&parent=${parent}&muted=false`;
+        const ch = configChannel || currentChannel;
+        iframe.src = `https://player.twitch.tv/?channel=${ch}&parent=${parent}&muted=false`;
+        // Обновляем currentChannel для Twitch IRC
+        if (configChannel) currentChannel = configChannel;
     } else if (currentPlatform === 'vk') {
-        // VK Video embed: поддерживает прямые трансляции
-        iframe.src = `https://vk.com/video_ext.php?oid=${currentChannel}&hd=2&autoplay=1`;
+        if (configChannel) {
+            // Если полная ссылка — используем как есть
+            if (configChannel.startsWith('http')) {
+                iframe.src = configChannel;
+            } else {
+                iframe.src = `https://vk.com/video_ext.php?oid=${configChannel}&hd=2&autoplay=1`;
+            }
+        } else {
+            iframe.src = '';
+        }
     } else if (currentPlatform === 'youtube') {
-        iframe.src = `https://www.youtube.com/embed/live_stream?channel=${currentChannel}&autoplay=1`;
+        if (configChannel) {
+            if (configChannel.startsWith('http')) {
+                iframe.src = configChannel;
+            } else {
+                iframe.src = `https://www.youtube.com/embed/live_stream?channel=${configChannel}&autoplay=1`;
+            }
+        } else {
+            iframe.src = '';
+        }
+    }
+    
+    // Обновляем заголовок стрима
+    const titleEl = document.getElementById('streamTitle');
+    if (titleEl && configChannel) {
+        // Показываем красивое имя
+        const displayName = configChannel.replace(/^https?:\/\//, '').split('/').pop() || configChannel;
+        titleEl.textContent = displayName.toUpperCase();
+    }
+    
+    // Если в режиме виджета — обновляем виджет чата тоже
+    if (currentChatMode === 'widget') {
+        loadChatWidget();
     }
     
     updatePlatformChat();
 }
+
 
 function switchPlatform(platform) {
     currentPlatform = platform;
@@ -221,6 +258,15 @@ function switchPlatform(platform) {
     addSystemMessage(`Платформа: ${platform.toUpperCase()}`);
     showToast(platform === 'twitch' ? '💜' : platform === 'vk' ? '🔵' : '🔴', `${platform.toUpperCase()}`);
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch(e) {}
+    
+    // Обновляем плеер из конфига
+    initPlayer();
+    
+    // Если в режиме виджета чата — обновляем виджет
+    if (currentChatMode === 'widget') {
+        loadChatWidget();
+    }
+
 }
 
 function updatePlatformChat() {
@@ -781,25 +827,32 @@ function openGame(url) {
 // ==========================================
 // КОНФИГ ТРАНСЛЯЦИИ (АДМИН)
 // ==========================================
+let currentStreamConfig = {}; // Глобально хранит конфиг
+let currentChatMode = 'unified'; // 'unified' или 'widget'
+
 function saveStreamConfig() {
     const config = {
         twitch: {
             enabled: document.getElementById('adminTwitchEnabled')?.checked || false,
             channel: document.getElementById('adminTwitchChannel')?.value?.trim() || '',
+            chatWidget: document.getElementById('adminTwitchChatWidget')?.value?.trim() || '',
         },
         youtube: {
             enabled: document.getElementById('adminYoutubeEnabled')?.checked || false,
             channel: document.getElementById('adminYoutubeChannel')?.value?.trim() || '',
+            chatWidget: document.getElementById('adminYoutubeChatWidget')?.value?.trim() || '',
         },
         vk: {
             enabled: document.getElementById('adminVkEnabled')?.checked || false,
             channel: document.getElementById('adminVkChannel')?.value?.trim() || '',
+            chatWidget: document.getElementById('adminVkChatWidget')?.value?.trim() || '',
         },
     };
     
+    currentStreamConfig = config;
     localStorage.setItem('stream_config', JSON.stringify(config));
     
-    // Сохранить на сервер (серверный TwitchReader переключится автоматически)
+    // Сохранить на сервер
     if (myTelegramId) {
         fetch(`${BOT_API_URL}/api/stream/config/save`, {
             method: 'POST',
@@ -809,6 +862,8 @@ function saveStreamConfig() {
     }
     
     applyStreamConfig(config);
+    // Обновляем плеер с новым конфигом
+    initPlayer();
     showToast('💾', 'Настройки сохранены!');
     try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
 }
@@ -819,6 +874,7 @@ async function loadStreamConfig() {
         const resp = await fetch(`${BOT_API_URL}/api/stream/config`);
         const data = await resp.json();
         if (data.config) {
+            currentStreamConfig = data.config;
             applyStreamConfig(data.config);
             fillAdminForm(data.config);
             localStorage.setItem('stream_config', JSON.stringify(data.config));
@@ -831,6 +887,7 @@ async function loadStreamConfig() {
         const raw = localStorage.getItem('stream_config');
         if (raw) {
             const config = JSON.parse(raw);
+            currentStreamConfig = config;
             applyStreamConfig(config);
             fillAdminForm(config);
         }
@@ -843,22 +900,29 @@ function fillAdminForm(config) {
         if (el) el.checked = config.twitch.enabled;
         const ch = document.getElementById('adminTwitchChannel');
         if (ch && config.twitch.channel) ch.value = config.twitch.channel;
+        const cw = document.getElementById('adminTwitchChatWidget');
+        if (cw && config.twitch.chatWidget) cw.value = config.twitch.chatWidget;
     }
     if (config.youtube) {
         const el = document.getElementById('adminYoutubeEnabled');
         if (el) el.checked = config.youtube.enabled;
         const ch = document.getElementById('adminYoutubeChannel');
         if (ch && config.youtube.channel) ch.value = config.youtube.channel;
+        const cw = document.getElementById('adminYoutubeChatWidget');
+        if (cw && config.youtube.chatWidget) cw.value = config.youtube.chatWidget;
     }
     if (config.vk) {
         const el = document.getElementById('adminVkEnabled');
         if (el) el.checked = config.vk.enabled;
         const ch = document.getElementById('adminVkChannel');
         if (ch && config.vk.channel) ch.value = config.vk.channel;
+        const cw = document.getElementById('adminVkChatWidget');
+        if (cw && config.vk.chatWidget) cw.value = config.vk.chatWidget;
     }
 }
 
 function applyStreamConfig(config) {
+    currentStreamConfig = config;
     // Показывать/скрывать вкладки платформ
     document.querySelectorAll('.platform-tab').forEach(tab => {
         const platform = tab.dataset.platform;
@@ -867,6 +931,60 @@ function applyStreamConfig(config) {
         }
     });
 }
+
+// ==========================================
+// ПЕРЕКЛЮЧАТЕЛЬ ЧАТ-РЕЖИМА
+// ==========================================
+function switchChatMode(mode) {
+    currentChatMode = mode;
+    const unifiedBtn = document.getElementById('chatModeUnified');
+    const widgetBtn = document.getElementById('chatModeWidget');
+    const messagesEl = document.getElementById('chatMessages');
+    const widgetEl = document.getElementById('chatWidgetContainer');
+    const inputArea = document.querySelector('.stream-chat__input-area');
+    
+    if (mode === 'unified') {
+        // Показываем наш единый чат
+        if (messagesEl) messagesEl.style.display = 'block';
+        if (widgetEl) widgetEl.style.display = 'none';
+        if (inputArea) inputArea.style.display = 'flex';
+        if (unifiedBtn) unifiedBtn.classList.add('chat-mode-btn--active');
+        if (widgetBtn) widgetBtn.classList.remove('chat-mode-btn--active');
+    } else {
+        // Показываем виджет платформы
+        if (messagesEl) messagesEl.style.display = 'none';
+        if (widgetEl) widgetEl.style.display = 'block';
+        if (inputArea) inputArea.style.display = 'none';
+        if (unifiedBtn) unifiedBtn.classList.remove('chat-mode-btn--active');
+        if (widgetBtn) widgetBtn.classList.add('chat-mode-btn--active');
+        loadChatWidget();
+    }
+}
+
+function loadChatWidget() {
+    const iframe = document.getElementById('chatWidgetIframe');
+    const container = document.getElementById('chatWidgetContainer');
+    if (!iframe || !container) return;
+    
+    const config = currentStreamConfig[currentPlatform];
+    const widgetUrl = config?.chatWidget || '';
+    
+    if (widgetUrl) {
+        iframe.src = widgetUrl;
+        container.style.display = 'block';
+    } else {
+        // Автоматический fallback — Twitch chat embed
+        if (currentPlatform === 'twitch') {
+            const parent = window.location.hostname || 'localhost';
+            const ch = config?.channel || currentChannel;
+            iframe.src = `https://www.twitch.tv/embed/${ch}/chat?parent=${parent}&darkpopout`;
+        } else {
+            iframe.src = '';
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#5a7a5a;font-size:0.8rem;">⚠️ Виджет чата не настроен.<br>Админ может добавить URL в настройках ⚙️</div>';
+        }
+    }
+}
+
 
 function updateStreamConfig() {
     // Вызывается при изменении полей — подсветка
