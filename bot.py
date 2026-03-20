@@ -6645,16 +6645,20 @@ def create_api_app():
                 if len(file_data) > 2 * 1024 * 1024:
                     return web.json_response({'error': 'File too large (max 2MB)'}, status=400)
                 
-                # Write file
-                target = os.path.join(site_dir, asset_path)
-                target_dir = os.path.dirname(target)
-                os.makedirs(target_dir, exist_ok=True)
+                # Write file to BOTH site/ and webapp/ so it updates everywhere
+                webapp_dir = os.path.join(os.path.dirname(__file__), 'webapp')
+                saved_paths = []
                 
-                with open(target, 'wb') as f:
-                    f.write(file_data)
+                for base_dir in [site_dir, webapp_dir]:
+                    target = os.path.join(base_dir, asset_path)
+                    target_dir_path = os.path.dirname(target)
+                    os.makedirs(target_dir_path, exist_ok=True)
+                    with open(target, 'wb') as f:
+                        f.write(file_data)
+                    saved_paths.append(target)
                 
-                logger.info(f"Design asset uploaded: {asset_path} ({len(file_data)} bytes)")
-                return web.json_response({'ok': True, 'path': asset_path, 'size': len(file_data)})
+                logger.info(f"Design asset uploaded to {len(saved_paths)} dirs: {asset_path} ({len(file_data)} bytes)")
+                return web.json_response({'ok': True, 'path': asset_path, 'size': len(file_data), 'dirs': len(saved_paths)})
             except Exception as e:
                 logger.error(f"Design upload error: {e}")
                 return web.json_response({'error': str(e)}, status=500)
