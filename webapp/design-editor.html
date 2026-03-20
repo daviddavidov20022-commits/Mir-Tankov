@@ -771,14 +771,23 @@
             },
         ];
 
-        // API
+        // API — определяем правильный URL
         const BOT_API_URL = (() => {
+            // Если открыт через сервер — используем origin сервера (не localStorage!)
+            if (window.location.protocol === 'https:' || window.location.protocol === 'http:') {
+                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    return window.location.origin; // Используем тот же сервер откуда загружена страница
+                }
+            }
+            // Для локальной разработки
             const params = new URLSearchParams(window.location.search);
-            const host = params.get('api') || localStorage.getItem('api_host');
+            const host = params.get('api');
             if (host) return host;
             if (window.location.protocol === 'file:' || window.location.hostname === 'localhost') return 'http://127.0.0.1:8081';
-            return localStorage.getItem('api_url') || 'https://mir-tankov-production.up.railway.app';
+            return 'https://mir-tankov-production.up.railway.app';
         })();
+        console.log('[Design Editor] API URL:', BOT_API_URL);
+
 
         let currentAsset = null;
         let selectedFile = null;
