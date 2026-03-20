@@ -201,14 +201,6 @@ function switchPlatform(platform) {
         tab.classList.toggle('platform-tab--active', tab.dataset.platform === platform);
     });
     
-    // Обновить placeholder канала
-    const channelInput = document.getElementById('channelInput');
-    if (channelInput) {
-        if (platform === 'twitch') channelInput.placeholder = 'Имя канала или twitch.tv/...';
-        else if (platform === 'vk') channelInput.placeholder = 'Ссылка VK стрима (vk.com/video...)';
-        else if (platform === 'youtube') channelInput.placeholder = 'Ссылка YouTube или ID канала';
-    }
-    
     // Обновить индикатор платформы у чата
     const platformInfo = document.getElementById('chatPlatformInfo');
     const chatInput = document.getElementById('chatInput');

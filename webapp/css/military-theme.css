@@ -205,70 +205,85 @@ body {
 }
 
 /* ==========================================
-   STREAM PLAYER — Console frame with texture
+   STREAM PLAYER — CSS-only military frame
    ========================================== */
 .stream-player {
-    border: none !important;
+    border: 2px solid rgba(100, 180, 100, 0.35) !important;
     border-radius: 10px;
     position: relative;
     background: #000 !important;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
-    overflow: visible;
+    box-shadow:
+        0 4px 30px rgba(0, 0, 0, 0.6),
+        inset 0 0 30px rgba(0, 0, 0, 0.8),
+        0 0 1px rgba(100, 200, 100, 0.3);
+    overflow: hidden;
 }
 
-/* Console frame overlay — рамка с прозрачным центром */
+/* Operator Console label */
 .stream-player::before {
-    content: '';
+    content: '⚙ OPERATOR CONSOLE';
     position: absolute;
-    top: -6px;
-    left: -6px;
-    right: -6px;
-    bottom: -6px;
-    background: #000;
-    border-radius: 14px;
+    top: 0;
+    left: 12px;
+    padding: 3px 12px;
+    background: linear-gradient(180deg, #2a3a2a, #1a2a1a);
+    border: 1px solid rgba(100, 180, 100, 0.25);
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.6rem;
+    color: #7a9a7a;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    z-index: 5;
     pointer-events: none;
-    z-index: 2;
 }
 
-/* Frame image on top of black background */
+/* Scanline effect */
 .stream-player::after {
     content: '';
     position: absolute;
-    top: -6px;
-    left: -6px;
-    right: -6px;
-    bottom: -6px;
-    background: url('../img/military/console_frame.png') center/cover no-repeat;
-    border-radius: 14px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+    );
     pointer-events: none;
-    z-index: 4;
-    opacity: 0.75;
+    z-index: 3;
+    border-radius: 10px;
 }
-
 
 /* Tactical corner brackets */
-.stream-player .stream-player__aspect::before {
+.stream-player .stream-player__aspect::before,
+.stream-player .stream-player__preview::before {
     content: '';
     position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 30px;
-    height: 30px;
-    border-left: 2px solid rgba(100, 200, 100, 0.4);
-    border-top: 2px solid rgba(100, 200, 100, 0.4);
+    top: 8px;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+    border-left: 2px solid rgba(100, 200, 100, 0.5);
+    border-top: 2px solid rgba(100, 200, 100, 0.5);
     z-index: 4;
     pointer-events: none;
 }
 
-.stream-player .stream-player__aspect::after {
+.stream-player .stream-player__aspect::after,
+.stream-player .stream-player__preview::after {
     content: '';
     position: absolute;
-    bottom: 10px;
-    right: 10px;
-    width: 30px;
-    height: 30px;
-    border-right: 2px solid rgba(100, 200, 100, 0.4);
-    border-bottom: 2px solid rgba(100, 200, 100, 0.4);
+    bottom: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-right: 2px solid rgba(100, 200, 100, 0.5);
+    border-bottom: 2px solid rgba(100, 200, 100, 0.5);
     z-index: 4;
     pointer-events: none;
 }

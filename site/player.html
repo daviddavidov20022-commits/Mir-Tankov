@@ -37,17 +37,17 @@
         <div class="content-area">
             <button class="btn-back" onclick="goBack()">← Назад</button>
 
-            <!-- Platform Tabs — открывают стрим в браузере -->
+            <!-- Platform Tabs — переключают встроенный плеер -->
             <div class="platform-tabs" id="platformTabs">
-                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="openStreamLink('twitch')">
+                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="switchPlatform('twitch')">
                     <span class="platform-tab__icon">💜</span>
                     <span class="platform-tab__name">TWITCH</span>
                 </button>
-                <button class="platform-tab" data-platform="vk" onclick="openStreamLink('vk')">
+                <button class="platform-tab" data-platform="vk" onclick="switchPlatform('vk')">
                     <span class="platform-tab__icon">🔵</span>
                     <span class="platform-tab__name">VK PLAY</span>
                 </button>
-                <button class="platform-tab" data-platform="youtube" onclick="openStreamLink('youtube')">
+                <button class="platform-tab" data-platform="youtube" onclick="switchPlatform('youtube')">
                     <span class="platform-tab__icon">🔴</span>
                     <span class="platform-tab__name">YOUTUBE</span>
                 </button>
@@ -62,21 +62,6 @@
                 <div class="stream-header__info">
                     <div class="stream-header__title" id="streamTitle">ISERVERI</div>
                     <div class="stream-header__viewers" id="streamViewers">Загрузка...</div>
-                </div>
-                <button class="stream-header__settings" onclick="toggleChannelSettings()" title="Сменить канал">⚙️</button>
-            </div>
-
-            <!-- Channel Settings (hidden by default) -->
-            <div class="channel-settings" id="channelSettings" style="display: none;">
-                <div class="channel-settings__title">Сменить канал</div>
-                <div class="channel-settings__input-group">
-                    <input type="text" id="channelInput" class="channel-settings__input" 
-                           placeholder="Имя канала или ссылка..." value="iserveri" autocomplete="off"
-                           onkeydown="if(event.key==='Enter')changeChannel()">
-                    <button class="channel-settings__btn" onclick="changeChannel()">Подключить</button>
-                </div>
-                <div class="channel-settings__popular" id="popularChannels">
-                    <!-- Filled by JS -->
                 </div>
             </div>
 

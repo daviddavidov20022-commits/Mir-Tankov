@@ -160,50 +160,42 @@ function createParticles() {
 
 // ==========================================
 // МУЛЬТИПЛАТФОРМЕННЫЙ ПЛЕЕР
+// Захардкоженные каналы стримера
 // ==========================================
+const STREAMER_CHANNELS = {
+    twitch: 'serverenok',
+    vk: 'iserveri',
+    youtube: 'ISERVERI'
+};
+
+const STREAMER_TITLES = {
+    twitch: 'SERVERENOK',
+    vk: 'ISERVERI',
+    youtube: 'ISERVERI'
+};
+
 function initPlayer() {
     const iframe = document.getElementById('streamPlayerIframe');
     if (!iframe) return;
     const parent = window.location.hostname || 'localhost';
     
-    // Берём канал из конфига (сохранённого админом)
-    const platformConfig = currentStreamConfig[currentPlatform] || {};
-    const configChannel = platformConfig.channel || '';
-
     if (currentPlatform === 'twitch') {
-        const ch = configChannel || currentChannel;
-        iframe.src = `https://player.twitch.tv/?channel=${ch}&parent=${parent}&muted=false`;
-        // Обновляем currentChannel для Twitch IRC
-        if (configChannel) currentChannel = configChannel;
+        const ch = STREAMER_CHANNELS.twitch;
+        // Twitch требует parent= с доменом — добавляем и localhost и production
+        iframe.src = `https://player.twitch.tv/?channel=${ch}&parent=${parent}&parent=localhost&parent=mir-tankov-production.up.railway.app&muted=false`;
+        currentChannel = ch;
     } else if (currentPlatform === 'vk') {
-        if (configChannel) {
-            // Если полная ссылка — используем как есть
-            if (configChannel.startsWith('http')) {
-                iframe.src = configChannel;
-            } else {
-                iframe.src = `https://vk.com/video_ext.php?oid=${configChannel}&hd=2&autoplay=1`;
-            }
-        } else {
-            iframe.src = '';
-        }
+        // VK Video Live embed — iserveri
+        iframe.src = `https://live.vkvideo.ru/iserveri/embed`;
     } else if (currentPlatform === 'youtube') {
-        if (configChannel) {
-            if (configChannel.startsWith('http')) {
-                iframe.src = configChannel;
-            } else {
-                iframe.src = `https://www.youtube.com/embed/live_stream?channel=${configChannel}&autoplay=1`;
-            }
-        } else {
-            iframe.src = '';
-        }
+        // YouTube embed — канал @ISERVERI
+        iframe.src = `https://www.youtube.com/embed?listType=user_uploads&list=ISERVERI&autoplay=1`;
     }
     
     // Обновляем заголовок стрима
     const titleEl = document.getElementById('streamTitle');
-    if (titleEl && configChannel) {
-        // Показываем красивое имя
-        const displayName = configChannel.replace(/^https?:\/\//, '').split('/').pop() || configChannel;
-        titleEl.textContent = displayName.toUpperCase();
+    if (titleEl) {
+        titleEl.textContent = STREAMER_TITLES[currentPlatform] || 'ISERVERI';
     }
     
     // Если в режиме виджета — обновляем виджет чата тоже
@@ -222,14 +214,6 @@ function switchPlatform(platform) {
     document.querySelectorAll('.platform-tab').forEach(tab => {
         tab.classList.toggle('platform-tab--active', tab.dataset.platform === platform);
     });
-    
-    // Обновить placeholder канала
-    const channelInput = document.getElementById('channelInput');
-    if (channelInput) {
-        if (platform === 'twitch') channelInput.placeholder = 'Имя канала или twitch.tv/...';
-        else if (platform === 'vk') channelInput.placeholder = 'Ссылка VK стрима (vk.com/video...)';
-        else if (platform === 'youtube') channelInput.placeholder = 'Ссылка YouTube или ID канала';
-    }
     
     // Обновить индикатор платформы у чата
     const platformInfo = document.getElementById('chatPlatformInfo');
@@ -825,32 +809,13 @@ function openGame(url) {
 }
 
 // ==========================================
-// ОТКРЫТИЕ СТРИМА В БРАУЗЕРЕ
+// ССЫЛКИ НА СТРИМЫ (для внешнего открытия в Telegram WebApp)
 // ==========================================
 const STREAM_LINKS = {
     twitch: 'https://www.twitch.tv/serverenok',
     vk: 'https://live.vkvideo.ru/iserveri',
     youtube: 'https://www.youtube.com/@ISERVERI'
 };
-
-function openStreamLink(platform) {
-    const url = STREAM_LINKS[platform];
-    if (!url) return;
-    
-    // Подсветим нажатую кнопку
-    document.querySelectorAll('.platform-tab').forEach(tab => {
-        tab.classList.toggle('platform-tab--active', tab.dataset.platform === platform);
-    });
-    
-    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch(e) {}
-    
-    // Открываем в браузере
-    if (window.Telegram?.WebApp?.openLink) {
-        window.Telegram.WebApp.openLink(url);
-    } else {
-        window.open(url, '_blank');
-    }
-}
 
 // ==========================================
 // КОНФИГ ТРАНСЛЯЦИИ (АДМИН)
