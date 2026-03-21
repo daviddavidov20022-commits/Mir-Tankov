@@ -134,6 +134,18 @@
                 </button>
             </div>
 
+            <!-- Mini Music Player (inline, scrolls with page) -->
+            <div id="miniMusicPlayer" style="display:none; margin:10px 0; padding:10px 14px; background:linear-gradient(135deg, rgba(30,20,50,0.9), rgba(20,12,35,0.9)); border:1px solid rgba(224,64,251,0.25); border-radius:12px; max-width:400px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="miniMpIcon" style="font-size:1.2rem;">🎵</div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:0.55rem; color:#E040FB; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">▶ Сейчас играет</div>
+                        <div id="mpTitle" style="font-size:0.75rem; color:#fff; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">—</div>
+                        <div id="mpUser" style="font-size:0.55rem; color:#888; margin-top:1px;">—</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Donate Modal -->
             <div class="modal-overlay" id="donateModal" style="display:none;" onclick="if(event.target===this)closeDonateModal()">
                 <div class="modal-dialog">
@@ -260,6 +272,19 @@
                             <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminMusicPaused"><span>⏸ Пауза очереди</span></label></div>
                         </div>
                         <button class="sp-save-btn" onclick="saveMusicSettings()">💾 Сохранить</button>
+
+                        <!-- 🎵 Сейчас играет (админ) -->
+                        <div class="sp-group">
+                            <div class="sp-group__title">🎵 Сейчас играет</div>
+                            <div id="adminNowPlaying" style="padding:8px 12px; background:rgba(224,64,251,0.08); border:1px solid rgba(224,64,251,0.15); border-radius:8px; margin-bottom:8px;">
+                                <div id="adminMpTitle" style="font-size:0.8rem; color:#E040FB; font-weight:600;">Ничего не играет</div>
+                                <div id="adminMpUser" style="font-size:0.65rem; color:#888; margin-top:2px;">—</div>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button class="sp-test-btn" onclick="skipMusicTrack()" style="flex:1; background:rgba(255,152,0,0.15); border-color:rgba(255,152,0,0.3); color:#FFB74D;">⏭ Скипнуть</button>
+                                <button class="sp-test-btn" onclick="stopMusicTrack()" style="flex:1; background:rgba(244,67,54,0.15); border-color:rgba(244,67,54,0.3); color:#EF5350;">⏹ Стоп</button>
+                            </div>
+                        </div>
 
                         <div class="sp-group">
                             <div class="sp-group__title">📋 Очередь <button class="sp-refresh" onclick="refreshMusicQueue()">🔄</button></div>
@@ -389,28 +414,6 @@
             </a>
         </nav>
 
-    <!-- Music Player Bar -->
-    <div id="musicPlayerBar" style="display:none; position:fixed; bottom:56px; left:0; right:0; z-index:999;">
-        <div style="background:linear-gradient(180deg, rgba(30,20,50,0.98), rgba(15,10,30,0.98)); border-top:2px solid #E040FB; padding:10px 16px;">
-            <div style="display:flex; align-items:center; gap:12px; max-width:900px; margin:0 auto;">
-                <!-- Анимированная иконка -->
-                <div style="font-size:1.4rem; display:flex; align-items:center;">
-                    <span id="mpIcon" style="display:inline-block;">🎵</span>
-                </div>
-                <!-- Инфо о треке -->
-                <div style="flex:1; min-width:0;">
-                    <div style="font-size:0.6rem; color:#E040FB; text-transform:uppercase; letter-spacing:1px; font-weight:700;">▶ Сейчас играет</div>
-                    <div id="mpTitle" style="font-size:0.8rem; color:#fff; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">—</div>
-                    <div id="mpUser" style="font-size:0.6rem; color:#888; margin-top:1px;">—</div>
-                </div>
-                <!-- Кнопки управления (для админа) -->
-                <div id="mpControls" style="display:none; gap:6px; align-items:center;">
-                    <button onclick="skipMusicTrack()" style="background:rgba(255,152,0,0.2); border:1px solid rgba(255,152,0,0.4); color:#FFB74D; padding:6px 14px; border-radius:8px; cursor:pointer; font-size:0.75rem; font-weight:600; transition:0.2s;">⏭ Скип</button>
-                    <button onclick="stopMusicTrack()" style="background:rgba(244,67,54,0.2); border:1px solid rgba(244,67,54,0.4); color:#EF5350; padding:6px 14px; border-radius:8px; cursor:pointer; font-size:0.75rem; font-weight:600; transition:0.2s;">⏹ Стоп</button>
-                </div>
-            </div>
-        </div>
-    </div>
     <div id="ytMusicPlayer" style="position:absolute; top:-9999px; width:1px; height:1px;"></div>
 
     <script src="js/stream.js"></script>
@@ -448,6 +451,8 @@
                                 const vd = ytPlayer.getVideoData();
                                 if (vd && vd.title) {
                                     document.getElementById('mpTitle').textContent = vd.title;
+                                    const at = document.getElementById('adminMpTitle');
+                                    if (at) at.textContent = vd.title;
                                 }
                             } catch(err) {}
                         }
@@ -502,14 +507,23 @@
         }
 
         function showMusicBar() {
-            document.getElementById('musicPlayerBar').style.display = 'block';
-            // Показать кнопки управления для админа
-            const ctrl = document.getElementById('mpControls');
-            if (ctrl && window.isAdmin) { ctrl.style.display = 'flex'; }
+            const mini = document.getElementById('miniMusicPlayer');
+            if (mini) mini.style.display = 'block';
+            // Обновить инфо в настройках админа
+            const adminTitle = document.getElementById('adminMpTitle');
+            const adminUser = document.getElementById('adminMpUser');
+            if (adminTitle) adminTitle.textContent = document.getElementById('mpTitle').textContent;
+            if (adminUser) adminUser.textContent = document.getElementById('mpUser').textContent;
         }
 
         function hideMusicBar() {
-            document.getElementById('musicPlayerBar').style.display = 'none';
+            const mini = document.getElementById('miniMusicPlayer');
+            if (mini) mini.style.display = 'none';
+            // Сбросить инфо в настройках
+            const adminTitle = document.getElementById('adminMpTitle');
+            const adminUser = document.getElementById('adminMpUser');
+            if (adminTitle) adminTitle.textContent = 'Ничего не играет';
+            if (adminUser) adminUser.textContent = '—';
         }
 
         // ⏭ Скип — пропустить текущий, взять следующий
