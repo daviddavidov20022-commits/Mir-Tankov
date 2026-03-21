@@ -1046,14 +1046,19 @@ async function sendDonate() {
     const message = document.getElementById('donateMessage').value.trim();
     
     if (amount < 10) {
-        showToast('❌', 'Минимум 10 🧀');
+        alert('❌ Минимум 10 🧀');
         return;
     }
     
     if (!myTelegramId) {
-        showToast('❌', 'Нужна авторизация через Telegram');
+        alert('❌ Нужна авторизация! Войди через главную страницу.');
         return;
     }
+    
+    // Визуальная обратная связь
+    const btn = document.querySelector('#donateModal .modal-btn--primary');
+    const originalText = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = '⏳ Отправка...'; btn.disabled = true; btn.style.opacity = '0.6'; }
     
     try {
         const resp = await fetch(`${BOT_API_URL}/api/stream/donate`, {
@@ -1069,22 +1074,28 @@ async function sendDonate() {
         const data = await resp.json();
         
         if (data.success) {
-            closeDonateModal();
-            showToast('🧀', `Донат ${amount} 🧀 отправлен!`);
+            // Показать успех прямо на кнопке
+            if (btn) { btn.textContent = '✅ Отправлено!'; btn.style.background = '#4CAF50'; btn.style.opacity = '1'; }
             document.getElementById('donateMessage').value = '';
-            // Обновить баланс в localStorage
             try {
                 const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
                 local.coins = data.new_balance;
                 localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
             } catch(e) {}
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
+            // Закрыть через 1 сек
+            setTimeout(() => {
+                closeDonateModal();
+                if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; btn.style.background = ''; }
+                showToast('🧀', `Донат ${amount} 🧀 отправлен!`);
+            }, 1000);
         } else {
-            showToast('❌', data.error || 'Ошибка доната');
-            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
+            alert('❌ ' + (data.error || 'Ошибка доната'));
+            if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
         }
     } catch(e) {
-        showToast('❌', 'Ошибка сети');
+        alert('❌ Ошибка сети: ' + e.message);
+        if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
     }
 }
 
@@ -1108,17 +1119,16 @@ async function sendMusicRequest() {
     }
     
     if (!myTelegramId) {
-        alert('❌ Нужна авторизация! telegram_id не определён.\n\nВойди через главную страницу (index.html) и перейди в Стрим.');
-        console.error('sendMusicRequest: myTelegramId =', myTelegramId);
+        alert('❌ Нужна авторизация! Войди через главную страницу.');
         return;
     }
     
     // Визуальная обратная связь
-    const btn = document.querySelector('.modal-btn--primary');
-    if (btn) { btn.textContent = '⏳ Отправка...'; btn.disabled = true; }
+    const btn = document.querySelector('#musicModal .modal-btn--primary');
+    const originalText = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = '⏳ Отправка...'; btn.disabled = true; btn.style.opacity = '0.6'; }
     
     try {
-        console.log('sendMusicRequest: sending to', BOT_API_URL, 'telegram_id=', myTelegramId);
         const resp = await fetch(`${BOT_API_URL}/api/stream/music/request`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1132,8 +1142,8 @@ async function sendMusicRequest() {
         const data = await resp.json();
         
         if (data.success) {
-            closeMusicModal();
-            showToast('🎵', 'Трек добавлен в очередь!');
+            // Показать успех на кнопке
+            if (btn) { btn.textContent = '✅ Трек добавлен!'; btn.style.background = '#4CAF50'; btn.style.opacity = '1'; }
             document.getElementById('musicUrl').value = '';
             try {
                 const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
@@ -1141,15 +1151,19 @@ async function sendMusicRequest() {
                 localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
             } catch(e) {}
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
+            // Закрыть через 1 сек
+            setTimeout(() => {
+                closeMusicModal();
+                if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; btn.style.background = ''; }
+                showToast('🎵', 'Трек добавлен в очередь!');
+            }, 1000);
         } else {
             alert('❌ ' + (data.error || 'Ошибка заказа'));
-            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
+            if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
         }
     } catch(e) {
-        console.error('sendMusicRequest error:', e);
         alert('❌ Ошибка сети: ' + e.message);
-    } finally {
-        if (btn) { btn.textContent = '🎵 Заказать (50 🧀)'; btn.disabled = false; }
+        if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
     }
 }
 
