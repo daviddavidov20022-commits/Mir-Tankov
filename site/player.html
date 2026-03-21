@@ -389,15 +389,26 @@
             </a>
         </nav>
 
-    <!-- Hidden YouTube Music Player -->
-    <div id="musicPlayerBar" style="display:none; position:fixed; bottom:60px; left:0; right:0; z-index:999; background:linear-gradient(180deg, rgba(20,15,30,0.98), rgba(10,8,20,0.98)); border-top:2px solid #9146FF; padding:8px 16px; display:none;">
-        <div style="display:flex; align-items:center; gap:12px; max-width:900px; margin:0 auto;">
-            <div style="font-size:1.3rem; animation:pulse 2s infinite;">🎵</div>
-            <div style="flex:1; min-width:0;">
-                <div id="mpTitle" style="font-size:0.8rem; color:#E040FB; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</div>
-                <div id="mpUser" style="font-size:0.65rem; color:#888;">—</div>
+    <!-- Music Player Bar -->
+    <div id="musicPlayerBar" style="display:none; position:fixed; bottom:56px; left:0; right:0; z-index:999;">
+        <div style="background:linear-gradient(180deg, rgba(30,20,50,0.98), rgba(15,10,30,0.98)); border-top:2px solid #E040FB; padding:10px 16px;">
+            <div style="display:flex; align-items:center; gap:12px; max-width:900px; margin:0 auto;">
+                <!-- Анимированная иконка -->
+                <div style="font-size:1.4rem; display:flex; align-items:center;">
+                    <span id="mpIcon" style="display:inline-block;">🎵</span>
+                </div>
+                <!-- Инфо о треке -->
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:0.6rem; color:#E040FB; text-transform:uppercase; letter-spacing:1px; font-weight:700;">▶ Сейчас играет</div>
+                    <div id="mpTitle" style="font-size:0.8rem; color:#fff; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">—</div>
+                    <div id="mpUser" style="font-size:0.6rem; color:#888; margin-top:1px;">—</div>
+                </div>
+                <!-- Кнопки управления (для админа) -->
+                <div id="mpControls" style="display:none; gap:6px; align-items:center;">
+                    <button onclick="skipMusicTrack()" style="background:rgba(255,152,0,0.2); border:1px solid rgba(255,152,0,0.4); color:#FFB74D; padding:6px 14px; border-radius:8px; cursor:pointer; font-size:0.75rem; font-weight:600; transition:0.2s;">⏭ Скип</button>
+                    <button onclick="stopMusicTrack()" style="background:rgba(244,67,54,0.2); border:1px solid rgba(244,67,54,0.4); color:#EF5350; padding:6px 14px; border-radius:8px; cursor:pointer; font-size:0.75rem; font-weight:600; transition:0.2s;">⏹ Стоп</button>
+                </div>
             </div>
-            <button id="mpSkipBtn" onclick="skipMusicTrack()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:4px 12px; border-radius:8px; cursor:pointer; font-size:0.7rem; display:none;">⏭ Пропустить</button>
         </div>
     </div>
     <div id="ytMusicPlayer" style="position:absolute; top:-9999px; width:1px; height:1px;"></div>
@@ -412,26 +423,40 @@
         let ytReady = false;
         let musicPlaying = false;
         let musicPollTimer = null;
+        let musicStopped = false; // По кнопке "Стоп" — не забирать новые
 
         window.onYouTubeIframeAPIReady = function() {
             ytPlayer = new YT.Player('ytMusicPlayer', {
                 height: '1', width: '1',
                 playerVars: { autoplay: 1, controls: 0 },
                 events: {
-                    onReady: function() { ytReady = true; console.log('[Music] YT ready'); startMusicPoll(); },
+                    onReady: function() {
+                        ytReady = true;
+                        console.log('[Music] YT ready');
+                        startMusicPoll();
+                    },
                     onStateChange: function(e) {
                         if (e.data === YT.PlayerState.ENDED) {
                             console.log('[Music] Track ended');
                             musicPlaying = false;
                             hideMusicBar();
-                            setTimeout(pollMusicQueue, 2000);
+                            if (!musicStopped) setTimeout(pollMusicQueue, 2000);
+                        }
+                        // Когда видео загрузилось — показать название
+                        if (e.data === YT.PlayerState.PLAYING && ytPlayer.getVideoData) {
+                            try {
+                                const vd = ytPlayer.getVideoData();
+                                if (vd && vd.title) {
+                                    document.getElementById('mpTitle').textContent = vd.title;
+                                }
+                            } catch(err) {}
                         }
                     },
                     onError: function(e) {
                         console.log('[Music] YT error:', e.data);
                         musicPlaying = false;
                         hideMusicBar();
-                        setTimeout(pollMusicQueue, 3000);
+                        if (!musicStopped) setTimeout(pollMusicQueue, 3000);
                     }
                 }
             });
@@ -440,12 +465,12 @@
         function startMusicPoll() {
             pollMusicQueue();
             musicPollTimer = setInterval(function() {
-                if (!musicPlaying) pollMusicQueue();
+                if (!musicPlaying && !musicStopped) pollMusicQueue();
             }, 5000);
         }
 
         async function pollMusicQueue() {
-            if (musicPlaying) return;
+            if (musicPlaying || musicStopped) return;
             try {
                 const resp = await fetch(`${BOT_API_URL}/api/stream/music/next`);
                 const data = await resp.json();
@@ -465,7 +490,9 @@
             const vid = extractYTId(track.url);
             if (!vid) { console.log('[Music] Bad URL:', track.url); return; }
             musicPlaying = true;
-            document.getElementById('mpTitle').textContent = track.url.replace(/https?:\/\/(www\.)?youtube\.com\/watch\?v=/, '');
+            musicStopped = false;
+            // Показать URL пока грузится (потом заменится на название)
+            document.getElementById('mpTitle').textContent = '⏳ Загрузка...';
             document.getElementById('mpUser').textContent = '🧀 Заказал: ' + (track.username || 'Аноним');
             showMusicBar();
             if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
@@ -475,20 +502,33 @@
         }
 
         function showMusicBar() {
-            const bar = document.getElementById('musicPlayerBar');
-            bar.style.display = 'block';
-            if (window.isAdmin) document.getElementById('mpSkipBtn').style.display = 'block';
+            document.getElementById('musicPlayerBar').style.display = 'block';
+            // Показать кнопки управления для админа
+            const ctrl = document.getElementById('mpControls');
+            if (ctrl && window.isAdmin) { ctrl.style.display = 'flex'; }
         }
 
         function hideMusicBar() {
             document.getElementById('musicPlayerBar').style.display = 'none';
         }
 
+        // ⏭ Скип — пропустить текущий, взять следующий
         window.skipMusicTrack = function() {
             if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
             musicPlaying = false;
+            musicStopped = false;
             hideMusicBar();
+            showToast('⏭', 'Трек скипнут');
             setTimeout(pollMusicQueue, 1000);
+        };
+
+        // ⏹ Стоп — полностью остановить, не брать новые
+        window.stopMusicTrack = function() {
+            if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+            musicPlaying = false;
+            musicStopped = true;
+            hideMusicBar();
+            showToast('⏹', 'Плеер остановлен');
         };
 
         // Fallback если YT API не загрузился
