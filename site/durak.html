@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>МИР ТАНКОВ — Дурак</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="js/site-page.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0e14;
+            color: #E8E6E3;
+            font-family: 'Roboto', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* === HEADER === */
+        .game-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px;
+            background: rgba(15, 18, 25, 0.95);
+            border-bottom: 1px solid rgba(200, 170, 110, 0.15);
+        }
+        .game-header__left { display: flex; align-items: center; gap: 10px; }
+        .game-header__back {
+            background: none; border: none; color: #C8AA6E; font-size: 1rem;
+            cursor: pointer; padding: 4px 8px;
+        }
+        .game-header__title {
+            font-family: 'Oswald', sans-serif; font-size: 1.1rem;
+            color: #C8AA6E; font-weight: 600; letter-spacing: 1px;
+        }
+        .game-header__trump {
+            font-size: 0.75rem; color: #888;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .game-header__trump .suit-icon { font-size: 1.1rem; }
+
+        /* === GAME AREA === */
+        .game-area {
+            max-width: 900px; margin: 0 auto; padding: 10px 12px;
+            display: flex; flex-direction: column; gap: 8px;
+            min-height: calc(100vh - 52px);
+        }
+
+        /* === OPPONENT === */
+        .opponent-zone {
+            display: flex; align-items: center; justify-content: center;
+            gap: 4px; padding: 8px 0; flex-wrap: wrap; min-height: 60px;
+        }
+        .card-back {
+            width: 38px; height: 54px;
+            background: linear-gradient(135deg, #2d4a2e, #1a3a1c);
+            border: 2px solid #4a7a4c;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; color: rgba(200, 170, 110, 0.4);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .card-back::after {
+            content: '⭐'; position: absolute; font-size: 0.9rem;
+            opacity: 0.3;
+        }
+
+        /* === INFO BAR === */
+        .info-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 12px;
+            background: rgba(20, 25, 35, 0.8);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.7rem;
+        }
+        .info-bar__deck { color: #888; }
+        .info-bar__status {
+            color: #C8AA6E; font-weight: 600;
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .info-bar__turn { color: #E040FB; font-weight: 600; }
+
+        /* === TABLE === */
+        .table-zone {
+            flex: 1;
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; flex-wrap: wrap;
+            min-height: 160px;
+            padding: 10px;
+            background: rgba(15, 25, 15, 0.4);
+            border: 1px solid rgba(74, 122, 76, 0.15);
+            border-radius: 12px;
+            position: relative;
+        }
+        .table-zone::before {
+            content: 'ПОЛЕ БОЯ';
+            position: absolute; top: 6px; left: 12px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.5rem; color: rgba(74, 122, 76, 0.3);
+            letter-spacing: 2px;
+        }
+        .table-pair {
+            display: flex; flex-direction: column; align-items: center; gap: -10px;
+            position: relative;
+        }
+        .table-pair .card:nth-child(2) {
+            margin-top: -30px;
+            transform: rotate(8deg);
+        }
+        .table-empty {
+            color: rgba(255,255,255,0.15);
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+        }
+
+        /* === PLAYER HAND === */
+        .player-zone {
+            display: flex; align-items: center; justify-content: center;
+            gap: 4px; padding: 8px 0; flex-wrap: wrap; min-height: 90px;
+        }
+
+        /* === CARD === */
+        .card {
+            width: 58px; height: 82px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.12);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            padding: 4px 3px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+            position: relative;
+            user-select: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            border-color: rgba(200, 170, 110, 0.5);
+        }
+        .card:active { transform: translateY(-4px) scale(0.97); }
+        .card--selected {
+            transform: translateY(-12px) !important;
+            border-color: #C8AA6E !important;
+            box-shadow: 0 8px 25px rgba(200, 170, 110, 0.3) !important;
+        }
+        .card--disabled { opacity: 0.4; pointer-events: none; }
+
+        /* Card colors by suit */
+        .card--heavy {
+            background: linear-gradient(160deg, #2a1a1a, #1a0e0e);
+            border-color: rgba(244, 67, 54, 0.25);
+        }
+        .card--medium {
+            background: linear-gradient(160deg, #1a1a2a, #0e0e1a);
+            border-color: rgba(66, 165, 245, 0.25);
+        }
+        .card--light {
+            background: linear-gradient(160deg, #1a2a1a, #0e1a0e);
+            border-color: rgba(102, 187, 106, 0.25);
+        }
+        .card--spg {
+            background: linear-gradient(160deg, #2a2a1a, #1a1a0e);
+            border-color: rgba(255, 193, 7, 0.25);
+        }
+
+        /* Trump card highlight */
+        .card--trump { box-shadow: 0 0 12px rgba(200, 170, 110, 0.15); }
+
+        .card__top { display: flex; align-items: center; gap: 2px; width: 100%; }
+        .card__value {
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.85rem; font-weight: 700;
+            line-height: 1;
+        }
+        .card__suit-sm { font-size: 0.65rem; }
+        .card__center {
+            font-size: 1.4rem; line-height: 1;
+        }
+        .card__name {
+            font-size: 0.35rem; color: rgba(255,255,255,0.5);
+            text-align: center; line-height: 1.1;
+            overflow: hidden; width: 100%;
+        }
+
+        /* Suit colors */
+        .suit-heavy { color: #EF5350; }
+        .suit-medium { color: #42A5F5; }
+        .suit-light { color: #66BB6A; }
+        .suit-spg { color: #FFC107; }
+
+        /* === ACTIONS === */
+        .actions-bar {
+            display: flex; gap: 8px; justify-content: center;
+            padding: 6px 0;
+        }
+        .action-btn {
+            padding: 10px 24px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .action-btn:hover { transform: scale(1.05); }
+        .action-btn--take {
+            background: rgba(244, 67, 54, 0.15);
+            color: #EF5350;
+            border-color: rgba(244, 67, 54, 0.3);
+        }
+        .action-btn--pass {
+            background: rgba(76, 175, 80, 0.15);
+            color: #66BB6A;
+            border-color: rgba(76, 175, 80, 0.3);
+        }
+        .action-btn--bita {
+            background: rgba(200, 170, 110, 0.15);
+            color: #C8AA6E;
+            border-color: rgba(200, 170, 110, 0.3);
+        }
+        .action-btn:disabled {
+            opacity: 0.3; pointer-events: none;
+        }
+
+        /* === RESULT OVERLAY === */
+        .result-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+        .result-box {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(160deg, rgba(22, 29, 40, 0.98), rgba(10, 14, 20, 0.98));
+            border: 1px solid rgba(200, 170, 110, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .result-box__icon { font-size: 3rem; margin-bottom: 12px; }
+        .result-box__title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.8rem; color: #C8AA6E;
+            margin-bottom: 8px;
+        }
+        .result-box__sub { color: #888; font-size: 0.85rem; margin-bottom: 20px; }
+        .result-box__btn {
+            padding: 12px 32px; border-radius: 12px;
+            background: linear-gradient(135deg, #C8AA6E, #a08a50);
+            color: #0a0e14; border: none;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: 0.2s;
+        }
+        .result-box__btn:hover { transform: scale(1.05); }
+
+        /* === ANIMATIONS === */
+        @keyframes dealCard {
+            from { transform: translateY(-100px) rotate(-10deg); opacity: 0; }
+            to { transform: translateY(0) rotate(0); opacity: 1; }
+        }
+        .card--deal { animation: dealCard 0.3s ease-out; }
+
+        @keyframes cardPlay {
+            from { transform: scale(1.2); opacity: 0.5; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .card--played { animation: cardPlay 0.2s ease-out; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="game-header">
+        <div class="game-header__left">
+            <button class="game-header__back" onclick="goBack()">← Назад</button>
+            <div class="game-header__title">ДУРАК</div>
+        </div>
+        <div class="game-header__trump" id="trumpInfo">
+            <span>Козырь:</span>
+            <span class="suit-icon" id="trumpIcon">—</span>
+        </div>
+    </div>
+
+    <!-- Game Area -->
+    <div class="game-area">
+        <!-- Opponent cards -->
+        <div class="opponent-zone" id="opponentHand"></div>
+
+        <!-- Info bar -->
+        <div class="info-bar">
+            <div class="info-bar__deck" id="deckInfo">🂠 Колода: 24</div>
+            <div class="info-bar__status" id="gameStatus">Раздача...</div>
+            <div class="info-bar__turn" id="turnInfo">—</div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-zone" id="tableZone">
+            <div class="table-empty">РАЗЛОЖИТЕ КАРТЫ</div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="actions-bar" id="actionsBar">
+            <button class="action-btn action-btn--take" id="btnTake" onclick="playerTake()" style="display:none;">🛑 ЗАБРАТЬ</button>
+            <button class="action-btn action-btn--bita" id="btnBita" onclick="playerBita()" style="display:none;">✅ БИТО</button>
+            <button class="action-btn action-btn--pass" id="btnPass" onclick="playerPass()" style="display:none;">➡️ ПАС</button>
+        </div>
+
+        <!-- Player cards -->
+        <div class="player-zone" id="playerHand"></div>
+    </div>
+
+    <!-- Result overlay -->
+    <div class="result-overlay" id="resultOverlay" style="display:none;">
+        <div class="result-box">
+            <div class="result-box__icon" id="resultIcon">🏆</div>
+            <div class="result-box__title" id="resultTitle">ПОБЕДА!</div>
+            <div class="result-box__sub" id="resultSub">Вы победили ИИ</div>
+            <button class="result-box__btn" onclick="startNewGame()">🔄 ИГРАТЬ СНОВА</button>
+        </div>
+    </div>
+
+    <script>
+    // =============================================
+    // МИР ТАНКОВ — КАРТОЧНАЯ ИГРА "ДУРАК"
+    // =============================================
+
+    // Масти = типы техники
+    const SUITS = {
+        heavy:  { name: 'Тяжёлые', icon: '🛡️', color: 'heavy',  css: 'suit-heavy' },
+        medium: { name: 'Средние', icon: '⚔️', color: 'medium', css: 'suit-medium' },
+        light:  { name: 'Лёгкие',  icon: '💨', color: 'light',  css: 'suit-light' },
+        spg:    { name: 'Арта',    icon: '💥', color: 'spg',    css: 'suit-spg' },
+    };
+
+    // Карты = танки (значение → название)
+    const VALUES = {
+        6:  { display: '6',  power: 6,  tanks: { heavy:'КВ-1',    medium:'Т-34',     light:'МТ-25',    spg:'СУ-5' } },
+        7:  { display: '7',  power: 7,  tanks: { heavy:'КВ-3',    medium:'А-43',     light:'ЛТТБ',     spg:'С-51' } },
+        8:  { display: '8',  power: 8,  tanks: { heavy:'ИС',      medium:'Т-44',     light:'ЛТГ',      spg:'СУ-14' } },
+        9:  { display: '9',  power: 9,  tanks: { heavy:'ИС-3',    medium:'Т-54',     light:'Т-49',     spg:'212А' } },
+        10: { display: '10', power: 10, tanks: { heavy:'ИС-7',    medium:'Об.140',   light:'Т-100ЛТ',  spg:'Об.261' } },
+        11: { display: 'В',  power: 11, tanks: { heavy:'Мaus',    medium:'Е-50М',    light:'Ш.Пц 41',  spg:'GW E 100' } },
+        12: { display: 'Д',  power: 12, tanks: { heavy:'Е-100',   medium:'Леопард',  light:'АМХ 13',   spg:'Конк.GC' } },
+        13: { display: 'К',  power: 13, tanks: { heavy:'60ТП',    medium:'СТБ-1',    light:'EBR 105',  spg:'Т92' } },
+        14: { display: 'Т',  power: 14, tanks: { heavy:'Чифтейн', medium:'Об.907',   light:'Мантикор', spg:'CGC' } },
+    };
+
+    // Состояние игры
+    let deck = [];
+    let playerCards = [];
+    let opponentCards = [];
+    let tableCards = []; // [{attack: card, defense: card|null}, ...]
+    let trumpSuit = '';
+    let trumpCard = null;
+    let isPlayerAttacking = true;
+    let gameOver = false;
+    let isPlayerTurn = true;
+
+    // ============ СОЗДАНИЕ КОЛОДЫ ============
+    function createDeck() {
+        const cards = [];
+        for (const suit of Object.keys(SUITS)) {
+            for (const val of Object.keys(VALUES)) {
+                cards.push({
+                    suit: suit,
+                    value: parseInt(val),
+                    id: `${suit}_${val}`,
+                });
+            }
+        }
+        return shuffle(cards);
+    }
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // ============ РАЗДАЧА ============
+    function dealCards() {
+        while (playerCards.length < 6 && deck.length > 0) {
+            playerCards.push(deck.pop());
+        }
+        while (opponentCards.length < 6 && deck.length > 0) {
+            opponentCards.push(deck.pop());
+        }
+    }
+
+    // ============ ОТРИСОВКА ============
+    function renderAll() {
+        renderOpponent();
+        renderTable();
+        renderPlayer();
+        renderInfo();
+        renderButtons();
+    }
+
+    function createCardEl(card, clickable = false) {
+        const v = VALUES[card.value];
+        const s = SUITS[card.suit];
+        const isTrump = card.suit === trumpSuit;
+        const el = document.createElement('div');
+        el.className = `card card--${s.color}${isTrump ? ' card--trump' : ''}`;
+        el.dataset.id = card.id;
+        el.innerHTML = `
+            <div class="card__top">
+                <span class="card__value ${s.css}">${v.display}</span>
+                <span class="card__suit-sm">${s.icon}</span>
+            </div>
+            <div class="card__center">${s.icon}</div>
+            <div class="card__name">${v.tanks[card.suit]}</div>
+        `;
+        if (clickable) {
+            el.onclick = () => onPlayerCardClick(card);
+        }
+        return el;
+    }
+
+    function renderOpponent() {
+        const zone = document.getElementById('opponentHand');
+        zone.innerHTML = '';
+        opponentCards.forEach(() => {
+            const back = document.createElement('div');
+            back.className = 'card-back';
+            zone.appendChild(back);
+        });
+    }
+
+    function renderTable() {
+        const zone = document.getElementById('tableZone');
+        zone.innerHTML = '';
+        if (tableCards.length === 0) {
+            zone.innerHTML = '<div class="table-empty">РАЗЛОЖИТЕ КАРТЫ</div>';
+            return;
+        }
+        tableCards.forEach(pair => {
+            const pairEl = document.createElement('div');
+            pairEl.className = 'table-pair';
+            const atkEl = createCardEl(pair.attack);
+            atkEl.classList.add('card--played');
+            atkEl.style.cursor = 'default';
+            pairEl.appendChild(atkEl);
+            if (pair.defense) {
+                const defEl = createCardEl(pair.defense);
+                defEl.classList.add('card--played');
+                defEl.style.cursor = 'default';
+                pairEl.appendChild(defEl);
+            }
+            zone.appendChild(pairEl);
+        });
+    }
+
+    function renderPlayer() {
+        const zone = document.getElementById('playerHand');
+        zone.innerHTML = '';
+        sortCards(playerCards);
+        playerCards.forEach(card => {
+            const el = createCardEl(card, true);
+            if (!canPlayCard(card)) {
+                el.classList.add('card--disabled');
+            }
+            el.classList.add('card--deal');
+            zone.appendChild(el);
+        });
+    }
+
+    function renderInfo() {
+        document.getElementById('deckInfo').textContent = `🂠 Колода: ${deck.length}`;
+        const trumpS = SUITS[trumpSuit];
+        if (trumpS) {
+            document.getElementById('trumpIcon').textContent = trumpS.icon;
+            document.getElementById('trumpIcon').className = `suit-icon ${trumpS.css}`;
+        }
+
+        if (gameOver) return;
+
+        if (isPlayerTurn) {
+            if (isPlayerAttacking) {
+                document.getElementById('gameStatus').textContent = tableCards.length ? 'ПОДКИДЫВАЙТЕ' : 'ВАШ ХОД — АТАКА';
+                document.getElementById('turnInfo').textContent = '🎯 Атакуете';
+            } else {
+                document.getElementById('gameStatus').textContent = 'ОТБИВАЙТЕСЬ!';
+                document.getElementById('turnInfo').textContent = '🛡️ Защита';
+            }
+        } else {
+            document.getElementById('gameStatus').textContent = 'ИИ ДУМАЕТ...';
+            document.getElementById('turnInfo').textContent = '🤖 Ход ИИ';
+        }
+    }
+
+    function renderButtons() {
+        const btnTake = document.getElementById('btnTake');
+        const btnBita = document.getElementById('btnBita');
+        const btnPass = document.getElementById('btnPass');
+
+        btnTake.style.display = 'none';
+        btnBita.style.display = 'none';
+        btnPass.style.display = 'none';
+
+        if (gameOver || !isPlayerTurn) return;
+
+        if (isPlayerAttacking) {
+            // Атакующий может "бито" если все карты отбиты
+            if (tableCards.length > 0) {
+                const allDefended = tableCards.every(p => p.defense !== null);
+                if (allDefended) {
+                    btnBita.style.display = 'inline-block';
+                }
+                // Может подкинуть ещё
+                btnPass.style.display = 'inline-block';
+                btnPass.textContent = '✅ БИТО';
+            }
+        } else {
+            // Защитник может забрать
+            const hasUndefended = tableCards.some(p => p.defense === null);
+            if (hasUndefended) {
+                btnTake.style.display = 'inline-block';
+            }
+        }
+    }
+
+    function sortCards(cards) {
+        cards.sort((a, b) => {
+            const aT = a.suit === trumpSuit ? 1 : 0;
+            const bT = b.suit === trumpSuit ? 1 : 0;
+            if (aT !== bT) return aT - bT;
+            const suitOrder = Object.keys(SUITS);
+            const aSI = suitOrder.indexOf(a.suit);
+            const bSI = suitOrder.indexOf(b.suit);
+            if (aSI !== bSI) return aSI - bSI;
+            return a.value - b.value;
+        });
+    }
+
+    // ============ ЛОГИКА ИГРЫ ============
+    function canPlayCard(card) {
+        if (!isPlayerTurn || gameOver) return false;
+
+        if (isPlayerAttacking) {
+            // Атака
+            if (tableCards.length === 0) return true; // Первая карта
+            if (tableCards.length >= 6) return false; // Максимум 6 пар
+            // Можно подкинуть карту с таким же значением что уже на столе
+            const tableValues = new Set();
+            tableCards.forEach(p => {
+                tableValues.add(p.attack.value);
+                if (p.defense) tableValues.add(p.defense.value);
+            });
+            return tableValues.has(card.value);
+        } else {
+            // Защита — нужно побить неотбитую карту
+            const undefended = tableCards.find(p => p.defense === null);
+            if (!undefended) return false;
+            return canBeat(card, undefended.attack);
+        }
+    }
+
+    function canBeat(defCard, atkCard) {
+        if (defCard.suit === atkCard.suit) {
+            return defCard.value > atkCard.value;
+        }
+        if (defCard.suit === trumpSuit) {
+            return true; // Козырь бьёт любую не-козырную
+        }
+        return false;
+    }
+
+    // ============ ДЕЙСТВИЯ ИГРОКА ============
+    function onPlayerCardClick(card) {
+        if (!isPlayerTurn || gameOver) return;
+        if (!canPlayCard(card)) return;
+
+        if (isPlayerAttacking) {
+            // Атака — кладём карту на стол
+            tableCards.push({ attack: card, defense: null });
+            removeCard(playerCards, card);
+            renderAll();
+
+            // Проверяем конец
+            if (checkGameOver()) return;
+
+            // Передаём ход ИИ на отбой
+            setTimeout(() => {
+                aiDefend();
+            }, 600);
+        } else {
+            // Защита — отбиваем
+            const undefended = tableCards.find(p => p.defense === null);
+            if (undefended && canBeat(card, undefended.attack)) {
+                undefended.defense = card;
+                removeCard(playerCards, card);
+                renderAll();
+
+                if (checkGameOver()) return;
+
+                // Если всё отбито — ИИ может подкинуть
+                const allDef = tableCards.every(p => p.defense !== null);
+                if (allDef) {
+                    setTimeout(() => aiAddMore(), 600);
+                }
+            }
+        }
+    }
+
+    function playerTake() {
+        // Забираем все карты со стола
+        tableCards.forEach(p => {
+            playerCards.push(p.attack);
+            if (p.defense) playerCards.push(p.defense);
+        });
+        tableCards = [];
+        dealCards();
+        // Теперь ИИ атакует снова (т.к. мы забрали)
+        isPlayerAttacking = false;
+        isPlayerTurn = false;
+        renderAll();
+        if (!checkGameOver()) {
+            setTimeout(() => aiAttack(), 800);
+        }
+    }
+
+    function playerBita() {
+        playerPass();
+    }
+
+    function playerPass() {
+        // Бито — все карты отбиты, убираем со стола
+        if (isPlayerAttacking) {
+            const allDef = tableCards.every(p => p.defense);
+            if (!allDef) return;
+        }
+        tableCards = [];
+        dealCards();
+        // Меняем роли
+        isPlayerAttacking = !isPlayerAttacking;
+        if (isPlayerAttacking) {
+            isPlayerTurn = true;
+        } else {
+            isPlayerTurn = false;
+            setTimeout(() => aiAttack(), 800);
+        }
+        renderAll();
+        checkGameOver();
+    }
+
+    // ============ ИИ ============
+    function aiAttack() {
+        isPlayerTurn = false;
+        isPlayerAttacking = false;
+        renderAll();
+
+        // ИИ выбирает самую слабую карту для атаки
+        const sorted = [...opponentCards].sort((a, b) => {
+            const aT = a.suit === trumpSuit ? 100 : 0;
+            const bT = b.suit === trumpSuit ? 100 : 0;
+            return (a.value + aT) - (b.value + bT);
+        });
+
+        if (sorted.length === 0) {
+            checkGameOver();
+            return;
+        }
+
+        const card = sorted[0];
+        tableCards.push({ attack: card, defense: null });
+        removeCard(opponentCards, card);
+        isPlayerTurn = true;
+        renderAll();
+        if (checkGameOver()) return;
+    }
+
+    function aiDefend() {
+        isPlayerTurn = false;
+        renderAll();
+
+        setTimeout(() => {
+            const undefended = tableCards.find(p => p.defense === null);
+            if (!undefended) {
+                // Всё отбито — ИИ может подкинуть ещё или пас
+                aiDecideAfterDefense();
+                return;
+            }
+
+            // Найти самую слабую карту которая бьёт
+            const canBeatCards = opponentCards.filter(c => canBeat(c, undefended.attack));
+            canBeatCards.sort((a, b) => {
+                const aT = a.suit === trumpSuit ? 100 : 0;
+                const bT = b.suit === trumpSuit ? 100 : 0;
+                return (a.value + aT) - (b.value + bT);
+            });
+
+            if (canBeatCards.length > 0) {
+                // Отбиваем
+                const defCard = canBeatCards[0];
+                undefended.defense = defCard;
+                removeCard(opponentCards, defCard);
+                renderAll();
+                if (checkGameOver()) return;
+
+                // Проверяем есть ли ещё незакрытые
+                const nextUndefended = tableCards.find(p => p.defense === null);
+                if (nextUndefended) {
+                    setTimeout(() => aiDefend(), 500);
+                } else {
+                    // Всё отбито — игрок может подкинуть
+                    isPlayerTurn = true;
+                    isPlayerAttacking = true;
+                    renderAll();
+                }
+            } else {
+                // Не может отбить — забирает
+                aiTake();
+            }
+        }, 500);
+    }
+
+    function aiTake() {
+        tableCards.forEach(p => {
+            opponentCards.push(p.attack);
+            if (p.defense) opponentCards.push(p.defense);
+        });
+        tableCards = [];
+        dealCards();
+        // Игрок атакует снова
+        isPlayerAttacking = true;
+        isPlayerTurn = true;
+        document.getElementById('gameStatus').textContent = 'ИИ ЗАБРАЛ! ВАШ ХОД';
+        renderAll();
+        checkGameOver();
+    }
+
+    function aiDecideAfterDefense() {
+        // ИИ всё отбил — бито
+        tableCards = [];
+        dealCards();
+        isPlayerAttacking = true;
+        isPlayerTurn = true;
+        renderAll();
+        checkGameOver();
+    }
+
+    function aiAddMore() {
+        // ИИ-атакующий подкидывает ещё карты
+        if (tableCards.length >= 6) {
+            playerPass();
+            return;
+        }
+
+        const tableValues = new Set();
+        tableCards.forEach(p => {
+            tableValues.add(p.attack.value);
+            if (p.defense) tableValues.add(p.defense.value);
+        });
+
+        // Ищем карту для подкидывания (не козырь если возможно)
+        const canAdd = opponentCards.filter(c => tableValues.has(c.value));
+        canAdd.sort((a, b) => {
+            const aT = a.suit === trumpSuit ? 100 : 0;
+            const bT = b.suit === trumpSuit ? 100 : 0;
+            return (a.value + aT) - (b.value + bT);
+        });
+
+        if (canAdd.length > 0 && tableCards.length < 6) {
+            const card = canAdd[0];
+            tableCards.push({ attack: card, defense: null });
+            removeCard(opponentCards, card);
+            isPlayerTurn = true;
+            renderAll();
+            if (checkGameOver()) return;
+        } else {
+            // Пас — бито
+            tableCards = [];
+            dealCards();
+            isPlayerAttacking = !isPlayerAttacking;
+            if (isPlayerAttacking) {
+                isPlayerTurn = true;
+            } else {
+                isPlayerTurn = false;
+                setTimeout(() => aiAttack(), 800);
+            }
+            renderAll();
+            checkGameOver();
+        }
+    }
+
+    // ============ УТИЛИТЫ ============
+    function removeCard(arr, card) {
+        const idx = arr.findIndex(c => c.id === card.id);
+        if (idx !== -1) arr.splice(idx, 1);
+    }
+
+    function checkGameOver() {
+        if (gameOver) return true;
+
+        // Если колода пуста и кто-то без карт
+        if (deck.length === 0) {
+            if (playerCards.length === 0 && opponentCards.length === 0) {
+                // Ничья
+                endGame('draw');
+                return true;
+            }
+            if (playerCards.length === 0) {
+                endGame('win');
+                return true;
+            }
+            if (opponentCards.length === 0) {
+                endGame('lose');
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function endGame(result) {
+        gameOver = true;
+        const overlay = document.getElementById('resultOverlay');
+        const icon = document.getElementById('resultIcon');
+        const title = document.getElementById('resultTitle');
+        const sub = document.getElementById('resultSub');
+
+        if (result === 'win') {
+            icon.textContent = '🏆';
+            title.textContent = 'ПОБЕДА!';
+            sub.textContent = 'Вы разгромили ИИ-командира!';
+        } else if (result === 'lose') {
+            icon.textContent = '💀';
+            title.textContent = 'ПОРАЖЕНИЕ';
+            sub.textContent = 'ИИ оказался хитрее...';
+        } else {
+            icon.textContent = '🤝';
+            title.textContent = 'НИЧЬЯ';
+            sub.textContent = 'Достойный противник!';
+        }
+
+        overlay.style.display = 'flex';
+        document.getElementById('gameStatus').textContent = result === 'win' ? '🏆 ПОБЕДА' : result === 'lose' ? '💀 ПОРАЖЕНИЕ' : '🤝 НИЧЬЯ';
+    }
+
+    // ============ СТАРТ ИГРЫ ============
+    function startNewGame() {
+        document.getElementById('resultOverlay').style.display = 'none';
+        gameOver = false;
+        deck = createDeck();
+        playerCards = [];
+        opponentCards = [];
+        tableCards = [];
+
+        // Козырь — последняя карта в колоде
+        trumpCard = deck[0];
+        trumpSuit = trumpCard.suit;
+
+        dealCards();
+
+        // Определяем кто ходит первым (у кого младший козырь)
+        let minPlayerTrump = 15, minOpponentTrump = 15;
+        playerCards.forEach(c => { if (c.suit === trumpSuit && c.value < minPlayerTrump) minPlayerTrump = c.value; });
+        opponentCards.forEach(c => { if (c.suit === trumpSuit && c.value < minOpponentTrump) minOpponentTrump = c.value; });
+
+        if (minPlayerTrump <= minOpponentTrump) {
+            isPlayerAttacking = true;
+            isPlayerTurn = true;
+        } else {
+            isPlayerAttacking = false;
+            isPlayerTurn = false;
+            setTimeout(() => aiAttack(), 800);
+        }
+
+        renderAll();
+    }
+
+    function goBack() {
+        if (window.Telegram?.WebApp?.close) {
+            window.Telegram.WebApp.close();
+        } else if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = 'index.html';
+        }
+    }
+
+    // Запуск!
+    startNewGame();
+    </script>
+</body>
+</html>
