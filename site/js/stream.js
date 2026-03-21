@@ -1083,12 +1083,12 @@ async function sendDonate() {
                 localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
             } catch(e) {}
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
-            // Закрыть через 1 сек
+            // Быстро закрыть
             setTimeout(() => {
                 closeDonateModal();
                 if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; btn.style.background = ''; }
                 showToast('🧀', `Донат ${amount} 🧀 отправлен!`);
-            }, 1000);
+            }, 500);
         } else {
             alert('❌ ' + (data.error || 'Ошибка доната'));
             if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
@@ -1151,12 +1151,12 @@ async function sendMusicRequest() {
                 localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
             } catch(e) {}
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
-            // Закрыть через 1 сек
+            // Быстро закрыть
             setTimeout(() => {
                 closeMusicModal();
                 if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; btn.style.background = ''; }
                 showToast('🎵', 'Трек добавлен в очередь!');
-            }, 1000);
+            }, 500);
         } else {
             alert('❌ ' + (data.error || 'Ошибка заказа'));
             if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
