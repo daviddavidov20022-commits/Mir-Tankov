@@ -4,410 +4,800 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мир Танков — Клуб</title>
-    <meta name="description" content="Мир Танков — Клуб. Статистика, мини-игры, стримы и многое другое!">
+    <title>ISERVERI — Мир Танков Клуб</title>
+    <meta name="description" content="ISERVERI — стример Мир Танков. Клуб с мини-играми, статистикой WN8, челленджами, стримами и эксклюзивным контентом. Присоединяйся!">
+    <meta name="keywords" content="Мир Танков, World of Tanks, стример, ISERVERI, клуб, WN8, статистика">
+    <meta property="og:title" content="ISERVERI — Мир Танков Клуб">
+    <meta property="og:description" content="Стримы, мини-игры, статистика WN8 и закрытый клуб для настоящих танкистов">
+    <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/site.css">
+    <link rel="stylesheet" href="css/landing.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
 </head>
 
-<body>
-    <!-- Animated background particles -->
-    <div class="bg-particles" id="bgParticles"></div>
+<body class="landing-page">
+    <!-- 3D Canvas particle system -->
+    <canvas id="heroCanvas"></canvas>
 
     <!-- ==========================================
-         LOGIN OVERLAY (показывается если не авторизован)
+         TOP NAVBAR
          ========================================== -->
-    <div class="login-overlay" id="loginOverlay" style="display:none;">
-        <div class="login-card">
-            <div class="login-logo">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="12" y="34" width="40" height="14" rx="3" fill="#C8AA6E" />
-                    <rect x="20" y="24" width="24" height="14" rx="2" fill="#A08850" />
-                    <rect x="36" y="18" width="18" height="8" rx="2" fill="#8B7340" />
-                    <circle cx="18" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
-                    <circle cx="32" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
-                    <circle cx="46" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
-                </svg>
-                <h1>МИР ТАНКОВ</h1>
-                <p>Веб-версия клуба</p>
-            </div>
-
-            <div class="login-input-group">
-                <input type="text" class="login-input" id="loginInput" 
-                       placeholder="Telegram ID или никнейм"
-                       onkeydown="if(event.key==='Enter')doLogin()">
-                <p class="login-hint">Введите ваш Telegram ID (число) или игровой никнейм WoT</p>
-                <p class="login-error" id="loginError"></p>
-            </div>
-
-            <button class="login-btn" id="loginBtn" onclick="doLogin()">🚀 Войти</button>
-
-            <div class="login-divider">или</div>
-
-            <a href="https://t.me/Mir_tankov_bot" target="_blank" class="login-tg-link">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                </svg>
-                Зарегистрироваться через Telegram
+    <nav class="top-navbar" id="topNavbar">
+        <div class="navbar-inner">
+            <a href="index.html" class="navbar-brand">
+                <div class="navbar-brand__icon">
+                    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="12" y="34" width="40" height="14" rx="3" fill="#C8AA6E" />
+                        <rect x="20" y="24" width="24" height="14" rx="2" fill="#A08850" />
+                        <rect x="36" y="18" width="18" height="8" rx="2" fill="#8B7340" />
+                        <circle cx="18" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
+                        <circle cx="32" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
+                        <circle cx="46" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="navbar-brand__text">МИР ТАНКОВ</div>
+                    <div class="navbar-brand__sub">Клуб ISERVERI</div>
+                </div>
             </a>
+
+            <div class="navbar-links" id="navbarLinks">
+                <a href="#features">Возможности</a>
+                <a href="player.html" onclick="event.preventDefault(); openGame('player.html')">Стрим <span class="live-dot" id="navLiveDot" style="display:none;"></span></a>
+                <a href="stats.html" onclick="event.preventDefault(); openGame('stats.html')">Статистика</a>
+                <a href="subscribe.html" onclick="event.preventDefault(); openGame('subscribe.html')">Подписка</a>
+            </div>
+
+            <div class="navbar-right">
+                <!-- Logged in state -->
+                <a class="navbar-user" id="navUser" style="display:none;" onclick="openGame('profile.html')">
+                    <span class="navbar-user__avatar">🪖</span>
+                    <span class="navbar-user__name" id="navUserName">Танкист</span>
+                </a>
+
+                <!-- Not logged in -->
+                <a class="navbar-cta" id="navLoginBtn" href="#" onclick="scrollToJoin()">Присоединиться</a>
+
+                <!-- Logout button -->
+                <button class="logout-btn" id="navLogoutBtn" style="display:none;" onclick="siteAuth.logout()">🚪</button>
+            </div>
+
+            <button class="navbar-hamburger" id="hamburgerBtn" onclick="toggleMobileNav()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Mobile nav panel -->
+    <div class="mobile-nav-panel" id="mobileNavPanel">
+        <a href="#features" onclick="closeMobileNav()">🎮 Возможности</a>
+        <a href="player.html" onclick="event.preventDefault(); openGame('player.html')">📺 Стрим</a>
+        <a href="stats.html" onclick="event.preventDefault(); openGame('stats.html')">📊 Статистика</a>
+        <a href="subscribe.html" onclick="event.preventDefault(); openGame('subscribe.html')">💎 Подписка</a>
+        <a href="profile.html" onclick="event.preventDefault(); openGame('profile.html')" id="mobileProfileLink" style="display:none;">👤 Профиль</a>
+        <a href="#" onclick="scrollToJoin(); closeMobileNav();" id="mobileJoinLink">🚀 Присоединиться</a>
+    </div>
+
+    <!-- ==========================================
+         HERO SECTION
+         ========================================== -->
+    <section class="hero" id="heroSection" style="background: url('img/hero_banner.png') center/cover no-repeat;">
+        <!-- Overlay gradient -->
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,8,0.5) 0%,rgba(5,5,8,0.7) 40%,rgba(5,5,8,0.95) 100%);z-index:1;"></div>
+        <div class="hero__content">
+            <!-- Live status badge -->
+            <div id="heroStreamBadge">
+                <div class="hero__offline-badge">
+                    <span>⚫ OFFLINE</span>
+                </div>
+            </div>
+
+            <div class="hero__avatar">🪖</div>
+            
+            <h1 class="hero__name">ISERVERI</h1>
+            <p class="hero__tagline">Стример Мир Танков</p>
+            <p class="hero__subtitle">
+                Закрытый клуб для ценителей танковых баталий. Мини-игры, статистика WN8, 
+                челленджи с призами, AI-донаты и живые стримы на всех площадках!
+            </p>
+
+            <div class="hero__actions">
+                <button class="hero__btn hero__btn--primary" id="heroJoinBtn" onclick="scrollToJoin()">
+                    🚀 Присоединиться
+                </button>
+                <a class="hero__btn hero__btn--secondary" href="#" onclick="event.preventDefault(); openGame('player.html')">
+                    📺 Смотреть стрим
+                </a>
+            </div>
+
+            <!-- Logged-in hero actions (hidden by default) -->
+            <div class="hero__actions" id="heroLoggedActions" style="display:none;">
+                <a class="hero__btn hero__btn--primary" href="#" onclick="event.preventDefault(); openGame('player.html')">
+                    📺 Перейти к стриму
+                </a>
+                <a class="hero__btn hero__btn--secondary" href="#features">
+                    🎮 Возможности клуба
+                </a>
+            </div>
+
+            <!-- Social links -->
+            <div class="hero__socials">
+                <a href="https://www.youtube.com/@ISERVERI" target="_blank" class="hero__social" title="YouTube">
+                    <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>
+                <a href="https://vkplay.live/iserveri" target="_blank" class="hero__social" title="VK Play">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.293 7.707l-4.586 4.586a1 1 0 0 1-1.414 0L7.707 11.707a1 1 0 0 1 1.414-1.414L11 12.172l3.879-3.879a1 1 0 0 1 1.414 1.414z"/></svg>
+                </a>
+                <a href="https://trovo.live/ISERVERI" target="_blank" class="hero__social" title="Trovo">
+                    <svg viewBox="0 0 24 24"><path d="M2.592 2l4.219 10.283L2.406 22h5.22l2.2-4.928L12.029 22h5.203l-4.39-9.717L17.219 2h-5.204L9.843 6.833 7.797 2H2.592zm14.19 0l2.7 6.07L22 2h-5.218z"/></svg>
+                </a>
+                <a href="https://www.twitch.tv/serverenok" target="_blank" class="hero__social" title="Twitch">
+                    <svg viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+                </a>
+                <a href="https://t.me/Mir_tankov_bot" target="_blank" class="hero__social" title="Telegram">
+                    <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                </a>
+            </div>
+
+            <!-- Stats counters -->
+            <div class="hero__stats">
+                <div class="hero__stat">
+                    <div class="hero__stat-value" id="heroUsersCount">—</div>
+                    <div class="hero__stat-label">Участников</div>
+                </div>
+                <div class="hero__stat">
+                    <div class="hero__stat-value" id="heroGamesCount">6</div>
+                    <div class="hero__stat-label">Мини-игр</div>
+                </div>
+                <div class="hero__stat">
+                    <div class="hero__stat-value">4</div>
+                    <div class="hero__stat-label">Площадки</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         LIVE STREAM PREVIEW (показывается только если LIVE)
+         ========================================== -->
+    <div class="live-preview" id="livePreview">
+        <div class="live-preview__frame">
+            <div class="live-preview__player">
+                <iframe id="livePreviewIframe" allowfullscreen></iframe>
+            </div>
+            <div class="live-preview__info">
+                <span class="live-preview__title" id="livePreviewTitle">ISERVERI — Live</span>
+                <span class="live-preview__viewers" id="livePreviewViewers">
+                    <span class="dot" style="width:6px;height:6px;background:#ef4444;border-radius:50;display:inline-block;"></span>
+                    <span id="liveViewerCount">0</span> зрителей
+                </span>
+            </div>
         </div>
     </div>
 
     <!-- ==========================================
-         MAIN APP (показывается после авторизации)
+         FEATURES SECTION
          ========================================== -->
-    <div id="mainApp" style="display:none;">
-
-        <!-- Site header bar -->
-        <div class="site-header">
-            <span class="site-badge">🌐 Веб-версия</span>
-            <button class="logout-btn" onclick="siteAuth.logout()">🚪 Выйти</button>
+    <section class="landing-section reveal" id="features">
+        <div class="landing-section__header">
+            <div class="landing-section__label">Возможности клуба</div>
+            <h2 class="landing-section__title">Всё для настоящего танкиста</h2>
+            <p class="landing-section__desc">
+                Мини-игры, статистика, челленджи и многое другое — всё в одном месте
+            </p>
         </div>
 
-        <!-- App Header -->
-        <header class="app-header">
-            <div class="header-content">
-                <div class="logo-section">
-                    <div class="logo-icon">
-                        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="12" y="34" width="40" height="14" rx="3" fill="#C8AA6E" />
-                            <rect x="20" y="24" width="24" height="14" rx="2" fill="#A08850" />
-                            <rect x="36" y="18" width="18" height="8" rx="2" fill="#8B7340" />
-                            <circle cx="18" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
-                            <circle cx="32" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
-                            <circle cx="46" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2" />
-                        </svg>
-                    </div>
-                    <div class="logo-text">
-                        <h1>МИР ТАНКОВ</h1>
-                        <span class="logo-subtitle">Клуб</span>
-                    </div>
+        <div class="features-grid">
+            <!-- Free features -->
+            <div class="feature-card" onclick="openGame('stats.html')">
+                <span class="feature-card__badge feature-card__badge--free">Free</span>
+                <div class="feature-card__icon" style="background:rgba(52,152,219,0.12);">
+                    <img src="img/icons/stats.png" alt="Статистика">
                 </div>
-                <div class="user-info" id="userInfo" onclick="openGame('profile.html')" style="cursor:pointer;">
-                    <div class="user-avatar" id="userAvatar">🪖</div>
-                    <span class="user-name" id="userName">Танкист</span>
+                <div>
+                    <div class="feature-card__title">Статистика WN8</div>
+                    <div class="feature-card__desc">Полная статистика танкиста с рейтингом WN8 и аналитикой</div>
                 </div>
             </div>
-        </header>
 
-        <!-- Stats bar -->
-        <div class="stats-bar">
-            <div class="stat-item">
-                <div class="stat-icon"><img src="img/icons/cheese.png" alt="Сыр"></div>
-                <div class="stat-value" id="coinsCount">0</div>
-                <div class="stat-label">СЫР</div>
+            <div class="feature-card" onclick="openGame('player.html')">
+                <span class="feature-card__badge feature-card__badge--free">Free</span>
+                <div class="feature-card__icon" style="background:rgba(145,70,255,0.12);">
+                    <img src="img/icons/stream.png" alt="Стрим">
+                </div>
+                <div>
+                    <div class="feature-card__title">Стрим + Чат</div>
+                    <div class="feature-card__desc">Смотри стрим и чат всех площадок в одном окне</div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-icon"><img src="img/icons/xp.png" alt="Опыт"></div>
-                <div class="stat-value" id="xpCount">0</div>
-                <div class="stat-label">ОПЫТ</div>
+
+            <div class="feature-card" onclick="openGame('top.html')">
+                <span class="feature-card__badge feature-card__badge--free">Free</span>
+                <div class="feature-card__icon" style="background:rgba(200,170,110,0.12);">
+                    <img src="img/icons/players.png" alt="Игроки">
+                </div>
+                <div>
+                    <div class="feature-card__title">Рейтинги</div>
+                    <div class="feature-card__desc">Топ игроков, друзья и вызовы на бой</div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-icon"><img src="img/icons/trophy.png" alt="Победы"></div>
-                <div class="stat-value" id="winsCount">0</div>
-                <div class="stat-label">ПОБЕДЫ</div>
+
+            <!-- Premium features -->
+            <div class="feature-card" onclick="openGame('wheel.html')">
+                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
+                <div class="feature-card__icon" style="background:rgba(200,170,110,0.12);">
+                    <img src="img/icons/wheel.png" alt="Колесо Фортуны">
+                </div>
+                <div>
+                    <div class="feature-card__title">Колесо Фортуны</div>
+                    <div class="feature-card__desc">Крути и выигрывай до 1000 сыра каждый день</div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-icon"><img src="img/icons/gamepad.png" alt="Игры"></div>
-                <div class="stat-value" id="gamesCount">0</div>
-                <div class="stat-label">ИГРЫ</div>
+
+            <div class="feature-card" onclick="openGame('challenges.html')">
+                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
+                <div class="feature-card__icon" style="background:rgba(200,170,110,0.12);">
+                    <img src="img/icons/arena.png" alt="Арена PvP">
+                </div>
+                <div>
+                    <div class="feature-card__title">Арена PvP</div>
+                    <div class="feature-card__desc">Вызови соперника на дуэль и докажи мастерство</div>
+                </div>
+            </div>
+
+            <div class="feature-card" onclick="openGame('global-challenge.html')">
+                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
+                <div class="feature-card__icon" style="background:rgba(231,76,60,0.12);">
+                    <img src="img/icons/challenge.png" alt="Челленджи">
+                </div>
+                <div>
+                    <div class="feature-card__title">Челленджи</div>
+                    <div class="feature-card__desc">Таймер, топ-3, призы за достижения</div>
+                </div>
+            </div>
+
+            <div class="feature-card" onclick="openGame('quiz.html')">
+                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
+                <div class="feature-card__icon" style="background:rgba(76,175,80,0.12);">
+                    <img src="img/icons/quiz.png" alt="Викторина">
+                </div>
+                <div>
+                    <div class="feature-card__title">Танковая Викторина</div>
+                    <div class="feature-card__desc">Проверь знания о танках и соревнуйся</div>
+                </div>
+            </div>
+
+            <div class="feature-card" onclick="openGame('donate.html')">
+                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
+                <div class="feature-card__icon" style="background:rgba(224,64,251,0.12);">
+                    🤖
+                </div>
+                <div>
+                    <div class="feature-card__title">AI Донат</div>
+                    <div class="feature-card__desc">Генерация уникальных картинок через ИИ на стриме</div>
+                </div>
+            </div>
+
+            <!-- Coming soon -->
+            <div class="feature-card feature-card--locked">
+                <span class="feature-card__badge feature-card__badge--soon">Скоро</span>
+                <div class="feature-card__icon" style="background:rgba(100,100,120,0.08);">
+                    <img src="img/icons/daily.png" alt="Задания">
+                </div>
+                <div>
+                    <div class="feature-card__title">Ежедневные Задания</div>
+                    <div class="feature-card__desc">Бонусы и награды каждый день</div>
+                    <div class="feature-card__lock">🔒</div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <!-- Main content -->
-        <main class="main-content">
-
-            <!-- Quick Actions -->
-            <section class="section-header">
-                <h2>⚡ Быстрый доступ</h2>
-            </section>
-
-            <div class="menu-list">
-                <div class="menu-item menu-item--active" onclick="openGame('stats.html')">
-                    <div class="menu-item__icon" style="background:rgba(52,152,219,0.15);"><img src="img/icons/stats.png" alt="Статистика"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Статистика Танкиста</div>
-                        <div class="menu-item__desc">WN8 рейтинг, % побед, средний ур...</div>
+    <!-- ==========================================
+         SUBSCRIPTION CTA
+         ========================================== -->
+    <section class="sub-cta-section reveal">
+        <div class="sub-cta-inner">
+            <div class="sub-cta-info">
+                <h2>💎 Открой полный доступ</h2>
+                <p>
+                    Подписка открывает все возможности клуба: мини-игры, челленджи с призами,
+                    полная статистика WN8, AI-ассистент и приоритет на ивентах
+                </p>
+                <div class="sub-cta-features">
+                    <div class="sub-cta-feature">
+                        <span class="sub-cta-feature__icon">🎰</span>
+                        <span>Колесо Фортуны — бесплатные вращения</span>
                     </div>
-                    <div class="menu-item__badge menu-item__badge--new">NEW</div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-
-                <div class="menu-item menu-item--active" onclick="openGame('top.html')">
-                    <div class="menu-item__icon" style="background:rgba(200,170,110,0.15);"><img src="img/icons/players.png" alt="Игроки"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Игроки и Рейтинги</div>
-                        <div class="menu-item__desc">Топ, друзья, вызовы на бой</div>
+                    <div class="sub-cta-feature">
+                        <span class="sub-cta-feature__icon">⚔️</span>
+                        <span>Арена PvP — дуэли с другими игроками</span>
                     </div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-
-                <div class="menu-item menu-item--active" onclick="openGame('player.html')">
-                    <div class="menu-item__icon" style="background:rgba(145,70,255,0.15);"><img src="img/icons/stream.png" alt="Стрим"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Стрим + Чат</div>
-                        <div class="menu-item__desc">Смотри стрим и чат всех площадок</div>
+                    <div class="sub-cta-feature">
+                        <span class="sub-cta-feature__icon">🎯</span>
+                        <span>Все челленджи + эксклюзивные</span>
                     </div>
-                    <div class="menu-item__badge menu-item__badge--live">LIVE</div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-            </div>
-
-            <!-- Games -->
-            <section class="section-header">
-                <h2>🎮 Игры</h2>
-            </section>
-
-            <div class="menu-list">
-                <div class="menu-item menu-item--active" onclick="openGame('wheel.html')">
-                    <div class="menu-item__icon" style="background:rgba(200,170,110,0.15);"><img src="img/icons/wheel.png" alt="Колесо"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Колесо Фортуны</div>
-                        <div class="menu-item__desc">Крути и выигрывай до 1000 🧀</div>
+                    <div class="sub-cta-feature">
+                        <span class="sub-cta-feature__icon">📊</span>
+                        <span>Полная статистика + WN8 рейтинг</span>
                     </div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-
-                <div class="menu-item menu-item--active" onclick="openGame('global-challenge.html')">
-                    <div class="menu-item__icon" style="background:rgba(231,76,60,0.15);"><img src="img/icons/challenge.png" alt="Челлендж"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Общий Челлендж</div>
-                        <div class="menu-item__desc">Таймер, топ-3, призы</div>
+                    <div class="sub-cta-feature">
+                        <span class="sub-cta-feature__icon">🤖</span>
+                        <span>AI-ассистент без лимитов</span>
                     </div>
-                    <div class="menu-item__badge menu-item__badge--live">LIVE</div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-
-                <div class="menu-item menu-item--active" onclick="openGame('challenges.html')">
-                    <div class="menu-item__icon" style="background:rgba(200,170,110,0.15);"><img src="img/icons/arena.png" alt="Арена"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Арена PvP</div>
-                        <div class="menu-item__desc">Вызови соперника на дуэль</div>
+                    <div class="sub-cta-feature">
+                        <span class="sub-cta-feature__icon">🏅</span>
+                        <span>Значок подписчика</span>
                     </div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-
-                <div class="menu-item menu-item--active" onclick="openGame('quiz.html')">
-                    <div class="menu-item__icon" style="background:rgba(76,175,80,0.15);"><img src="img/icons/quiz.png" alt="Викторина"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Танковая Викторина</div>
-                        <div class="menu-item__desc">Проверь знания о танках</div>
-                    </div>
-                    <div class="menu-item__badge menu-item__badge--new">NEW</div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-
-                <div class="menu-item" onclick="openGame('durak.html')">
-                    <div class="menu-item__icon" style="background:rgba(200,170,110,0.1);">🃏</div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Карточный Дурак</div>
-                        <div class="menu-item__desc">Танковый дурак против ИИ</div>
-                    </div>
-                    <div class="menu-item__badge menu-item__badge--new">NEW</div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-
-                <div class="menu-item menu-item--locked">
-                    <div class="menu-item__icon" style="background:rgba(100,100,100,0.1);"><img src="img/icons/slots.png" alt="Слоты"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Слоты Танков</div>
-                        <div class="menu-item__desc">Испытай удачу</div>
-                    </div>
-                    <div class="menu-item__badge menu-item__badge--soon">СКОРО</div>
-                </div>
-
-                <div class="menu-item menu-item--locked">
-                    <div class="menu-item__icon" style="background:rgba(100,100,100,0.1);"><img src="img/icons/daily.png" alt="Задания"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Ежедневные Задания</div>
-                        <div class="menu-item__desc">Бонусы каждый день</div>
-                    </div>
-                    <div class="menu-item__badge menu-item__badge--soon">СКОРО</div>
-                </div>
-
-                <div class="menu-item menu-item--locked">
-                    <div class="menu-item__icon" style="background:rgba(100,100,100,0.1);"><img src="img/icons/cards.png" alt="Карточки"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Коллекция Танков</div>
-                        <div class="menu-item__desc">Собери все карточки</div>
-                    </div>
-                    <div class="menu-item__badge menu-item__badge--soon">СКОРО</div>
                 </div>
             </div>
 
-            <!-- Shop -->
-            <section class="section-header">
-                <h2>🛒 Магазин</h2>
-            </section>
-
-            <div class="menu-list">
-                <div class="menu-item menu-item--active" onclick="openGame('cheese.html')">
-                    <div class="menu-item__icon" style="background:rgba(255,193,7,0.15);"><img src="img/icons/cheese.png" alt="Сыр"></div>
-                    <div class="menu-item__info">
-                        <div class="menu-item__title">Купить СЫР</div>
-                        <div class="menu-item__desc">1 ₽ = 1 🧀 — обменник валюты</div>
-                    </div>
-                    <div class="menu-item__badge menu-item__badge--hot">💰</div>
-                    <div class="menu-item__arrow">›</div>
-                </div>
-            </div>
-
-            <!-- Daily bonus section -->
-            <section class="daily-bonus" id="dailyBonus">
-                <div class="daily-bonus__content">
-                    <div class="daily-bonus__icon">🎁</div>
-                    <div class="daily-bonus__text">
-                        <h3>Ежедневный Бонус</h3>
-                        <p id="dailyBonusText">Забери свой бонус!</p>
-                    </div>
-                    <button class="daily-bonus__btn" id="dailyBonusBtn" onclick="claimDailyBonus()">
-                        Забрать
-                    </button>
-                </div>
-            </section>
-
-            <!-- Streaming Platforms Section -->
-            <section class="section-header" style="margin-top: 24px;">
-                <h2>📺 Трансляции</h2>
-                <p>Смотри стримы на любимой платформе!</p>
-            </section>
-
-            <div class="stream-total" id="streamTotal" style="display: none;">
-                <div class="stream-total__icon">👁</div>
-                <div class="stream-total__text">
-                    Сейчас смотрят: <span class="stream-total__count" id="totalViewers">0</span>
-                </div>
-            </div>
-
-            <div class="stream-links" id="streamLinks">
-                <a href="https://www.youtube.com/@ISERVERI" target="_blank" class="stream-card stream-card--youtube"
-                    id="linkYoutube">
-                    <div class="stream-card__icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
-                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                        </svg>
-                    </div>
-                    <div class="stream-card__info">
-                        <span class="stream-card__name">YouTube</span>
-                        <span class="stream-card__user">@ISERVERI</span>
-                    </div>
-                    <div class="stream-card__meta">
-                        <div class="stream-card__viewers" id="ytViewers" style="display: none;">
-                            <span class="viewers-dot"></span>
-                            <span class="viewers-count">0</span>
-                        </div>
-                        <div class="stream-card__badge stream-badge--offline" id="ytBadge">OFFLINE</div>
-                    </div>
+            <div class="sub-cta-pricing">
+                <div class="sub-cta-pricing__badge">Промо — первый месяц</div>
+                <div class="sub-cta-pricing__price">490 ₽</div>
+                <div class="sub-cta-pricing__period">в месяц · или 250 ⭐</div>
+                <a class="sub-cta-pricing__btn" href="#" onclick="event.preventDefault(); openGame('subscribe.html')">
+                    💎 Оформить подписку
                 </a>
+                <div class="sub-cta-pricing__hint">Скидки до −25% за длительный период</div>
+            </div>
+        </div>
+    </section>
 
-                <a href="https://vkplay.live/iserveri" target="_blank" class="stream-card stream-card--vkplay"
-                    id="linkVkplay">
-                    <div class="stream-card__icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
-                            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.293 7.707l-4.586 4.586a1 1 0 0 1-1.414 0L7.707 11.707a1 1 0 0 1 1.414-1.414L11 12.172l3.879-3.879a1 1 0 0 1 1.414 1.414z" />
-                        </svg>
-                    </div>
-                    <div class="stream-card__info">
-                        <span class="stream-card__name">VK Play</span>
-                        <span class="stream-card__user">iserveri</span>
-                    </div>
-                    <div class="stream-card__meta">
-                        <div class="stream-card__viewers" id="vkViewers" style="display: none;">
-                            <span class="viewers-dot"></span>
-                            <span class="viewers-count">0</span>
-                        </div>
-                        <div class="stream-card__badge stream-badge--offline" id="vkBadge">OFFLINE</div>
-                    </div>
-                </a>
+    <!-- ==========================================
+         STREAMING PLATFORMS
+         ========================================== -->
+    <section class="landing-section reveal">
+        <div class="landing-section__header">
+            <div class="landing-section__label">Трансляции</div>
+            <h2 class="landing-section__title">Смотри на любой площадке</h2>
+            <p class="landing-section__desc">
+                ISERVERI стримит на 4 платформах одновременно — выбирай удобную
+            </p>
+        </div>
 
-                <a href="https://trovo.live/ISERVERI" target="_blank" class="stream-card stream-card--trovo"
-                    id="linkTrovo">
-                    <div class="stream-card__icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
-                            <path d="M2.592 2l4.219 10.283L2.406 22h5.22l2.2-4.928L12.029 22h5.203l-4.39-9.717L17.219 2h-5.204L9.843 6.833 7.797 2H2.592zm14.19 0l2.7 6.07L22 2h-5.218z" />
-                        </svg>
-                    </div>
-                    <div class="stream-card__info">
-                        <span class="stream-card__name">Trovo</span>
-                        <span class="stream-card__user">ISERVERI</span>
-                    </div>
-                    <div class="stream-card__meta">
-                        <div class="stream-card__viewers" id="trovoViewers" style="display: none;">
-                            <span class="viewers-dot"></span>
-                            <span class="viewers-count">0</span>
-                        </div>
-                        <div class="stream-card__badge stream-badge--offline" id="trovoBadge">OFFLINE</div>
-                    </div>
-                </a>
+        <div class="platforms-grid">
+            <a href="https://www.youtube.com/@ISERVERI" target="_blank" class="platform-card platform-card--youtube" id="platYoutube">
+                <div class="platform-card__icon">
+                    <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </div>
+                <div class="platform-card__name">YouTube</div>
+                <div class="platform-card__user">@ISERVERI</div>
+                <div class="platform-card__status platform-card__status--offline" id="platYtStatus">OFFLINE</div>
+            </a>
 
-                <a href="https://www.twitch.tv/serverenok" target="_blank" class="stream-card stream-card--twitch"
-                    id="linkTwitch">
-                    <div class="stream-card__icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
-                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z" />
-                        </svg>
-                    </div>
-                    <div class="stream-card__info">
-                        <span class="stream-card__name">Twitch</span>
-                        <span class="stream-card__user">serverenok</span>
-                    </div>
-                    <div class="stream-card__meta">
-                        <div class="stream-card__viewers" id="twitchViewers" style="display: none;">
-                            <span class="viewers-dot"></span>
-                            <span class="viewers-count">0</span>
-                        </div>
-                        <div class="stream-card__badge stream-badge--offline" id="twitchBadge">OFFLINE</div>
-                    </div>
+            <a href="https://vkplay.live/iserveri" target="_blank" class="platform-card platform-card--vkplay" id="platVkplay">
+                <div class="platform-card__icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.293 7.707l-4.586 4.586a1 1 0 0 1-1.414 0L7.707 11.707a1 1 0 0 1 1.414-1.414L11 12.172l3.879-3.879a1 1 0 0 1 1.414 1.414z"/></svg>
+                </div>
+                <div class="platform-card__name">VK Play</div>
+                <div class="platform-card__user">iserveri</div>
+                <div class="platform-card__status platform-card__status--offline" id="platVkStatus">OFFLINE</div>
+            </a>
+
+            <a href="https://trovo.live/ISERVERI" target="_blank" class="platform-card platform-card--trovo" id="platTrovo">
+                <div class="platform-card__icon">
+                    <svg viewBox="0 0 24 24"><path d="M2.592 2l4.219 10.283L2.406 22h5.22l2.2-4.928L12.029 22h5.203l-4.39-9.717L17.219 2h-5.204L9.843 6.833 7.797 2H2.592zm14.19 0l2.7 6.07L22 2h-5.218z"/></svg>
+                </div>
+                <div class="platform-card__name">Trovo</div>
+                <div class="platform-card__user">ISERVERI</div>
+                <div class="platform-card__status platform-card__status--offline" id="platTrovoStatus">OFFLINE</div>
+            </a>
+
+            <a href="https://www.twitch.tv/serverenok" target="_blank" class="platform-card platform-card--twitch" id="platTwitch">
+                <div class="platform-card__icon">
+                    <svg viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+                </div>
+                <div class="platform-card__name">Twitch</div>
+                <div class="platform-card__user">serverenok</div>
+                <div class="platform-card__status platform-card__status--offline" id="platTwitchStatus">OFFLINE</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         JOIN / LOGIN SECTION
+         ========================================== -->
+    <section class="landing-section reveal" id="joinSection">
+        <div class="landing-section__header">
+            <div class="landing-section__label">Присоединяйся</div>
+            <h2 class="landing-section__title">Войди в клуб</h2>
+            <p class="landing-section__desc">
+                Войди через Telegram ID или никнейм Мир Танков
+            </p>
+        </div>
+
+        <div style="max-width: 420px; margin: 0 auto;">
+            <div class="join-card">
+                <div class="login-input-group">
+                    <input type="text" class="login-input" id="loginInput" 
+                           placeholder="Telegram ID или никнейм WoT"
+                           onkeydown="if(event.key==='Enter')doLogin()">
+                    <p class="login-hint">Введите ваш Telegram ID (число) или игровой никнейм</p>
+                    <p class="login-error" id="loginError"></p>
+                </div>
+
+                <button class="login-btn" id="loginBtn" onclick="doLogin()">🚀 Войти</button>
+
+                <div class="login-divider">или</div>
+
+                <a href="https://t.me/Mir_tankov_bot" target="_blank" class="login-tg-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    Зарегистрироваться через Telegram
                 </a>
             </div>
+        </div>
+    </section>
 
-            <!-- Admin panel -->
-            <div style="text-align: center; padding: 16px;">
-                <button onclick="toggleAdmin()"
-                    style="background:rgba(200,170,110,0.08);border:1px dashed rgba(200,170,110,0.2);color:#5A6577;font-size:0.75rem;cursor:pointer;padding:10px 20px;border-radius:12px;">
-                    ⚙️ Панель управления
-                </button>
+    <!-- ==========================================
+         FOOTER
+         ========================================== -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-brand__name">МИР ТАНКОВ</span>
+                <span>© 2026 Клуб ISERVERI</span>
             </div>
-            <div id="adminPanelContainer"></div>
 
-        </main>
+            <div class="footer-links">
+                <a href="#features">Возможности</a>
+                <a href="subscribe.html" onclick="event.preventDefault(); openGame('subscribe.html')">Подписка</a>
+                <a href="https://t.me/Mir_tankov_bot" target="_blank">Telegram бот</a>
+            </div>
 
-        <!-- Bottom navigation -->
-        <nav class="bottom-nav">
-            <div class="nav-item nav-item--active">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">Главная</span>
+            <div class="footer-socials">
+                <a href="https://www.youtube.com/@ISERVERI" target="_blank" title="YouTube">
+                    <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/></svg>
+                </a>
+                <a href="https://www.twitch.tv/serverenok" target="_blank" title="Twitch">
+                    <svg viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+                </a>
+                <a href="https://t.me/Mir_tankov_bot" target="_blank" title="Telegram">
+                    <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                </a>
             </div>
-            <div class="nav-item" onclick="openGame('top.html')">
-                <span class="nav-icon">🏆</span>
-                <span class="nav-label">Топ</span>
-            </div>
-            <div class="nav-item" onclick="openGame('player.html')">
-                <span class="nav-icon">📺</span>
-                <span class="nav-label">Стрим</span>
-            </div>
-            <div class="nav-item" onclick="openGame('friends.html')">
-                <span class="nav-icon">👥</span>
-                <span class="nav-label">Друзья</span>
-            </div>
-            <div class="nav-item" onclick="openGame('profile.html')">
-                <span class="nav-icon">👤</span>
-                <span class="nav-label">Профиль</span>
-            </div>
-        </nav>
+        </div>
+    </footer>
 
-    </div><!-- /mainApp -->
-
+    <!-- ==========================================
+         SCRIPTS
+         ========================================== -->
     <script src="js/site-app.js"></script>
     <script>
-        // Логика показа логина/главной
+        // ==========================================
+        // LANDING PAGE LOGIC
+        // ==========================================
+        
+        const API_BASE_LANDING = 'https://mir-tankov-production.up.railway.app';
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('topNavbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('top-navbar--scrolled');
+            } else {
+                navbar.classList.remove('top-navbar--scrolled');
+            }
+        });
+
+        // Mobile nav toggle
+        function toggleMobileNav() {
+            const panel = document.getElementById('mobileNavPanel');
+            panel.classList.toggle('open');
+        }
+
+        function closeMobileNav() {
+            const panel = document.getElementById('mobileNavPanel');
+            panel.classList.remove('open');
+        }
+
+        // Scroll to join section
+        function scrollToJoin() {
+            const joinSection = document.getElementById('joinSection');
+            if (joinSection) {
+                joinSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Update UI based on auth state
+        function updateLandingUI() {
+            const isLoggedIn = siteAuth.isLoggedIn;
+            
+            // Navbar
+            const navUser = document.getElementById('navUser');
+            const navLoginBtn = document.getElementById('navLoginBtn');
+            const navLogoutBtn = document.getElementById('navLogoutBtn');
+            const navUserName = document.getElementById('navUserName');
+            const mobileProfileLink = document.getElementById('mobileProfileLink');
+            const mobileJoinLink = document.getElementById('mobileJoinLink');
+            
+            if (isLoggedIn) {
+                if (navUser) navUser.style.display = 'flex';
+                if (navLoginBtn) navLoginBtn.style.display = 'none';
+                if (navLogoutBtn) navLogoutBtn.style.display = 'block';
+                if (navUserName) navUserName.textContent = siteAuth.username;
+                if (mobileProfileLink) mobileProfileLink.style.display = 'block';
+                if (mobileJoinLink) mobileJoinLink.style.display = 'none';
+                
+                // Hero buttons
+                const heroJoinBtn = document.getElementById('heroJoinBtn');
+                const heroLoggedActions = document.getElementById('heroLoggedActions');
+                if (heroJoinBtn) heroJoinBtn.parentElement.style.display = 'none';
+                if (heroLoggedActions) heroLoggedActions.style.display = 'flex';
+                
+                // Hide join section
+                const joinSection = document.getElementById('joinSection');
+                if (joinSection) joinSection.style.display = 'none';
+            } else {
+                if (navUser) navUser.style.display = 'none';
+                if (navLoginBtn) navLoginBtn.style.display = 'inline-flex';
+                if (navLogoutBtn) navLogoutBtn.style.display = 'none';
+            }
+        }
+
+        // Override the default showLoginScreen for landing
+        function showLoginScreen() {
+            // On landing page, we don't use overlay — login is inline
+            updateLandingUI();
+            return false;
+        }
+
+        // Check stream status for landing
+        async function checkLandingStreams() {
+            try {
+                const resp = await fetch(`${API_BASE_LANDING}/api/streams/status`);
+                const data = await resp.json();
+                let anyLive = false;
+                let livePlatform = null;
+                let totalViewers = 0;
+
+                for (const platform of ['youtube', 'vkplay', 'trovo', 'twitch']) {
+                    const statusId = {
+                        youtube: 'platYtStatus',
+                        vkplay: 'platVkStatus',
+                        trovo: 'platTrovoStatus',
+                        twitch: 'platTwitchStatus'
+                    }[platform];
+                    
+                    const el = document.getElementById(statusId);
+                    const card = el ? el.closest('.platform-card') : null;
+                    
+                    if (data[platform] && data[platform].live) {
+                        anyLive = true;
+                        if (!livePlatform) livePlatform = platform;
+                        totalViewers += data[platform].viewers || 0;
+                        
+                        if (el) {
+                            const v = data[platform].viewers || 0;
+                            el.textContent = v > 0 ? `LIVE · ${v}` : 'LIVE';
+                            el.className = 'platform-card__status platform-card__status--live';
+                        }
+                        // Add glow to live platform cards
+                        if (card) {
+                            card.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+                            card.style.boxShadow = '0 0 30px rgba(239, 68, 68, 0.08)';
+                        }
+                    } else {
+                        if (el) {
+                            el.textContent = 'OFFLINE';
+                            el.className = 'platform-card__status platform-card__status--offline';
+                        }
+                        if (card) {
+                            card.style.borderColor = '';
+                            card.style.boxShadow = '';
+                        }
+                    }
+                }
+
+                // Update hero badge
+                const heroStreamBadge = document.getElementById('heroStreamBadge');
+                const navLiveDot = document.getElementById('navLiveDot');
+                
+                if (anyLive) {
+                    const viewerText = totalViewers > 0 ? `LIVE · ${totalViewers} зрителей` : 'LIVE';
+                    heroStreamBadge.innerHTML = `
+                        <div class="hero__live-badge" onclick="openGame('player.html')">
+                            <span class="dot"></span>
+                            <span>${viewerText}</span>
+                        </div>
+                    `;
+                    if (navLiveDot) navLiveDot.style.display = 'inline-block';
+                    
+                    // Show live preview
+                    const livePreview = document.getElementById('livePreview');
+                    if (livePreview) {
+                        livePreview.classList.add('is-live');
+                        const iframe = document.getElementById('livePreviewIframe');
+                        if (iframe && !iframe.src) {
+                            // Pick best embed source
+                            if (data.twitch && data.twitch.live) {
+                                iframe.src = `https://player.twitch.tv/?channel=serverenok&parent=${window.location.hostname}&muted=true`;
+                            } else if (data.youtube && data.youtube.live) {
+                                // YouTube live embed via channel
+                                iframe.src = `https://www.youtube.com/embed/live_stream?channel=UClMCysoDnCFN2oQUu9fcQRg&autoplay=1&mute=1`;
+                            }
+                        }
+                        const viewerCount = document.getElementById('liveViewerCount');
+                        if (viewerCount) viewerCount.textContent = totalViewers;
+                    }
+                } else {
+                    heroStreamBadge.innerHTML = `
+                        <div class="hero__offline-badge">
+                            <span>⚫ OFFLINE</span>
+                        </div>
+                    `;
+                    if (navLiveDot) navLiveDot.style.display = 'none';
+                }
+            } catch (e) {
+                console.warn('Stream check error:', e);
+            }
+        }
+
+        // Load total users count
+        async function loadUsersCount() {
+            try {
+                const resp = await fetch(`${API_BASE_LANDING}/api/stats/total_users`);
+                const data = await resp.json();
+                const el = document.getElementById('heroUsersCount');
+                if (el && data.total) {
+                    el.textContent = data.total.toLocaleString();
+                }
+            } catch (e) {
+                const el = document.getElementById('heroUsersCount');
+                if (el) el.textContent = '100+';
+            }
+        }
+
+        // Scroll-reveal animations
+        function initRevealAnimations() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        // ==========================================
+        // 3D CANVAS — Fire Embers Particle System
+        // ==========================================
+        function init3DCanvas() {
+            const canvas = document.getElementById('heroCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let W, H;
+            let mouseX = 0, mouseY = 0;
+            
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+            
+            // Track mouse for parallax
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / W - 0.5) * 2;
+                mouseY = (e.clientY / H - 0.5) * 2;
+            });
+            
+            // Particle class — embers
+            class Ember {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * W;
+                    this.y = H + Math.random() * 100;
+                    this.z = Math.random() * 3;
+                    this.size = 0.5 + Math.random() * 2.5;
+                    this.speedY = -(0.3 + Math.random() * 1.2);
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    this.wobble = Math.random() * Math.PI * 2;
+                    this.wobbleSpeed = 0.01 + Math.random() * 0.03;
+                    this.life = 0;
+                    this.maxLife = 300 + Math.random() * 400;
+                    this.hue = 25 + Math.random() * 25; // golden-orange
+                }
+                update() {
+                    this.life++;
+                    this.wobble += this.wobbleSpeed;
+                    this.x += this.speedX + Math.sin(this.wobble) * 0.3 + mouseX * this.z * 0.15;
+                    this.y += this.speedY - mouseY * this.z * 0.08;
+                    if (this.life > this.maxLife || this.y < -20) this.reset();
+                }
+                draw(ctx) {
+                    const progress = this.life / this.maxLife;
+                    const alpha = progress < 0.1 ? progress * 10 : progress > 0.7 ? (1 - progress) / 0.3 : 1;
+                    const scale = 1 + this.z * 0.5;
+                    const r = this.size * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${this.hue}, 80%, ${55 + this.z * 10}%, ${alpha * (0.3 + this.z * 0.15)})`;
+                    ctx.fill();
+                    
+                    // Glow
+                    if (r > 1.5) {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, r * 3, 0, Math.PI * 2);
+                        ctx.fillStyle = `hsla(${this.hue}, 80%, 50%, ${alpha * 0.04})`;
+                        ctx.fill();
+                    }
+                }
+            }
+            
+            // Grid lines — subtle 3D perspective grid
+            class GridLine {
+                constructor(y) {
+                    this.baseY = y;
+                    this.alpha = 0.015 + Math.random() * 0.015;
+                }
+                draw(ctx) {
+                    const parallaxY = this.baseY + mouseY * 20;
+                    ctx.beginPath();
+                    ctx.moveTo(0, parallaxY);
+                    ctx.lineTo(W, parallaxY);
+                    ctx.strokeStyle = `rgba(200, 170, 110, ${this.alpha})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+            
+            const embers = Array.from({length: 80}, () => new Ember());
+            const gridLines = Array.from({length: 12}, (_, i) => new GridLine(H * (i + 1) / 13));
+            
+            function animate() {
+                ctx.clearRect(0, 0, W, H);
+                
+                // Ambient gradient
+                const grad = ctx.createRadialGradient(W * 0.3, H * 0.4, 0, W * 0.5, H * 0.5, W * 0.8);
+                grad.addColorStop(0, 'rgba(200, 170, 110, 0.02)');
+                grad.addColorStop(0.5, 'rgba(200, 170, 110, 0.005)');
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, W, H);
+                
+                // Grid
+                gridLines.forEach(l => l.draw(ctx));
+                
+                // Embers
+                embers.forEach(e => {
+                    e.update();
+                    e.draw(ctx);
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Hero parallax on mouse
+        function initHeroParallax() {
+            const hero = document.querySelector('.hero__content');
+            if (!hero) return;
+            document.addEventListener('mousemove', (e) => {
+                const x = (e.clientX / window.innerWidth - 0.5) * 8;
+                const y = (e.clientY / window.innerHeight - 0.5) * 5;
+                hero.style.transform = `translate(${x}px, ${y}px)`;
+            });
+        }
+
+        // Init
         document.addEventListener('DOMContentLoaded', () => {
-            showLoginScreen();
+            updateLandingUI();
+            init3DCanvas();
+            initHeroParallax();
+            initRevealAnimations();
+            loadUsersCount();
+            
+            setTimeout(checkLandingStreams, 1000);
+            setInterval(checkLandingStreams, 120000);
         });
     </script>
 </body>

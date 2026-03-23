@@ -3818,32 +3818,52 @@ async def api_streams_status(request):
 
         # ============ Trovo ============
         try:
-            async with session.post("https://open-api.trovo.live/openplatform/channels/id",
-                headers={"Accept": "application/json", "Client-ID": ""},
-                json={"username": "ISERVERI"},
-                timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            # Trovo — scrape the channel page since we have no Client-ID
+            import re as _re_trovo
+            trovo_url = "https://trovo.live/ISERVERI"
+            trovo_headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            }
+            async with session.get(trovo_url, headers=trovo_headers,
+                                   timeout=aiohttp.ClientTimeout(total=12)) as resp:
                 if resp.status == 200:
-                    data = await resp.json()
-                    if data.get("is_live"):
-                        result["trovo"] = {"live": True, "viewers": data.get("current_viewers", 0)}
+                    html = await resp.text()
+                    # Look for live indicators in initial state JSON
+                    is_live = '"isLive":true' in html or '"isLive": true' in html or '"streamStatus":"LIVE"' in html
+                    if not is_live:
+                        is_live = '"liveStatus":1' in html or '"is_live":true' in html
+                    viewers = 0
+                    if is_live:
+                        # Try to extract viewer count
+                        for pat in [r'"currentViewers"\s*:\s*(\d+)', r'"viewers"\s*:\s*(\d+)',
+                                    r'"viewer_num"\s*:\s*(\d+)', r'(\d+)\s*(?:viewers|зрител)']:
+                            m = _re_trovo.search(pat, html)
+                            if m:
+                                viewers = int(m.group(1))
+                                break
+                        result["trovo"] = {"live": True, "viewers": viewers}
+                        logger.info(f"Trovo scrape: LIVE with {viewers} viewers")
+                    else:
+                        logger.info("Trovo scrape: OFFLINE")
         except Exception as e:
             logger.warning(f"Trovo check error: {e}")
 
         # ============ Twitch ============
         try:
-            # Twitch requires OAuth app token. Try unauthenticated GQL endpoint.
+            # Twitch: use GQL inline query (more reliable than persisted queries)
             twitch_gql_url = "https://gql.twitch.tv/gql"
             twitch_headers = {
                 "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",  # public web client-id
                 "Content-Type": "application/json",
             }
+            # Method 1: StreamMetadata query (inline, no hash needed)
             twitch_payload = [{
-                "operationName": "UseLive",
+                "operationName": "StreamMetadata",
                 "variables": {"channelLogin": "serverenok"},
                 "extensions": {
                     "persistedQuery": {
                         "version": 1,
-                        "sha256Hash": "639d5f11bfb8bf3053b424d9ef650d04c4ebb7d94711d644afb08fe9a0571571"
+                        "sha256Hash": "a647c2a13599e5991e175155f798ca7f1ecddde73f7f341f39009c14dbfd59df"
                     }
                 }
             }]
@@ -3852,13 +3872,40 @@ async def api_streams_status(request):
                                     timeout=aiohttp.ClientTimeout(total=10)) as resp:
                 if resp.status == 200:
                     data = await resp.json()
+                    tw_found = False
                     if isinstance(data, list) and len(data) > 0:
                         user_data = data[0].get("data", {}).get("user", {})
                         stream = user_data.get("stream") if user_data else None
                         if stream:
                             viewers = stream.get("viewersCount", 0)
                             result["twitch"] = {"live": True, "viewers": viewers}
-                            logger.info(f"Twitch: LIVE with {viewers} viewers")
+                            logger.info(f"Twitch GQL method 1: LIVE with {viewers} viewers")
+                            tw_found = True
+                    
+                    # Method 2: fallback — try UseLive query
+                    if not tw_found:
+                        twitch_payload2 = [{
+                            "operationName": "UseLive",
+                            "variables": {"channelLogin": "serverenok"},
+                            "extensions": {
+                                "persistedQuery": {
+                                    "version": 1,
+                                    "sha256Hash": "639d5f11bfb8bf3053b424d9ef650d04c4ebb7d94711d644afb08fe9a0571571"
+                                }
+                            }
+                        }]
+                        async with session.post(twitch_gql_url, headers=twitch_headers,
+                                                json=twitch_payload2,
+                                                timeout=aiohttp.ClientTimeout(total=8)) as resp2:
+                            if resp2.status == 200:
+                                data2 = await resp2.json()
+                                if isinstance(data2, list) and len(data2) > 0:
+                                    user2 = data2[0].get("data", {}).get("user", {})
+                                    stream2 = user2.get("stream") if user2 else None
+                                    if stream2:
+                                        viewers2 = stream2.get("viewersCount", 0)
+                                        result["twitch"] = {"live": True, "viewers": viewers2}
+                                        logger.info(f"Twitch GQL method 2: LIVE with {viewers2} viewers")
         except Exception as e:
             logger.warning(f"Twitch check error: {e}")
 
