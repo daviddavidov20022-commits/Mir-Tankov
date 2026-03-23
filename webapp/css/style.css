@@ -938,6 +938,19 @@ body {
 .nav-icon {
     font-size: 1.3rem;
     transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-icon svg {
+    color: var(--color-text-muted);
+    transition: var(--transition-fast);
+}
+
+.nav-item--active .nav-icon svg {
+    color: var(--color-gold);
+    filter: drop-shadow(0 0 6px rgba(200, 170, 110, 0.4));
 }
 
 .nav-label {
@@ -955,6 +968,10 @@ body {
 
 .nav-item:not(.nav-item--active):hover .nav-icon {
     transform: translateY(-2px);
+}
+
+.nav-item:not(.nav-item--active):hover .nav-icon svg {
+    color: var(--color-text-secondary);
 }
 
 .nav-item:not(.nav-item--active):hover .nav-label {
