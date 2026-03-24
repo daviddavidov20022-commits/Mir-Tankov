@@ -5010,26 +5010,28 @@ async def api_global_challenge_join(request):
             ).fetchone()
             if not ch:
                 return cors_response({"error": "Челлендж не найден или завершён"}, 404)
+            ch_data = dict(ch)
 
-            # Запоминаем базовую статистику на момент вступления
-            baseline_value = 0
-            baseline_battles = 0
-            baseline_values_json = None
+        # Запоминаем базовую статистику на момент вступления (ВЫНЕСЕНО из with get_db)
+        baseline_value = 0
+        baseline_battles = 0
+        baseline_values_json = None
 
-            if account_id:
-                ch_conditions = [c.strip() for c in (ch["condition"] or "damage").split(",") if c.strip()]
-                if len(ch_conditions) > 1:
-                    multi_stat = await gc_fetch_player_multi_stats(account_id, ch["condition"])
-                    if multi_stat:
-                        baseline_value = multi_stat["value"]
-                        baseline_battles = multi_stat["battles"]
-                        baseline_values_json = json.dumps(multi_stat["per_condition"])
-                else:
-                    stat = await gc_fetch_player_stat(account_id, ch["condition"])
-                    if stat:
-                        baseline_value = stat["value"]
-                        baseline_battles = stat["battles"]
+        if account_id:
+            ch_conditions = [c.strip() for c in (ch_data["condition"] or "damage").split(",") if c.strip()]
+            if len(ch_conditions) > 1:
+                multi_stat = await gc_fetch_player_multi_stats(account_id, ch_data["condition"])
+                if multi_stat:
+                    baseline_value = multi_stat["value"]
+                    baseline_battles = multi_stat["battles"]
+                    baseline_values_json = json.dumps(multi_stat["per_condition"])
+            else:
+                stat = await gc_fetch_player_stat(account_id, ch_data["condition"])
+                if stat:
+                    baseline_value = stat["value"]
+                    baseline_battles = stat["battles"]
 
+        with get_db() as conn:
             try:
                 conn.execute("""
                     INSERT INTO global_challenge_participants 
@@ -5087,7 +5089,7 @@ async def _do_refresh_stats():
                 (ch["id"],)
             ).fetchall()
 
-        stat_field = GC_CONDITION_TO_STAT.get(ch["condition"].split(",")[0].strip(), "damage_dealt")
+        stat_field = GC_CONDITION_TO_STAT.get((ch["condition"] or "damage").split(",")[0].strip(), "damage_dealt")
         max_battles = ch.get("max_battles", 0) or 0
         ch_conditions = [c.strip() for c in (ch["condition"] or "damage").split(",") if c.strip()]
         is_multi_cond = len(ch_conditions) > 1
