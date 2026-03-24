@@ -4607,6 +4607,72 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str):
         return None
 
 
+async def gc_fetch_batch_stats(account_ids, conditions_str):
+    """Получить стату ПАКЕТНО для до 100 игроков за 1 API запрос.
+    
+    Lesta API поддерживает account_id через запятую (до 100).
+    Возвращает dict: {account_id: {"battles": N, "per_condition": {cond: val}}}
+    """
+    import aiohttp
+    if not account_ids:
+        return {}
+    
+    conditions = [c.strip() for c in conditions_str.split(",") if c.strip()]
+    if not conditions:
+        conditions = ["damage"]
+    
+    stat_fields = set()
+    for cond in conditions:
+        stat_fields.add(GC_CONDITION_TO_STAT.get(cond, "damage_dealt"))
+    stat_fields.add("battles")
+    
+    fields_str = ",".join(f"statistics.all.{f}" for f in stat_fields)
+    results = {}
+    
+    # Разбиваем на батчи по 100 (лимит Lesta API)
+    BATCH_SIZE = 100
+    for i in range(0, len(account_ids), BATCH_SIZE):
+        batch = account_ids[i:i + BATCH_SIZE]
+        ids_str = ",".join(str(aid) for aid in batch)
+        
+        try:
+            timeout = aiohttp.ClientTimeout(total=15)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                url = (f"https://api.tanki.su/wot/account/info/"
+                       f"?application_id={LESTA_APP_ID}&account_id={ids_str}"
+                       f"&fields={fields_str}")
+                async with session.get(url) as resp:
+                    data = await resp.json()
+            
+            if data.get("status") != "ok":
+                logger.warning(f"GC batch fetch failed for batch {i//BATCH_SIZE}: status={data.get('status')}")
+                continue
+            
+            for aid in batch:
+                player_data = data["data"].get(str(aid))
+                if not player_data:
+                    continue
+                
+                stats = player_data.get("statistics", {}).get("all", {})
+                result = {
+                    "battles": stats.get("battles", 0),
+                    "per_condition": {}
+                }
+                for cond in conditions:
+                    sf = GC_CONDITION_TO_STAT.get(cond, "damage_dealt")
+                    result["per_condition"][cond] = stats.get(sf, 0)
+                
+                first_sf = GC_CONDITION_TO_STAT.get(conditions[0], "damage_dealt")
+                result["value"] = stats.get(first_sf, 0)
+                results[aid] = result
+                
+        except Exception as e:
+            logger.error(f"GC batch fetch error (batch {i//BATCH_SIZE}): {e}")
+    
+    logger.info(f"GC batch fetch: got stats for {len(results)}/{len(account_ids)} players in {(len(account_ids)-1)//BATCH_SIZE + 1} API calls")
+    return results
+
+
 async def gc_fetch_tank_stats(account_id):
     """Получить стату по каждому танку игрока из Lesta API"""
     import aiohttp
@@ -5071,7 +5137,7 @@ async def api_global_challenge_refresh_stats(request):
         return cors_response({"error": str(e)}, 500)
 
 async def _do_refresh_stats():
-    """Внутренняя логика обновления статистики"""
+    """Внутренняя логика обновления статистики (BATCH — до 100 игроков за 1 API запрос)"""
     try:
         from database import get_db
         from datetime import datetime
@@ -5094,47 +5160,33 @@ async def _do_refresh_stats():
         ch_conditions = [c.strip() for c in (ch["condition"] or "damage").split(",") if c.strip()]
         is_multi_cond = len(ch_conditions) > 1
 
-        # Обновляем стату каждого участника
-        updated = 0
+        # === STEP 1: Собираем все account_id ===
+        participant_data = []  # [(p_dict, account_id)]
         for p in participants:
             p = dict(p)
             user = get_user_by_telegram_id(p["telegram_id"])
             account_id = user.get("wot_account_id") if user else None
-
-            # Если нет account_id — пробуем найти по нику
-            if not account_id and p.get("nickname"):
-                try:
-                    import aiohttp as _aiohttp
-                    timeout = _aiohttp.ClientTimeout(total=10)
-                    async with _aiohttp.ClientSession(timeout=timeout) as session:
-                        url = (
-                            f"https://api.tanki.su/wot/account/list/"
-                            f"?application_id={LESTA_APP_ID}"
-                            f"&search={p['nickname']}&limit=1&type=exact"
-                        )
-                        async with session.get(url) as resp:
-                            result = await resp.json()
-                            if result.get("status") == "ok" and result.get("data"):
-                                account_id = result["data"][0]["account_id"]
-                                if user:
-                                    from database import update_user_wot
-                                    update_user_wot(p["telegram_id"], p["nickname"], account_id)
-                                logger.info(f"GC refresh: auto-found account_id={account_id} for {p['nickname']}")
-                except Exception as e:
-                    logger.warning(f"GC refresh lookup error: {e}")
-
             if not account_id:
+                continue
+            participant_data.append((p, int(account_id)))
+
+        if not participant_data:
+            return cors_response({"success": True, "updated": 0, "total": len(participants)})
+
+        # === STEP 2: BATCH запрос — все игроки за 1-10 API запросов ===
+        all_account_ids = [aid for _, aid in participant_data]
+        batch_stats = await gc_fetch_batch_stats(all_account_ids, ch["condition"])
+
+        # === STEP 3: Обновляем каждого участника из кэша ===
+        updated = 0
+        for p, account_id in participant_data:
+            multi_stat = batch_stats.get(account_id)
+            if not multi_stat:
                 continue
 
             condition_values_json = None
 
             if is_multi_cond:
-                # Multi-condition: fetch all stats at once
-                multi_stat = await gc_fetch_player_multi_stats(account_id, ch["condition"])
-                if not multi_stat:
-                    logger.warning(f"GC refresh: multi_stat returned None for {p['nickname']} (account {account_id})")
-                    continue
-
                 new_battles = max(0, multi_stat["battles"] - p["baseline_battles"])
 
                 # Compute per-condition deltas
@@ -5153,35 +5205,29 @@ async def _do_refresh_stats():
                     delta = max(0, current_stat - baseline_stat)
                     cond_deltas[c] = delta
                     total_value += delta
-                    logger.info(f"GC {p['nickname']} [{c}]: current={current_stat}, baseline={baseline_stat}, delta={delta}")
 
                 new_value = total_value
                 condition_values_json = json.dumps(cond_deltas)
-                logger.info(f"GC {p['nickname']}: total_value={total_value}, battles={new_battles}, cond_deltas={cond_deltas}")
 
                 # Лимит боёв для мульти-условий
                 if max_battles > 0 and new_battles > max_battles:
                     new_battles = max_battles
             else:
-                # Single condition: original logic
-                stat = await gc_fetch_player_stat(account_id, ch["condition"])
-                if not stat:
-                    continue
-
-                new_value = max(0, stat["value"] - p["baseline_value"])
-                new_battles = max(0, stat["battles"] - p["baseline_battles"])
+                # Single condition
+                new_value = max(0, multi_stat["value"] - p["baseline_value"])
+                new_battles = max(0, multi_stat["battles"] - p["baseline_battles"])
 
                 # Лимит боёв
                 if max_battles > 0 and new_battles > max_battles:
                     new_battles = max_battles
 
-                # Обнаружение отдельных боёв по танкам (только для single condition)
+                # Обнаружение боёв по танкам (только single condition)
                 try:
                     await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles)
                 except Exception as e:
                     logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
 
-                # Если лимит боёв — пересчитываем урон только из gc_battle_log
+                # Если лимит боёв — пересчитываем из gc_battle_log
                 if max_battles > 0:
                     with get_db() as conn_bl:
                         rows = conn_bl.execute(
