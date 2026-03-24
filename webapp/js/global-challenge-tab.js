@@ -690,6 +690,7 @@ function gcToggleCond(cond, btn) {
         btn.classList.add('gc-cond-btn--active');
     }
     gcUpdateCondSelectedBadges();
+    if (typeof gcUpdatePreview === 'function') gcUpdatePreview();
 }
 
 function gcUpdateCondSelectedBadges() {
@@ -1068,16 +1069,47 @@ function gcUpdatePreview() {
     const ac = wcCurrentAccent;
     const bg = theme.bg.replace('{opacity}', opacity.toFixed(2));
     const tc = theme.titleColor;
+
+    // Multi-condition preview data
+    const selConds = (typeof gcAdminConditions !== 'undefined') ? gcAdminConditions : ['damage'];
+    const isMulti = selConds.length > 1;
+    const condIcons = selConds.map(c => (GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage).icon).join(' ');
+    const condLabel = isMulti ? selConds.map(c => (GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage).icon).join('+') : (GC_CONDITION_MAP[selConds[0]] || GC_CONDITION_MAP.damage).name;
+    
+    // Fake multi-value data for preview
+    const fakeMultiMeVal = isMulti 
+        ? selConds.map(c => { const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage; return `${ci.icon}${Math.floor(Math.random()*5000+8000).toLocaleString('ru')}`; }).join(' · ')
+        : '15,230';
+    const fakeMultiP1 = isMulti
+        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+12000).toLocaleString('ru')}`).join(' · ')
+        : '18,500';
+    const fakeMultiP2 = isMulti
+        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+8000).toLocaleString('ru')}`).join(' · ')
+        : '15,230';
+    const fakeMultiP3 = isMulti
+        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+5000).toLocaleString('ru')}`).join(' · ')
+        : '12,100';
+    // Short versions for compact layouts
+    const fakeShortP1 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}18k`).join('·') : '18k';
+    const fakeShortP2 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}15k`).join('·') : '15k';
+    const fakeShortP3 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}12k`).join('·') : '12k';
+
+    // Condition badges for preview
+    const condBadgeHtml = isMulti ? `<div style="display:flex;gap:2px;justify-content:center;margin:3px 0;flex-wrap:wrap">${selConds.map(c => {
+        const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
+        return `<span style="font-size:.2rem;padding:1px 4px;background:${ac}15;border:1px solid ${ac}33;border-radius:8px;color:${ac}">${ci.icon} ${ci.name}</span>`;
+    }).join('')}</div>` : '';
+
     const live = showLive ? `<div style="position:absolute;top:4px;right:4px;background:#e00;color:#fff;font-size:.3rem;padding:1px 4px;border-radius:3px;font-weight:900">● LIVE</div>` : '';
     const timerHtml = showTimer ? `<div style="font-family:'Russo One',sans-serif;font-size:1.3rem;color:${theme.timerColor};text-shadow:${theme.timerShadow};line-height:1">52:30</div>` : '';
     const meHtml = showMe ? `<div style="display:flex;align-items:center;gap:4px;padding:4px 6px;border:1px solid ${ac}33;background:${ac}0d">
         <div style="width:16px;height:16px;border-radius:50%;background:${theme.avatarBg};display:flex;align-items:center;justify-content:center;font-size:.25rem;font-weight:900">FA</div>
         <div style="flex:1;font-size:.35rem;font-weight:700;color:${theme.meNick}">Fara777</div>
-        <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${theme.meVal}">15,230</div></div>` : '';
+        <div style="font-family:'Russo One',sans-serif;font-size:${isMulti ? '.3' : '.45'}rem;color:${theme.meVal}">${fakeMultiMeVal}</div></div>` : '';
     const topHtml = showTop ? `<div style="font-size:.25rem">
-        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}10;border-left:2px solid ${ac};margin-bottom:1px"><span style="color:${tc};font-weight:900">1</span><span style="flex:1">TankAce</span><span style="color:${theme.lbVal};font-weight:700">18,500</span></div>
-        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}08;border-left:2px solid #aaa;margin-bottom:1px"><span style="color:#aaa;font-weight:900">2</span><span style="flex:1">Fara777</span><span style="color:${theme.lbVal};font-weight:700">15,230</span></div>
-        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}06;border-left:2px solid #cd7f32"><span style="color:#cd7f32;font-weight:900">3</span><span style="flex:1">Wolf</span><span style="color:${theme.lbVal};font-weight:700">12,100</span></div></div>` : '';
+        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}10;border-left:2px solid ${ac};margin-bottom:1px"><span style="color:${tc};font-weight:900">1</span><span style="flex:1">TankAce</span><span style="color:${theme.lbVal};font-weight:700;font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP1}</span></div>
+        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}08;border-left:2px solid #aaa;margin-bottom:1px"><span style="color:#aaa;font-weight:900">2</span><span style="flex:1">Fara777</span><span style="color:${theme.lbVal};font-weight:700;font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP2}</span></div>
+        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}06;border-left:2px solid #cd7f32"><span style="color:#cd7f32;font-weight:900">3</span><span style="flex:1">Wolf</span><span style="color:${theme.lbVal};font-weight:700;font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP3}</span></div></div>` : '';
 
     // Border
     let border = `2px solid ${ac}`;
@@ -1093,9 +1125,10 @@ function gcUpdatePreview() {
         case 1: // Classic vertical
             html = `<div style="${baseStyle};width:180px;padding:10px;text-align:center">
                 ${live}
-                <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${tc};margin-bottom:4px">🔥 Челлендж</div>
+                <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${tc};margin-bottom:4px">${condIcons} Челлендж</div>
                 ${timerHtml}
                 <div style="font-size:.28rem;opacity:.4;margin:3px 0 6px">👥 3 · 🧀 500</div>
+                ${condBadgeHtml}
                 ${meHtml}
                 <div style="margin-top:4px">${topHtml}</div>
             </div>`;
@@ -1106,12 +1139,12 @@ function gcUpdatePreview() {
                 ${live}
                 <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
                     <div style="text-align:center">${timerHtml}<div style="font-size:.2rem;color:${ac};opacity:.5">ОСТАЛОСЬ</div></div>
-                    <div style="flex:1"><div style="font-family:'Russo One',sans-serif;font-size:.4rem;color:${tc};margin-bottom:3px">🔥 Челлендж</div>${meHtml}</div>
+                    <div style="flex:1"><div style="font-family:'Russo One',sans-serif;font-size:.4rem;color:${tc};margin-bottom:3px">${condIcons} Челлендж</div>${condBadgeHtml}${meHtml}</div>
                 </div>
                 <div style="display:flex;gap:2px">${showTop ? `
-                    <div style="flex:1;font-size:.25rem;padding:3px 4px;background:${ac}10;border-radius:2px"><span style="color:${tc};font-weight:900">1</span> Ace <span style="color:${theme.lbVal}">18k</span></div>
-                    <div style="flex:1;font-size:.25rem;padding:3px 4px;background:${ac}08;border-radius:2px"><span style="color:#aaa;font-weight:900">2</span> Fara <span style="color:${theme.lbVal}">15k</span></div>
-                    <div style="flex:1;font-size:.25rem;padding:3px 4px;background:${ac}06;border-radius:2px"><span style="color:#cd7f32;font-weight:900">3</span> Wolf <span style="color:${theme.lbVal}">12k</span></div>
+                    <div style="flex:1;font-size:.22rem;padding:3px 4px;background:${ac}10;border-radius:2px"><span style="color:${tc};font-weight:900">1</span> Ace <span style="color:${theme.lbVal}">${fakeShortP1}</span></div>
+                    <div style="flex:1;font-size:.22rem;padding:3px 4px;background:${ac}08;border-radius:2px"><span style="color:#aaa;font-weight:900">2</span> Fara <span style="color:${theme.lbVal}">${fakeShortP2}</span></div>
+                    <div style="flex:1;font-size:.22rem;padding:3px 4px;background:${ac}06;border-radius:2px"><span style="color:#cd7f32;font-weight:900">3</span> Wolf <span style="color:${theme.lbVal}">${fakeShortP3}</span></div>
                 ` : ''}</div>
             </div>`;
             break;
@@ -1120,25 +1153,26 @@ function gcUpdatePreview() {
             html = `<div style="${baseStyle};width:280px;padding:6px 10px;display:flex;align-items:center;gap:6px;border-radius:5px">
                 ${showLive ? `<div style="background:#e00;color:#fff;font-size:.25rem;padding:1px 3px;border-radius:2px;font-weight:900">LIVE</div>` : ''}
                 <div style="width:1px;height:14px;background:${ac};opacity:.15"></div>
-                <div style="font-family:'Russo One',sans-serif;font-size:.35rem;color:${tc}">🔥 Челлендж</div>
+                <div style="font-family:'Russo One',sans-serif;font-size:.35rem;color:${tc}">${condIcons} Челлендж</div>
                 <div style="width:1px;height:14px;background:${ac};opacity:.15"></div>
                 ${showTimer ? `<div style="font-family:'Russo One',sans-serif;font-size:.5rem;color:${theme.timerColor}">52:30</div>` : ''}
-                ${showMe ? `<div style="width:1px;height:14px;background:${ac};opacity:.15"></div><div style="font-size:.3rem;color:${ac}">Fara: <span style="color:${tc}">15,230</span></div>` : ''}
+                ${showMe ? `<div style="width:1px;height:14px;background:${ac};opacity:.15"></div><div style="font-size:.3rem;color:${ac}">Fara: <span style="color:${tc}">${fakeMultiMeVal}</span></div>` : ''}
             </div>`;
             break;
 
         case 4: // Scoreboard
-            html = `<div style="${baseStyle};width:180px;border-radius:3px">
+            html = `<div style="${baseStyle};width:${isMulti ? 220 : 180}px;border-radius:3px">
                 ${live}
                 <div style="padding:6px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)">
                     <div style="font-size:.3rem;color:${ac};letter-spacing:1px;opacity:.5">ЧЕЛЛЕНДЖ</div>
                     ${timerHtml}
+                    ${condBadgeHtml}
                 </div>
-                <div style="padding:2px 4px;font-size:.2rem;opacity:.3;display:flex;border-bottom:1px solid rgba(255,255,255,.04)"><span style="width:14px">#</span><span style="flex:1">Игрок</span><span>Урона</span></div>
+                <div style="padding:2px 4px;font-size:.2rem;opacity:.3;display:flex;border-bottom:1px solid rgba(255,255,255,.04)"><span style="width:14px">#</span><span style="flex:1">Игрок</span><span>${condLabel}</span></div>
                 ${showTop ? `
-                <div style="padding:3px 4px;font-size:.25rem;display:flex;border-bottom:1px solid rgba(255,255,255,.03)"><span style="width:14px;color:gold;font-weight:900">1</span><span style="flex:1">TankAce</span><span style="color:${theme.lbVal}">18,500</span></div>
-                <div style="padding:3px 4px;font-size:.25rem;display:flex;background:${ac}10;border-left:2px solid ${ac};border-bottom:1px solid rgba(255,255,255,.03)"><span style="width:14px;color:silver;font-weight:900">2</span><span style="flex:1">⭐ Fara777</span><span style="color:${theme.lbVal}">15,230</span></div>
-                <div style="padding:3px 4px;font-size:.25rem;display:flex"><span style="width:14px;color:#cd7f32;font-weight:900">3</span><span style="flex:1">Wolf</span><span style="color:${theme.lbVal}">12,100</span></div>
+                <div style="padding:3px 4px;font-size:.25rem;display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,.03)"><span style="width:14px;color:gold;font-weight:900">1</span><span style="flex:1">TankAce</span><span style="color:${theme.lbVal};font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP1}</span></div>
+                <div style="padding:3px 4px;font-size:.25rem;display:flex;align-items:center;background:${ac}10;border-left:2px solid ${ac};border-bottom:1px solid rgba(255,255,255,.03)"><span style="width:14px;color:silver;font-weight:900">2</span><span style="flex:1">⭐ Fara777</span><span style="color:${theme.lbVal};font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP2}</span></div>
+                <div style="padding:3px 4px;font-size:.25rem;display:flex;align-items:center"><span style="width:14px;color:#cd7f32;font-weight:900">3</span><span style="flex:1">Wolf</span><span style="color:${theme.lbVal};font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP3}</span></div>
                 ` : ''}
             </div>`;
             break;
@@ -1150,18 +1184,18 @@ function gcUpdatePreview() {
                     <div style="${baseStyle};flex:1;padding:6px;text-align:center;border-radius:5px">
                         <div style="font-size:.2rem;color:${ac};letter-spacing:1px;opacity:.5">⏱ ОСТАЛОСЬ</div>
                         ${timerHtml}
-                        <div style="font-size:.25rem;color:${ac};margin-top:1px">🔥 Челлендж</div>
+                        <div style="font-size:.25rem;color:${ac};margin-top:1px">${condIcons} Челлендж</div>
                     </div>
                     ${showMe ? `<div style="${baseStyle};flex:1;padding:6px;text-align:center;border-radius:5px">
-                        <div style="font-size:.2rem;color:${ac};letter-spacing:1px;opacity:.5">👤 УРОНА</div>
+                        <div style="font-size:.2rem;color:${ac};letter-spacing:1px;opacity:.5">👤 ${condLabel}</div>
                         <div style="font-size:.3rem;color:${ac};margin:2px 0">Fara777</div>
-                        <div style="font-family:'Russo One',sans-serif;font-size:.7rem;color:${tc}">15,230</div>
+                        <div style="font-family:'Russo One',sans-serif;font-size:${isMulti ? '.45' : '.7'}rem;color:${tc}">${fakeMultiMeVal}</div>
                     </div>`: ''}
                 </div>
                 ${showTop ? `<div style="${baseStyle};display:flex;gap:2px;padding:3px;border-radius:4px">
-                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}10;border-radius:3px"><span style="color:gold;font-weight:900">1</span> Ace <span style="color:${theme.lbVal}">18k</span></div>
-                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}08;border-radius:3px"><span style="color:silver;font-weight:900">2</span> Fara <span style="color:${theme.lbVal}">15k</span></div>
-                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}06;border-radius:3px"><span style="color:#cd7f32;font-weight:900">3</span> Wolf <span style="color:${theme.lbVal}">12k</span></div>
+                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}10;border-radius:3px"><span style="color:gold;font-weight:900">1</span> Ace <span style="color:${theme.lbVal}">${fakeShortP1}</span></div>
+                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}08;border-radius:3px"><span style="color:silver;font-weight:900">2</span> Fara <span style="color:${theme.lbVal}">${fakeShortP2}</span></div>
+                    <div style="flex:1;font-size:.22rem;padding:3px;background:${ac}06;border-radius:3px"><span style="color:#cd7f32;font-weight:900">3</span> Wolf <span style="color:${theme.lbVal}">${fakeShortP3}</span></div>
                 </div>`: ''}
             </div>`;
             break;
