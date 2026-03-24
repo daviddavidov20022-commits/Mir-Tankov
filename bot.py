@@ -5124,17 +5124,39 @@ async def api_global_challenge_join(request):
         return cors_response({"error": str(e)}, 500)
 
 
+# Кулдаун и блокировка для refresh-stats (защита от спама и параллельных запросов)
+import asyncio as _gc_asyncio
+_gc_refresh_lock = _gc_asyncio.Lock()
+_gc_last_refresh_time = 0
+_gc_last_refresh_result = None
+GC_REFRESH_COOLDOWN = 30  # секунд между обновлениями
+
 async def api_global_challenge_refresh_stats(request):
     """POST /api/global-challenge/refresh-stats — обновить стату всех участников через Lesta API"""
-    import asyncio
-    try:
-        return await asyncio.wait_for(_do_refresh_stats(), timeout=25)
-    except asyncio.TimeoutError:
-        logger.error("GC refresh-stats: TIMEOUT (25s)")
-        return cors_response({"error": "Timeout", "updated": 0}, 200)
-    except Exception as e:
-        logger.error(f"API global_challenge_refresh error: {e}")
-        return cors_response({"error": str(e)}, 500)
+    import asyncio, time
+    global _gc_last_refresh_time, _gc_last_refresh_result
+
+    # Cooldown: если обновляли недавно — вернуть кэш
+    now = time.time()
+    if now - _gc_last_refresh_time < GC_REFRESH_COOLDOWN and _gc_last_refresh_result:
+        return _gc_last_refresh_result
+    
+    # Блокировка: не запускать параллельно несколько обновлений
+    if _gc_refresh_lock.locked():
+        return cors_response({"status": "already_running", "updated": 0}, 200)
+    
+    async with _gc_refresh_lock:
+        try:
+            result = await asyncio.wait_for(_do_refresh_stats(), timeout=55)
+            _gc_last_refresh_time = time.time()
+            _gc_last_refresh_result = result
+            return result
+        except asyncio.TimeoutError:
+            logger.error("GC refresh-stats: TIMEOUT (55s)")
+            return cors_response({"error": "Timeout", "updated": 0}, 200)
+        except Exception as e:
+            logger.error(f"API global_challenge_refresh error: {e}")
+            return cors_response({"error": str(e)}, 500)
 
 async def _do_refresh_stats():
     """Внутренняя логика обновления статистики (BATCH — до 100 игроков за 1 API запрос)"""
