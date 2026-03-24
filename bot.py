@@ -5125,35 +5125,42 @@ async def api_global_challenge_join(request):
 
 
 # Кулдаун и блокировка для refresh-stats (защита от спама и параллельных запросов)
-import asyncio as _gc_asyncio
-_gc_refresh_lock = _gc_asyncio.Lock()
+_gc_refresh_lock = None  # Создадим лениво (asyncio.Lock нельзя создавать до event loop)
 _gc_last_refresh_time = 0
-_gc_last_refresh_result = None
+_gc_last_refresh_data = None  # Кэшируем данные, не Response
 GC_REFRESH_COOLDOWN = 30  # секунд между обновлениями
 
 async def api_global_challenge_refresh_stats(request):
     """POST /api/global-challenge/refresh-stats — обновить стату всех участников через Lesta API"""
     import asyncio, time
-    global _gc_last_refresh_time, _gc_last_refresh_result
+    global _gc_refresh_lock, _gc_last_refresh_time, _gc_last_refresh_data
+
+    # Ленивое создание Lock (в правильном event loop)
+    if _gc_refresh_lock is None:
+        _gc_refresh_lock = asyncio.Lock()
 
     # Cooldown: если обновляли недавно — вернуть кэш
     now = time.time()
-    if now - _gc_last_refresh_time < GC_REFRESH_COOLDOWN and _gc_last_refresh_result:
-        return _gc_last_refresh_result
+    if now - _gc_last_refresh_time < GC_REFRESH_COOLDOWN and _gc_last_refresh_data is not None:
+        return cors_response(_gc_last_refresh_data)
     
     # Блокировка: не запускать параллельно несколько обновлений
     if _gc_refresh_lock.locked():
-        return cors_response({"status": "already_running", "updated": 0}, 200)
+        return cors_response({"status": "already_running", "updated": 0})
     
     async with _gc_refresh_lock:
         try:
             result = await asyncio.wait_for(_do_refresh_stats(), timeout=55)
             _gc_last_refresh_time = time.time()
-            _gc_last_refresh_result = result
+            # Сохраняем данные ответа, а не сам Response (его нельзя переиспользовать)
+            try:
+                _gc_last_refresh_data = {"success": True, "updated": result._updated_count if hasattr(result, '_updated_count') else 0}
+            except Exception:
+                _gc_last_refresh_data = {"success": True}
             return result
         except asyncio.TimeoutError:
             logger.error("GC refresh-stats: TIMEOUT (55s)")
-            return cors_response({"error": "Timeout", "updated": 0}, 200)
+            return cors_response({"error": "Timeout", "updated": 0})
         except Exception as e:
             logger.error(f"API global_challenge_refresh error: {e}")
             return cors_response({"error": str(e)}, 500)
