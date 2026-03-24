@@ -401,6 +401,8 @@ def init_db():
         for col, default in [
             ("baseline_value", "INTEGER DEFAULT 0"),
             ("baseline_battles", "INTEGER DEFAULT 0"),
+            ("baseline_values", "TEXT"),  # JSON: per-condition baselines
+            ("condition_values", "TEXT"),  # JSON: per-condition current values
         ]:
             try:
                 conn.execute(f"ALTER TABLE global_challenge_participants ADD COLUMN {col} {default}")

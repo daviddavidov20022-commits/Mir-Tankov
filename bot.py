@@ -4556,6 +4556,57 @@ async def gc_fetch_player_stat(account_id, condition):
         return None
 
 
+async def gc_fetch_player_multi_stats(account_id, conditions_str):
+    """Получить стату по нескольким условиям сразу (одним запросом к API)"""
+    import aiohttp
+    conditions = [c.strip() for c in conditions_str.split(",") if c.strip()]
+    if not conditions:
+        conditions = ["damage"]
+    
+    # Собираем все нужные поля
+    stat_fields = set()
+    for cond in conditions:
+        stat_fields.add(GC_CONDITION_TO_STAT.get(cond, "damage_dealt"))
+    stat_fields.add("battles")
+    
+    fields_str = ",".join(f"statistics.all.{f}" for f in stat_fields)
+    
+    try:
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            url = (f"https://api.tanki.su/wot/account/info/"
+                   f"?application_id={LESTA_APP_ID}&account_id={account_id}"
+                   f"&fields={fields_str}")
+            async with session.get(url) as resp:
+                data = await resp.json()
+        
+        if data.get("status") != "ok":
+            return None
+        
+        player_data = data["data"].get(str(account_id))
+        if not player_data:
+            return None
+        
+        stats = player_data.get("statistics", {}).get("all", {})
+        
+        result = {
+            "battles": stats.get("battles", 0),
+            "per_condition": {}
+        }
+        for cond in conditions:
+            sf = GC_CONDITION_TO_STAT.get(cond, "damage_dealt")
+            result["per_condition"][cond] = stats.get(sf, 0)
+        
+        # Суммарное значение (основное condition = первое)
+        first_sf = GC_CONDITION_TO_STAT.get(conditions[0], "damage_dealt")
+        result["value"] = stats.get(first_sf, 0)
+        
+        return result
+    except Exception as e:
+        logger.error(f"GC fetch multi stats error for {account_id}: {e}")
+        return None
+
+
 async def gc_fetch_tank_stats(account_id):
     """Получить стату по каждому танку игрока из Lesta API"""
     import aiohttp
@@ -4710,21 +4761,30 @@ async def api_global_challenge_create(request):
 
         baseline_value = 0
         baseline_battles = 0
+        baseline_values_json = None
 
         if admin_account_id:
-            stat = await gc_fetch_player_stat(admin_account_id, condition)
-            if stat:
-                baseline_value = stat["value"]
-                baseline_battles = stat["battles"]
+            conditions = [c.strip() for c in condition.split(",") if c.strip()]
+            if len(conditions) > 1:
+                multi_stat = await gc_fetch_player_multi_stats(admin_account_id, condition)
+                if multi_stat:
+                    baseline_value = multi_stat["value"]
+                    baseline_battles = multi_stat["battles"]
+                    baseline_values_json = json.dumps(multi_stat["per_condition"])
+            else:
+                stat = await gc_fetch_player_stat(admin_account_id, condition)
+                if stat:
+                    baseline_value = stat["value"]
+                    baseline_battles = stat["battles"]
 
         with get_db() as conn:
             import sqlite3
             try:
                 conn.execute("""
                     INSERT INTO global_challenge_participants 
-                    (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, current_value, battles_played)
-                    VALUES (?, ?, ?, ?, ?, 0, 0)
-                """, (challenge_id, admin_tg, admin_nick, baseline_value, baseline_battles))
+                    (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, baseline_values, current_value, battles_played)
+                    VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+                """, (challenge_id, admin_tg, admin_nick, baseline_value, baseline_battles, baseline_values_json))
             except sqlite3.IntegrityError:
                 pass
 
@@ -4823,7 +4883,15 @@ async def api_global_challenge_active(request):
             """, (ch["id"],)).fetchall()
 
             ch["participants_count"] = participants
-            ch["leaderboard"] = [dict(r) for r in top]
+            lb = [dict(r) for r in top]
+            # Parse condition_values JSON for multi-condition display
+            for entry in lb:
+                if entry.get("condition_values"):
+                    try:
+                        entry["condition_values"] = json.loads(entry["condition_values"])
+                    except Exception:
+                        entry["condition_values"] = None
+            ch["leaderboard"] = lb
 
             # Добавляем Z (UTC marker) к ends_at чтобы JS правильно интерпретировал
             if ch.get("ends_at") and not str(ch["ends_at"]).endswith("Z") and "+" not in str(ch["ends_at"]):
@@ -4946,19 +5014,28 @@ async def api_global_challenge_join(request):
             # Запоминаем базовую статистику на момент вступления
             baseline_value = 0
             baseline_battles = 0
+            baseline_values_json = None
 
             if account_id:
-                stat = await gc_fetch_player_stat(account_id, ch["condition"])
-                if stat:
-                    baseline_value = stat["value"]
-                    baseline_battles = stat["battles"]
+                ch_conditions = [c.strip() for c in (ch["condition"] or "damage").split(",") if c.strip()]
+                if len(ch_conditions) > 1:
+                    multi_stat = await gc_fetch_player_multi_stats(account_id, ch["condition"])
+                    if multi_stat:
+                        baseline_value = multi_stat["value"]
+                        baseline_battles = multi_stat["battles"]
+                        baseline_values_json = json.dumps(multi_stat["per_condition"])
+                else:
+                    stat = await gc_fetch_player_stat(account_id, ch["condition"])
+                    if stat:
+                        baseline_value = stat["value"]
+                        baseline_battles = stat["battles"]
 
             try:
                 conn.execute("""
                     INSERT INTO global_challenge_participants 
-                    (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, current_value, battles_played)
-                    VALUES (?, ?, ?, ?, ?, 0, 0)
-                """, (challenge_id, tg_id, nickname, baseline_value, baseline_battles))
+                    (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, baseline_values, current_value, battles_played)
+                    VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+                """, (challenge_id, tg_id, nickname, baseline_value, baseline_battles, baseline_values_json))
             except sqlite3.IntegrityError:
                 return cors_response({"error": "Вы уже участвуете!"}, 400)
 
@@ -5010,8 +5087,10 @@ async def _do_refresh_stats():
                 (ch["id"],)
             ).fetchall()
 
-        stat_field = GC_CONDITION_TO_STAT.get(ch["condition"], "damage_dealt")
+        stat_field = GC_CONDITION_TO_STAT.get(ch["condition"].split(",")[0].strip(), "damage_dealt")
         max_battles = ch.get("max_battles", 0) or 0
+        ch_conditions = [c.strip() for c in (ch["condition"] or "damage").split(",") if c.strip()]
+        is_multi_cond = len(ch_conditions) > 1
 
         # Обновляем стату каждого участника
         updated = 0
@@ -5045,13 +5124,43 @@ async def _do_refresh_stats():
             if not account_id:
                 continue
 
-            # Общая стата
-            stat = await gc_fetch_player_stat(account_id, ch["condition"])
-            if not stat:
-                continue
+            condition_values_json = None
 
-            new_value = max(0, stat["value"] - p["baseline_value"])
-            new_battles = max(0, stat["battles"] - p["baseline_battles"])
+            if is_multi_cond:
+                # Multi-condition: fetch all stats at once
+                multi_stat = await gc_fetch_player_multi_stats(account_id, ch["condition"])
+                if not multi_stat:
+                    continue
+
+                new_battles = max(0, multi_stat["battles"] - p["baseline_battles"])
+
+                # Compute per-condition deltas
+                baseline_vals = {}
+                if p.get("baseline_values"):
+                    try:
+                        baseline_vals = json.loads(p["baseline_values"])
+                    except Exception:
+                        pass
+
+                cond_deltas = {}
+                total_value = 0
+                for c in ch_conditions:
+                    current_stat = multi_stat["per_condition"].get(c, 0)
+                    baseline_stat = baseline_vals.get(c, p.get("baseline_value", 0) if c == ch_conditions[0] else 0)
+                    delta = max(0, current_stat - baseline_stat)
+                    cond_deltas[c] = delta
+                    total_value += delta
+
+                new_value = total_value
+                condition_values_json = json.dumps(cond_deltas)
+            else:
+                # Single condition: original logic
+                stat = await gc_fetch_player_stat(account_id, ch["condition"])
+                if not stat:
+                    continue
+
+                new_value = max(0, stat["value"] - p["baseline_value"])
+                new_battles = max(0, stat["battles"] - p["baseline_battles"])
 
             # Лимит боёв
             if max_battles > 0 and new_battles > max_battles:
@@ -5075,11 +5184,18 @@ async def _do_refresh_stats():
                         new_battles = len(rows)
 
             with get_db() as conn:
-                conn.execute("""
-                    UPDATE global_challenge_participants 
-                    SET current_value = ?, battles_played = ?, last_updated = ?
-                    WHERE challenge_id = ? AND telegram_id = ?
-                """, (new_value, new_battles, datetime.now(), ch["id"], p["telegram_id"]))
+                if condition_values_json:
+                    conn.execute("""
+                        UPDATE global_challenge_participants 
+                        SET current_value = ?, battles_played = ?, last_updated = ?, condition_values = ?
+                        WHERE challenge_id = ? AND telegram_id = ?
+                    """, (new_value, new_battles, datetime.now(), condition_values_json, ch["id"], p["telegram_id"]))
+                else:
+                    conn.execute("""
+                        UPDATE global_challenge_participants 
+                        SET current_value = ?, battles_played = ?, last_updated = ?
+                        WHERE challenge_id = ? AND telegram_id = ?
+                    """, (new_value, new_battles, datetime.now(), ch["id"], p["telegram_id"]))
                 updated += 1
 
         logger.info(f"GC refresh-stats: updated {updated}/{len(participants)} participants")

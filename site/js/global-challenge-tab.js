@@ -16,7 +16,7 @@ const GC_CONDITION_MAP = {
 
 let gcCurrentChallenge = null;
 let gcTimerInterval = null;
-let gcAdminCondition = 'damage';
+let gcAdminConditions = ['damage'];
 let gcAllSubscribers = [];
 let _gcLastDataHash = null;
 let _gcIsFirstLoad = true;
@@ -144,9 +144,27 @@ function gcShowActive(ch) {
     document.getElementById('gcTitle').textContent = ch.title;
     document.getElementById('gcDesc').textContent = ch.description || '';
 
-    const cond = GC_CONDITION_MAP[ch.condition] || GC_CONDITION_MAP.damage;
-    document.getElementById('gcCondition').textContent = cond.icon;
-    document.getElementById('gcCondLabel').textContent = cond.name;
+    // Multi-condition support
+    const conditions = (ch.condition || 'damage').split(',');
+    const firstCond = GC_CONDITION_MAP[conditions[0]] || GC_CONDITION_MAP.damage;
+    document.getElementById('gcCondition').textContent = conditions.map(c => (GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage).icon).join(' ');
+    
+    if (conditions.length > 1) {
+        document.getElementById('gcCondLabel').textContent = conditions.length + ' условия';
+        // Show condition badges
+        const badgesEl = document.getElementById('gcCondBadges');
+        if (badgesEl) {
+            badgesEl.style.display = '';
+            badgesEl.innerHTML = conditions.map(c => {
+                const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
+                return `<span style="display:inline-block;padding:3px 10px;background:rgba(200,170,110,0.1);border:1px solid rgba(200,170,110,0.2);border-radius:20px;font-size:0.6rem;color:#C8AA6E;font-weight:600">${ci.icon} ${ci.name}</span>`;
+            }).join(' ');
+        }
+    } else {
+        document.getElementById('gcCondLabel').textContent = firstCond.name;
+        const badgesEl = document.getElementById('gcCondBadges');
+        if (badgesEl) badgesEl.style.display = 'none';
+    }
 
     // Stats
     document.getElementById('gcParticipants').textContent = ch.participants_count || 0;
@@ -319,6 +337,31 @@ function gcStartTimer(endsAtStr, durationMinutes) {
 }
 
 // ============================================================
+// MULTI-CONDITION VALUE FORMATTER
+// ============================================================
+function gcFormatLbValue(player, challenge) {
+    if (!challenge) return (player.current_value || 0).toLocaleString('ru');
+    const conditions = (challenge.condition || 'damage').split(',');
+    
+    if (conditions.length <= 1) {
+        return (player.current_value || 0).toLocaleString('ru');
+    }
+    
+    // Multi-condition: show breakdown if player has condition_values
+    const condVals = player.condition_values;
+    if (condVals && typeof condVals === 'object') {
+        return conditions.map(c => {
+            const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
+            const val = condVals[c] || 0;
+            return `<span style="display:block;font-size:0.6rem;line-height:1.3">${ci.icon} ${val.toLocaleString('ru')}</span>`;
+        }).join('');
+    }
+    
+    // Fallback: show total
+    return (player.current_value || 0).toLocaleString('ru');
+}
+
+// ============================================================
 // LEADERBOARD
 // ============================================================
 function gcRenderLeaderboard(leaders) {
@@ -355,7 +398,7 @@ function gcRenderLeaderboard(leaders) {
                     <div class="gc-lb-name">${isMe ? '⭐ ' : ''}${p.nickname || 'Танкист'}</div>
                     <div class="gc-lb-battles">${battlesText}</div>
                 </div>
-                <div class="gc-lb-value">${(p.current_value || 0).toLocaleString('ru')}</div>
+                <div class="gc-lb-value">${gcFormatLbValue(p, gcCurrentChallenge)}</div>
             </div>`;
     }).join('');
 
@@ -627,10 +670,39 @@ function gcFilterSubscribers() {
 // ============================================================
 // ADMIN: CREATE / STOP / DELETE
 // ============================================================
-function gcSelectCond(cond, btn) {
-    gcAdminCondition = cond;
-    document.querySelectorAll('#gcAdminPanel .gc-cond-btn').forEach(b => b.classList.remove('gc-cond-btn--active'));
-    btn.classList.add('gc-cond-btn--active');
+function gcToggleCond(cond, btn) {
+    const idx = gcAdminConditions.indexOf(cond);
+    if (idx >= 0) {
+        // Deselect — but don't allow empty
+        if (gcAdminConditions.length <= 1) {
+            showToast('⚠️ Нужно хотя бы 1 условие');
+            return;
+        }
+        gcAdminConditions.splice(idx, 1);
+        btn.classList.remove('gc-cond-btn--active');
+    } else {
+        // Select — limit to 3
+        if (gcAdminConditions.length >= 3) {
+            showToast('⚠️ Максимум 3 условия');
+            return;
+        }
+        gcAdminConditions.push(cond);
+        btn.classList.add('gc-cond-btn--active');
+    }
+    gcUpdateCondSelectedBadges();
+}
+
+function gcUpdateCondSelectedBadges() {
+    const el = document.getElementById('gcCondSelected');
+    if (!el) return;
+    if (gcAdminConditions.length <= 1) {
+        el.innerHTML = '';
+        return;
+    }
+    el.innerHTML = gcAdminConditions.map(c => {
+        const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
+        return `<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:rgba(200,170,110,0.12);border:1px solid rgba(200,170,110,0.25);border-radius:16px;font-size:0.55rem;color:#C8AA6E;font-weight:600">${ci.icon} ${ci.name}</span>`;
+    }).join('');
 }
 
 function gcSetDuration(min) {
@@ -661,7 +733,7 @@ async function gcLaunchChallenge() {
                 title,
                 description: desc,
                 icon: '🔥',
-                condition: gcAdminCondition,
+                condition: gcAdminConditions.join(','),
                 duration_minutes: duration,
                 max_battles: maxBattles,
                 reward_coins: reward,
