@@ -5132,6 +5132,7 @@ async def _do_refresh_stats():
                 # Multi-condition: fetch all stats at once
                 multi_stat = await gc_fetch_player_multi_stats(account_id, ch["condition"])
                 if not multi_stat:
+                    logger.warning(f"GC refresh: multi_stat returned None for {p['nickname']} (account {account_id})")
                     continue
 
                 new_battles = max(0, multi_stat["battles"] - p["baseline_battles"])
@@ -5152,9 +5153,15 @@ async def _do_refresh_stats():
                     delta = max(0, current_stat - baseline_stat)
                     cond_deltas[c] = delta
                     total_value += delta
+                    logger.info(f"GC {p['nickname']} [{c}]: current={current_stat}, baseline={baseline_stat}, delta={delta}")
 
                 new_value = total_value
                 condition_values_json = json.dumps(cond_deltas)
+                logger.info(f"GC {p['nickname']}: total_value={total_value}, battles={new_battles}, cond_deltas={cond_deltas}")
+
+                # Лимит боёв для мульти-условий
+                if max_battles > 0 and new_battles > max_battles:
+                    new_battles = max_battles
             else:
                 # Single condition: original logic
                 stat = await gc_fetch_player_stat(account_id, ch["condition"])
@@ -5164,36 +5171,36 @@ async def _do_refresh_stats():
                 new_value = max(0, stat["value"] - p["baseline_value"])
                 new_battles = max(0, stat["battles"] - p["baseline_battles"])
 
-            # Лимит боёв
-            if max_battles > 0 and new_battles > max_battles:
-                new_battles = max_battles
+                # Лимит боёв
+                if max_battles > 0 and new_battles > max_battles:
+                    new_battles = max_battles
 
-            # Обнаружение отдельных боёв по танкам
-            try:
-                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles)
-            except Exception as e:
-                logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
+                # Обнаружение отдельных боёв по танкам (только для single condition)
+                try:
+                    await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles)
+                except Exception as e:
+                    logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
 
-            # Если лимит боёв — пересчитываем урон только из gc_battle_log
-            if max_battles > 0:
-                with get_db() as conn:
-                    rows = conn.execute(
-                        "SELECT damage FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? ORDER BY battle_num LIMIT ?",
-                        (ch["id"], p["telegram_id"], max_battles)
-                    ).fetchall()
-                    if rows:
-                        new_value = sum(r["damage"] for r in rows)
-                        new_battles = len(rows)
+                # Если лимит боёв — пересчитываем урон только из gc_battle_log
+                if max_battles > 0:
+                    with get_db() as conn_bl:
+                        rows = conn_bl.execute(
+                            "SELECT damage FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? ORDER BY battle_num LIMIT ?",
+                            (ch["id"], p["telegram_id"], max_battles)
+                        ).fetchall()
+                        if rows:
+                            new_value = sum(r["damage"] for r in rows)
+                            new_battles = len(rows)
 
-            with get_db() as conn:
+            with get_db() as conn_up:
                 if condition_values_json:
-                    conn.execute("""
+                    conn_up.execute("""
                         UPDATE global_challenge_participants 
                         SET current_value = ?, battles_played = ?, last_updated = ?, condition_values = ?
                         WHERE challenge_id = ? AND telegram_id = ?
                     """, (new_value, new_battles, datetime.now(), condition_values_json, ch["id"], p["telegram_id"]))
                 else:
-                    conn.execute("""
+                    conn_up.execute("""
                         UPDATE global_challenge_participants 
                         SET current_value = ?, battles_played = ?, last_updated = ?
                         WHERE challenge_id = ? AND telegram_id = ?
