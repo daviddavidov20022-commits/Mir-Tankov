@@ -852,22 +852,13 @@
         const showTop = P.get('top') !== '0';
         const showLive = P.get('live') !== '0';
 
-        // SVG condition icons (inline, sharp at any size)
-        const SVG_ICONS = {
-            damage: `<svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:middle;filter:drop-shadow(0 0 2px rgba(255,160,0,.6))"><path d="M12 2L9 9 2 12l7 3 3 7 3-7 7-3-7-3z" fill="#ff9800"/><circle cx="12" cy="12" r="3" fill="#ffeb3b" opacity=".9"/></svg>`,
-            frags: `<svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:middle;filter:drop-shadow(0 0 2px rgba(244,67,54,.5))"><circle cx="12" cy="12" r="10" fill="none" stroke="#f44336" stroke-width="1.5"/><circle cx="12" cy="12" r="6" fill="none" stroke="#f44336" stroke-width="1.2"/><circle cx="12" cy="12" r="2" fill="#f44336"/><line x1="12" y1="0" x2="12" y2="5" stroke="#f44336" stroke-width="1.2"/><line x1="12" y1="19" x2="12" y2="24" stroke="#f44336" stroke-width="1.2"/><line x1="0" y1="12" x2="5" y2="12" stroke="#f44336" stroke-width="1.2"/><line x1="19" y1="12" x2="24" y2="12" stroke="#f44336" stroke-width="1.2"/></svg>`,
-            xp: `<svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:middle;filter:drop-shadow(0 0 3px rgba(255,215,0,.6))"><path d="M12 1l3.09 6.26L22 8.27l-5 4.87L18.18 20 12 16.77 5.82 20 7 13.14l-5-4.87 6.91-1.01z" fill="#ffd700"/></svg>`,
-            spotting: `<svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:middle;filter:drop-shadow(0 0 2px rgba(33,150,243,.5))"><path d="M12 4C4 4 1 12 1 12s3 8 11 8 11-8 11-8-3-8-11-8z" fill="none" stroke="#2196f3" stroke-width="1.5"/><circle cx="12" cy="12" r="4" fill="#2196f3"/><circle cx="12" cy="12" r="1.5" fill="#bbdefb"/></svg>`,
-            blocked: `<svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:middle;filter:drop-shadow(0 0 2px rgba(96,125,139,.5))"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" fill="#607d8b"/><path d="M12 4L5 8v5c0 4.52 3.13 8.72 7 9.93V4z" fill="#78909c"/></svg>`,
-            wins: `<svg viewBox="0 0 24 24" width="1em" height="1em" style="vertical-align:middle;filter:drop-shadow(0 0 3px rgba(255,215,0,.5))"><path d="M5 3h14l-2 8h3l-8 10 2-6H8l5-8H5z" fill="#ffd700"/></svg>`,
-        };
         const COND = {
-            damage:   { icon: SVG_ICONS.damage,   emoji: '💥', unit: 'урона',   short: 'ДМГ',  color: '#ff9800' },
-            frags:    { icon: SVG_ICONS.frags,     emoji: '🎯', unit: 'фрагов',  short: 'ФРАГ', color: '#f44336' },
-            xp:       { icon: SVG_ICONS.xp,        emoji: '⭐', unit: 'опыта',   short: 'ОПЫТ', color: '#ffd700' },
-            spotting: { icon: SVG_ICONS.spotting,   emoji: '👁', unit: 'засвета', short: 'СВЕТ', color: '#2196f3' },
-            blocked:  { icon: SVG_ICONS.blocked,    emoji: '🛡', unit: 'блока',   short: 'БЛОК', color: '#607d8b' },
-            wins:     { icon: SVG_ICONS.wins,       emoji: '🏆', unit: 'побед',   short: 'ПОБ',  color: '#ffd700' },
+            damage:   { icon: '💥', unit: 'урона',   short: 'ДМГ',  color: '#ff9800' },
+            frags:    { icon: '🎯', unit: 'фрагов',  short: 'ФРАГ', color: '#f44336' },
+            xp:       { icon: '⭐', unit: 'опыта',   short: 'ОПЫТ', color: '#ffd700' },
+            spotting: { icon: '👁', unit: 'засвета', short: 'СВЕТ', color: '#2196f3' },
+            blocked:  { icon: '🛡', unit: 'блока',   short: 'БЛОК', color: '#607d8b' },
+            wins:     { icon: '🏆', unit: 'побед',   short: 'ПОБ',  color: '#ffd700' },
         };
         const THEMES = {
             gold: { bg: 'rgba(26,21,8,{o})', ac: '#f5d36e', acD: '#8B6914', tc: '#ffeeb0', ts: '0 0 15px rgba(245,211,110,.4),0 2px 0 #a07c2a,0 4px 8px rgba(0,0,0,.7)' },
