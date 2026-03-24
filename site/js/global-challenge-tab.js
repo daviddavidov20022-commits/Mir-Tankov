@@ -348,7 +348,10 @@ function gcFormatLbValue(player, challenge) {
     }
     
     // Multi-condition: show breakdown if player has condition_values
-    const condVals = player.condition_values;
+    let condVals = player.condition_values;
+    if (typeof condVals === 'string') {
+        try { condVals = JSON.parse(condVals); } catch(e) { condVals = null; }
+    }
     if (condVals && typeof condVals === 'object') {
         return conditions.map(c => {
             const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
@@ -426,7 +429,10 @@ async function gcShowPlayerDetail(telegramId, nickname) {
         document.body.appendChild(modal);
     }
 
-    const cond = GC_CONDITION_MAP[gcCurrentChallenge.condition] || GC_CONDITION_MAP.damage;
+    const ch = gcCurrentChallenge;
+    const conditions = (ch.condition || 'damage').split(',').map(c => c.trim()).filter(Boolean);
+    const isMulti = conditions.length > 1;
+    const firstCond = GC_CONDITION_MAP[conditions[0]] || GC_CONDITION_MAP.damage;
 
     modal.innerHTML = `
         <div class="gc-modal">
@@ -441,11 +447,38 @@ async function gcShowPlayerDetail(telegramId, nickname) {
     modal.style.display = 'flex';
 
     try {
-        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/battle-log?challenge_id=${gcCurrentChallenge.id}&telegram_id=${telegramId}`);
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/battle-log?challenge_id=${ch.id}&telegram_id=${telegramId}`);
         const data = await resp.json();
+
+        // Find this player in leaderboard for condition_values
+        const player = (ch.leaderboard || []).find(p => String(p.telegram_id) === String(telegramId));
 
         const body = document.getElementById('gcDetailBody');
         if (!data.battles || data.battles.length === 0) {
+            // Even without battle log, show condition_values if available
+            if (isMulti && player) {
+                let cv = player.condition_values;
+                if (typeof cv === 'string') try { cv = JSON.parse(cv); } catch(e) { cv = null; }
+                if (cv && typeof cv === 'object') {
+                    let condHtml = '<div style="padding:12px">';
+                    condHtml += '<div style="text-align:center;color:#aaa;margin-bottom:12px">Побоевая разбивка недоступна для мульти-условий</div>';
+                    condHtml += '<div style="display:flex;flex-direction:column;gap:8px">';
+                    conditions.forEach(c => {
+                        const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
+                        const val = (cv[c] || 0).toLocaleString('ru');
+                        condHtml += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.12);border-radius:10px">
+                            <span style="display:flex;align-items:center;gap:6px;font-size:14px">${ci.icon} ${ci.name}</span>
+                            <span style="font-weight:700;color:#C8AA6E;font-size:16px">${val}</span>
+                        </div>`;
+                    });
+                    condHtml += '</div>';
+                    const total = (player.current_value || 0).toLocaleString('ru');
+                    condHtml += `<div class="gc-battles-total">Сумма: <b>${total}</b> за <b>${player.battles_played || 0}</b> боёв</div>`;
+                    condHtml += '</div>';
+                    body.innerHTML = condHtml;
+                    return;
+                }
+            }
             body.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa">Боёв пока не обнаружено. Данные обновляются каждые 15 сек.</div>';
             return;
         }
@@ -463,11 +496,32 @@ async function gcShowPlayerDetail(telegramId, nickname) {
                         <span class="gc-battle-tier">${tierStr}</span>
                         ${b.tank_name}
                     </div>
-                    <div class="gc-battle-dmg">${(b.damage || 0).toLocaleString('ru')} ${cond.unit}</div>
+                    <div class="gc-battle-dmg">${(b.damage || 0).toLocaleString('ru')} ${firstCond.unit}</div>
                 </div>`;
         });
         html += '</div>';
-        html += `<div class="gc-battles-total">Итого: <b>${totalDmg.toLocaleString('ru')}</b> ${cond.unit} за <b>${data.battles.length}</b> боёв</div>`;
+
+        // Multi-condition summary
+        if (isMulti && player) {
+            let cv = player.condition_values;
+            if (typeof cv === 'string') try { cv = JSON.parse(cv); } catch(e) { cv = null; }
+            if (cv && typeof cv === 'object') {
+                html += '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:8px 12px">';
+                conditions.forEach(c => {
+                    const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
+                    const val = (cv[c] || 0).toLocaleString('ru');
+                    html += `<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:rgba(200,170,110,0.08);border:1px solid rgba(200,170,110,0.18);border-radius:14px;font-size:13px">
+                        ${ci.icon} <span style="color:#aaa">${ci.name}:</span> <b style="color:#C8AA6E">${val}</b>
+                    </span>`;
+                });
+                html += '</div>';
+            }
+        }
+
+        const totalLabel = isMulti
+            ? `Сумма: <b>${(player?.current_value || totalDmg).toLocaleString('ru')}</b> за <b>${data.battles.length}</b> боёв`
+            : `Итого: <b>${totalDmg.toLocaleString('ru')}</b> ${firstCond.unit} за <b>${data.battles.length}</b> боёв`;
+        html += `<div class="gc-battles-total">${totalLabel}</div>`;
         body.innerHTML = html;
     } catch (e) {
         document.getElementById('gcDetailBody').innerHTML = '<div style="color:red; padding:20px">❌ Ошибка загрузки</div>';
@@ -481,7 +535,8 @@ async function gcShowFullTable() {
     if (!gcCurrentChallenge) return;
     const ch = gcCurrentChallenge;
     const leaders = ch.leaderboard || [];
-    const cond = GC_CONDITION_MAP[ch.condition] || GC_CONDITION_MAP.damage;
+    const conditions = (ch.condition || 'damage').split(',').map(c => c.trim()).filter(Boolean);
+    const isMulti = conditions.length > 1;
     const maxBattles = ch.max_battles || 0;
 
     let modal = document.getElementById('gcDetailModal');
@@ -491,6 +546,14 @@ async function gcShowFullTable() {
         modal.className = 'gc-modal-overlay';
         document.body.appendChild(modal);
     }
+
+    // Build header columns for each condition
+    const condHeaders = isMulti
+        ? conditions.map(c => {
+            const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
+            return `<th style="font-size:12px;white-space:nowrap">${ci.icon} ${ci.name}</th>`;
+        }).join('') + '<th>Σ</th>'
+        : `<th>${(GC_CONDITION_MAP[conditions[0]] || GC_CONDITION_MAP.damage).name}</th>`;
 
     let html = `
         <div class="gc-modal gc-modal--wide">
@@ -505,7 +568,7 @@ async function gcShowFullTable() {
                             <th>#</th>
                             <th>Игрок</th>
                             <th>Боёв</th>
-                            <th>${cond.name}</th>
+                            ${condHeaders}
                         </tr>
                     </thead>
                     <tbody>`;
@@ -513,12 +576,26 @@ async function gcShowFullTable() {
     const sorted = [...leaders].sort((a, b) => (b.current_value || 0) - (a.current_value || 0));
     sorted.forEach((p, i) => {
         const battlesText = maxBattles > 0 ? `${p.battles_played || 0}/${maxBattles}` : `${p.battles_played || 0}`;
+
+        let condCells = '';
+        if (isMulti) {
+            let cv = p.condition_values;
+            if (typeof cv === 'string') try { cv = JSON.parse(cv); } catch(e) { cv = null; }
+            conditions.forEach(c => {
+                const val = (cv && cv[c]) ? cv[c] : 0;
+                condCells += `<td class="gc-table__value" style="font-size:13px">${val.toLocaleString('ru')}</td>`;
+            });
+            condCells += `<td class="gc-table__value" style="font-weight:700;color:#C8AA6E">${(p.current_value || 0).toLocaleString('ru')}</td>`;
+        } else {
+            condCells = `<td class="gc-table__value">${(p.current_value || 0).toLocaleString('ru')}</td>`;
+        }
+
         html += `
             <tr class="gc-table__row" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || '').replace(/'/g, "\\'")}')">
                 <td class="gc-table__rank">${i + 1}</td>
                 <td class="gc-table__name">${p.nickname || 'Танкист'}</td>
                 <td class="gc-table__battles">${battlesText}</td>
-                <td class="gc-table__value">${(p.current_value || 0).toLocaleString('ru')}</td>
+                ${condCells}
             </tr>`;
     });
 
