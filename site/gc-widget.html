@@ -995,7 +995,11 @@
         function formatCondValue(player, ch) {
             const conditions = (ch.condition || 'damage').split(',');
             if (conditions.length <= 1) return (player.current_value || 0).toLocaleString('ru');
-            const cv = player.condition_values;
+            let cv = player.condition_values;
+            // Parse JSON string if needed
+            if (typeof cv === 'string') {
+                try { cv = JSON.parse(cv); } catch (e) { cv = null; }
+            }
             if (cv && typeof cv === 'object') {
                 return conditions.map(c => {
                     const ci = COND[c] || COND.damage;
@@ -1008,8 +1012,10 @@
         function showChallenge(ch) {
             document.getElementById('wEmpty').style.display = 'none';
             const conditions = (ch.condition || 'damage').split(',');
-            const cond = COND[conditions[0]] || COND.damage;
-            // Multi-condition: build combined unit string
+            // Create a COPY — never mutate the shared COND object!
+            const baseCond = COND[conditions[0]] || COND.damage;
+            const cond = { ...baseCond };
+            // Multi-condition: build combined unit string on the copy
             if (conditions.length > 1) {
                 cond.unit = conditions.map(c => (COND[c] || COND.damage).icon).join('+');
                 cond.icon = conditions.map(c => (COND[c] || COND.damage).icon).join(' ');
