@@ -12,7 +12,12 @@
 // ============================================================
 const LESTA_API = 'https://api.tanki.su/wot';
 const LESTA_APP = 'c984faa7dc529f4cb0139505d5e8043c';
-const BOT_API_URL = localStorage.getItem('bot_api_url') || 'https://mir-tankov-production.up.railway.app';
+const BOT_API_URL = (() => {
+    const params = new URLSearchParams(window.location.search);
+    const host = params.get('api') || localStorage.getItem('api_host') || localStorage.getItem('bot_api_url');
+    if (host) return host;
+    return 'https://mir-tankov-production.up.railway.app';
+})();
 const BOT_USERNAME = 'Mir_tankov_privat_bot';
 
 let myTelegramId = 0;
