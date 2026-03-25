@@ -4526,30 +4526,31 @@ GC_CONDITION_TO_STAT = {
 
 
 async def gc_fetch_player_stat(account_id, condition):
-    """Получить текущий суммарный стат игрока из Lesta API"""
+    """Получить текущий суммарный стат игрока из Lesta API (через tanks/stats — актуальные данные)"""
     import aiohttp
     stat_field = GC_CONDITION_TO_STAT.get(condition, "damage_dealt")
 
     try:
-        timeout = aiohttp.ClientTimeout(total=10)
+        timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            url = (f"https://api.tanki.su/wot/account/info/"
+            url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={LESTA_APP_ID}&account_id={account_id}"
-                   f"&fields=statistics.all.{stat_field},statistics.all.battles")
+                   f"&fields=all.{stat_field},all.battles,tank_id")
             async with session.get(url) as resp:
                 data = await resp.json()
 
             if data.get("status") != "ok":
                 return None
 
-            player_data = data["data"].get(str(account_id))
-            if not player_data:
+            tanks = data["data"].get(str(account_id))
+            if not tanks:
                 return None
 
-            stats = player_data.get("statistics", {}).get("all", {})
+            total_value = sum(t.get("all", {}).get(stat_field, 0) for t in tanks)
+            total_battles = sum(t.get("all", {}).get("battles", 0) for t in tanks)
             return {
-                "value": stats.get(stat_field, 0),
-                "battles": stats.get("battles", 0),
+                "value": total_value,
+                "battles": total_battles,
             }
     except Exception as e:
         logger.error(f"GC fetch stat error for {account_id}: {e}")
@@ -4557,24 +4558,31 @@ async def gc_fetch_player_stat(account_id, condition):
 
 
 async def gc_fetch_player_multi_stats(account_id, conditions_str):
-    """Получить стату по нескольким условиям сразу (одним запросом к API)"""
+    """Получить стату по нескольким условиям сразу (через tanks/stats — актуальные данные)"""
     import aiohttp
     conditions = [c.strip() for c in conditions_str.split(",") if c.strip()]
     if not conditions:
         conditions = ["damage"]
     
-    # Собираем все нужные поля
-    stat_fields = set()
-    for cond in conditions:
-        stat_fields.add(GC_CONDITION_TO_STAT.get(cond, "damage_dealt"))
-    stat_fields.add("battles")
+    COND_TO_FIELD = {
+        "damage": "damage_dealt",
+        "frags": "frags",
+        "xp": "xp",
+        "spotting": "spotted",
+        "blocked": "damage_received",
+        "wins": "wins",
+    }
     
-    fields_str = ",".join(f"statistics.all.{f}" for f in stat_fields)
+    # Собираем все нужные поля для tanks/stats
+    tank_fields = set(["battles"])
+    for cond in conditions:
+        tank_fields.add(COND_TO_FIELD.get(cond, "damage_dealt"))
+    fields_str = ",".join(f"all.{f}" for f in tank_fields) + ",tank_id"
     
     try:
-        timeout = aiohttp.ClientTimeout(total=10)
+        timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            url = (f"https://api.tanki.su/wot/account/info/"
+            url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={LESTA_APP_ID}&account_id={account_id}"
                    f"&fields={fields_str}")
             async with session.get(url) as resp:
@@ -4583,23 +4591,27 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str):
         if data.get("status") != "ok":
             return None
         
-        player_data = data["data"].get(str(account_id))
-        if not player_data:
+        tanks = data["data"].get(str(account_id))
+        if not tanks:
             return None
         
-        stats = player_data.get("statistics", {}).get("all", {})
+        # Суммируем стату по всем танкам
+        total_battles = 0
+        per_condition = {c: 0 for c in conditions}
         
+        for t in tanks:
+            all_stats = t.get("all", {})
+            total_battles += all_stats.get("battles", 0)
+            for cond in conditions:
+                field = COND_TO_FIELD.get(cond, "damage_dealt")
+                per_condition[cond] += all_stats.get(field, 0)
+        
+        first_cond = conditions[0]
         result = {
-            "battles": stats.get("battles", 0),
-            "per_condition": {}
+            "battles": total_battles,
+            "per_condition": per_condition,
+            "value": per_condition.get(first_cond, 0),
         }
-        for cond in conditions:
-            sf = GC_CONDITION_TO_STAT.get(cond, "damage_dealt")
-            result["per_condition"][cond] = stats.get(sf, 0)
-        
-        # Суммарное значение (основное condition = первое)
-        first_sf = GC_CONDITION_TO_STAT.get(conditions[0], "damage_dealt")
-        result["value"] = stats.get(first_sf, 0)
         
         return result
     except Exception as e:
@@ -4608,10 +4620,14 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str):
 
 
 async def gc_fetch_batch_stats(account_ids, conditions_str):
-    """Получить стату ПАКЕТНО для до 100 игроков за 1 API запрос.
+    """Получить стату ПАКЕТНО для игроков.
     
-    Lesta API поддерживает account_id через запятую (до 100).
-    Возвращает dict: {account_id: {"battles": N, "per_condition": {cond: val}}}
+    ВАЖНО: Используем tanks/stats вместо account/info, т.к. account/info 
+    кэшируется на стороне Lesta на часы/дни и показывает устаревшие данные.
+    tanks/stats обновляется СРАЗУ после боя.
+    
+    Для каждого игрока суммируем стату по всем танкам.
+    Возвращает dict: {account_id: {"battles": N, "per_condition": {cond: val}, "value": V}}
     """
     import aiohttp
     if not account_ids:
@@ -4621,55 +4637,83 @@ async def gc_fetch_batch_stats(account_ids, conditions_str):
     if not conditions:
         conditions = ["damage"]
     
-    stat_fields = set()
-    for cond in conditions:
-        stat_fields.add(GC_CONDITION_TO_STAT.get(cond, "damage_dealt"))
-    stat_fields.add("battles")
+    # Маппинг условий → поля в tanks/stats (поле внутри all.{field})
+    COND_TO_TANK_FIELD = {
+        "damage": "damage_dealt",
+        "frags": "frags",
+        "xp": "xp",
+        "spotting": "spotted",
+        "blocked": "damage_received",
+        "wins": "wins",
+    }
     
-    fields_str = ",".join(f"statistics.all.{f}" for f in stat_fields)
+    # Собираем поля для запроса tanks/stats
+    tank_fields = set(["battles"])
+    for cond in conditions:
+        tank_fields.add(COND_TO_TANK_FIELD.get(cond, "damage_dealt"))
+    fields_str = ",".join(f"all.{f}" for f in tank_fields) + ",tank_id"
+    
     results = {}
     
-    # Разбиваем на батчи по 100 (лимит Lesta API)
-    BATCH_SIZE = 100
-    for i in range(0, len(account_ids), BATCH_SIZE):
-        batch = account_ids[i:i + BATCH_SIZE]
-        ids_str = ",".join(str(aid) for aid in batch)
-        
+    # tanks/stats НЕ поддерживает батч-запросы (только 1 account_id за раз)
+    # Но мы делаем их параллельно через asyncio.gather для скорости
+    async def fetch_one(session, aid):
         try:
-            timeout = aiohttp.ClientTimeout(total=15)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                url = (f"https://api.tanki.su/wot/account/info/"
-                       f"?application_id={LESTA_APP_ID}&account_id={ids_str}"
-                       f"&fields={fields_str}")
-                async with session.get(url) as resp:
-                    data = await resp.json()
+            url = (f"https://api.tanki.su/wot/tanks/stats/"
+                   f"?application_id={LESTA_APP_ID}&account_id={aid}"
+                   f"&fields={fields_str}")
+            async with session.get(url) as resp:
+                data = await resp.json()
             
             if data.get("status") != "ok":
-                logger.warning(f"GC batch fetch failed for batch {i//BATCH_SIZE}: status={data.get('status')}")
-                continue
+                return None
             
-            for aid in batch:
-                player_data = data["data"].get(str(aid))
-                if not player_data:
-                    continue
-                
-                stats = player_data.get("statistics", {}).get("all", {})
-                result = {
-                    "battles": stats.get("battles", 0),
-                    "per_condition": {}
-                }
+            tanks = data["data"].get(str(aid))
+            if not tanks:
+                return None
+            
+            # Суммируем стату по всем танкам
+            total_battles = 0
+            per_condition = {c: 0 for c in conditions}
+            
+            for t in tanks:
+                all_stats = t.get("all", {})
+                total_battles += all_stats.get("battles", 0)
                 for cond in conditions:
-                    sf = GC_CONDITION_TO_STAT.get(cond, "damage_dealt")
-                    result["per_condition"][cond] = stats.get(sf, 0)
-                
-                first_sf = GC_CONDITION_TO_STAT.get(conditions[0], "damage_dealt")
-                result["value"] = stats.get(first_sf, 0)
-                results[aid] = result
-                
+                    field = COND_TO_TANK_FIELD.get(cond, "damage_dealt")
+                    per_condition[cond] += all_stats.get(field, 0)
+            
+            first_cond = conditions[0]
+            result = {
+                "battles": total_battles,
+                "per_condition": per_condition,
+                "value": per_condition.get(first_cond, 0),
+            }
+            return (aid, result)
         except Exception as e:
-            logger.error(f"GC batch fetch error (batch {i//BATCH_SIZE}): {e}")
+            logger.warning(f"GC tanks/stats fetch error for {aid}: {e}")
+            return None
     
-    logger.info(f"GC batch fetch: got stats for {len(results)}/{len(account_ids)} players in {(len(account_ids)-1)//BATCH_SIZE + 1} API calls")
+    # Параллельные запросы (по 10 одновременно чтобы не перегрузить API)
+    import asyncio
+    CONCURRENT = 10
+    timeout = aiohttp.ClientTimeout(total=20)
+    
+    for i in range(0, len(account_ids), CONCURRENT):
+        batch = account_ids[i:i + CONCURRENT]
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            tasks = [fetch_one(session, aid) for aid in batch]
+            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            for res in batch_results:
+                if isinstance(res, Exception):
+                    logger.warning(f"GC batch task exception: {res}")
+                    continue
+                if res is not None:
+                    aid, data = res
+                    results[aid] = data
+    
+    logger.info(f"GC batch fetch (tanks/stats): got stats for {len(results)}/{len(account_ids)} players")
     return results
 
 
