@@ -30,9 +30,15 @@
         <div class="wheel-header__title">
             <h1>🎰 Колесо Фортуны</h1>
         </div>
-        <div class="wheel-header__coins">
-            <span>🧀</span>
-            <span id="coinsDisplay">0</span>
+        <div style="display:flex;align-items:center;gap:8px">
+            <!-- Кнопка настроек: видна только админу -->
+            <button id="wheelAdminBtn" onclick="openWheelAdmin()"
+                style="display:none;background:rgba(200,170,110,0.12);border:1px solid rgba(200,170,110,0.3);border-radius:10px;padding:7px 10px;cursor:pointer;font-size:1.1rem;line-height:1;transition:all 0.2s"
+                title="Настройки колеса">⚙️</button>
+            <div class="wheel-header__coins">
+                <span>🧀</span>
+                <span id="coinsDisplay">0</span>
+            </div>
         </div>
     </header>
 
@@ -119,6 +125,32 @@
 
     <script src="js/app.js"></script>
     <script src="js/wheel.js"></script>
+    <script>
+        // Показываем кнопку настроек только для администратора
+        function initWheelAdminBtn() {
+            const ADMIN_ID = 6507474079;
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            const isAdmin = (tgUser && tgUser.id === ADMIN_ID)
+                         || localStorage.getItem('admin_mode') === 'true';
+            if (isAdmin) {
+                const btn = document.getElementById('wheelAdminBtn');
+                if (btn) btn.style.display = 'block';
+            }
+        }
+
+        function openWheelAdmin() {
+            window.location.href = 'admin.html';
+        }
+
+        // Ждём инициализации Telegram SDK
+        if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.ready();
+            setTimeout(initWheelAdminBtn, 800);
+        } else {
+            document.addEventListener('DOMContentLoaded', () => setTimeout(initWheelAdminBtn, 800));
+        }
+        window.openWheelAdmin = openWheelAdmin;
+    </script>
 </body>
 
 </html>
