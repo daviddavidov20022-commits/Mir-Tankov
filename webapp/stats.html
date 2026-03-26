@@ -19,10 +19,10 @@
     <!-- Header -->
     <header class="stats-header">
         <button class="back-btn" onclick="goBack()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+            <span>←</span>
         </button>
         <div class="header-title">
-            <h1><svg class="header-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8AA6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg> Статистика</h1>
+            <h1>📊 Статистика</h1>
             <span class="header-sub">Мир Танков</span>
         </div>
     </header>
@@ -30,13 +30,7 @@
     <!-- Search Section -->
     <section class="search-section" id="searchSection">
         <div class="search-card">
-            <div class="search-icon">
-                <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#C8AA6E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="M21 21l-4.35-4.35"/>
-                    <circle cx="11" cy="11" r="3" stroke-opacity="0.4"/>
-                </svg>
-            </div>
+            <div class="search-icon">🔍</div>
             <h2>Поиск игрока</h2>
             <p>Введите никнейм игрока Мир Танков</p>
 
@@ -44,7 +38,7 @@
                 <input type="text" id="nicknameInput" class="search-input" placeholder="Введите ник..."
                     autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="24">
                 <button class="search-btn" id="searchBtn" onclick="searchPlayer()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <span class="search-btn__icon">🔍</span>
                     <span class="search-btn__text">Найти</span>
                 </button>
             </div>
@@ -61,16 +55,7 @@
     <section class="loading-section" id="loadingSection" style="display: none;">
         <div class="loading-card">
             <div class="tank-loader">
-                <div class="tank-loader__body">
-                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
-                        <rect x="12" y="34" width="40" height="14" rx="3" fill="#C8AA6E"/>
-                        <rect x="20" y="24" width="24" height="14" rx="2" fill="#A08850"/>
-                        <rect x="36" y="18" width="18" height="8" rx="2" fill="#8B7340"/>
-                        <circle cx="18" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2"/>
-                        <circle cx="32" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2"/>
-                        <circle cx="46" cy="52" r="5" fill="#5C5C5C" stroke="#8B7340" stroke-width="2"/>
-                    </svg>
-                </div>
+                <div class="tank-loader__body">🏎️</div>
                 <div class="tank-loader__track"></div>
             </div>
             <p>Загрузка статистики...</p>
@@ -84,13 +69,7 @@
         <div class="player-header" id="playerHeader">
             <div class="player-avatar">
                 <div class="player-avatar__ring" id="ratingRing"></div>
-                <div class="player-avatar__icon">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#C8AA6E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="rgba(200,170,110,0.15)"/>
-                        <path d="M12 6a4 4 0 0 0-4 4c0 1.5.5 2.5 1.5 3.5L8 17h8l-1.5-3.5c1-1 1.5-2 1.5-3.5a4 4 0 0 0-4-4z"/>
-                        <path d="M9 17v1a3 3 0 0 0 6 0v-1"/>
-                    </svg>
-                </div>
+                <div class="player-avatar__icon">🪖</div>
             </div>
             <div class="player-info">
                 <h2 class="player-nickname" id="playerNickname">—</h2>
@@ -107,37 +86,19 @@
         <!-- Add friend button -->
         <div class="add-friend-bar" id="addFriendBar" style="display:none;">
             <button class="add-friend-btn" id="addFriendBtn" onclick="addFriendFromStats()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                Добавить в друзья
+                ➕ Добавить в друзья
             </button>
         </div>
 
         <!-- Main Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card stat-card--battles">
-                <div class="stat-card__icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
-                        <path d="M13 7L8.5 2.5 10 1l6 6-1.5 1.5"/>
-                        <path d="M16 10l4.5 4.5L19 16l-6-6 1.5-1.5"/>
-                        <line x1="9" y1="15" x2="4.5" y2="19.5"/>
-                        <line x1="14.5" y1="9" x2="19.5" y2="4.5" stroke-opacity="0.4"/>
-                    </svg>
-                </div>
+                <div class="stat-card__icon">⚔️</div>
                 <div class="stat-card__value" id="statBattles">0</div>
                 <div class="stat-card__label">Боёв</div>
             </div>
             <div class="stat-card stat-card--winrate">
-                <div class="stat-card__icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                        <path d="M4 22h16"/>
-                        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-                        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
-                    </svg>
-                </div>
+                <div class="stat-card__icon">🏆</div>
                 <div class="stat-card__value" id="statWinrate">0%</div>
                 <div class="stat-card__label">Победы</div>
                 <div class="stat-card__bar">
@@ -145,20 +106,12 @@
                 </div>
             </div>
             <div class="stat-card stat-card--damage">
-                <div class="stat-card__icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="rgba(231,76,60,0.15)"/>
-                    </svg>
-                </div>
+                <div class="stat-card__icon"><img src="img/military/cond_damage.png" style="width:28px;height:28px"></div>
                 <div class="stat-card__value" id="statDamage">0</div>
                 <div class="stat-card__label">Ср. Урон</div>
             </div>
             <div class="stat-card stat-card--survive">
-                <div class="stat-card__icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="rgba(46,204,113,0.15)"/>
-                    </svg>
-                </div>
+                <div class="stat-card__icon">💚</div>
                 <div class="stat-card__value" id="statSurvive">0%</div>
                 <div class="stat-card__label">Выживание</div>
                 <div class="stat-card__bar">
@@ -169,62 +122,56 @@
 
         <!-- Detailed Stats -->
         <div class="detail-section">
-            <h3 class="detail-title">
-                <svg class="detail-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                Боевые показатели
-            </h3>
+            <h3 class="detail-title">💥 Боевые показатели</h3>
             <div class="detail-grid">
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Средние фраги</span>
+                    <span class="detail-label"><img src="img/military/cond_frags.png" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"> Средние фраги</span>
                     <span class="detail-value" id="detailFrags">0</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Средний засвет</span>
+                    <span class="detail-label"><img src="img/military/cond_spotting.png" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"> Средний засвет</span>
                     <span class="detail-value" id="detailSpotted">0</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="6"/></svg> Точность</span>
+                    <span class="detail-label">🎯 Точность</span>
                     <span class="detail-value" id="detailAccuracy">0%</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Средний опыт</span>
+                    <span class="detail-label"><img src="img/military/cond_xp.png" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"> Средний опыт</span>
                     <span class="detail-value" id="detailXP">0</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" fill="rgba(231,76,60,0.15)"/></svg> Макс. урон</span>
+                    <span class="detail-label">🔥 Макс. урон</span>
                     <span class="detail-value" id="detailMaxDmg">0</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="rgba(241,196,15,0.15)"/></svg> Макс. опыт</span>
+                    <span class="detail-label">⭐ Макс. опыт</span>
                     <span class="detail-value" id="detailMaxXP">0</span>
                 </div>
             </div>
         </div>
 
         <div class="detail-section">
-            <h3 class="detail-title">
-                <svg class="detail-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8AA6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-                Результаты
-            </h3>
+            <h3 class="detail-title">📊 Результаты</h3>
             <div class="detail-grid">
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Побед</span>
+                    <span class="detail-label">✅ Побед</span>
                     <span class="detail-value detail-value--green" id="detailWins">0</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2.5"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg> Поражений</span>
+                    <span class="detail-label">❌ Поражений</span>
                     <span class="detail-value detail-value--red" id="detailLosses">0</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="2" stroke-linecap="round"><path d="M17 11H3"/><path d="M21 7H3"/><path d="M21 15H3"/></svg> Ничьих</span>
+                    <span class="detail-label">🤝 Ничьих</span>
                     <span class="detail-value" id="detailDraws">0</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M3 21h18L12 3z" fill="rgba(230,126,34,0.1)"/><rect x="8" y="14" width="8" height="7" fill="rgba(230,126,34,0.2)" stroke="none"/></svg> Захват базы</span>
+                    <span class="detail-label">🏰 Захват базы</span>
                     <span class="detail-value" id="detailCapture">0</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label"><svg class="detail-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(52,152,219,0.1)"/></svg> Защита базы</span>
+                    <span class="detail-label">🛡 Защита базы</span>
                     <span class="detail-value" id="detailDefend">0</span>
                 </div>
             </div>
@@ -232,21 +179,9 @@
 
         <!-- Skill Level -->
         <div class="skill-section" id="skillSection">
-            <h3 class="detail-title">
-                <svg class="detail-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8AA6E" stroke-width="2">
-                    <path d="M12 15l-2 5h4l-2-5z" fill="rgba(200,170,110,0.3)"/>
-                    <circle cx="12" cy="8" r="6"/>
-                    <polygon points="12 2 13.5 5.5 17.5 6 14.5 8.5 15.5 12.5 12 10.5 8.5 12.5 9.5 8.5 6.5 6 10.5 5.5" fill="rgba(200,170,110,0.3)"/>
-                </svg>
-                Оценка уровня
-            </h3>
+            <h3 class="detail-title">🎖 Оценка уровня</h3>
             <div class="skill-card" id="skillCard">
-                <div class="skill-icon" id="skillIcon">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2">
-                        <circle cx="12" cy="12" r="10" fill="rgba(46,204,113,0.2)"/>
-                        <path d="M8 12l3 3 5-6"/>
-                    </svg>
-                </div>
+                <div class="skill-icon" id="skillIcon">🟢</div>
                 <div class="skill-info">
                     <div class="skill-name" id="skillName">Хороший игрок</div>
                     <div class="skill-desc" id="skillDesc">Уверенный боец на поле боя</div>
@@ -268,8 +203,7 @@
 
         <!-- Search Again -->
         <button class="new-search-btn" onclick="showSearch()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            Искать другого игрока
+            🔍 Искать другого игрока
         </button>
 
         <!-- Demo Warning -->

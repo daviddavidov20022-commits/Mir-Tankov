@@ -15,6 +15,13 @@ WEBAPP = os.path.join(ROOT, 'webapp')
 # ==========================================
 DIRECT_COPY = [
     'css/military-theme.css',
+    'css/global-challenge.css',
+    'css/stats.css',
+    'css/style.css',
+    'js/global-challenge-tab.js',
+    'js/gc-obs-links.js',
+    'js/stats-page.js',
+    'js/app.js',
 ]
 
 # ==========================================
@@ -23,6 +30,12 @@ DIRECT_COPY = [
 # ==========================================
 HTML_FILES = [
     'design-editor.html',
+    'gc-widget.html',
+    'global-challenge.html',
+    'challenges.html',
+    'stats.html',
+    'index.html',
+    'profile.html',
 ]
 
 # ==========================================

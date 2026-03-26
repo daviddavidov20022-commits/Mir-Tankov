@@ -6,12 +6,12 @@
  */
 
 const GC_CONDITION_MAP = {
-    damage: { icon: '💥', name: 'Урон', unit: 'урона' },
-    frags: { icon: '🎯', name: 'Фраги', unit: 'фрагов' },
-    xp: { icon: '⭐', name: 'Опыт', unit: 'опыта' },
-    spotting: { icon: '👁', name: 'Засвет', unit: 'засвета' },
-    blocked: { icon: '🛡', name: 'Блок', unit: 'блока' },
-    wins: { icon: '🏆', name: 'Победы', unit: 'побед' },
+    damage: { icon: '<img src="img/military/cond_damage.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Урон', unit: 'урона' },
+    frags: { icon: '<img src="img/military/cond_frags.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Фраги', unit: 'фрагов' },
+    xp: { icon: '<img src="img/military/cond_xp.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Опыт', unit: 'опыта' },
+    spotting: { icon: '<img src="img/military/cond_spotting.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Засвет', unit: 'засвета' },
+    blocked: { icon: '<img src="img/military/cond_blocked.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Блок', unit: 'блока' },
+    wins: { icon: '<img src="img/military/cond_wins.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Победы', unit: 'побед' },
 };
 
 let gcCurrentChallenge = null;
@@ -140,14 +140,14 @@ function gcShowActive(ch) {
     document.getElementById('gcFinished').style.display = 'none';
 
     // Header
-    document.getElementById('gcIcon').textContent = ch.icon || '🔥';
+    document.getElementById('gcIcon').innerHTML = ch.icon || '🔥';
     document.getElementById('gcTitle').textContent = ch.title;
     document.getElementById('gcDesc').textContent = ch.description || '';
 
     // Multi-condition support
     const conditions = (ch.condition || 'damage').split(',');
     const firstCond = GC_CONDITION_MAP[conditions[0]] || GC_CONDITION_MAP.damage;
-    document.getElementById('gcCondition').textContent = conditions.map(c => (GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage).icon).join(' ');
+    document.getElementById('gcCondition').innerHTML = conditions.map(c => (GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage).icon).join(' ');
     
     if (conditions.length > 1) {
         document.getElementById('gcCondLabel').textContent = conditions.length + ' условия';
