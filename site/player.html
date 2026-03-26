@@ -1,405 +1,852 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>МИР ТАНКОВ — Стрим</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/stream.css">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>МИР ТАНКОВ — Стрим Хаб</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="css/military-theme.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{
+            --gold:#C8AA6E;--gold2:#E8D5A3;
+            --bg:#080c12;--card:#0f1520;--card2:#141c28;--card3:#1a2332;
+            --border:rgba(200,170,110,0.12);--border2:rgba(200,170,110,0.22);
+            --text:#E8E6E3;--text2:#8B95A5;--text3:#4A5568;
+            --twitch:#9146FF;--yt:#FF0000;--vk:#0077FF;--tg:#29B6F6;
+            --green:#22c55e;--red:#ef4444;
+            --r:14px;--shadow:0 8px 32px rgba(0,0,0,0.5);
+        }
+        html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+        /* ── HEADER ── */
+        .sh-header{
+            position:sticky;top:0;z-index:200;
+            background:rgba(8,12,18,0.96);backdrop-filter:blur(20px);
+            border-bottom:1px solid var(--border);
+            display:flex;align-items:center;justify-content:space-between;
+            padding:10px 14px;gap:10px;
+        }
+        .sh-header__left{display:flex;align-items:center;gap:10px;}
+        .sh-back{
+            width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+            background:rgba(200,170,110,0.08);border:1px solid var(--border);
+            border-radius:10px;cursor:pointer;font-size:1rem;color:var(--gold);
+            text-decoration:none;flex-shrink:0;transition:all .2s;
+        }
+        .sh-back:hover{background:rgba(200,170,110,0.15);}
+        .sh-brand{display:flex;align-items:center;gap:8px;}
+        .sh-brand__icon{font-size:1.2rem;}
+        .sh-brand__text{font-family:'Russo One';font-size:0.85rem;color:var(--gold);letter-spacing:1px;}
+        .sh-brand__sub{font-size:0.6rem;color:var(--text3);letter-spacing:2px;text-transform:uppercase;}
+        .sh-header__right{display:flex;align-items:center;gap:8px;}
+        .live-pill{
+            display:flex;align-items:center;gap:5px;
+            padding:4px 10px;border-radius:20px;
+            background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);
+            font-size:0.65rem;font-weight:700;color:var(--green);
+            text-transform:uppercase;letter-spacing:1px;
+        }
+        .live-pill__dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse-dot 1.4s ease-in-out infinite;}
+        .live-pill.offline{background:rgba(74,85,104,0.2);border-color:rgba(74,85,104,0.3);color:var(--text3);}
+        .live-pill.offline .live-pill__dot{background:var(--text3);animation:none;}
+        @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.3);}}
+        .sh-user{display:flex;align-items:center;gap:6px;cursor:pointer;}
+        .sh-avatar{width:30px;height:30px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;}
+        .sh-username{font-size:0.72rem;font-weight:600;color:var(--text2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+        /* ── PLATFORM SWITCHER ── */
+        .platform-bar{
+            display:flex;gap:6px;padding:12px 14px 0;
+        }
+        .plat-btn{
+            flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+            padding:8px 6px;border-radius:10px;border:1px solid var(--border);
+            background:rgba(255,255,255,0.02);
+            font-size:0.65rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+            cursor:pointer;transition:all .25s;color:var(--text3);position:relative;
+            font-family:'Inter',sans-serif;
+        }
+        .plat-btn__dot{width:5px;height:5px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+        .plat-btn.active-twitch{background:rgba(145,70,255,0.12);border-color:rgba(145,70,255,0.35);color:var(--twitch);}
+        .plat-btn.active-twitch .plat-btn__dot{background:var(--twitch);box-shadow:0 0 6px var(--twitch);}
+        .plat-btn.active-vk{background:rgba(0,119,255,0.1);border-color:rgba(0,119,255,0.3);color:var(--vk);}
+        .plat-btn.active-vk .plat-btn__dot{background:var(--vk);box-shadow:0 0 6px var(--vk);}
+        .plat-btn.active-youtube{background:rgba(255,0,0,0.1);border-color:rgba(255,0,0,0.25);color:var(--yt);}
+        .plat-btn.active-youtube .plat-btn__dot{background:var(--yt);box-shadow:0 0 6px var(--yt);}
+        .plat-live-badge{
+            position:absolute;top:-4px;right:-4px;
+            background:var(--red);color:#fff;font-size:0.4rem;font-weight:700;
+            padding:1px 4px;border-radius:4px;letter-spacing:.5px;
+        }
+
+        /* ── STREAM CARD ── */
+        .stream-card{
+            margin:12px 14px 0;border-radius:var(--r);overflow:hidden;
+            background:var(--card);border:1px solid var(--border);
+            position:relative;cursor:pointer;
+        }
+        .stream-card:hover .sc-overlay{opacity:1;}
+        .sc-thumb{
+            width:100%;aspect-ratio:16/7;
+            background:linear-gradient(135deg,#0d1117 0%,#1a0d2e 50%,#0d1117 100%);
+            display:flex;align-items:center;justify-content:center;
+            position:relative;overflow:hidden;
+        }
+        .sc-thumb-bg{
+            position:absolute;inset:0;
+            background:radial-gradient(ellipse at 30% 50%,rgba(145,70,255,0.15),transparent 60%),
+                        radial-gradient(ellipse at 70% 50%,rgba(200,170,110,0.08),transparent 60%);
+        }
+        .sc-thumb-lines{position:absolute;inset:0;opacity:.04;}
+        .sc-thumb-lines::before,.sc-thumb-lines::after{content:'';position:absolute;background:var(--gold);width:1px;}
+        .sc-thumb-lines::before{height:100%;left:33%;}
+        .sc-thumb-lines::after{height:100%;left:66%;}
+        .sc-center{position:relative;z-index:2;text-align:center;}
+        .sc-icon{font-size:2.5rem;display:block;margin-bottom:8px;filter:drop-shadow(0 0 20px rgba(145,70,255,.5));}
+        .sc-channel{font-family:'Russo One';font-size:1.1rem;color:#fff;letter-spacing:2px;}
+        .sc-platform{font-size:0.65rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:1px;}
+        .sc-overlay{
+            position:absolute;inset:0;background:rgba(0,0,0,.55);
+            display:flex;align-items:center;justify-content:center;
+            opacity:0;transition:opacity .25s;z-index:10;
+        }
+        .sc-watch-btn{
+            display:flex;align-items:center;gap:8px;
+            padding:10px 24px;border-radius:10px;border:none;cursor:pointer;
+            font-family:'Russo One';font-size:0.8rem;letter-spacing:1px;
+            background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0e14;
+            transition:transform .15s;
+        }
+        .sc-watch-btn:hover{transform:scale(1.05);}
+        .sc-footer{
+            padding:10px 14px;display:flex;align-items:center;justify-content:space-between;
+        }
+        .sc-footer-left{display:flex;align-items:center;gap:8px;}
+        .sc-viewers{font-size:0.72rem;color:var(--text2);display:flex;align-items:center;gap:4px;}
+        .sc-viewers-dot{width:5px;height:5px;background:var(--red);border-radius:50%;}
+        .sc-hint{font-size:0.6rem;color:var(--text3);}
+        .sc-open-link{
+            display:flex;align-items:center;gap:5px;
+            padding:6px 12px;border-radius:8px;
+            background:linear-gradient(135deg,var(--gold),var(--gold2));
+            font-size:0.65rem;font-weight:700;color:#0a0e14;letter-spacing:.5px;
+            border:none;cursor:pointer;font-family:'Inter',sans-serif;
+            transition:transform .15s,box-shadow .15s;
+        }
+        .sc-open-link:hover{transform:scale(1.04);box-shadow:0 4px 16px rgba(200,170,110,.3);}
+
+        /* ── ACTION BUTTONS ── */
+        .action-row{
+            display:flex;gap:8px;padding:10px 14px 0;
+        }
+        .act-btn{
+            flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+            padding:10px 6px;border-radius:12px;border:1px solid var(--border);
+            background:var(--card);cursor:pointer;transition:all .2s;
+            font-family:'Inter',sans-serif;
+        }
+        .act-btn:hover{border-color:var(--border2);background:var(--card2);}
+        .act-btn:active{transform:scale(.96);}
+        .act-btn__icon{font-size:1.2rem;}
+        .act-btn__label{font-size:0.55rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+        .act-btn--donate{border-color:rgba(200,170,110,0.2);}
+        .act-btn--donate .act-btn__icon{filter:drop-shadow(0 0 6px rgba(200,170,110,.3));}
+        .act-btn--ai{border-color:rgba(167,139,250,0.2);}
+        .act-btn--music{border-color:rgba(96,165,250,0.2);}
+
+        /* ── CHAT SECTION ── */
+        .chat-section{margin:12px 14px 0;}
+        .chat-header{
+            display:flex;align-items:center;justify-content:space-between;
+            margin-bottom:8px;
+        }
+        .chat-header__left{display:flex;align-items:center;gap:8px;}
+        .chat-title{font-family:'Russo One';font-size:0.8rem;color:var(--text);letter-spacing:1px;}
+        .chat-status{display:flex;align-items:center;gap:4px;font-size:0.6rem;color:var(--text3);}
+        .chat-status__dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 1.4s infinite;}
+        .chat-status.offline .chat-status__dot{background:var(--text3);animation:none;}
+        .chat-mode-toggle{display:flex;gap:4px;background:rgba(0,0,0,.3);border-radius:8px;padding:3px;}
+        .cmt-btn{
+            padding:4px 10px;border-radius:6px;border:none;
+            font-size:0.6rem;font-weight:700;cursor:pointer;
+            font-family:'Inter',sans-serif;color:var(--text3);background:transparent;
+            transition:all .2s;
+        }
+        .cmt-btn.active{background:rgba(200,170,110,0.15);color:var(--gold);}
+
+        .chat-box{
+            background:var(--card);border:1px solid var(--border);
+            border-radius:var(--r);overflow:hidden;
+        }
+        .chat-messages{
+            height:280px;overflow-y:auto;padding:10px;
+            display:flex;flex-direction:column;gap:4px;
+            scroll-behavior:smooth;
+        }
+        .chat-messages::-webkit-scrollbar{width:3px;}
+        .chat-messages::-webkit-scrollbar-track{background:transparent;}
+        .chat-messages::-webkit-scrollbar-thumb{background:rgba(200,170,110,.2);border-radius:2px;}
+
+        /* Chat messages */
+        .cm{
+            display:flex;align-items:flex-start;gap:7px;
+            padding:5px 8px;border-radius:8px;
+            animation:cm-in .25s ease forwards;
+            transition:background .15s;
+        }
+        .cm:hover{background:rgba(255,255,255,.03);}
+        @keyframes cm-in{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+        .cm__plat{font-size:.8rem;flex-shrink:0;opacity:.7;}
+        .cm__badges{font-size:.7rem;flex-shrink:0;}
+        .cm__name{font-weight:700;font-size:.75rem;flex-shrink:0;cursor:pointer;}
+        .cm__sep{color:var(--text3);font-size:.7rem;flex-shrink:0;}
+        .cm__text{font-size:.75rem;color:var(--text);line-height:1.4;word-break:break-word;}
+        .cm__time{font-size:.55rem;color:var(--text3);flex-shrink:0;margin-left:auto;margin-top:1px;}
+
+        .cm-system{
+            display:flex;align-items:center;gap:6px;
+            padding:5px 8px;border-radius:6px;
+            background:rgba(200,170,110,.04);border:1px solid rgba(200,170,110,.08);
+            font-size:.68rem;color:var(--text3);
+        }
+        .cm-system__icon{font-size:.8rem;}
+        .cm-event{
+            padding:6px 10px;border-radius:8px;
+            background:linear-gradient(90deg,rgba(145,70,255,.1),rgba(145,70,255,.04));
+            border-left:2px solid var(--twitch);
+            font-size:.7rem;color:var(--text);font-weight:600;
+            animation:cm-in .3s ease forwards;
+        }
+
+        /* Widget iframe */
+        .chat-widget-wrap{display:none;height:300px;}
+        .chat-widget-wrap iframe{width:100%;height:100%;border:none;}
+
+        /* Input */
+        .chat-input-row{
+            display:flex;align-items:center;gap:6px;
+            padding:8px 10px;border-top:1px solid var(--border);
+            background:var(--card2);
+        }
+        .chat-plat-icon{font-size:.9rem;flex-shrink:0;opacity:.7;}
+        .chat-input{
+            flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+            border-radius:8px;padding:7px 10px;color:var(--text);font-size:.78rem;
+            font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;
+        }
+        .chat-input:focus{border-color:rgba(200,170,110,.25);}
+        .chat-input::placeholder{color:var(--text3);}
+        .chat-send{
+            width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;
+            background:linear-gradient(135deg,var(--gold),var(--gold2));
+            display:flex;align-items:center;justify-content:center;
+            font-size:.85rem;flex-shrink:0;transition:transform .15s;
+        }
+        .chat-send:hover{transform:scale(1.08);}
+        .chat-send:active{transform:scale(.95);}
+
+        /* ── MODALS ── */
+        .modal-overlay{
+            position:fixed;inset:0;z-index:500;
+            background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
+            display:flex;align-items:flex-end;justify-content:center;
+        }
+        .modal-sheet{
+            width:100%;max-width:480px;
+            background:var(--card2);border-radius:20px 20px 0 0;
+            border-top:1px solid var(--border2);
+            padding:20px 20px 30px;
+            animation:slide-up .3s cubic-bezier(.34,1.56,.64,1) forwards;
+        }
+        @keyframes slide-up{from{transform:translateY(100%);}to{transform:translateY(0);}}
+        .modal-drag{width:36px;height:4px;background:rgba(255,255,255,.12);border-radius:2px;margin:0 auto 16px;}
+        .modal-title{font-family:'Russo One';font-size:1rem;color:var(--gold);margin-bottom:4px;}
+        .modal-bal{font-size:.72rem;color:var(--text2);margin-bottom:14px;}
+        .modal-amounts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+        .modal-amt{
+            padding:6px 14px;border-radius:8px;border:1px solid var(--border2);
+            background:rgba(200,170,110,.06);color:var(--gold);font-size:.75rem;font-weight:700;
+            cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;
+        }
+        .modal-amt:hover,.modal-amt.sel{background:rgba(200,170,110,.18);border-color:var(--gold);}
+        .modal-inp{
+            width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);
+            border-radius:10px;padding:10px 12px;color:var(--text);font-size:.85rem;
+            font-family:'Inter',sans-serif;outline:none;margin-bottom:10px;
+        }
+        .modal-inp:focus{border-color:var(--border2);}
+        .modal-btn-primary{
+            width:100%;padding:12px;border-radius:12px;border:none;cursor:pointer;
+            background:linear-gradient(135deg,var(--gold),var(--gold2));
+            font-family:'Russo One';font-size:.85rem;color:#0a0e14;letter-spacing:.5px;
+            transition:transform .15s;margin-bottom:8px;
+        }
+        .modal-btn-primary:hover{transform:scale(1.02);}
+        .modal-btn-sec{
+            width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);
+            background:transparent;color:var(--text2);font-size:.78rem;cursor:pointer;
+            font-family:'Inter',sans-serif;
+        }
+
+        /* ── SETTINGS MODAL ── */
+        .settings-overlay{
+            position:fixed;inset:0;z-index:600;
+            background:rgba(0,0,0,.8);backdrop-filter:blur(10px);
+            display:flex;align-items:flex-end;justify-content:center;
+        }
+        .settings-sheet{
+            width:100%;max-width:480px;max-height:85vh;overflow-y:auto;
+            background:var(--card2);border-radius:20px 20px 0 0;
+            border-top:1px solid var(--border2);padding:16px 16px 30px;
+            animation:slide-up .3s cubic-bezier(.34,1.56,.64,1) forwards;
+        }
+        .settings-sheet::-webkit-scrollbar{width:3px;}
+        .settings-sheet::-webkit-scrollbar-thumb{background:rgba(200,170,110,.15);}
+        .ss-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+        .ss-title{font-family:'Russo One';font-size:.95rem;color:var(--gold);}
+        .ss-close{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:.85rem;}
+        .ss-tabs{display:flex;gap:4px;background:rgba(0,0,0,.3);border-radius:10px;padding:3px;margin-bottom:14px;}
+        .ss-tab{flex:1;padding:6px;border-radius:8px;border:none;background:transparent;font-size:.62rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
+        .ss-tab.active{background:rgba(200,170,110,.15);color:var(--gold);}
+        .sp{display:none;}
+        .sp.active{display:block;}
+        .sp-group{background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;}
+        .sp-label{font-family:'Russo One';font-size:.7rem;color:var(--text2);margin-bottom:8px;display:block;}
+        .sp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+        .sp-row:last-child{margin-bottom:0;}
+        .sp-input{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:.75rem;font-family:'Inter',sans-serif;outline:none;}
+        .sp-input:focus{border-color:var(--border2);}
+        .sp-input-sm{width:70px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:6px 8px;color:var(--text);font-size:.75rem;font-family:'Inter',sans-serif;outline:none;text-align:center;}
+        .sp-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.75rem;color:var(--text2);}
+        .sp-toggle input{width:14px;height:14px;cursor:pointer;accent-color:var(--gold);}
+        .sp-save{
+            width:100%;padding:11px;border-radius:10px;border:none;cursor:pointer;
+            background:linear-gradient(135deg,var(--gold),var(--gold2));
+            font-family:'Russo One';font-size:.8rem;color:#0a0e14;margin-top:4px;
+        }
+        .sp-add{padding:7px 12px;border-radius:8px;border:1px solid var(--border2);background:rgba(200,170,110,.08);color:var(--gold);font-size:.75rem;cursor:pointer;flex-shrink:0;font-family:'Inter',sans-serif;}
+        .sp-hint{font-size:.62rem;color:var(--text3);margin-bottom:8px;line-height:1.5;}
+        .sp-list{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+        .sp-list-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,0,0,.2);border-radius:8px;font-size:.72rem;color:var(--text2);}
+        .sp-list-item__name{flex:1;font-weight:600;color:var(--text);}
+        .sp-del{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:6px;color:#ef4444;padding:3px 7px;font-size:.65rem;cursor:pointer;flex-shrink:0;}
+        .sp-range{width:100%;accent-color:var(--gold);}
+        .sp-unit{font-size:.65rem;color:var(--text3);flex-shrink:0;}
+        .sp-select{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:6px 8px;color:var(--text);font-size:.73rem;flex:1;outline:none;font-family:'Inter',sans-serif;}
+        .sp-upload-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+        .sp-upload-btn{padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:.65rem;cursor:pointer;font-family:'Inter',sans-serif;}
+        .sp-upload-status{font-size:.6rem;color:var(--text3);}
+        .sp-test{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:rgba(200,170,110,.06);color:var(--gold);font-size:.7rem;cursor:pointer;font-family:'Inter',sans-serif;width:100%;margin-top:6px;}
+        .obs-url{font-size:.62rem;color:var(--gold);word-break:break-all;line-height:1.4;margin-top:4px;}
+
+        /* ── ADMIN GEAR ── */
+        .admin-gear{
+            position:fixed;bottom:80px;right:14px;z-index:300;
+            width:40px;height:40px;border-radius:50%;border:1px solid var(--border2);
+            background:rgba(200,170,110,.12);backdrop-filter:blur(10px);
+            display:none;align-items:center;justify-content:center;
+            font-size:1.1rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);
+            transition:transform .2s;
+        }
+        .admin-gear:hover{transform:rotate(30deg) scale(1.08);}
+
+        /* ── BOTTOM NAV ── */
+        .bottom-nav{
+            position:fixed;bottom:0;left:0;right:0;z-index:400;
+            background:rgba(8,12,18,.97);backdrop-filter:blur(20px);
+            border-top:1px solid var(--border);
+            display:flex;padding:6px 0 8px;
+        }
+        .bn-item{
+            flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+            cursor:pointer;padding:4px 0;text-decoration:none;
+            transition:opacity .2s;
+        }
+        .bn-item__icon{font-size:1.1rem;}
+        .bn-item__label{font-size:.45rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+        .bn-item--active .bn-item__icon{filter:drop-shadow(0 0 6px rgba(200,170,110,.5));}
+        .bn-item--active .bn-item__label{color:var(--gold);}
+
+        /* ── SPACERS ── */
+        .page-bottom{height:90px;}
+        .watermark{text-align:center;font-size:.55rem;color:var(--text3);padding:8px 0 4px;letter-spacing:1px;}
+
+        /* ── TOAST ── */
+        .toast{
+            position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+            background:var(--card3);border:1px solid var(--border2);border-radius:12px;
+            padding:8px 16px;display:flex;align-items:center;gap:6px;
+            font-size:.75rem;white-space:nowrap;z-index:999;
+            opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+            box-shadow:0 4px 20px rgba(0,0,0,.5);
+        }
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+        /* ── DEBUG ── */
+        #adminDebug{display:none;}
+
+        @media(max-width:360px){
+            .sh-brand__text{font-size:.75rem;}
+            .plat-btn{font-size:.55rem;padding:7px 4px;}
+            .chat-messages{height:240px;}
+        }
+    </style>
 </head>
-
 <body>
-    <div class="bg-particles" id="bgParticles"></div>
 
-    <div class="app-wrapper">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="app-header__left">
-                <div class="app-header__logo">🎮</div>
-                <div class="app-header__info">
-                    <div class="app-header__title">МИР ТАНКОВ</div>
-                    <div class="app-header__subtitle">СТРИМ</div>
-                </div>
+<!-- HEADER -->
+<header class="sh-header">
+    <div class="sh-header__left">
+        <a class="sh-back" onclick="goBack()">←</a>
+        <div class="sh-brand">
+            <span class="sh-brand__icon">📺</span>
+            <div>
+                <div class="sh-brand__text">СТРИМ ХАБ</div>
+                <div class="sh-brand__sub">МИР ТАНКОВ</div>
             </div>
-            <div class="app-header__right">
-                <div class="profile-badge" onclick="openGame('profile.html')">
-                    <span class="profile-badge__icon">👤</span>
-                    <span class="profile-badge__name" id="userName">Танкист</span>
-                </div>
-            </div>
-        </header>
-
-        <div class="content-area">
-            <button class="btn-back" onclick="goBack()">← Назад</button>
-
-            <!-- Platform Tabs — переключают встроенный плеер -->
-            <div class="platform-tabs" id="platformTabs">
-                <button class="platform-tab platform-tab--active" data-platform="twitch" onclick="switchPlatform('twitch')">
-                    <span class="platform-tab__icon">💜</span>
-                    <span class="platform-tab__name">TWITCH</span>
-                </button>
-                <button class="platform-tab" data-platform="vk" onclick="switchPlatform('vk')">
-                    <span class="platform-tab__icon">🔵</span>
-                    <span class="platform-tab__name">VK PLAY</span>
-                </button>
-                <button class="platform-tab" data-platform="youtube" onclick="switchPlatform('youtube')">
-                    <span class="platform-tab__icon">🔴</span>
-                    <span class="platform-tab__name">YOUTUBE</span>
-                </button>
-            </div>
-
-            <!-- Stream Info -->
-            <div class="stream-header">
-                <div class="stream-header__live" id="streamLiveBadge">
-                    <span class="stream-header__dot"></span>
-                    <span>LIVE</span>
-                </div>
-                <div class="stream-header__info">
-                    <div class="stream-header__title" id="streamTitle">ISERVERI</div>
-                    <div class="stream-header__viewers" id="streamViewers">Загрузка...</div>
-                </div>
-            </div>
-
-            <!-- Stream Preview (iframe не работает в Telegram WebView) -->
-            <div class="stream-player" id="streamPlayer">
-                <div class="stream-player__preview" id="streamPreview">
-                    <div class="stream-preview__bg">
-                        <div class="stream-preview__glow"></div>
-                    </div>
-                    <div class="stream-preview__content">
-                        <div class="stream-preview__icon" id="previewIcon">💜</div>
-                        <div class="stream-preview__channel" id="previewChannel">SERVERENOK</div>
-                        <div class="stream-preview__platform" id="previewPlatform">twitch.tv</div>
-                        <button class="stream-preview__btn" id="previewBtn" onclick="openStreamLink('twitch')">
-                            ▶ СМОТРЕТЬ СТРИМ
-                        </button>
-                        <div class="stream-preview__hint">Откроется в браузере</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chat -->
-            <div class="stream-chat">
-                <div class="stream-chat__header">
-                    <div class="stream-chat__title">COMMUNICATIONS LOG</div>
-                    <div class="stream-chat__platforms">
-                        <span class="chat-platform-badge chat-platform-badge--twitch" id="chatBadgeTwitch">📺 Twitch</span>
-                        <span class="chat-platform-badge chat-platform-badge--telegram" id="chatBadgeTelegram">📱 Telegram</span>
-                    </div>
-                </div>
-
-                <!-- Chat widget iframe (из админ-настроек) -->
-                <div class="stream-chat__widget" id="chatWidgetContainer" style="display:none;">
-                    <iframe id="chatWidgetIframe" style="width:100%;height:100%;border:none;border-radius:0;"></iframe>
-                </div>
-
-                <!-- Переключатель: виджет / наш чат -->
-                <div class="stream-chat__mode-toggle">
-                    <button class="chat-mode-btn chat-mode-btn--active" id="chatModeUnified" onclick="switchChatMode('unified')">📡 Общий чат</button>
-                    <button class="chat-mode-btn" id="chatModeWidget" onclick="switchChatMode('widget')">🔗 Виджет платформы</button>
-                </div>
-
-                <div class="stream-chat__messages" id="chatMessages">
-                    <div class="chat-system-msg">
-                        <span class="chat-system-msg__icon">🎮</span>
-                        <span>Подключение к чату...</span>
-                    </div>
-                </div>
-
-                <!-- Chat Input -->
-                <div class="stream-chat__input-area">
-                    <div class="stream-chat__platform-info" id="chatPlatformInfo">
-                        💜 → Twitch
-                    </div>
-                    <input type="text" class="stream-chat__input" id="chatInput" 
-                           placeholder="Написать сообщение..." 
-                           autocomplete="off" 
-                           maxlength="500">
-                    <button class="stream-chat__send" id="chatSendBtn" onclick="sendChatMessage()">➤</button>
-                </div>
-            </div>
-
-            <!-- Donate & Music Buttons -->
-            <div class="stream-actions">
-                <button class="stream-action-btn stream-action-btn--donate" onclick="openDonateModal()">
-                    <span class="stream-action-btn__icon">🎖</span>
-                    <span class="stream-action-btn__text">Донат</span>
-                    <span class="stream-action-btn__sub" id="topDonSub" style="font-size:0.55rem;color:#8a7a5a;margin-top:2px;">🏅 Топ дон: —</span>
-                </button>
-                <button class="stream-action-btn stream-action-btn--ai" onclick="openAiDonateModal()">
-                    <span class="stream-action-btn__icon">🤖</span>
-                    <span class="stream-action-btn__text">AI Донат</span>
-                </button>
-                <button class="stream-action-btn stream-action-btn--music" onclick="openMusicModal()">
-                    <span class="stream-action-btn__icon">🎵</span>
-                    <span class="stream-action-btn__text">Музыка</span>
-                    <span class="stream-action-btn__sub" id="trackSub" style="font-size:0.55rem;color:#7060a0;margin-top:2px;">🎶 Track: —</span>
-                </button>
-            </div>
-
-            <!-- Donate Modal -->
-            <div class="modal-overlay" id="donateModal" style="display:none;" onclick="if(event.target===this)closeDonateModal()">
-                <div class="modal-dialog">
-                    <div class="modal-dialog__title">🧀 Донат на стрим</div>
-                    <div class="modal-dialog__balance" id="donateBalance">Баланс: ... 🧀</div>
-                    
-                    <div class="donate-amounts">
-                        <button class="donate-amount-btn" onclick="setDonateAmount(10)">10 🧀</button>
-                        <button class="donate-amount-btn" onclick="setDonateAmount(50)">50 🧀</button>
-                        <button class="donate-amount-btn" onclick="setDonateAmount(100)">100 🧀</button>
-                        <button class="donate-amount-btn" onclick="setDonateAmount(500)">500 🧀</button>
-                    </div>
-                    
-                    <input type="number" id="donateAmount" class="modal-input" placeholder="Сумма (мин. 10)" min="10" value="50">
-                    <textarea id="donateMessage" class="modal-input modal-textarea" placeholder="Сообщение на стрим (необязательно)" maxlength="200" rows="2"></textarea>
-                    
-                    <button class="modal-btn modal-btn--primary" onclick="sendDonate()">
-                        🧀 Отправить донат
-                    </button>
-                    <button class="modal-btn modal-btn--secondary" onclick="closeDonateModal()">Отмена</button>
-                </div>
-            </div>
-
-            <!-- Music Modal -->
-            <div class="modal-overlay" id="musicModal" style="display:none;" onclick="if(event.target===this)closeMusicModal()">
-                <div class="modal-dialog">
-                    <div class="modal-dialog__title">🎵 Заказ музыки</div>
-                    <div class="modal-dialog__balance" id="musicBalance">Баланс: ... 🧀</div>
-                    <div class="modal-dialog__cost">Стоимость: 50 🧀</div>
-                    
-                    <input type="text" id="musicUrl" class="modal-input" placeholder="Ссылка на YouTube видео" autocomplete="off">
-                    
-                    <button class="modal-btn modal-btn--primary" onclick="sendMusicRequest()">
-                        🎵 Заказать (50 🧀)
-                    </button>
-                    <button class="modal-btn modal-btn--secondary" onclick="closeMusicModal()">Отмена</button>
-                </div>
-            </div>
-
-            <!-- ⚙️ Admin Gear Button (только для админов) -->
-            <button class="admin-gear-btn" id="adminGearBtn" onclick="openSettingsModal()" style="display:none;">⚙️</button>
-
-            <!-- Settings Modal -->
-            <div class="settings-overlay" id="settingsModal" style="display:none;" onclick="if(event.target===this)closeSettingsModal()">
-                <div class="settings-modal">
-                    <div class="settings-modal__header">
-                        <span class="settings-modal__title">⚙️ Настройки стрима</span>
-                        <button class="settings-modal__close" onclick="closeSettingsModal()">✕</button>
-                    </div>
-
-                    <!-- Tabs -->
-                    <div class="settings-tabs">
-                        <button class="settings-tab settings-tab--active" onclick="switchSettingsTab('broadcast', this)">📺 Трансляция</button>
-                        <button class="settings-tab" onclick="switchSettingsTab('music', this)">🎵 Музыка</button>
-                        <button class="settings-tab" onclick="switchSettingsTab('donates', this)">🧀 Донаты</button>
-                    </div>
-
-                    <!-- Tab: Broadcast -->
-                    <div class="settings-panel" id="settingsTab_broadcast">
-                        <div class="sp-group">
-                            <div class="sp-group__title">📺 Платформы — Стрим</div>
-                            <div class="sp-hint" style="margin-bottom:8px;">Ссылка на embed/iframe стрима каждой платформы</div>
-                            <div class="sp-row">
-                                <label class="sp-toggle"><input type="checkbox" id="adminTwitchEnabled" checked onchange="updateStreamConfig()"><span>💜 Twitch</span></label>
-                                <input type="text" id="adminTwitchChannel" class="sp-input" placeholder="Имя канала (напр. iserveri)" autocomplete="off">
-                            </div>
-                            <div class="sp-row">
-                                <label class="sp-toggle"><input type="checkbox" id="adminYoutubeEnabled" onchange="updateStreamConfig()"><span>🔴 YouTube</span></label>
-                                <input type="text" id="adminYoutubeChannel" class="sp-input" placeholder="Channel ID (UCxx...) или embed URL" autocomplete="off">
-                            </div>
-                            <div class="sp-row">
-                                <label class="sp-toggle"><input type="checkbox" id="adminVkEnabled" onchange="updateStreamConfig()"><span>🔵 VK Play</span></label>
-                                <input type="text" id="adminVkChannel" class="sp-input" placeholder="Ссылка embed VK (vk.com/video_ext...)" autocomplete="off">
-                            </div>
-                        </div>
-                        <div class="sp-group">
-                            <div class="sp-group__title">💬 Виджеты чатов</div>
-                            <div class="sp-hint" style="margin-bottom:8px;">Вставьте URL виджета/embed чата для каждой платформы. Все чаты будут видны в одном окне.</div>
-                            <div class="sp-row">
-                                <span class="sp-label">💜 Twitch чат</span>
-                            </div>
-                            <div class="sp-row">
-                                <input type="text" id="adminTwitchChatWidget" class="sp-input" placeholder="https://www.twitch.tv/embed/КАНАЛ/chat?parent=...&darkpopout" autocomplete="off">
-                            </div>
-                            <div class="sp-row">
-                                <span class="sp-label">🔴 YouTube чат</span>
-                            </div>
-                            <div class="sp-row">
-                                <input type="text" id="adminYoutubeChatWidget" class="sp-input" placeholder="https://www.youtube.com/live_chat?v=VIDEO_ID&embed_domain=..." autocomplete="off">
-                            </div>
-                            <div class="sp-row">
-                                <span class="sp-label">🔵 VK чат</span>
-                            </div>
-                            <div class="sp-row">
-                                <input type="text" id="adminVkChatWidget" class="sp-input" placeholder="URL виджета чата VK" autocomplete="off">
-                            </div>
-                        </div>
-                        <div class="sp-group">
-                            <div class="sp-group__title">⚡ Быстрые каналы</div>
-                            <div class="sp-row">
-                                <input type="text" id="adminChName" class="sp-input" placeholder="Название" autocomplete="off">
-                                <select id="adminChPlatform" class="sp-select">
-                                    <option value="twitch">💜 Twitch</option>
-                                    <option value="youtube">🔴 YouTube</option>
-                                    <option value="vk">🔵 VK</option>
-                                </select>
-                            </div>
-                            <div class="sp-row">
-                                <input type="text" id="adminChUrl" class="sp-input" placeholder="Канал/ссылка" autocomplete="off">
-                                <button class="sp-btn-add" onclick="addChannel()">➕</button>
-                            </div>
-                            <div id="adminChannelList"></div>
-                        </div>
-                        <button class="sp-save-btn" onclick="saveStreamConfig()">💾 Сохранить</button>
-                    </div>
-
-                    <!-- Tab: Music -->
-                    <div class="settings-panel" id="settingsTab_music" style="display:none;">
-                        <div class="sp-group">
-                            <div class="sp-group__title">Параметры</div>
-                            <div class="sp-row"><span class="sp-label">💰 Стоимость заказа</span><input type="number" id="adminMusicCost" class="sp-input-sm" value="50" min="0"><span class="sp-unit">🧀</span></div>
-                            <div class="sp-row"><span class="sp-label">👁 Мин. просмотров</span><input type="number" id="adminMusicMinViews" class="sp-input-sm" value="1000" min="0"></div>
-                            <div class="sp-row"><span class="sp-label">⏱ Макс. длительность</span><input type="number" id="adminMusicMaxDuration" class="sp-input-sm" value="300" min="30"><span class="sp-unit">сек</span></div>
-                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminMusicPaused"><span>⏸ Пауза очереди</span></label></div>
-                        </div>
-                        <button class="sp-save-btn" onclick="saveMusicSettings()">💾 Сохранить</button>
-
-                        <div class="sp-group">
-                            <div class="sp-group__title">📋 Очередь <button class="sp-refresh" onclick="refreshMusicQueue()">🔄</button></div>
-                            <div id="musicQueueList" class="sp-list"><div class="sp-list__empty">Загрузка...</div></div>
-                        </div>
-
-                        <button class="sp-test-btn sp-test-btn--music" onclick="sendTestMusic()">🎵 Тест алерта музыки</button>
-                    </div>
-
-                    <!-- Tab: Donates -->
-                    <div class="settings-panel" id="settingsTab_donates" style="display:none;">
-                        <div class="sp-group">
-                            <div class="sp-group__title">⏱ Основное</div>
-                            <div class="sp-row"><span class="sp-label">💰 Мин. сумма</span><input type="number" id="adminDonateMin" class="sp-input-sm" value="10" min="1"><span class="sp-unit">🧀</span></div>
-                            <div class="sp-row"><span class="sp-label">⏱ Длительность</span><input type="number" id="adminAlertDuration" class="sp-input-sm" value="7" min="1" max="30"><span class="sp-unit">сек</span></div>
-                        </div>
-
-                        <div class="sp-group">
-                            <div class="sp-group__title">🔊 Звуки доната</div>
-                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminSoundEnabled" checked><span>Звук при донате</span></label></div>
-                            <div class="sp-row"><span class="sp-label">Громкость</span><input type="range" id="adminSoundVolume" min="0" max="100" value="70" class="sp-range"><span class="sp-unit" id="adminSoundVolumeVal">70%</span></div>
-                            <div class="sp-upload-row">
-                                <span class="sp-label">🔹 Малый (10+)</span>
-                                <input type="file" id="fileSound_small" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_small')">
-                                <button class="sp-upload-btn" onclick="document.getElementById('fileSound_small').click()">📂 Загрузить .mp3</button>
-                                <span class="sp-upload-status" id="statusSound_small">нет файла</span>
-                            </div>
-                            <div class="sp-upload-row">
-                                <span class="sp-label">🔸 Средний (50+)</span>
-                                <input type="file" id="fileSound_medium" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_medium')">
-                                <button class="sp-upload-btn" onclick="document.getElementById('fileSound_medium').click()">📂 Загрузить .mp3</button>
-                                <span class="sp-upload-status" id="statusSound_medium">нет файла</span>
-                            </div>
-                            <div class="sp-upload-row">
-                                <span class="sp-label">🔶 Большой (200+)</span>
-                                <input type="file" id="fileSound_large" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_large')">
-                                <button class="sp-upload-btn" onclick="document.getElementById('fileSound_large').click()">📂 Загрузить .mp3</button>
-                                <span class="sp-upload-status" id="statusSound_large">нет файла</span>
-                            </div>
-                        </div>
-
-                        <div class="sp-group">
-                            <div class="sp-group__title">✨ Анимация</div>
-                            <div class="sp-row">
-                                <span class="sp-label">Стиль</span>
-                                <select id="adminAnimStyle" class="sp-select">
-                                    <option value="particles">🎆 Частицы</option>
-                                    <option value="cheese">🧀 Сырный дождь</option>
-                                    <option value="explosion">💥 Взрыв</option>
-                                    <option value="flash">⚡ Вспышка</option>
-                                    <option value="all" selected>🌟 Всё сразу</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="sp-group">
-                            <div class="sp-group__title">🎬 Видео/GIF при донате</div>
-                            <div class="sp-upload-row">
-                                <span class="sp-label">🔹 Малый (10+)</span>
-                                <input type="file" id="fileMedia_small" accept="image/gif,video/*" style="display:none" onchange="handleFileUpload(this,'media_small')">
-                                <button class="sp-upload-btn" onclick="document.getElementById('fileMedia_small').click()">📂 Загрузить</button>
-                                <span class="sp-upload-status" id="statusMedia_small">нет файла</span>
-                            </div>
-                            <div class="sp-upload-row">
-                                <span class="sp-label">🔸 Средний (50+)</span>
-                                <input type="file" id="fileMedia_medium" accept="image/gif,video/*" style="display:none" onchange="handleFileUpload(this,'media_medium')">
-                                <button class="sp-upload-btn" onclick="document.getElementById('fileMedia_medium').click()">📂 Загрузить</button>
-                                <span class="sp-upload-status" id="statusMedia_medium">нет файла</span>
-                            </div>
-                            <div class="sp-upload-row">
-                                <span class="sp-label">🔶 Большой (200+)</span>
-                                <input type="file" id="fileMedia_large" accept="image/gif,video/*" style="display:none" onchange="handleFileUpload(this,'media_large')">
-                                <button class="sp-upload-btn" onclick="document.getElementById('fileMedia_large').click()">📂 Загрузить</button>
-                                <span class="sp-upload-status" id="statusMedia_large">нет файла</span>
-                            </div>
-                            <div class="sp-hint">Макс. 1 МБ. Форматы: .gif .mp4 .webm</div>
-                        </div>
-
-                        <div class="sp-group">
-                            <div class="sp-group__title">🗣 Озвучка текста (TTS)</div>
-                            <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminTtsEnabled" checked><span>Озвучка сообщений</span></label></div>
-                            <div class="sp-row"><span class="sp-label">Скорость</span><input type="range" id="adminTtsSpeed" min="50" max="200" value="100" class="sp-range"><span class="sp-unit" id="adminTtsSpeedVal">1.0x</span></div>
-                            <div class="sp-row"><span class="sp-label">Мин. для TTS</span><input type="number" id="adminTtsMinAmount" class="sp-input-sm" value="30" min="0"><span class="sp-unit">🧀</span></div>
-                        </div>
-
-                        <button class="sp-save-btn" onclick="saveDonateSettings()">💾 Сохранить настройки</button>
-                        <button class="sp-test-btn sp-test-btn--donate" onclick="sendTestDonate()">🧀 Тест алерта доната</button>
-
-                        <div class="sp-group">
-                            <div class="sp-group__title">📺 Для OBS</div>
-                            <div class="sp-hint" style="font-size:0.72rem;line-height:1.5;color:rgba(255,255,255,0.5);">
-                                Добавь в OBS → Source → Browser:<br>
-                                <span style="color:#C8AA6E;word-break:break-all;" id="obsAlertUrl"></span><br>
-                                Ширина: 600 | Высота: 400
-                            </div>
-                        </div>
-
-                        <div class="sp-group">
-                            <div class="sp-group__title">📊 Последние донаты <button class="sp-refresh" onclick="refreshDonateHistory()">🔄</button></div>
-                            <div id="donateHistoryList" class="sp-list"><div class="sp-list__empty">Загрузка...</div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
-        <nav class="bottom-nav">
-            <a class="bottom-nav__item" onclick="openGame('index.html')">
-                <span class="bottom-nav__icon">🏠</span>
-                <span class="bottom-nav__label">ГЛАВНАЯ</span>
-            </a>
-            <a class="bottom-nav__item" onclick="openGame('top.html')">
-                <span class="bottom-nav__icon">🏆</span>
-                <span class="bottom-nav__label">ТОП</span>
-            </a>
-            <a class="bottom-nav__item bottom-nav__item--active">
-                <span class="bottom-nav__icon">📺</span>
-                <span class="bottom-nav__label">СТРИМ</span>
-            </a>
-            <a class="bottom-nav__item" onclick="openGame('friends.html')">
-                <span class="bottom-nav__icon">👥</span>
-                <span class="bottom-nav__label">ДРУЗЬЯ</span>
-            </a>
-            <a class="bottom-nav__item" onclick="openGame('profile.html')">
-                <span class="bottom-nav__icon">👤</span>
-                <span class="bottom-nav__label">ПРОФИЛЬ</span>
-            </a>
-        </nav>
+    </div>
+    <div class="sh-header__right">
+        <div class="live-pill offline" id="livePill">
+            <span class="live-pill__dot"></span>
+            <span id="livePillText">OFFLINE</span>
+        </div>
+        <div class="sh-user" onclick="openGame('profile.html')">
+            <div class="sh-avatar">🪖</div>
+            <span class="sh-username" id="userName">Танкист</span>
+        </div>
+    </div>
+</header>
 
-        <div class="watermark">@Mir_tankov_privat_bot</div>
+<!-- PLATFORM SWITCHER -->
+<div class="platform-bar" id="platformTabs">
+    <button class="plat-btn active-twitch" data-platform="twitch" onclick="switchPlatform('twitch')">
+        <span class="plat-btn__dot"></span>💜 TWITCH
+    </button>
+    <button class="plat-btn" data-platform="vk" onclick="switchPlatform('vk')">
+        <span class="plat-btn__dot"></span>🔵 VK PLAY
+    </button>
+    <button class="plat-btn" data-platform="youtube" onclick="switchPlatform('youtube')">
+        <span class="plat-btn__dot"></span>🔴 YOUTUBE
+    </button>
+</div>
+
+<!-- STREAM CARD -->
+<div class="stream-card" id="streamCard" onclick="handleStreamCardClick()">
+    <div class="sc-thumb" id="scThumb">
+        <div class="sc-thumb-bg" id="scThumbBg"></div>
+        <div class="sc-thumb-lines"></div>
+        <div class="sc-center">
+            <span class="sc-icon" id="previewIcon">💜</span>
+            <div class="sc-channel" id="previewChannel">SERVERENOK</div>
+            <div class="sc-platform" id="previewPlatform">twitch.tv</div>
+        </div>
+        <div class="sc-overlay">
+            <button class="sc-watch-btn" id="scWatchBtn">▶ СМОТРЕТЬ</button>
+        </div>
+    </div>
+    <div class="sc-footer">
+        <div class="sc-footer-left">
+            <div class="sc-viewers" id="scViewers">
+                <span class="sc-viewers-dot"></span>
+                <span id="streamViewers">нет данных</span>
+            </div>
+        </div>
+        <div class="sc-hint">Откроется в браузере</div>
+        <button class="sc-open-link" id="scOpenBtn" onclick="event.stopPropagation();openCurrentStream()">
+            ▶ Смотреть
+        </button>
+    </div>
+</div>
+
+<!-- ACTIONS -->
+<div class="action-row">
+    <button class="act-btn act-btn--donate" onclick="openDonateModal()">
+        <span class="act-btn__icon">🧀</span>
+        <span class="act-btn__label">Донат</span>
+    </button>
+    <button class="act-btn act-btn--ai" onclick="openAiDonateModal()">
+        <span class="act-btn__icon">🤖</span>
+        <span class="act-btn__label">AI Донат</span>
+    </button>
+    <button class="act-btn act-btn--music" onclick="openMusicModal()">
+        <span class="act-btn__icon">🎵</span>
+        <span class="act-btn__label">Музыка</span>
+    </button>
+</div>
+
+<!-- CHAT -->
+<div class="chat-section">
+    <div class="chat-header">
+        <div class="chat-header__left">
+            <span class="chat-title">ЧАТ</span>
+            <div class="chat-status offline" id="chatStatus">
+                <span class="chat-status__dot"></span>
+                <span id="chatStatusText">Подключение...</span>
+            </div>
+        </div>
+        <div class="chat-mode-toggle">
+            <button class="cmt-btn active" id="chatModeUnified" onclick="switchChatMode('unified')">Общий</button>
+            <button class="cmt-btn" id="chatModeWidget" onclick="switchChatMode('widget')">Виджет</button>
+        </div>
     </div>
 
-    <script src="js/stream.js"></script>
-</body>
+    <div class="chat-box">
+        <div class="chat-widget-wrap" id="chatWidgetContainer">
+            <iframe id="chatWidgetIframe"></iframe>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="cm-system">
+                <span class="cm-system__icon">🎮</span>
+                <span>Подключение к чату…</span>
+            </div>
+        </div>
+        <div class="chat-input-row">
+            <span class="chat-plat-icon" id="chatPlatIcon">💜</span>
+            <input class="chat-input" id="chatInput"
+                   placeholder="Написать в чат…"
+                   autocomplete="off" maxlength="500">
+            <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()">➤</button>
+        </div>
+    </div>
+</div>
 
+<div class="page-bottom">
+    <div class="watermark">@Mir_tankov_privat_bot</div>
+</div>
+
+<!-- ADMIN GEAR -->
+<button class="admin-gear" id="adminGearBtn" onclick="openSettingsModal()">⚙️</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+    <span id="toastIcon">✅</span>
+    <span id="toastText"></span>
+</div>
+
+<!-- DEBUG -->
+<div id="adminDebug"></div>
+
+<!-- DONATE MODAL -->
+<div class="modal-overlay" id="donateModal" style="display:none" onclick="if(event.target===this)closeDonateModal()">
+    <div class="modal-sheet">
+        <div class="modal-drag"></div>
+        <div class="modal-title">🧀 Донат на стрим</div>
+        <div class="modal-bal" id="donateBalance">Баланс: ... 🧀</div>
+        <div class="modal-amounts">
+            <button class="modal-amt" onclick="setDonateAmount(10)">10 🧀</button>
+            <button class="modal-amt" onclick="setDonateAmount(50)">50 🧀</button>
+            <button class="modal-amt" onclick="setDonateAmount(100)">100 🧀</button>
+            <button class="modal-amt" onclick="setDonateAmount(500)">500 🧀</button>
+        </div>
+        <input type="number" id="donateAmount" class="modal-inp" placeholder="Сумма (мин. 10)" min="10" value="50">
+        <textarea id="donateMessage" class="modal-inp" placeholder="Сообщение на стрим (необязательно)" maxlength="200" rows="2" style="resize:none;"></textarea>
+        <button class="modal-btn-primary" onclick="sendDonate()">🧀 Отправить донат</button>
+        <button class="modal-btn-sec" onclick="closeDonateModal()">Отмена</button>
+    </div>
+</div>
+
+<!-- MUSIC MODAL -->
+<div class="modal-overlay" id="musicModal" style="display:none" onclick="if(event.target===this)closeMusicModal()">
+    <div class="modal-sheet">
+        <div class="modal-drag"></div>
+        <div class="modal-title">🎵 Заказ музыки</div>
+        <div class="modal-bal" id="musicBalance">Баланс: ... 🧀</div>
+        <div class="modal-bal" style="color:var(--gold)">Стоимость: 50 🧀</div>
+        <input type="text" id="musicUrl" class="modal-inp" placeholder="Ссылка на YouTube видео" autocomplete="off" style="margin-top:10px">
+        <button class="modal-btn-primary" onclick="sendMusicRequest()">🎵 Заказать (50 🧀)</button>
+        <button class="modal-btn-sec" onclick="closeMusicModal()">Отмена</button>
+    </div>
+</div>
+
+<!-- SETTINGS MODAL (ADMIN) -->
+<div class="settings-overlay" id="settingsModal" style="display:none" onclick="if(event.target===this)closeSettingsModal()">
+    <div class="settings-sheet">
+        <div class="ss-header">
+            <span class="ss-title">⚙️ Настройки стрима</span>
+            <button class="ss-close" onclick="closeSettingsModal()">✕</button>
+        </div>
+        <div class="ss-tabs">
+            <button class="ss-tab active" onclick="switchSettingsTab('broadcast',this)">📺 Трансляция</button>
+            <button class="ss-tab" onclick="switchSettingsTab('music',this)">🎵 Музыка</button>
+            <button class="ss-tab" onclick="switchSettingsTab('donates',this)">🧀 Донаты</button>
+        </div>
+
+        <!-- TAB: BROADCAST -->
+        <div class="sp active" id="settingsTab_broadcast">
+            <div class="sp-group">
+                <span class="sp-label">📺 Платформы</span>
+                <div class="sp-row">
+                    <label class="sp-toggle"><input type="checkbox" id="adminTwitchEnabled" checked onchange="updateStreamConfig()"><span>💜 Twitch</span></label>
+                    <input type="text" id="adminTwitchChannel" class="sp-input" placeholder="Имя канала (iserveri)">
+                </div>
+                <div class="sp-row">
+                    <label class="sp-toggle"><input type="checkbox" id="adminYoutubeEnabled" onchange="updateStreamConfig()"><span>🔴 YouTube</span></label>
+                    <input type="text" id="adminYoutubeChannel" class="sp-input" placeholder="Channel ID или embed URL">
+                </div>
+                <div class="sp-row">
+                    <label class="sp-toggle"><input type="checkbox" id="adminVkEnabled" onchange="updateStreamConfig()"><span>🔵 VK Play</span></label>
+                    <input type="text" id="adminVkChannel" class="sp-input" placeholder="VK embed URL">
+                </div>
+            </div>
+            <div class="sp-group">
+                <span class="sp-label">💬 Виджеты чатов</span>
+                <div class="sp-hint">URL embed-чата для каждой платформы</div>
+                <div class="sp-row"><input type="text" id="adminTwitchChatWidget" class="sp-input" placeholder="💜 Twitch chat embed URL"></div>
+                <div class="sp-row"><input type="text" id="adminYoutubeChatWidget" class="sp-input" placeholder="🔴 YouTube live_chat URL"></div>
+                <div class="sp-row"><input type="text" id="adminVkChatWidget" class="sp-input" placeholder="🔵 VK chat URL"></div>
+            </div>
+            <div class="sp-group">
+                <span class="sp-label">⚡ Быстрые каналы</span>
+                <div class="sp-row">
+                    <input type="text" id="adminChName" class="sp-input" placeholder="Название">
+                    <select id="adminChPlatform" class="sp-select" style="max-width:100px">
+                        <option value="twitch">💜 Twitch</option>
+                        <option value="youtube">🔴 YouTube</option>
+                        <option value="vk">🔵 VK</option>
+                    </select>
+                </div>
+                <div class="sp-row">
+                    <input type="text" id="adminChUrl" class="sp-input" placeholder="Канал/ссылка">
+                    <button class="sp-add" onclick="addChannel()">➕</button>
+                </div>
+                <div class="sp-list" id="adminChannelList"></div>
+            </div>
+            <button class="sp-save" onclick="saveStreamConfig()">💾 Сохранить</button>
+        </div>
+
+        <!-- TAB: MUSIC -->
+        <div class="sp" id="settingsTab_music">
+            <div class="sp-group">
+                <span class="sp-label">Параметры</span>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2);flex:1">💰 Стоимость заказа</span><input type="number" id="adminMusicCost" class="sp-input-sm" value="50" min="0"><span class="sp-unit">🧀</span></div>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2);flex:1">👁 Мин. просмотров</span><input type="number" id="adminMusicMinViews" class="sp-input-sm" value="1000" min="0"></div>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2);flex:1">⏱ Макс. длит.</span><input type="number" id="adminMusicMaxDuration" class="sp-input-sm" value="300" min="30"><span class="sp-unit">сек</span></div>
+                <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminMusicPaused"><span>⏸ Пауза очереди</span></label></div>
+            </div>
+            <button class="sp-save" onclick="saveMusicSettings()">💾 Сохранить</button>
+            <div class="sp-group" style="margin-top:10px">
+                <span class="sp-label">📋 Очередь <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.8rem" onclick="refreshMusicQueue()">🔄</button></span>
+                <div class="sp-list" id="musicQueueList"><div style="font-size:.7rem;color:var(--text3);text-align:center;padding:10px">Загрузка...</div></div>
+            </div>
+            <button class="sp-test" onclick="sendTestMusic()">🎵 Тест алерта музыки</button>
+        </div>
+
+        <!-- TAB: DONATES -->
+        <div class="sp" id="settingsTab_donates">
+            <div class="sp-group">
+                <span class="sp-label">⏱ Основное</span>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2);flex:1">💰 Мин. сумма</span><input type="number" id="adminDonateMin" class="sp-input-sm" value="10" min="1"><span class="sp-unit">🧀</span></div>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2);flex:1">⏱ Длительность</span><input type="number" id="adminAlertDuration" class="sp-input-sm" value="7" min="1" max="30"><span class="sp-unit">сек</span></div>
+            </div>
+            <div class="sp-group">
+                <span class="sp-label">🔊 Звуки доната</span>
+                <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminSoundEnabled" checked><span>Звук при донате</span></label></div>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2)">Громкость</span><input type="range" id="adminSoundVolume" min="0" max="100" value="70" class="sp-range"><span class="sp-unit" id="adminSoundVolumeVal">70%</span></div>
+                <div class="sp-upload-row"><span style="font-size:.65rem;color:var(--text2);flex:1">🔹 Малый (10+)</span><input type="file" id="fileSound_small" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_small')"><button class="sp-upload-btn" onclick="document.getElementById('fileSound_small').click()">📂 .mp3</button><span class="sp-upload-status" id="statusSound_small">нет файла</span></div>
+                <div class="sp-upload-row"><span style="font-size:.65rem;color:var(--text2);flex:1">🔸 Средний (50+)</span><input type="file" id="fileSound_medium" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_medium')"><button class="sp-upload-btn" onclick="document.getElementById('fileSound_medium').click()">📂 .mp3</button><span class="sp-upload-status" id="statusSound_medium">нет файла</span></div>
+                <div class="sp-upload-row"><span style="font-size:.65rem;color:var(--text2);flex:1">🔶 Большой (200+)</span><input type="file" id="fileSound_large" accept="audio/*" style="display:none" onchange="handleFileUpload(this,'sound_large')"><button class="sp-upload-btn" onclick="document.getElementById('fileSound_large').click()">📂 .mp3</button><span class="sp-upload-status" id="statusSound_large">нет файла</span></div>
+            </div>
+            <div class="sp-group">
+                <span class="sp-label">✨ Анимация</span>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2)">Стиль</span>
+                    <select id="adminAnimStyle" class="sp-select">
+                        <option value="particles">🎆 Частицы</option>
+                        <option value="cheese">🧀 Сырный дождь</option>
+                        <option value="explosion">💥 Взрыв</option>
+                        <option value="flash">⚡ Вспышка</option>
+                        <option value="all" selected>🌟 Всё сразу</option>
+                    </select>
+                </div>
+            </div>
+            <div class="sp-group">
+                <span class="sp-label">🗣 TTS</span>
+                <div class="sp-row"><label class="sp-toggle"><input type="checkbox" id="adminTtsEnabled" checked><span>Озвучка сообщений</span></label></div>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2)">Скорость</span><input type="range" id="adminTtsSpeed" min="50" max="200" value="100" class="sp-range"><span class="sp-unit" id="adminTtsSpeedVal">1.0x</span></div>
+                <div class="sp-row"><span style="font-size:.72rem;color:var(--text2);flex:1">Мин. для TTS</span><input type="number" id="adminTtsMinAmount" class="sp-input-sm" value="30" min="0"><span class="sp-unit">🧀</span></div>
+            </div>
+            <div class="sp-group">
+                <span class="sp-label">📺 OBS URL</span>
+                <div class="obs-url" id="obsAlertUrl"></div>
+            </div>
+            <button class="sp-save" onclick="saveDonateSettings()">💾 Сохранить</button>
+            <button class="sp-test" onclick="sendTestDonate()" style="margin-top:8px">🧀 Тест алерта доната</button>
+            <div class="sp-group" style="margin-top:10px">
+                <span class="sp-label">📊 Последние донаты <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.8rem" onclick="refreshDonateHistory()">🔄</button></span>
+                <div class="sp-list" id="donateHistoryList"><div style="font-size:.7rem;color:var(--text3);text-align:center;padding:10px">Загрузка...</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+    <a class="bn-item" onclick="openGame('index.html')">
+        <span class="bn-item__icon">🏠</span>
+        <span class="bn-item__label">Главная</span>
+    </a>
+    <a class="bn-item" onclick="openGame('top.html')">
+        <span class="bn-item__icon">🏆</span>
+        <span class="bn-item__label">Топ</span>
+    </a>
+    <a class="bn-item bn-item--active">
+        <span class="bn-item__icon">📺</span>
+        <span class="bn-item__label">Стрим</span>
+    </a>
+    <a class="bn-item" onclick="openGame('friends.html')">
+        <span class="bn-item__icon">👥</span>
+        <span class="bn-item__label">Друзья</span>
+    </a>
+    <a class="bn-item" onclick="openGame('profile.html')">
+        <span class="bn-item__icon">👤</span>
+        <span class="bn-item__label">Профиль</span>
+    </a>
+</nav>
+
+<script>
+// ── Patch UI to match new HTML ──
+// Override connection status update
+function updateConnectionStatus(status) {
+    const chatStatus = document.getElementById('chatStatus');
+    const chatStatusText = document.getElementById('chatStatusText');
+    const livePill = document.getElementById('livePill');
+    const livePillText = document.getElementById('livePillText');
+    if (status === 'connected') {
+        if (chatStatus) { chatStatus.classList.remove('offline'); chatStatusText.textContent = 'Twitch подключён'; }
+        if (livePill) { livePill.classList.remove('offline'); livePillText.textContent = 'LIVE'; }
+    } else if (status === 'connecting') {
+        if (chatStatus) { chatStatus.classList.add('offline'); chatStatusText.textContent = 'Подключение...'; }
+    } else {
+        if (chatStatus) { chatStatus.classList.add('offline'); chatStatusText.textContent = 'Отключён'; }
+        if (livePill) { livePill.classList.add('offline'); livePillText.textContent = 'OFFLINE'; }
+    }
+}
+
+// Override switchPlatform UI
+const _origSwitchPlatform = window.switchPlatform;
+document.addEventListener('DOMContentLoaded', () => {
+    // Platform tabs styling
+    const platMap = { twitch:'active-twitch', vk:'active-vk', youtube:'active-youtube' };
+    const platIcon = { twitch:'💜', vk:'🔵', youtube:'🔴' };
+    window._patchSwitchPlatform = function(platform) {
+        document.querySelectorAll('.plat-btn').forEach(b => {
+            b.className = 'plat-btn';
+            if (b.dataset.platform === platform) b.classList.add(platMap[platform]);
+        });
+        const ci = document.getElementById('chatPlatIcon');
+        if (ci) ci.textContent = platIcon[platform] || '💜';
+    };
+});
+
+// Open current stream link
+function openCurrentStream() {
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch(e) {}
+    openStreamLink(currentPlatform);
+}
+function handleStreamCardClick() {
+    openStreamLink(currentPlatform);
+}
+
+// Override showToast
+function showToast(icon, text, duration = 3000) {
+    const t = document.getElementById('toast');
+    const ti = document.getElementById('toastIcon');
+    const tt = document.getElementById('toastText');
+    if (!t) return;
+    ti.textContent = icon; tt.textContent = text;
+    t.classList.add('show');
+    clearTimeout(window._toastTmr);
+    window._toastTmr = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// Chat mode toggle label sync
+const _origSwitchChatMode = window.switchChatMode;
+function switchChatMode(mode) {
+    const u = document.getElementById('chatModeUnified');
+    const w = document.getElementById('chatModeWidget');
+    const msgs = document.getElementById('chatMessages');
+    const widget = document.getElementById('chatWidgetContainer');
+    const inputRow = document.querySelector('.chat-input-row');
+    if (mode === 'unified') {
+        if (u) u.classList.add('active'); if (w) w.classList.remove('active');
+        if (msgs) msgs.style.display = 'flex';
+        if (widget) widget.style.display = 'none';
+        if (inputRow) inputRow.style.display = 'flex';
+    } else {
+        if (w) w.classList.add('active'); if (u) u.classList.remove('active');
+        if (msgs) msgs.style.display = 'none';
+        if (widget) { widget.style.display = 'block'; loadChatWidget(); }
+        if (inputRow) inputRow.style.display = 'none';
+    }
+    currentChatMode = mode;
+}
+
+// Chat messages flex direction fix
+document.addEventListener('DOMContentLoaded', () => {
+    const msgs = document.getElementById('chatMessages');
+    if (msgs) msgs.style.flexDirection = 'column';
+
+    // Volume display
+    const vol = document.getElementById('adminSoundVolume');
+    if (vol) vol.addEventListener('input', () => {
+        const el = document.getElementById('adminSoundVolumeVal');
+        if (el) el.textContent = vol.value + '%';
+    });
+    const spd = document.getElementById('adminTtsSpeed');
+    if (spd) spd.addEventListener('input', () => {
+        const el = document.getElementById('adminTtsSpeedVal');
+        if (el) el.textContent = (spd.value / 100).toFixed(1) + 'x';
+    });
+});
+
+// Settings tabs
+function switchSettingsTab(tab, btn) {
+    document.querySelectorAll('.sp').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.ss-tab').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById('settingsTab_' + tab);
+    if (panel) panel.classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (tab === 'donates') {
+        const obsEl = document.getElementById('obsAlertUrl');
+        if (obsEl) obsEl.textContent = window.location.origin + '/obs/alerts.html';
+        refreshDonateHistory();
+    }
+    if (tab === 'music') refreshMusicQueue();
+}
+
+function openSettingsModal() {
+    const m = document.getElementById('settingsModal');
+    if (m) { m.style.display = 'flex'; renderAdminChannelList(); }
+}
+function closeSettingsModal() {
+    const m = document.getElementById('settingsModal');
+    if (m) m.style.display = 'none';
+}
+function openDonateModal() {
+    const m = document.getElementById('donateModal');
+    if (m) { m.style.display = 'flex'; loadDonateBalance(); }
+}
+function closeDonateModal() {
+    const m = document.getElementById('donateModal');
+    if (m) m.style.display = 'none';
+}
+function openMusicModal() {
+    const m = document.getElementById('musicModal');
+    if (m) { m.style.display = 'flex'; loadMusicBalance(); }
+}
+function closeMusicModal() {
+    const m = document.getElementById('musicModal');
+    if (m) m.style.display = 'none';
+}
+function setDonateAmount(a) {
+    const inp = document.getElementById('donateAmount');
+    if (inp) inp.value = a;
+    document.querySelectorAll('.modal-amt').forEach(b => b.classList.remove('sel'));
+    event.target.classList.add('sel');
+}
+</script>
+<script src="js/stream.js"></script>
+</body>
 </html>
