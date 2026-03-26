@@ -6,12 +6,12 @@
  */
 
 const GC_CONDITION_MAP = {
-    damage: { icon: '<img src="img/military/cond_damage.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Урон', unit: 'урона' },
-    frags: { icon: '<img src="img/military/cond_frags.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Фраги', unit: 'фрагов' },
-    xp: { icon: '<img src="img/military/cond_xp.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Опыт', unit: 'опыта' },
-    spotting: { icon: '<img src="img/military/cond_spotting.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Засвет', unit: 'засвета' },
-    blocked: { icon: '<img src="img/military/cond_blocked.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Блок', unit: 'блока' },
-    wins: { icon: '<img src="img/military/cond_wins.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Победы', unit: 'побед' },
+    damage: { icon: '<img src="img/military/cond_damage.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Урон', unit: 'урона' },
+    frags: { icon: '<img src="img/military/cond_frags.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Фраги', unit: 'фрагов' },
+    xp: { icon: '<img src="img/military/cond_xp.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Опыт', unit: 'опыта' },
+    spotting: { icon: '<img src="img/military/cond_spotting.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Засвет', unit: 'засвета' },
+    blocked: { icon: '<img src="img/military/cond_blocked.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Блок', unit: 'блока' },
+    wins: { icon: '<img src="img/military/cond_wins.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Победы', unit: 'побед' },
 };
 
 let gcCurrentChallenge = null;

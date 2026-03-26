@@ -5325,7 +5325,8 @@ async def _do_refresh_stats():
 
             # Detect new battles from tank baselines (fills gc_battle_log)
             try:
-                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, 0)
+                # Pass the tank list retrieved from batch_stats
+                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, multi_stat["tanks"])
             except Exception as e:
                 logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
 
