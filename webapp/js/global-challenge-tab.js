@@ -1384,32 +1384,55 @@ async function gcLoadHistory() {
     if (!section || !list) return;
 
     try {
-        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/history`);
+        const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || '';
+        const url = tgId
+            ? `${BOT_API_URL}/api/global-challenge/history?telegram_id=${tgId}`
+            : `${BOT_API_URL}/api/global-challenge/history`;
+        const resp = await fetch(url);
         const data = await resp.json();
 
         if (data.history && data.history.length > 0) {
             section.style.display = '';
+
+            const placeEmoji = ['🥇', '🥈', '🥉'];
+
             list.innerHTML = data.history.map(ch => {
                 const date = new Date(ch.finished_at || ch.ends_at).toLocaleDateString('ru', {
-                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                    day: 'numeric', month: 'short', year: 'numeric'
                 });
                 const conds = (ch.condition || 'damage').split(',');
-                const icons = conds.map(c => (GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage).icon).join(' ');
-                
+                const icons = conds.map(c => (GC_CONDITION_MAP[c.trim()] || GC_CONDITION_MAP.damage).icon).join(' ');
+
+                // Топ-3 участников
+                const top3html = (ch.leaderboard_top3 || []).map((p, i) => `
+                    <div class="gc-hist-top-row">
+                        <span class="gc-hist-place">${placeEmoji[i] || `#${i+1}`}</span>
+                        <span class="gc-hist-nick">${p.nickname}</span>
+                        <span class="gc-hist-val">${(p.current_value||0).toLocaleString('ru')}</span>
+                    </div>`).join('');
+
+                // Личный результат
+                let myHtml = '';
+                if (ch.my_result) {
+                    const pEmoji = placeEmoji[ch.my_result.place - 1] || `#${ch.my_result.place}`;
+                    myHtml = `<div class="gc-hist-my-result">
+                        <span>🎮 Мой результат: ${pEmoji} место</span>
+                        <span>${(ch.my_result.value||0).toLocaleString('ru')} · ${ch.my_result.battles} боёв</span>
+                    </div>`;
+                }
+
                 return `
                     <div class="gc-history-card" onclick="gcShowHistoryChallenge(${ch.id})">
                         <div class="gc-history-header">
                             <div class="gc-history-title">${icons} ${ch.title}</div>
                             <div class="gc-history-date">${date}</div>
                         </div>
-                        <div class="gc-history-winner">
-                            <div class="gc-history-medal">🥇</div>
-                            <div class="gc-history-wnick">${ch.winner_nickname || 'Без победителя'}</div>
-                            <div class="gc-history-wval">${(ch.winner_value || 0).toLocaleString('ru')}</div>
-                        </div>
-                        <div style="font-size:0.55rem;color:#5A6577;display:flex;justify-content:space-between">
+                        <div class="gc-hist-top3">${top3html}</div>
+                        ${myHtml}
+                        <div class="gc-hist-footer">
                             <span>👥 ${ch.participants_count} участников</span>
                             <span>🧀 Приз: ${ch.reward_coins}</span>
+                            <span style="color:#C8AA6E;font-weight:600">Подробнее →</span>
                         </div>
                     </div>
                 `;
@@ -1422,20 +1445,18 @@ async function gcLoadHistory() {
     }
 }
 
+
 async function gcShowHistoryChallenge(id) {
     try {
-        // Просто запрашиваем детали этого челленджа (он finished)
-        // Наш API /active если передать challenge_id? Нет, у нас нет такого эндпоинта.
-        // Но мы можем запросить /active и если там не тот ID, то мы в тупике.
-        // Добавим эндпоинт на бэкенд? Или используем /active и подменим?
-        // На самом деле, админ просил "можно всегда посмотреть результат".
-        
-        // Временно: просто загружаем его как активный чтобы сработал рендер
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active?challenge_id=${id}`);
         const data = await resp.json();
         if (data.challenge) {
+            // Устанавливаем как текущий, чтобы "Подробно" работало для исторических боёв
+            gcCurrentChallenge = data.challenge;
             gcShowFinished(data.challenge);
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            showToast('❌ Данные этого челленджа недоступны');
         }
     } catch(e) {
         showToast('❌ Ошибка загрузки деталей');

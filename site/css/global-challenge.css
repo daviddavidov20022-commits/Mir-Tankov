@@ -1,5 +1,5 @@
-/* ==========================================
-   GLOBAL CHALLENGE — ВИДЖЕТ & СТРАНИЦА
+﻿/* ==========================================
+   GLOBAL CHALLENGE вЂ” Р’РР”Р–Р•Рў & РЎРўР РђРќРР¦Рђ
    ========================================== */
 
 .gc-page {
@@ -1694,7 +1694,7 @@
 }
 
 /* ==========================================
-   MODAL OVERLAY (детали игрока / таблица)
+   MODAL OVERLAY (РґРµС‚Р°Р»Рё РёРіСЂРѕРєР° / С‚Р°Р±Р»РёС†Р°)
    ========================================== */
 .gc-modal-overlay {
     display: none;
@@ -1774,7 +1774,7 @@
 }
 
 /* ==========================================
-   BATTLE LOG (побоевая разбивка)
+   BATTLE LOG (РїРѕР±РѕРµРІР°СЏ СЂР°Р·Р±РёРІРєР°)
    ========================================== */
 .gc-battles-list {
     display: flex;
@@ -1852,7 +1852,7 @@
 }
 
 /* ==========================================
-   FULL TABLE (турнирная таблица)
+   FULL TABLE (С‚СѓСЂРЅРёСЂРЅР°СЏ С‚Р°Р±Р»РёС†Р°)
    ========================================== */
 .gc-table {
     width: 100%;
@@ -2116,4 +2116,66 @@
     width: 1.1em;
     height: 1.1em;
     margin-right: 3px;
+}
+/* ==========================================
+   HISTORY CARDS - ENHANCED
+   ========================================== */
+.gc-hist-top3 {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0;
+    padding: 8px 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.gc-hist-top-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+}
+
+.gc-hist-place {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    width: 22px;
+}
+
+.gc-hist-nick {
+    flex: 1;
+    color: #c8c8d0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gc-hist-val {
+    font-weight: 700;
+    color: #C8AA6E;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+}
+
+.gc-hist-my-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.65rem;
+    padding: 6px 10px;
+    background: rgba(200, 170, 110, 0.08);
+    border: 1px solid rgba(200, 170, 110, 0.2);
+    border-radius: 8px;
+    color: #C8AA6E;
+    margin-bottom: 6px;
+}
+
+.gc-hist-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.55rem;
+    color: #5A6577;
+    margin-top: 4px;
 }

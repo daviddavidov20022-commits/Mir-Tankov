@@ -5621,15 +5621,17 @@ async def api_global_challenge_battle_log(request):
 
 
 async def api_global_challenge_history(request):
-    """GET /api/global-challenge/history — последние 10 завершенных челленджей"""
+    """GET /api/global-challenge/history?telegram_id=X — завершенные челленджи (с личным результатом если указан TG ID)"""
     try:
         from database import get_db_read
+        telegram_id = request.query.get("telegram_id")
+        
         with get_db_read() as conn:
             rows = conn.execute("""
                 SELECT * FROM global_challenges 
                 WHERE status = 'finished' 
                 ORDER BY finished_at DESC 
-                LIMIT 10
+                LIMIT 20
             """).fetchall()
             
             history = []
@@ -5642,13 +5644,85 @@ async def api_global_challenge_history(request):
                 ).fetchone()
                 ch["participants_count"] = count["cnt"] if count else 0
                 
-                # Winner details
+                # Leaderboard top-3
+                top3 = conn.execute("""
+                    SELECT nickname, current_value, battles_played, telegram_id
+                    FROM global_challenge_participants 
+                    WHERE challenge_id = ? 
+                    ORDER BY current_value DESC LIMIT 3
+                """, (r["id"],)).fetchall()
+                ch["leaderboard_top3"] = [dict(x) for x in top3]
+                
+                # Личный результат запрашивающего (если указан telegram_id)
+                if telegram_id:
+                    my = conn.execute("""
+                        SELECT current_value, battles_played, condition_values
+                        FROM global_challenge_participants
+                        WHERE challenge_id = ? AND telegram_id = ?
+                    """, (r["id"], int(telegram_id))).fetchone()
+                    if my:
+                        # Определяем место
+                        place = conn.execute("""
+                            SELECT COUNT(*) FROM global_challenge_participants 
+                            WHERE challenge_id = ? AND current_value > ?
+                        """, (r["id"], my["current_value"])).fetchone()[0] + 1
+                        ch["my_result"] = {
+                            "value": my["current_value"],
+                            "battles": my["battles_played"],
+                            "place": place
+                        }
+                    else:
+                        ch["my_result"] = None
+                
                 history.append(ch)
                 
         return cors_response({"history": history})
     except Exception as e:
         logger.error(f"API challenge_history error: {e}")
         return cors_response({"error": str(e)}, 500)
+
+
+async def api_global_challenge_my_history(request):
+    """GET /api/global-challenge/my-history?telegram_id=X — история участия конкретного игрока"""
+    try:
+        from database import get_db_read
+        telegram_id = request.query.get("telegram_id")
+        if not telegram_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+        
+        with get_db_read() as conn:
+            rows = conn.execute("""
+                SELECT gc.id, gc.title, gc.condition, gc.finished_at, gc.ends_at,
+                       gc.winner_nickname, gc.winner_value, gc.reward_coins,
+                       p.current_value, p.battles_played, p.condition_values
+                FROM global_challenge_participants p
+                JOIN global_challenges gc ON gc.id = p.challenge_id
+                WHERE p.telegram_id = ? AND gc.status = 'finished'
+                ORDER BY gc.finished_at DESC LIMIT 20
+            """, (int(telegram_id),)).fetchall()
+            
+            result = []
+            for r in rows:
+                ch = dict(r)
+                # Место игрока
+                place = conn.execute("""
+                    SELECT COUNT(*) FROM global_challenge_participants 
+                    WHERE challenge_id = ? AND current_value > ?
+                """, (r["id"], r["current_value"])).fetchone()[0] + 1
+                ch["my_place"] = place
+                # Всего участников
+                total = conn.execute(
+                    "SELECT COUNT(*) FROM global_challenge_participants WHERE challenge_id = ?",
+                    (r["id"],)
+                ).fetchone()[0]
+                ch["total_participants"] = total
+                result.append(ch)
+        
+        return cors_response({"history": result})
+    except Exception as e:
+        logger.error(f"API my_history error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
 
 
 async def api_global_challenge_finish(request):
@@ -7044,6 +7118,7 @@ def create_api_app():
     app.router.add_post("/api/global-challenge/finish", api_global_challenge_finish)
     app.router.add_post("/api/global-challenge/delete", api_global_challenge_delete)
     app.router.add_get("/api/global-challenge/history", api_global_challenge_history)
+    app.router.add_get("/api/global-challenge/my-history", api_global_challenge_my_history)
     app.router.add_get("/api/global-challenge/battle-log", api_global_challenge_battle_log)
 
     # Раздача OBS виджетов через HTTP (file:// не работает с YouTube API)
