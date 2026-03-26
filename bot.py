@@ -5029,7 +5029,14 @@ async def api_global_challenge_active(request):
                         SELECT * FROM global_challenge_participants 
                         WHERE challenge_id = ? ORDER BY current_value DESC LIMIT 10
                     """, (last["id"],)).fetchall()
-                    last["leaderboard"] = [dict(r) for r in top]
+                    lb = []
+                    for r in top:
+                        d_r = dict(r)
+                        if d_r.get("condition_values"):
+                            try: d_r["condition_values"] = json.loads(d_r["condition_values"])
+                            except: d_r["condition_values"] = None
+                        lb.append(d_r)
+                    last["leaderboard"] = lb
                     last["participants_count"] = conn.execute(
                         "SELECT COUNT(*) FROM global_challenge_participants WHERE challenge_id = ?",
                         (last["id"],)
@@ -5316,71 +5323,42 @@ async def _do_refresh_stats():
 
             condition_values_json = None
 
-            if is_multi_cond:
-                new_battles = max(0, multi_stat["battles"] - p["baseline_battles"])
+            # Detect new battles from tank baselines (fills gc_battle_log)
+            try:
+                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, 0)
+            except Exception as e:
+                logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
 
-                # Compute per-condition deltas
-                baseline_vals = {}
-                if p.get("baseline_values"):
-                    try:
-                        baseline_vals = json.loads(p["baseline_values"])
-                    except Exception:
-                        pass
-
-                cond_deltas = {}
-                total_value = 0
-                for c in ch_conditions:
-                    current_stat = multi_stat["per_condition"].get(c, 0)
-                    baseline_stat = baseline_vals.get(c, p.get("baseline_value", 0) if c == ch_conditions[0] else 0)
-                    delta = max(0, current_stat - baseline_stat)
-                    cond_deltas[c] = delta
-                    total_value += delta
-
-                new_value = total_value
-                condition_values_json = json.dumps(cond_deltas)
-
-                # Лимит боёв для мульти-условий
-                if max_battles > 0 and new_battles > max_battles:
-                    new_battles = max_battles
-            else:
-                # Single condition
-                new_value = max(0, multi_stat["value"] - p["baseline_value"])
-                new_battles = max(0, multi_stat["battles"] - p["baseline_battles"])
-
-                # Лимит боёв
-                if max_battles > 0 and new_battles > max_battles:
-                    new_battles = max_battles
-
-                # Обнаружение боёв по танкам (только single condition)
-                try:
-                    await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles)
-                except Exception as e:
-                    logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
-
-                # Если лимит боёв — пересчитываем из gc_battle_log
+            # Source of truth for scores: gc_battle_log (respects max_battles and individual battle stats)
+            with get_db() as conn_calc:
+                # Get battles within limit
+                query = "SELECT * FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? ORDER BY battle_num"
                 if max_battles > 0:
-                    with get_db() as conn_bl:
-                        rows = conn_bl.execute(
-                            "SELECT damage FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? ORDER BY battle_num LIMIT ?",
-                            (ch["id"], p["telegram_id"], max_battles)
-                        ).fetchall()
-                        if rows:
-                            new_value = sum(r["damage"] for r in rows)
-                            new_battles = len(rows)
+                    query += f" LIMIT {max_battles}"
+                
+                rows = conn_calc.execute(query, (ch["id"], p["telegram_id"])).fetchall()
+                
+                total_val = 0
+                cond_vals = {c: 0 for c in ch_conditions}
+                battles_cnt = len(rows)
+                
+                for r in rows:
+                    for c in ch_conditions:
+                        val = r.get(c, 0)
+                        cond_vals[c] += val
+                        total_val += val # Simple sum for leaderboard
+                
+                new_value = total_val
+                condition_values_json = json.dumps(cond_vals)
+                new_battles = battles_cnt
 
+            # Update participant record
             with get_db() as conn_up:
-                if condition_values_json:
-                    conn_up.execute("""
-                        UPDATE global_challenge_participants 
-                        SET current_value = ?, battles_played = ?, last_updated = ?, condition_values = ?
-                        WHERE challenge_id = ? AND telegram_id = ?
-                    """, (new_value, new_battles, datetime.now(), condition_values_json, ch["id"], p["telegram_id"]))
-                else:
-                    conn_up.execute("""
-                        UPDATE global_challenge_participants 
-                        SET current_value = ?, battles_played = ?, last_updated = ?
-                        WHERE challenge_id = ? AND telegram_id = ?
-                    """, (new_value, new_battles, datetime.now(), ch["id"], p["telegram_id"]))
+                conn_up.execute("""
+                    UPDATE global_challenge_participants 
+                    SET current_value = ?, battles_played = ?, last_updated = ?, condition_values = ?
+                    WHERE challenge_id = ? AND telegram_id = ?
+                """, (new_value, new_battles, datetime.now(), condition_values_json, ch["id"], p["telegram_id"]))
                 updated += 1
 
         # === STEP 4: Проверка завершения челленджа (по времени или по боям) ===

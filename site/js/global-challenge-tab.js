@@ -244,6 +244,25 @@ function gcShowFinished(ch) {
     }, ch);
     document.getElementById('gcWinnerLabel').textContent = conditions.length > 1 ? 'результат' : firstCond.unit;
 
+    // Show Reward
+    const winCard = document.getElementById('gcWinnerCard');
+    if (winCard) {
+        winCard.style.cursor = 'pointer';
+        winCard.onclick = () => gcShowPlayerDetail(ch.winner_telegram_id, ch.winner_nickname, true, ch.id);
+        
+        let rewardHtml = '';
+        if (ch.reward_coins > 0) {
+            rewardHtml = `<div class="gc-winner-reward" style="margin-top:10px; font-weight:800; color:#f5d36e; font-size:0.9rem">
+                🏆 ВЫИГРЫШ: 🧀 ${ch.reward_coins.toLocaleString('ru')}
+            </div>`;
+        }
+        
+        // Remove old reward if exists
+        const oldRew = winCard.querySelector('.gc-winner-reward');
+        if (oldRew) oldRew.remove();
+        winCard.insertAdjacentHTML('beforeend', rewardHtml);
+    }
+
     // Final leaderboard
     const lb = ch.leaderboard || [];
     let html = '';
@@ -257,11 +276,11 @@ function gcShowFinished(ch) {
             const rankCls = i < 3 ? ['gc-lb-rank--1st', 'gc-lb-rank--2nd', 'gc-lb-rank--3rd'][i] : 'gc-lb-rank--other';
             
             html += `
-                <div class="gc-lb-item ${cls}" style="cursor:pointer" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || '').replace(/'/g, "\\'")}', true, ${ch.id})">
+                <div class="gc-lb-item ${cls}" style="cursor:pointer; position:relative" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || '').replace(/'/g, "\\'")}', true, ${ch.id})">
                     <div class="gc-lb-rank ${rankCls}">${medal}</div>
                     <div class="gc-lb-info">
                         <div class="gc-lb-name">${p.nickname}</div>
-                        <div class="gc-lb-battles">${p.battles_played || 0} боёв</div>
+                        <div class="gc-lb-battles">${p.battles_played || 0} боёв <span style="font-size:0.5rem; opacity:0.6; margin-left:4px">🔍 подробно</span></div>
                     </div>
                     <div class="gc-lb-value" style="text-align:right">${gcFormatLbValue(p, ch)}</div>
                 </div>`;
@@ -1434,15 +1453,16 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
         const data = await resp.json();
         
         if (!data.battles || data.battles.length === 0) {
-            body.innerHTML = `<div style="text-align:center;padding:40px;color:#5A6577">Боёв пока не записано.<br><span style="font-size:0.7rem">Обновление происходит после каждого боя.</span></div>`;
+            body.innerHTML = `<div style="text-align:center;padding:40px;color:#5A6577">Данных по боям пока нет.<br><span style="font-size:0.7rem">Убедитесь, что игрок сыграл хотя бы один бой после вступления.</span></div>`;
             summary.innerHTML = '';
             return;
         }
 
+        const ch = gcCurrentChallenge; 
+        const conditions = (ch?.condition || 'damage').split(',');
+        
         // Рендерим бои
         let html = '<div class="gc-battles-list">';
-        const ch = gcCurrentChallenge;
-        const conditions = (ch?.condition || 'damage').split(',');
         
         data.battles.forEach((b, i) => {
             const winCls = b.wins ? 'gc-battle-stat--win' : 'gc-battle-stat--loss';
