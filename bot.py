@@ -64,7 +64,17 @@ from events import (
 # ============================================================
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 WEBAPP_URL = "https://daviddavidov20022-commits.github.io/Mir-Tankov/webapp/"
-LESTA_APP_ID = os.getenv("LESTA_APP_ID", "")
+LESTA_APP_IDS = [s.strip() for s in os.getenv("LESTA_APP_ID", "").split(",") if s.strip()]
+_lesta_key_index = 0
+
+def get_lesta_app_id():
+    """Возвращает следующий API-ключ из списка (ротация)"""
+    global _lesta_key_index
+    if not LESTA_APP_IDS:
+        return ""
+    key = LESTA_APP_IDS[_lesta_key_index]
+    _lesta_key_index = (_lesta_key_index + 1) % len(LESTA_APP_IDS)
+    return key
 VERIFY_REDIRECT_URL = WEBAPP_URL + "verify.html"
 
 # ID администратора (ваш Telegram ID)
@@ -2676,10 +2686,10 @@ async def process_nickname(message: types.Message, state: FSMContext):
 
                 # Предлагаем верификацию
                 verify_kb = None
-                if LESTA_APP_ID:
+                if get_lesta_app_id():
                     auth_url = (
                         f"https://api.tanki.su/wot/auth/login/"
-                        f"?application_id={LESTA_APP_ID}"
+                        f"?application_id={get_lesta_app_id()}"
                         f"&redirect_uri={VERIFY_REDIRECT_URL}"
                         f"&nofollow=1"
                     )
@@ -2800,7 +2810,7 @@ async def cmd_verify(message: types.Message):
         return
 
     # Генерируем ссылку на Lesta OAuth
-    if not LESTA_APP_ID:
+    if not get_lesta_app_id():
         await message.answer(
             "❌ LESTA_APP_ID не настроен.\n"
             "Добавьте его в .env файл.",
@@ -2809,7 +2819,7 @@ async def cmd_verify(message: types.Message):
 
     auth_url = (
         f"https://api.tanki.su/wot/auth/login/"
-        f"?application_id={LESTA_APP_ID}"
+        f"?application_id={get_lesta_app_id()}"
         f"&redirect_uri={VERIFY_REDIRECT_URL}"
         f"&nofollow=1"
     )
@@ -3916,8 +3926,6 @@ async def api_streams_status(request):
 
 # --- ARENA / CHALLENGES API ---
 
-LESTA_APP_ID = "c984faa7dc529f4cb0139505d5e8043c"
-
 # Cache for tank encyclopedia {tank_id: {tier, type, name}}
 _tank_encyclopedia = {}
 
@@ -3933,7 +3941,7 @@ async def load_tank_encyclopedia():
             page = 1
             while page <= 10:
                 url = (f"https://api.tanki.su/wot/encyclopedia/vehicles/"
-                       f"?application_id={LESTA_APP_ID}&fields=tank_id,tier,type,name&limit=100&page_no={page}")
+                       f"?application_id={get_lesta_app_id()}&fields=tank_id,tier,type,name&limit=100&page_no={page}")
                 async with session.get(url) as resp:
                     data = await resp.json()
                 if data.get("status") != "ok":
@@ -3961,7 +3969,7 @@ async def fetch_player_stats(user, ch):
     if not account_id and nickname:
         try:
             async with aiohttp.ClientSession() as session:
-                url = f"https://api.tanki.su/wot/account/list/?application_id={LESTA_APP_ID}&search={nickname}&limit=1"
+                url = f"https://api.tanki.su/wot/account/list/?application_id={get_lesta_app_id()}&search={nickname}&limit=1"
                 async with session.get(url) as resp:
                     data = await resp.json()
                     if data.get("status") == "ok" and data.get("data"):
@@ -3984,7 +3992,7 @@ async def fetch_player_stats(user, ch):
         async with aiohttp.ClientSession() as session:
             # Fetch per-tank stats for this player
             url = (f"https://api.tanki.su/wot/tanks/stats/"
-                   f"?application_id={LESTA_APP_ID}&account_id={account_id}"
+                   f"?application_id={get_lesta_app_id()}&account_id={account_id}"
                    f"&fields=tank_id,all.battles,all.damage_dealt,all.spotted,all.frags,"
                    f"all.xp,all.wins,all.damage_received,all.shots,all.hits,all.survived_battles")
             async with session.get(url) as resp:
@@ -4534,7 +4542,7 @@ async def gc_fetch_player_stat(account_id, condition):
         timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
-                   f"?application_id={LESTA_APP_ID}&account_id={account_id}"
+                   f"?application_id={get_lesta_app_id()}&account_id={account_id}"
                    f"&fields=all.{stat_field},all.battles,tank_id")
             async with session.get(url) as resp:
                 data = await resp.json()
@@ -4583,7 +4591,7 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str):
         timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
-                   f"?application_id={LESTA_APP_ID}&account_id={account_id}"
+                   f"?application_id={get_lesta_app_id()}&account_id={account_id}"
                    f"&fields={fields_str}")
             async with session.get(url) as resp:
                 data = await resp.json()
@@ -4660,7 +4668,7 @@ async def gc_fetch_batch_stats(account_ids, conditions_str):
     async def fetch_one(session, aid):
         try:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
-                   f"?application_id={LESTA_APP_ID}&account_id={aid}"
+                   f"?application_id={get_lesta_app_id()}&account_id={aid}"
                    f"&fields={fields_str}")
             async with session.get(url) as resp:
                 data = await resp.json()
@@ -4724,7 +4732,7 @@ async def gc_fetch_tank_stats(account_id):
         timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
-                   f"?application_id={LESTA_APP_ID}&account_id={account_id}"
+                   f"?application_id={get_lesta_app_id()}&account_id={account_id}"
                    f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.xp,all.wins")
             async with session.get(url) as resp:
                 data = await resp.json()
@@ -4787,7 +4795,7 @@ async def gc_get_tank_names(tank_ids):
                     batch = missing[i:i+100]
                     ids_str = ",".join(str(x) for x in batch)
                     url = (f"https://api.tanki.su/wot/encyclopedia/vehicles/"
-                           f"?application_id={LESTA_APP_ID}&tank_id={ids_str}"
+                           f"?application_id={get_lesta_app_id()}&tank_id={ids_str}"
                            f"&fields=name,tier,type")
                     async with session.get(url) as resp:
                         data = await resp.json()
@@ -4824,11 +4832,11 @@ async def api_global_challenge_create(request):
         ends_at = datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)
 
         with get_db() as conn:
-            # Закрываем старые активные
-            conn.execute(
-                "UPDATE global_challenges SET status = 'finished', finished_at = datetime('now') "
-                "WHERE status = 'active'"
-            )
+            # Находим старые активные и корректно закрываем их с наградами
+            active_ids = conn.execute("SELECT id FROM global_challenges WHERE status = 'active'").fetchall()
+            for row in active_ids:
+                _internal_finish_challenge(conn, row["id"])
+
             cursor = conn.execute("""
                 INSERT INTO global_challenges 
                 (title, description, icon, condition, duration_minutes, max_battles,
@@ -4913,59 +4921,98 @@ async def api_global_challenge_create(request):
     except Exception as e:
         logger.error(f"API global_challenge_create error: {e}")
         return cors_response({"error": str(e)}, 500)
+def _internal_finish_challenge(conn, challenge_id):
+    """Внутренняя логика завершения челленджа: выбор победителя, выдача награды, смена статуса."""
+    try:
+        # 1. Находим победителя
+        winner = conn.execute("""
+            SELECT * FROM global_challenge_participants 
+            WHERE challenge_id = ? ORDER BY current_value DESC LIMIT 1
+        """, (challenge_id,)).fetchone()
+        
+        winner_tg = winner["telegram_id"] if winner else None
+        winner_nick = winner["nickname"] if winner else None
+        winner_val = winner["current_value"] if winner else 0
+        
+        # 2. Обновляем статус челленджа
+        conn.execute("""
+            UPDATE global_challenges 
+            SET status = 'finished', finished_at = datetime('now'),
+                winner_telegram_id = ?, winner_nickname = ?, winner_value = ?
+            WHERE id = ?
+        """, (winner_tg, winner_nick, winner_val, challenge_id))
+        
+        logger.info(f"🏆 Челлендж {challenge_id} завершён. Победитель: {winner_nick} ({winner_val})")
+        
+        # 3. Выдача награды
+        ch_data = conn.execute("SELECT reward_coins, title FROM global_challenges WHERE id = ?", (challenge_id,)).fetchone()
+        if winner_tg and ch_data and ch_data["reward_coins"] > 0:
+            try:
+                from database import buy_cheese
+                buy_cheese(winner_tg, ch_data["reward_coins"], method="challenge_reward")
+                logger.info(f"💰 Награда {ch_data['reward_coins']} сыра выдана {winner_tg} за {ch_data['title']}")
+            except Exception as e:
+                logger.error(f"Ошибка выдачи награды: {e}")
+        
+        return True
+    except Exception as e:
+        logger.error(f"Ошибка в _internal_finish_challenge: {e}")
+        return False
 
 
 async def api_global_challenge_active(request):
     """GET /api/global-challenge/active — получить активный общий челлендж"""
     try:
-        from database import get_db
+        from database import get_db, get_db_read
         from datetime import datetime, timezone
 
         now_utc = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
-        with get_db() as conn:
+        # Сначала пробуем просто прочитать активный челлендж без блокировки базы
+        with get_db_read() as conn:
             ch = conn.execute("""
                 SELECT * FROM global_challenges 
                 WHERE status = 'active' AND ends_at > ?
                 ORDER BY created_at DESC LIMIT 1
             """, (now_utc,)).fetchone()
 
-            if not ch:
-                # Проверяем и закрываем просроченные
+        # Если активного нет — возможно нужно закрыть те, что закончились по времени или боям
+        if not ch:
+            with get_db() as conn:
+                # 1. Закрываем по ВРЕМЕНИ
                 expired = conn.execute(
                     "SELECT id FROM global_challenges WHERE status = 'active' AND ends_at <= ?",
                     (now_utc,)
                 ).fetchall()
                 for ex in expired:
-                    # Автоматически завершаем
-                    winner = conn.execute("""
-                        SELECT * FROM global_challenge_participants 
-                        WHERE challenge_id = ? ORDER BY current_value DESC LIMIT 1
-                    """, (ex["id"],)).fetchone()
+                    _internal_finish_challenge(conn, ex["id"])
+                
+                # 2. Закрываем по БОЯМ (если все участники сыграли лимит)
+                # Ищем активные с лимитом боёв
+                battle_limited = conn.execute(
+                    "SELECT id, max_battles FROM global_challenges WHERE status = 'active' AND max_battles > 0"
+                ).fetchall()
+                for b_ch in battle_limited:
+                    # Проверяем, есть ли участники, которые ЕЩЁ НЕ сыграли лимит
+                    not_finished = conn.execute("""
+                        SELECT COUNT(*) FROM global_challenge_participants 
+                        WHERE challenge_id = ? AND battles_played < ?
+                    """, (b_ch["id"], b_ch["max_battles"])).fetchone()[0]
                     
-                    winner_tg = winner["telegram_id"] if winner else None
-                    winner_nick = winner["nickname"] if winner else None
-                    winner_val = winner["current_value"] if winner else 0
+                    # Если все (кто вступил) уже отыграли — закрываем
+                    # Проверяем что есть хотя бы один участник
+                    has_p = conn.execute("SELECT COUNT(*) FROM global_challenge_participants WHERE challenge_id = ?", (b_ch["id"],)).fetchone()[0]
                     
-                    conn.execute("""
-                        UPDATE global_challenges 
-                        SET status = 'finished', finished_at = datetime('now'),
-                            winner_telegram_id = ?, winner_nickname = ?, winner_value = ?
-                        WHERE id = ?
-                    """, (winner_tg, winner_nick, winner_val, ex["id"]))
-                    
-                    # Приз
-                    ch_data = conn.execute("SELECT reward_coins FROM global_challenges WHERE id = ?", (ex["id"],)).fetchone()
-                    if winner_tg and ch_data and ch_data["reward_coins"] > 0:
-                        from database import buy_cheese
-                        buy_cheese(winner_tg, ch_data["reward_coins"], method="challenge_reward")
+                    if has_p > 0 and not_finished == 0:
+                        _internal_finish_challenge(conn, b_ch["id"])
 
-                # Показать последний завершённый
+                # Снова пробуем найти (может уже ничего нет)
                 last = conn.execute("""
                     SELECT * FROM global_challenges 
                     WHERE status = 'finished'
                     ORDER BY finished_at DESC LIMIT 1
                 """).fetchone()
+                
                 if last:
                     last = dict(last)
                     top = conn.execute("""
@@ -4980,6 +5027,8 @@ async def api_global_challenge_active(request):
                     return cors_response({"challenge": last, "status": "finished"})
                 return cors_response({"challenge": None, "status": "none"})
 
+        # Если челлендж активен — собираем статику тоже через Read-Only
+        with get_db_read() as conn:
             ch = dict(ch)
             participants = conn.execute(
                 "SELECT COUNT(*) FROM global_challenge_participants WHERE challenge_id = ?",
@@ -4994,7 +5043,6 @@ async def api_global_challenge_active(request):
 
             ch["participants_count"] = participants
             lb = [dict(r) for r in top]
-            # Parse condition_values JSON for multi-condition display
             for entry in lb:
                 if entry.get("condition_values"):
                     try:
@@ -5003,7 +5051,6 @@ async def api_global_challenge_active(request):
                         entry["condition_values"] = None
             ch["leaderboard"] = lb
 
-            # Добавляем Z (UTC marker) к ends_at чтобы JS правильно интерпретировал
             if ch.get("ends_at") and not str(ch["ends_at"]).endswith("Z") and "+" not in str(ch["ends_at"]):
                 ch["ends_at"] = str(ch["ends_at"]) + "Z"
 
@@ -5068,7 +5115,7 @@ async def api_global_challenge_join(request):
                 async with _aiohttp.ClientSession() as session:
                     url = (
                         f"https://api.tanki.su/wot/account/list/"
-                        f"?application_id={LESTA_APP_ID}"
+                        f"?application_id={get_lesta_app_id()}"
                         f"&search={user['wot_nickname']}&limit=1&type=exact"
                     )
                     async with session.get(url, timeout=_aiohttp.ClientTimeout(total=10)) as resp:
@@ -5093,7 +5140,7 @@ async def api_global_challenge_join(request):
                     async with _aiohttp.ClientSession() as session:
                         url = (
                             f"https://api.tanki.su/wot/account/list/"
-                            f"?application_id={LESTA_APP_ID}"
+                            f"?application_id={get_lesta_app_id()}"
                             f"&search={try_nick}&limit=1&type=exact"
                         )
                         async with session.get(url, timeout=_aiohttp.ClientTimeout(total=10)) as resp:
@@ -5325,6 +5372,25 @@ async def _do_refresh_stats():
                         WHERE challenge_id = ? AND telegram_id = ?
                     """, (new_value, new_battles, datetime.now(), ch["id"], p["telegram_id"]))
                 updated += 1
+
+        # === STEP 4: Проверка завершения челленджа (по времени или по боям) ===
+        try:
+            from datetime import timezone
+            now_u = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            with get_db() as conn_end:
+                # По времени
+                if ch["ends_at"] <= now_u:
+                     _internal_finish_challenge(conn_end, ch["id"])
+                # По боям (если все отыграли)
+                elif max_battles > 0:
+                    not_f = conn_end.execute("""
+                        SELECT COUNT(*) FROM global_challenge_participants 
+                        WHERE challenge_id = ? AND battles_played < ?
+                    """, (ch["id"], max_battles)).fetchone()[0]
+                    if not_f == 0:
+                        _internal_finish_challenge(conn_end, ch["id"])
+        except Exception as e:
+            logger.error(f"Error checking GC auto-finish: {e}")
 
         logger.info(f"GC refresh-stats: updated {updated}/{len(participants)} participants")
         return cors_response({"success": True, "updated": updated, "total": len(participants)})
@@ -5604,7 +5670,7 @@ async def api_profile_save(request):
                     async with _aiohttp.ClientSession() as session:
                         url = (
                             f"https://api.tanki.su/wot/account/list/"
-                            f"?application_id={LESTA_APP_ID}"
+                            f"?application_id={get_lesta_app_id()}"
                             f"&search={wot_nickname}&limit=1&type=exact"
                         )
                         async with session.get(url, timeout=_aiohttp.ClientTimeout(total=10)) as resp:

@@ -30,21 +30,37 @@ logger.info(f"Database path: {DB_PATH}")
 
 
 @contextmanager
-def get_db():
-    """Контекстный менеджер для подключения к БД"""
-    conn = sqlite3.connect(DB_PATH, timeout=10)
+def get_db(write=True):
+    """
+    Контекстный менеджер для подключения к БД.
+    write=True (по умолчанию) — включает автоматический commit/rollback.
+    write=False — только чтение, без commit.
+    """
+    conn = sqlite3.connect(DB_PATH, timeout=20, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    
+    # Режим WAL для параллельной работы чтения и записи
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=10000")
-    conn.execute("PRAGMA foreign_keys=ON")
+    conn.execute("PRAGMA synchronous=NORMAL")  # Ускоряет запись, безопасно для WAL
+    conn.execute("PRAGMA busy_timeout=20000")  # Ждать разблокировки до 20 секунд
+    
     try:
         yield conn
-        conn.commit()
-    except Exception:
-        conn.rollback()
+        if write:
+            conn.commit()
+    except Exception as e:
+        if write:
+            conn.rollback()
+        logger.error(f"Database error: {e}")
         raise
     finally:
         conn.close()
+
+@contextmanager
+def get_db_read():
+    """Специальный менеджер только для чтения — максимально быстрый и без блокировок"""
+    with get_db(write=False) as conn:
+        yield conn
 
 
 def init_db():

@@ -23,16 +23,26 @@ logger = logging.getLogger(__name__)
 # НАСТРОЙКА API
 # ============================================================
 # Ключ читается из .env файла автоматически
-LESTA_APP_ID = os.getenv("LESTA_APP_ID", "")
+LESTA_APP_IDS = [s.strip() for s in os.getenv("LESTA_APP_ID", "").split(",") if s.strip()]
+_lesta_key_index = 0
+
+def get_lesta_app_id():
+    """Возвращает следующий API-ключ из списка (ротация)"""
+    global _lesta_key_index
+    if not LESTA_APP_IDS:
+        return ""
+    key = LESTA_APP_IDS[_lesta_key_index]
+    _lesta_key_index = (_lesta_key_index + 1) % len(LESTA_APP_IDS)
+    return key
 
 # Базовый URL API Мир Танков (Lesta Games)
 LESTA_API_URL = "https://api.tanki.su/wot"
 
 # Режим работы: True = реальный API, False = моковые данные
-USE_REAL_API = bool(LESTA_APP_ID)
+USE_REAL_API = bool(LESTA_APP_IDS)
 
 if USE_REAL_API:
-    logger.info("✅ API Lesta Games подключён (application_id найден)")
+    logger.info(f"✅ API Lesta Games подключён ({len(LESTA_APP_IDS)} ключей в ротации)")
 else:
     logger.info("⚠️ API ключ не найден — используем моковые данные. Добавьте LESTA_APP_ID в .env")
 
@@ -197,7 +207,7 @@ async def _search_player_api(nickname: str) -> list:
     """Поиск через реальный API"""
     url = f"{LESTA_API_URL}/account/list/"
     params = {
-        "application_id": LESTA_APP_ID,
+        "application_id": get_lesta_app_id(),
         "search": nickname,
         "limit": 5,
     }
@@ -258,7 +268,7 @@ async def _get_stats_api(account_id: int) -> dict | None:
     """Получить статистику через API"""
     url = f"{LESTA_API_URL}/account/info/"
     params = {
-        "application_id": LESTA_APP_ID,
+        "application_id": get_lesta_app_id(),
         "account_id": account_id,
         "fields": "nickname,global_rating,created_at,last_battle_time,statistics.all",
     }
