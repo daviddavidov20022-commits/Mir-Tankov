@@ -137,17 +137,17 @@
                     if (d.tts_min_amount) CONFIG.ttsMinAmount = d.tts_min_amount;
                 }
                 
-                // Загружаем медиа: сначала API (SQLite), потом статические файлы
+                // Загружаем только те медиа-файлы, которые реально есть в API
+                // НЕ пробуем статические URL — это вызывало 404-флуд на сервере
                 const mediaKeys = [
-                    {key: 'sound_small', cfg: 'soundSmall', exts: ['.mp3','.ogg','.wav']},
-                    {key: 'sound_medium', cfg: 'soundMedium', exts: ['.mp3','.ogg','.wav']},
-                    {key: 'sound_large', cfg: 'soundLarge', exts: ['.mp3','.ogg','.wav']},
-                    {key: 'media_small', cfg: 'mediaSmall', exts: ['.gif','.mp4','.webm']},
-                    {key: 'media_medium', cfg: 'mediaMedium', exts: ['.gif','.mp4','.webm']},
-                    {key: 'media_large', cfg: 'mediaLarge', exts: ['.gif','.mp4','.webm']},
+                    {key: 'sound_small',  cfg: 'soundSmall'},
+                    {key: 'sound_medium', cfg: 'soundMedium'},
+                    {key: 'sound_large',  cfg: 'soundLarge'},
+                    {key: 'media_small',  cfg: 'mediaSmall'},
+                    {key: 'media_medium', cfg: 'mediaMedium'},
+                    {key: 'media_large',  cfg: 'mediaLarge'},
                 ];
                 for (const m of mediaKeys) {
-                    // 1) Пробуем API (SQLite)
                     try {
                         const mr = await fetch(`${API_URL}/api/stream/media/${m.key}`);
                         if (mr.ok) {
@@ -155,27 +155,10 @@
                             if (md.data) {
                                 CONFIG[m.cfg] = md.data;
                                 console.log(`[Alert] ✅ ${m.key} (API)`);
-                                continue;
                             }
+                            // Если md.data пустой — файл не загружен, просто пропускаем
                         }
                     } catch(e) {}
-                    // 2) Пробуем статические файлы /obs/media/
-                    for (const ext of m.exts) {
-                        try {
-                            const sr = await fetch(`${API_URL}/obs/media/${m.key}${ext}`);
-                            if (sr.ok) {
-                                const blob = await sr.blob();
-                                const dataUri = await new Promise(resolve => {
-                                    const reader = new FileReader();
-                                    reader.onload = () => resolve(reader.result);
-                                    reader.readAsDataURL(blob);
-                                });
-                                CONFIG[m.cfg] = dataUri;
-                                console.log(`[Alert] ✅ ${m.key} (static ${ext})`);
-                                break;
-                            }
-                        } catch(e) {}
-                    }
                 }
                 
                 console.log('[Alert] Конфиг загружен. Звуки:', 
@@ -362,7 +345,7 @@
         // ========== ЗАПУСК ==========
         loadConfig().then(() => {
             setInterval(pollDonations, POLL_INTERVAL);
-            setInterval(loadConfig, 30000);
+            setInterval(loadConfig, 120000); // Перезагружаем конфиг раз в 2 минуты
             console.log('[МИР ТАНКОВ Alert] Виджет запущен, API:', API_URL);
             
             if (window.location.search.includes('test')) {
