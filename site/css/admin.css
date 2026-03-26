@@ -11,22 +11,24 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(10, 14, 20, 0.95);
+    background: rgba(10, 14, 20, 0.97);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(200, 170, 110, 0.15);
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    gap: 8px;
+    flex-wrap: nowrap;    /* не переносим — всё в одну строку */
 }
 
 .admin-header__left {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .back-link {
@@ -49,20 +51,37 @@ body {
 }
 
 .admin-badge {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     background: rgba(200, 170, 110, 0.15);
     color: var(--color-gold);
-    padding: 4px 10px;
+    padding: 3px 8px;
     border-radius: 20px;
     border: 1px solid rgba(200, 170, 110, 0.2);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+/* На очень узких экранах скрываем badge и сокращаем h1 */
+@media (max-width: 420px) {
+    .admin-badge { display: none; }
+    .admin-header h1 { font-size: 0.85rem; }
+    .btn-label { display: none; }   /* только иконка в кнопках */
+    .btn--icon-compact { padding: 7px 10px; }
 }
 
 .admin-header__actions {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* Компактные кнопки в хедере */
+.btn--icon-compact {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    white-space: nowrap;
 }
 
 /* Buttons */
