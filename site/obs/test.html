@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>🧪 Тест алертов</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            color: #e8e6e3;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        h1 { font-size: 1.5rem; color: #C8AA6E; }
+        .status { font-size: 0.8rem; color: #5a6577; margin-bottom: 10px; }
+        .status.ok { color: #4CAF50; }
+        .status.err { color: #f44336; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 500px; }
+        .btn {
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+        }
+        .btn:hover { transform: scale(1.03); }
+        .btn:active { transform: scale(0.97); }
+        .btn--donate10 { background: linear-gradient(135deg, #FFC107, #FF9800); }
+        .btn--donate50 { background: linear-gradient(135deg, #FF9800, #F44336); }
+        .btn--donate100 { background: linear-gradient(135deg, #F44336, #E91E63); }
+        .btn--donate500 { background: linear-gradient(135deg, #E91E63, #9C27B0); }
+        .btn--music { background: linear-gradient(135deg, #9C27B0, #E040FB); grid-column: span 2; }
+        .btn--clear { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #888; grid-column: span 2; font-size: 0.8rem; padding: 10px; }
+        .log { width: 100%; max-width: 500px; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; max-height: 200px; overflow-y: auto; font-size: 0.7rem; color: #8b95a5; }
+        .log-item { margin-bottom: 4px; }
+        .log-item.ok { color: #4CAF50; }
+        .log-item.err { color: #f44336; }
+        .iframes { position: fixed; bottom: 0; left: 0; right: 0; display: flex; gap: 0; height: 250px; pointer-events: none; }
+        .iframes iframe { flex: 1; border: none; height: 100%; }
+        .tip { font-size: 0.7rem; color: #5a6577; text-align: center; max-width: 400px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Панель тестирования</h1>
+    <div class="status" id="status">Проверка соединения...</div>
+    
+    <div class="grid">
+        <button class="btn btn--donate10" onclick="testDonate(10, '💥 Бабах!')">🧀 10 сыра</button>
+        <button class="btn btn--donate50" onclick="testDonate(50, '🔥 Жара!')">🧀 50 сыра</button>
+        <button class="btn btn--donate100" onclick="testDonate(100, '💣 Бомба!')">🧀 100 сыра</button>
+        <button class="btn btn--donate500" onclick="testDonate(500, '🏆 МЕГА ДОНАТ!')">🧀 500 сыра</button>
+        <button class="btn btn--music" onclick="testMusic()">🎵 Заказать музыку</button>
+        <button class="btn btn--clear" onclick="document.getElementById('log').innerHTML=''">🧹 Очистить лог</button>
+    </div>
+
+    <div class="tip">
+        👆 Нажимай кнопки и смотри на виджеты внизу! <br>
+        Или открой отдельно: 
+        <a href="/obs/alert.html?api=http://localhost:8085" target="_blank" style="color:#C8AA6E">Алерт</a> | 
+        <a href="/obs/music.html?api=http://localhost:8085" target="_blank" style="color:#E040FB">Музыка</a>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <!-- Встроенные виджеты внизу экрана -->
+    <div class="iframes">
+        <iframe src="/obs/alert.html?api=http://localhost:8085" allow="autoplay"></iframe>
+        <iframe src="/obs/music.html?api=http://localhost:8085" allow="autoplay"></iframe>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8085';
+        const TG_ID = 6507474079;
+        
+        // Проверка соединения
+        fetch(`${API}/api/stream/donate/history`)
+            .then(r => r.json())
+            .then(() => {
+                document.getElementById('status').textContent = '✅ Бот запущен и отвечает!';
+                document.getElementById('status').className = 'status ok';
+            })
+            .catch(() => {
+                document.getElementById('status').textContent = '❌ Бот не отвечает! Запусти python bot.py';
+                document.getElementById('status').className = 'status err';
+            });
+
+        function log(msg, ok = true) {
+            const el = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            el.innerHTML = `<div class="log-item ${ok ? 'ok' : 'err'}">[${time}] ${msg}</div>` + el.innerHTML;
+        }
+
+        async function testDonate(amount, message) {
+            try {
+                const resp = await fetch(`${API}/api/stream/donate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: TG_ID, username: 'Тест Админ', amount, message })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    log(`Донат ${amount} 🧀 — "${message}" ✅`);
+                } else {
+                    log(`Ошибка: ${data.error}`, false);
+                }
+            } catch(e) {
+                log(`Сеть: ${e.message}`, false);
+            }
+        }
+
+        const testTracks = [
+            'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'https://www.youtube.com/watch?v=9bZkp7q19f0',
+            'https://www.youtube.com/watch?v=kJQP7kiw5Fk',
+            'https://www.youtube.com/watch?v=RgKAFK5djSk',
+        ];
+
+        async function testMusic() {
+            const url = testTracks[Math.floor(Math.random() * testTracks.length)];
+            try {
+                const resp = await fetch(`${API}/api/stream/music/request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: TG_ID, username: 'DJ Админ', url, amount: 50 })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    log(`Музыка добавлена: ${url} 🎵`);
+                } else {
+                    log(`Ошибка: ${data.error}`, false);
+                }
+            } catch(e) {
+                log(`Сеть: ${e.message}`, false);
+            }
+        }
+    </script>
+</body>
+</html>

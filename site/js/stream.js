@@ -160,42 +160,28 @@ function createParticles() {
 
 // ==========================================
 // МУЛЬТИПЛАТФОРМЕННЫЙ ПЛЕЕР
-// Захардкоженные каналы стримера
 // ==========================================
-const STREAMER_CHANNELS = {
-    twitch: 'serverenok',
-    vk: 'iserveri',
-    youtube: 'ISERVERI'
-};
-
-const STREAMER_TITLES = {
-    twitch: 'SERVERENOK',
-    vk: 'ISERVERI',
-    youtube: 'ISERVERI'
-};
-
 function initPlayer() {
-    const iframe = document.getElementById('streamPlayerIframe');
-    if (!iframe) return;
-    const parent = window.location.hostname || 'localhost';
+    // В webapp используем превью-карточку вместо iframe
+    // (iframe Twitch не работает в Telegram WebView)
+    const preview = document.getElementById('streamPreview');
+    if (preview) {
+        updateStreamPreview(currentPlatform);
+    }
     
-    if (currentPlatform === 'twitch') {
-        const ch = STREAMER_CHANNELS.twitch;
-        // Twitch требует parent= с доменом
-        iframe.src = `https://player.twitch.tv/?channel=${ch}&parent=${parent}&parent=daviddavidov20022-commits.github.io&parent=localhost&muted=false`;
-        currentChannel = ch;
-    } else if (currentPlatform === 'vk') {
-        // VK Video Live embed
-        iframe.src = `https://live.vkvideo.ru/app/embed/iserveri?autoplay=true`;
-    } else if (currentPlatform === 'youtube') {
-        // YouTube live — встраиваем через @handle/live  
-        iframe.src = `https://www.youtube.com/@ISERVERI/live`;
+    // Берём канал из конфига (сохранённого админом)
+    const platformConfig = currentStreamConfig[currentPlatform] || {};
+    const configChannel = platformConfig.channel || '';
+    
+    if (currentPlatform === 'twitch' && configChannel) {
+        currentChannel = configChannel;
     }
     
     // Обновляем заголовок стрима
     const titleEl = document.getElementById('streamTitle');
-    if (titleEl) {
-        titleEl.textContent = STREAMER_TITLES[currentPlatform] || 'ISERVERI';
+    if (titleEl && configChannel) {
+        const displayName = configChannel.replace(/^https?:\/\//, '').split('/').pop() || configChannel;
+        titleEl.textContent = displayName.toUpperCase();
     }
     
     // Если в режиме виджета — обновляем виджет чата тоже
@@ -809,13 +795,67 @@ function openGame(url) {
 }
 
 // ==========================================
-// ССЫЛКИ НА СТРИМЫ (для внешнего открытия в Telegram WebApp)
+// ОТКРЫТИЕ СТРИМА В БРАУЗЕРЕ
 // ==========================================
 const STREAM_LINKS = {
     twitch: 'https://www.twitch.tv/serverenok',
     vk: 'https://live.vkvideo.ru/iserveri',
     youtube: 'https://www.youtube.com/@ISERVERI'
 };
+
+const STREAM_PREVIEW_DATA = {
+    twitch: { icon: '💜', channel: 'SERVERENOK', platform: 'twitch.tv', color: '#9146FF', gradient: 'linear-gradient(135deg, #9146FF, #7B2FFF)' },
+    vk: { icon: '🔵', channel: 'ISERVERI', platform: 'vk video', color: '#0077FF', gradient: 'linear-gradient(135deg, #0077FF, #0055CC)' },
+    youtube: { icon: '🔴', channel: 'ISERVERI', platform: 'youtube.com', color: '#FF0000', gradient: 'linear-gradient(135deg, #FF0000, #CC0000)' }
+};
+
+function openStreamLink(platform) {
+    const url = STREAM_LINKS[platform];
+    if (!url) return;
+    
+    // Подсветим нажатую кнопку
+    document.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.classList.toggle('platform-tab--active', tab.dataset.platform === platform);
+    });
+    
+    // Обновим превью-карточку
+    updateStreamPreview(platform);
+    
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch(e) {}
+    
+    // Открываем в браузере
+    if (window.Telegram?.WebApp?.openLink) {
+        window.Telegram.WebApp.openLink(url);
+    } else {
+        window.open(url, '_blank');
+    }
+}
+
+function updateStreamPreview(platform) {
+    const data = STREAM_PREVIEW_DATA[platform];
+    if (!data) return;
+    
+    const icon = document.getElementById('previewIcon');
+    const channel = document.getElementById('previewChannel');
+    const platLabel = document.getElementById('previewPlatform');
+    const btn = document.getElementById('previewBtn');
+    const glow = document.querySelector('.stream-preview__glow');
+    
+    if (icon) icon.textContent = data.icon;
+    if (channel) channel.textContent = data.channel;
+    if (platLabel) {
+        platLabel.textContent = data.platform;
+        platLabel.style.color = data.color;
+    }
+    if (btn) {
+        btn.style.background = data.gradient;
+        btn.onclick = () => openStreamLink(platform);
+    }
+    if (glow) {
+        glow.style.background = `radial-gradient(circle, ${data.color}26, transparent 70%)`;
+    }
+}
+
 
 // ==========================================
 // КОНФИГ ТРАНСЛЯЦИИ (АДМИН)
@@ -1046,19 +1086,14 @@ async function sendDonate() {
     const message = document.getElementById('donateMessage').value.trim();
     
     if (amount < 10) {
-        alert('❌ Минимум 10 🧀');
+        showToast('❌', 'Минимум 10 🧀');
         return;
     }
     
     if (!myTelegramId) {
-        alert('❌ Нужна авторизация! Войди через главную страницу.');
+        showToast('❌', 'Нужна авторизация через Telegram');
         return;
     }
-    
-    // Визуальная обратная связь
-    const btn = document.querySelector('#donateModal .modal-btn--primary');
-    const originalText = btn ? btn.textContent : '';
-    if (btn) { btn.textContent = '⏳ Отправка...'; btn.disabled = true; btn.style.opacity = '0.6'; }
     
     try {
         const resp = await fetch(`${BOT_API_URL}/api/stream/donate`, {
@@ -1074,28 +1109,22 @@ async function sendDonate() {
         const data = await resp.json();
         
         if (data.success) {
-            // Показать успех прямо на кнопке
-            if (btn) { btn.textContent = '✅ Отправлено!'; btn.style.background = '#4CAF50'; btn.style.opacity = '1'; }
+            closeDonateModal();
+            showToast('🧀', `Донат ${amount} 🧀 отправлен!`);
             document.getElementById('donateMessage').value = '';
+            // Обновить баланс в localStorage
             try {
                 const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
                 local.coins = data.new_balance;
                 localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
             } catch(e) {}
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
-            // Быстро закрыть
-            setTimeout(() => {
-                closeDonateModal();
-                if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; btn.style.background = ''; }
-                showToast('🧀', `Донат ${amount} 🧀 отправлен!`);
-            }, 500);
         } else {
-            alert('❌ ' + (data.error || 'Ошибка доната'));
-            if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
+            showToast('❌', data.error || 'Ошибка доната');
+            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
         }
     } catch(e) {
-        alert('❌ Ошибка сети: ' + e.message);
-        if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
+        showToast('❌', 'Ошибка сети');
     }
 }
 
@@ -1114,19 +1143,14 @@ async function sendMusicRequest() {
     const url = document.getElementById('musicUrl').value.trim();
     
     if (!url) {
-        alert('❌ Вставь ссылку на видео');
+        showToast('❌', 'Вставь ссылку на видео');
         return;
     }
     
     if (!myTelegramId) {
-        alert('❌ Нужна авторизация! Войди через главную страницу.');
+        showToast('❌', 'Нужна авторизация через Telegram');
         return;
     }
-    
-    // Визуальная обратная связь
-    const btn = document.querySelector('#musicModal .modal-btn--primary');
-    const originalText = btn ? btn.textContent : '';
-    if (btn) { btn.textContent = '⏳ Отправка...'; btn.disabled = true; btn.style.opacity = '0.6'; }
     
     try {
         const resp = await fetch(`${BOT_API_URL}/api/stream/music/request`, {
@@ -1142,8 +1166,8 @@ async function sendMusicRequest() {
         const data = await resp.json();
         
         if (data.success) {
-            // Показать успех на кнопке
-            if (btn) { btn.textContent = '✅ Трек добавлен!'; btn.style.background = '#4CAF50'; btn.style.opacity = '1'; }
+            closeMusicModal();
+            showToast('🎵', 'Трек добавлен в очередь!');
             document.getElementById('musicUrl').value = '';
             try {
                 const local = JSON.parse(localStorage.getItem(`mt_data_${myTelegramId}`) || '{}');
@@ -1151,19 +1175,12 @@ async function sendMusicRequest() {
                 localStorage.setItem(`mt_data_${myTelegramId}`, JSON.stringify(local));
             } catch(e) {}
             try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e) {}
-            // Быстро закрыть
-            setTimeout(() => {
-                closeMusicModal();
-                if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; btn.style.background = ''; }
-                showToast('🎵', 'Трек добавлен в очередь!');
-            }, 500);
         } else {
-            alert('❌ ' + (data.error || 'Ошибка заказа'));
-            if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
+            showToast('❌', data.error || 'Ошибка заказа');
+            try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e) {}
         }
     } catch(e) {
-        alert('❌ Ошибка сети: ' + e.message);
-        if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
+        showToast('❌', 'Ошибка сети');
     }
 }
 

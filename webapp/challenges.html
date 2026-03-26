@@ -435,7 +435,7 @@
                 <!-- Finished state -->
                 <div class="gc-finished" id="gcFinished" style="display:none">
                     <div class="gc-winner-crown">👑</div>
-                    <div class="gc-winner-title">ЧЕЛЛЕНДЖ ЗАВЕРШЁН!</div>
+                    <div class="gc-winner-title">ПОБЕДИТЕЛЬ ВЫЯВЛЕН!</div>
                     <div class="gc-winner-card" id="gcWinnerCard">
                         <div class="gc-winner-medal">🥇</div>
                         <div class="gc-winner-name" id="gcWinnerName">—</div>
@@ -443,6 +443,27 @@
                         <div class="gc-winner-label" id="gcWinnerLabel">урона</div>
                     </div>
                     <div class="gc-final-lb" id="gcFinalLb"></div>
+                </div>
+            </div>
+
+            <!-- HISTORY LIST -->
+            <div class="gc-history-section" id="gcHistorySection" style="margin-top:20px;display:none">
+                <div class="section-lbl">📜 История челленджей</div>
+                <div id="gcHistoryList" style="display:flex;flex-direction:column;gap:10px"></div>
+            </div>
+
+            <!-- MODAL FOR BATTLE LOGS -->
+            <div class="gc-modal" id="gcModal" style="display:none">
+                <div class="gc-modal__backdrop" onclick="gcCloseModal()"></div>
+                <div class="gc-modal__content">
+                    <div class="gc-modal__header">
+                        <div class="gc-modal__title" id="gcModalTitle">Результаты игрока</div>
+                        <button class="gc-modal__close" onclick="gcCloseModal()">×</button>
+                    </div>
+                    <div class="gc-modal__summary" id="gcModalSummary"></div>
+                    <div class="gc-modal__body" id="gcModalBody">
+                        <div class="gc-loading-mini">⏳ Загрузка боёв...</div>
+                    </div>
                 </div>
             </div>
 

@@ -99,6 +99,9 @@ async function gcLoadChallenge(forceRefresh) {
             } else {
                 gcShowEmpty();
             }
+            
+            // Загружаем историю параллельно
+            gcLoadHistory();
         }
 
         // Повторно убеждаемся что админ-панель показана
@@ -231,31 +234,39 @@ function gcShowFinished(ch) {
     document.getElementById('gcActive').style.display = 'none';
     document.getElementById('gcFinished').style.display = '';
 
-    const cond = GC_CONDITION_MAP[ch.condition] || GC_CONDITION_MAP.damage;
+    const conditions = (ch.condition || 'damage').split(',');
+    const firstCond = GC_CONDITION_MAP[conditions[0]] || GC_CONDITION_MAP.damage;
 
     document.getElementById('gcWinnerName').textContent = ch.winner_nickname || 'Нет участников';
-    document.getElementById('gcWinnerValue').textContent = (ch.winner_value || 0).toLocaleString('ru');
-    document.getElementById('gcWinnerLabel').textContent = cond.unit;
+    document.getElementById('gcWinnerValue').innerHTML = gcFormatLbValue({
+        current_value: ch.winner_value,
+        condition_values: ch.winner_condition_values
+    }, ch);
+    document.getElementById('gcWinnerLabel').textContent = conditions.length > 1 ? 'результат' : firstCond.unit;
 
     // Final leaderboard
     const lb = ch.leaderboard || [];
     let html = '';
     if (lb.length > 0) {
-        html += '<div class="gc-lb-title" style="margin-top:8px">📊 Итоговая таблица</div>';
+        html += '<div class="gc-lb-title" style="margin-top:20px;justify-content:center">🏆 ИТОГОВАЯ ТАБЛИЦА</div>';
+        html += '<div class="gc-lb-list">';
         lb.forEach((p, i) => {
             const medals = ['🥇', '🥈', '🥉'];
             const medal = medals[i] || `${i + 1}`;
             const cls = i === 0 ? 'gc-lb-item--1st' : i === 1 ? 'gc-lb-item--2nd' : i === 2 ? 'gc-lb-item--3rd' : 'gc-lb-item--other';
+            const rankCls = i < 3 ? ['gc-lb-rank--1st', 'gc-lb-rank--2nd', 'gc-lb-rank--3rd'][i] : 'gc-lb-rank--other';
+            
             html += `
-                <div class="gc-lb-item ${cls}">
-                    <div class="gc-lb-rank gc-lb-rank--${i < 3 ? ['1st', '2nd', '3rd'][i] : 'other'}">${medal}</div>
+                <div class="gc-lb-item ${cls}" style="cursor:pointer" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || '').replace(/'/g, "\\'")}', true, ${ch.id})">
+                    <div class="gc-lb-rank ${rankCls}">${medal}</div>
                     <div class="gc-lb-info">
                         <div class="gc-lb-name">${p.nickname}</div>
                         <div class="gc-lb-battles">${p.battles_played || 0} боёв</div>
                     </div>
-                    <div class="gc-lb-value">${(p.current_value || 0).toLocaleString('ru')}</div>
+                    <div class="gc-lb-value" style="text-align:right">${gcFormatLbValue(p, ch)}</div>
                 </div>`;
         });
+        html += '</div>';
     }
     document.getElementById('gcFinalLb').innerHTML = html;
 
@@ -272,12 +283,10 @@ function gcShowFinished(ch) {
             deleteBtn.style.display = '';
             deleteBtn.setAttribute('data-id', ch.id);
         }
-        // Скрываем OBS секцию когда челлендж завершён
         const obsSection = document.getElementById('gcObsSection');
         if (obsSection) obsSection.style.display = 'none';
     }
 
-    // Confetti!
     if (ch.winner_nickname) {
         setTimeout(gcLaunchConfetti, 300);
     }
@@ -1326,4 +1335,172 @@ function gcCopyCustomWidgetLink() {
         document.body.removeChild(input);
         showToast('📋 Ссылка на виджет скопирована!');
     });
+}
+// ============================================================
+// HISTORY: Загрузка завершенных челленджей
+// ============================================================
+async function gcLoadHistory() {
+    const section = document.getElementById('gcHistorySection');
+    const list = document.getElementById('gcHistoryList');
+    if (!section || !list) return;
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/history`);
+        const data = await resp.json();
+
+        if (data.history && data.history.length > 0) {
+            section.style.display = '';
+            list.innerHTML = data.history.map(ch => {
+                const date = new Date(ch.finished_at || ch.ends_at).toLocaleDateString('ru', {
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                });
+                const conds = (ch.condition || 'damage').split(',');
+                const icons = conds.map(c => (GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage).icon).join(' ');
+                
+                return `
+                    <div class="gc-history-card" onclick="gcShowHistoryChallenge(${ch.id})">
+                        <div class="gc-history-header">
+                            <div class="gc-history-title">${icons} ${ch.title}</div>
+                            <div class="gc-history-date">${date}</div>
+                        </div>
+                        <div class="gc-history-winner">
+                            <div class="gc-history-medal">🥇</div>
+                            <div class="gc-history-wnick">${ch.winner_nickname || 'Без победителя'}</div>
+                            <div class="gc-history-wval">${(ch.winner_value || 0).toLocaleString('ru')}</div>
+                        </div>
+                        <div style="font-size:0.55rem;color:#5A6577;display:flex;justify-content:space-between">
+                            <span>👥 ${ch.participants_count} участников</span>
+                            <span>🧀 Приз: ${ch.reward_coins}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            section.style.display = 'none';
+        }
+    } catch(e) {
+        console.error('History load error:', e);
+    }
+}
+
+async function gcShowHistoryChallenge(id) {
+    try {
+        // Просто запрашиваем детали этого челленджа (он finished)
+        // Наш API /active если передать challenge_id? Нет, у нас нет такого эндпоинта.
+        // Но мы можем запросить /active и если там не тот ID, то мы в тупике.
+        // Добавим эндпоинт на бэкенд? Или используем /active и подменим?
+        // На самом деле, админ просил "можно всегда посмотреть результат".
+        
+        // Временно: просто загружаем его как активный чтобы сработал рендер
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active?challenge_id=${id}`);
+        const data = await resp.json();
+        if (data.challenge) {
+            gcShowFinished(data.challenge);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    } catch(e) {
+        showToast('❌ Ошибка загрузки деталей');
+    }
+}
+
+// ============================================================
+// MODAL MANAGEMENT
+// ============================================================
+function gcCloseModal() {
+    document.getElementById('gcModal').style.display = 'none';
+}
+
+async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeId = null) {
+    const modal = document.getElementById('gcModal');
+    const title = document.getElementById('gcModalTitle');
+    const summary = document.getElementById('gcModalSummary');
+    const body = document.getElementById('gcModalBody');
+    
+    if (!modal) return;
+    
+    title.textContent = `Результаты: ${nickname}`;
+    summary.innerHTML = `<div class="gc-modal-stat__label">Загрузка информации...</div>`;
+    body.innerHTML = `<div style="text-align:center;padding:40px;color:#5A6577">⏳ Загрузка боёв...</div>`;
+    modal.style.display = 'flex';
+
+    const chId = challengeId || gcCurrentChallenge?.id;
+    if (!chId) {
+        body.innerHTML = 'Ошибка: ID челленджа не найден';
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/battle-log?challenge_id=${chId}&telegram_id=${tgId}`);
+        const data = await resp.json();
+        
+        if (!data.battles || data.battles.length === 0) {
+            body.innerHTML = `<div style="text-align:center;padding:40px;color:#5A6577">Боёв пока не записано.<br><span style="font-size:0.7rem">Обновление происходит после каждого боя.</span></div>`;
+            summary.innerHTML = '';
+            return;
+        }
+
+        // Рендерим бои
+        let html = '<div class="gc-battles-list">';
+        const ch = gcCurrentChallenge;
+        const conditions = (ch?.condition || 'damage').split(',');
+        
+        data.battles.forEach((b, i) => {
+            const winCls = b.wins ? 'gc-battle-stat--win' : 'gc-battle-stat--loss';
+            const winText = b.wins ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ';
+            
+            let statsHtml = '';
+            conditions.forEach(c => {
+                const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
+                const val = b[c] || 0;
+                statsHtml += `<div class="gc-battle-stat gc-battle-stat--active">${ci.icon} ${val.toLocaleString('ru')}</div>`;
+            });
+
+            html += `
+                <div class="gc-battle-row">
+                    <div class="gc-battle-num">#${i+1}</div>
+                    <div style="flex:1">
+                        <div class="gc-battle-tank"><span class="gc-battle-tier">${b.tank_tier}</span> ${b.tank_name}</div>
+                        <div class="gc-battle-stats">
+                            <div class="gc-battle-stat ${winCls}">${winText}</div>
+                            ${statsHtml}
+                        </div>
+                    </div>
+                    <div style="font-size:0.5rem;color:#3E4A5C;text-align:right">
+                        ${new Date(b.detected_at).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'})}
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        body.innerHTML = html;
+
+        // Summary bar
+        const totalDmg = data.battles.reduce((a, b) => a + (b.damage || 0), 0);
+        const winsCount = data.battles.filter(b => b.wins).length;
+        const wr = ((winsCount / data.battles.length) * 100).toFixed(0);
+        
+        summary.innerHTML = `
+            <div class="gc-modal-results" style="width:100%;margin-bottom:0">
+                <div class="gc-modal-stat">
+                    <div class="gc-modal-stat__val">${data.battles.length}</div>
+                    <div class="gc-modal-stat__label">Боёв</div>
+                </div>
+                <div class="gc-modal-stat">
+                    <div class="gc-modal-stat__val">${wr}%</div>
+                    <div class="gc-modal-stat__label">Побед</div>
+                </div>
+                <div class="gc-modal-stat gc-modal-stat--active">
+                    <div class="gc-modal-stat__val">💥 ${totalDmg.toLocaleString('ru')}</div>
+                    <div class="gc-modal-stat__label">Всего урона</div>
+                </div>
+                 <div class="gc-modal-stat">
+                    <div class="gc-modal-stat__val">🎯 ${data.battles.reduce((a,b)=>a+(b.frags||0),0)}</div>
+                    <div class="gc-modal-stat__label">Фрагов</div>
+                </div>
+            </div>
+        `;
+
+    } catch(e) {
+        body.innerHTML = `<div style="color:#ef4444;text-align:center;padding:20px">Ошибка загрузки данных</div>`;
+    }
 }

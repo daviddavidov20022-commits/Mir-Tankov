@@ -260,7 +260,8 @@ body {
 }
 
 /* Tactical corner brackets */
-.stream-player .stream-player__aspect::before {
+.stream-player .stream-player__aspect::before,
+.stream-player .stream-player__preview::before {
     content: '';
     position: absolute;
     top: 8px;
@@ -273,7 +274,8 @@ body {
     pointer-events: none;
 }
 
-.stream-player .stream-player__aspect::after {
+.stream-player .stream-player__aspect::after,
+.stream-player .stream-player__preview::after {
     content: '';
     position: absolute;
     bottom: 8px;

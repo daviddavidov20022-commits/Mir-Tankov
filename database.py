@@ -413,7 +413,30 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_gc_bl_challenge ON gc_battle_log(challenge_id, telegram_id);
         """)
 
-        # Миграции: добавить колонки если их нет
+        # Миграции для расширенной статистики в Челленджах
+        for col, default in [
+            ("baseline_frags", "INTEGER DEFAULT 0"),
+            ("baseline_xp", "INTEGER DEFAULT 0"),
+            ("baseline_spotting", "INTEGER DEFAULT 0"),
+            ("baseline_blocked", "INTEGER DEFAULT 0"),
+            ("baseline_wins", "INTEGER DEFAULT 0"),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE gc_tank_baselines ADD COLUMN {col} {default}")
+            except Exception: pass
+
+        for col, default in [
+            ("frags", "INTEGER DEFAULT 0"),
+            ("xp", "INTEGER DEFAULT 0"),
+            ("spotting", "INTEGER DEFAULT 0"),
+            ("blocked", "INTEGER DEFAULT 0"),
+            ("wins", "INTEGER DEFAULT 0"),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE gc_battle_log ADD COLUMN {col} {default}")
+            except Exception: pass
+
+        # Миграции для участников
         for col, default in [
             ("baseline_value", "INTEGER DEFAULT 0"),
             ("baseline_battles", "INTEGER DEFAULT 0"),

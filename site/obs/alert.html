@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>МИР ТАНКОВ — Донат Алерт</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .alert-wrap {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .alert-wrap.show { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .alert-wrap.hide { animation: popOut 0.4s ease-in forwards; }
+
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        @keyframes popOut {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -60%) scale(0.8); opacity: 0; }
+        }
+
+        /* Медиа — главный элемент */
+        .alert-media {
+            max-width: 400px;
+            max-height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+        }
+        .alert-media img, .alert-media video {
+            display: block;
+            max-width: 400px;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        /* Текст доната — под медиа */
+        .alert-info {
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
+        }
+        .alert-username {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.6rem;
+            color: #FFC107;
+            margin-bottom: 2px;
+        }
+        .alert-amount {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+        .alert-message {
+            font-size: 1rem;
+            color: #fff;
+            margin-top: 6px;
+            max-width: 380px;
+            padding: 6px 14px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            line-height: 1.4;
+            display: none;
+        }
+
+        /* TTS */
+        .alert-tts {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.3);
+            display: none;
+        }
+        .alert-tts.active {
+            display: block;
+            animation: ttsPulse 0.5s infinite alternate;
+        }
+        @keyframes ttsPulse { from { opacity: 0.3; } to { opacity: 0.8; } }
+    </style>
+</head>
+<body>
+    <div class="alert-wrap" id="alertWrap">
+        <div class="alert-media" id="alertMedia"></div>
+        <div class="alert-info">
+            <div class="alert-username" id="alertUsername"></div>
+            <div class="alert-amount" id="alertAmount"></div>
+        </div>
+        <div class="alert-message" id="alertMessage"></div>
+        <div class="alert-tts" id="alertTts">🔊 Озвучка...</div>
+    </div>
+
+    <script>
+        const API_URL = new URLSearchParams(window.location.search).get('api') || 'https://mir-tankov-production.up.railway.app';
+        const POLL_INTERVAL = 2000;
+
+        let CONFIG = {
+            alertDuration: 7,
+            soundEnabled: true,
+            soundVolume: 0.7,
+            soundSmall: '', soundMedium: '', soundLarge: '',
+            ttsEnabled: true, ttsSpeed: 1.0, ttsMinAmount: 30,
+            mediaSmall: '', mediaMedium: '', mediaLarge: '',
+        };
+
+        let isShowing = false;
+        let audioCtx = null;
+
+        // ========== ЗАГРУЗКА КОНФИГА ==========
+        async function loadConfig() {
+            try {
+                const resp = await fetch(`${API_URL}/api/stream/config`);
+                const data = await resp.json();
+                if (data.config?.donate) {
+                    const d = data.config.donate;
+                    if (d.alert_duration) CONFIG.alertDuration = d.alert_duration;
+                    if (d.sound_enabled !== undefined) CONFIG.soundEnabled = d.sound_enabled;
+                    if (d.sound_volume !== undefined) CONFIG.soundVolume = d.sound_volume;
+                    if (d.tts_enabled !== undefined) CONFIG.ttsEnabled = d.tts_enabled;
+                    if (d.tts_speed) CONFIG.ttsSpeed = d.tts_speed;
+                    if (d.tts_min_amount) CONFIG.ttsMinAmount = d.tts_min_amount;
+                }
+                
+                // Загружаем медиа: сначала API (SQLite), потом статические файлы
+                const mediaKeys = [
+                    {key: 'sound_small', cfg: 'soundSmall', exts: ['.mp3','.ogg','.wav']},
+                    {key: 'sound_medium', cfg: 'soundMedium', exts: ['.mp3','.ogg','.wav']},
+                    {key: 'sound_large', cfg: 'soundLarge', exts: ['.mp3','.ogg','.wav']},
+                    {key: 'media_small', cfg: 'mediaSmall', exts: ['.gif','.mp4','.webm']},
+                    {key: 'media_medium', cfg: 'mediaMedium', exts: ['.gif','.mp4','.webm']},
+                    {key: 'media_large', cfg: 'mediaLarge', exts: ['.gif','.mp4','.webm']},
+                ];
+                for (const m of mediaKeys) {
+                    // 1) Пробуем API (SQLite)
+                    try {
+                        const mr = await fetch(`${API_URL}/api/stream/media/${m.key}`);
+                        if (mr.ok) {
+                            const md = await mr.json();
+                            if (md.data) {
+                                CONFIG[m.cfg] = md.data;
+                                console.log(`[Alert] ✅ ${m.key} (API)`);
+                                continue;
+                            }
+                        }
+                    } catch(e) {}
+                    // 2) Пробуем статические файлы /obs/media/
+                    for (const ext of m.exts) {
+                        try {
+                            const sr = await fetch(`${API_URL}/obs/media/${m.key}${ext}`);
+                            if (sr.ok) {
+                                const blob = await sr.blob();
+                                const dataUri = await new Promise(resolve => {
+                                    const reader = new FileReader();
+                                    reader.onload = () => resolve(reader.result);
+                                    reader.readAsDataURL(blob);
+                                });
+                                CONFIG[m.cfg] = dataUri;
+                                console.log(`[Alert] ✅ ${m.key} (static ${ext})`);
+                                break;
+                            }
+                        } catch(e) {}
+                    }
+                }
+                
+                console.log('[Alert] Конфиг загружен. Звуки:', 
+                    CONFIG.soundSmall ? '✅' : '—',
+                    CONFIG.soundMedium ? '✅' : '—',
+                    '| Медиа:', CONFIG.mediaSmall ? '✅' : '—',
+                    CONFIG.mediaMedium ? '✅' : '—'
+                );
+            } catch(e) {
+                console.log('[Alert] Default config');
+            }
+        }
+
+        // ========== ЗВУКИ ==========
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+
+        function playTone(freq, duration, type = 'sine', vol = 0.3) {
+            if (!CONFIG.soundEnabled) return;
+            const ctx = getAudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            gain.gain.setValueAtTime(vol * CONFIG.soundVolume, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + duration);
+        }
+
+        function playCustomSound(dataUri) {
+            if (!CONFIG.soundEnabled) return;
+            try {
+                const audio = new Audio(dataUri);
+                audio.volume = CONFIG.soundVolume;
+                audio.play().catch(e => console.log('Sound error:', e));
+            } catch(e) {}
+        }
+
+        function playSound(tier) {
+            // Возвращает true если проиграл пользовательский звук
+            if (tier === 'large' && CONFIG.soundLarge) { playCustomSound(CONFIG.soundLarge); return true; }
+            if (tier === 'medium' && CONFIG.soundMedium) { playCustomSound(CONFIG.soundMedium); return true; }
+            if (CONFIG.soundSmall) { playCustomSound(CONFIG.soundSmall); return true; }
+            // Дефолтный звук (бип)
+            playTone(800, 0.15, 'sine', 0.4);
+            setTimeout(() => playTone(1000, 0.2, 'sine', 0.3), 100);
+            setTimeout(() => playTone(1200, 0.3, 'sine', 0.2), 200);
+            return false;
+        }
+
+        // ========== МЕДИА ==========
+        function showMedia(tier, hasCustomSound) {
+            const el = document.getElementById('alertMedia');
+            let url = '';
+            if (tier === 'large' && CONFIG.mediaLarge) url = CONFIG.mediaLarge;
+            else if (tier === 'medium' && CONFIG.mediaMedium) url = CONFIG.mediaMedium;
+            if (!url && CONFIG.mediaSmall) url = CONFIG.mediaSmall;
+            if (!url && CONFIG.mediaMedium) url = CONFIG.mediaMedium;
+
+            console.log(`[Alert] showMedia: tier=${tier}, hasUrl=${!!url}, customSound=${hasCustomSound}`);
+
+            if (!url) { el.style.display = 'none'; return; }
+
+            el.style.display = 'block';
+            if (url.startsWith('data:video/') || url.match(/\.(mp4|webm)$/i)) {
+                // Если загружен отдельный mp3 → видео muted (звук из mp3)
+                // Если mp3 НЕ загружен → видео со своим звуком
+                const muted = hasCustomSound ? 'muted' : '';
+                el.innerHTML = `<video src="${url}" autoplay ${muted} playsinline></video>`;
+                const vid = el.querySelector('video');
+                if (vid) {
+                    if (!hasCustomSound) vid.volume = CONFIG.soundVolume;
+                    vid.play().catch(() => {});
+                }
+            } else {
+                // GIF/картинка — без звука
+                el.innerHTML = `<img src="${url}" alt="">`;
+            }
+        }
+
+        // ========== TTS ==========
+        function speakText(text, amount) {
+            if (!CONFIG.ttsEnabled || amount < CONFIG.ttsMinAmount) return;
+            if (!text?.trim() || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const ttsEl = document.getElementById('alertTts');
+            ttsEl.classList.add('active');
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'ru-RU';
+            utter.rate = CONFIG.ttsSpeed;
+            utter.volume = CONFIG.soundVolume;
+            const voices = window.speechSynthesis.getVoices();
+            const ruVoice = voices.find(v => v.lang.startsWith('ru'));
+            if (ruVoice) utter.voice = ruVoice;
+            utter.onend = () => ttsEl.classList.remove('active');
+            utter.onerror = () => ttsEl.classList.remove('active');
+            setTimeout(() => window.speechSynthesis.speak(utter), 800);
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        }
+
+        // ========== ПОЛЛИНГ ==========
+        async function pollDonations() {
+            if (isShowing) return;
+            try {
+                const resp = await fetch(`${API_URL}/api/stream/donate/latest`);
+                const data = await resp.json();
+                if (data.event) showAlert(data.event);
+            } catch (e) {}
+        }
+
+        // ========== ПОКАЗ АЛЕРТА ==========
+        function showAlert(event) {
+            isShowing = true;
+            const wrap = document.getElementById('alertWrap');
+            const username = document.getElementById('alertUsername');
+            const amount = document.getElementById('alertAmount');
+            const message = document.getElementById('alertMessage');
+            const mediaEl = document.getElementById('alertMedia');
+
+            let tier = 'small';
+            if (event.amount >= 200) tier = 'large';
+            else if (event.amount >= 50) tier = 'medium';
+
+            username.textContent = event.username;
+            amount.textContent = `${event.amount} 🧀`;
+
+            if (event.message) {
+                message.textContent = event.message;
+                message.style.display = 'block';
+            } else {
+                message.style.display = 'none';
+            }
+
+            // AI Донат — показываем сгенерированную картинку
+            if (event.ai_image) {
+                mediaEl.style.display = 'block';
+                mediaEl.innerHTML = `<img src="${event.ai_image}" alt="AI Generated" style="box-shadow: 0 0 30px rgba(156,39,176,0.5)">`;
+                username.style.color = '#CE93D8';
+                // Звук
+                playSound(tier);
+            } else {
+                username.style.color = '#FFC107';
+                // Звук (сначала — чтобы знать muted ли видео)
+                const hasCustomSound = playSound(tier);
+                // Медиа (видео/GIF)
+                showMedia(tier, hasCustomSound);
+            }
+
+            // TTS
+            if (event.ai_prompt) {
+                speakText(`AI сгенерировал: ${event.ai_prompt}`, event.amount);
+            } else if (event.message) {
+                speakText(event.message, event.amount);
+            }
+
+            // Показать
+            wrap.classList.remove('hide');
+            wrap.classList.add('show');
+
+            // AI донат показываем дольше (картинку хочется рассмотреть)
+            const baseDuration = event.ai_image ? CONFIG.alertDuration * 2 : CONFIG.alertDuration;
+            const duration = (tier === 'large' ? baseDuration * 1.5 : baseDuration) * 1000;
+            setTimeout(() => {
+                wrap.classList.remove('show');
+                wrap.classList.add('hide');
+                window.speechSynthesis?.cancel();
+                setTimeout(() => {
+                    wrap.classList.remove('hide');
+                    mediaEl.style.display = 'none';
+                    isShowing = false;
+                }, 500);
+            }, duration);
+        }
+
+        // ========== ЗАПУСК ==========
+        loadConfig().then(() => {
+            setInterval(pollDonations, POLL_INTERVAL);
+            setInterval(loadConfig, 30000);
+            console.log('[МИР ТАНКОВ Alert] Виджет запущен, API:', API_URL);
+            
+            if (window.location.search.includes('test')) {
+                const btn = document.createElement('button');
+                btn.textContent = '🔊 Тест донат';
+                btn.style.cssText = 'position:fixed;bottom:10px;right:10px;z-index:9999;padding:12px 24px;font-size:16px;background:#C8AA6E;color:#000;border:none;border-radius:8px;cursor:pointer;font-weight:bold;';
+                btn.onclick = () => showAlert({username: 'Тестовый_Танкист', amount: 100, message: 'Тестовое сообщение!'});
+                document.body.appendChild(btn);
+                
+                const btn2 = document.createElement('button');
+                btn2.textContent = '💥 Тест большой';
+                btn2.style.cssText = 'position:fixed;bottom:10px;right:180px;z-index:9999;padding:12px 24px;font-size:16px;background:#FF5722;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;';
+                btn2.onclick = () => showAlert({username: 'Щедрый_Танкист', amount: 500, message: 'Огромный донат!'});
+                document.body.appendChild(btn2);
+            }
+        });
+    </script>
+</body>
+</html>

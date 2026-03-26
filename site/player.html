@@ -8,8 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/stream.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="js/site-page.js"></script>
-    <link rel="stylesheet" href="css/site.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="css/military-theme.css">
 </head>
 
@@ -65,13 +64,21 @@
                 </div>
             </div>
 
-            <!-- Universal Player -->
+            <!-- Stream Preview (iframe не работает в Telegram WebView) -->
             <div class="stream-player" id="streamPlayer">
-                <div class="stream-player__aspect">
-                    <iframe id="streamPlayerIframe" 
-                            allowfullscreen
-                            frameborder="0">
-                    </iframe>
+                <div class="stream-player__preview" id="streamPreview">
+                    <div class="stream-preview__bg">
+                        <div class="stream-preview__glow"></div>
+                    </div>
+                    <div class="stream-preview__content">
+                        <div class="stream-preview__icon" id="previewIcon">💜</div>
+                        <div class="stream-preview__channel" id="previewChannel">SERVERENOK</div>
+                        <div class="stream-preview__platform" id="previewPlatform">twitch.tv</div>
+                        <button class="stream-preview__btn" id="previewBtn" onclick="openStreamLink('twitch')">
+                            ▶ СМОТРЕТЬ СТРИМ
+                        </button>
+                        <div class="stream-preview__hint">Откроется в браузере</div>
+                    </div>
                 </div>
             </div>
 
@@ -132,18 +139,6 @@
                     <span class="stream-action-btn__text">Музыка</span>
                     <span class="stream-action-btn__sub" id="trackSub" style="font-size:0.55rem;color:#7060a0;margin-top:2px;">🎶 Track: —</span>
                 </button>
-            </div>
-
-            <!-- Mini Music Player (inline, scrolls with page) -->
-            <div id="miniMusicPlayer" style="display:none; margin:10px 0; padding:10px 14px; background:linear-gradient(135deg, rgba(30,20,50,0.9), rgba(20,12,35,0.9)); border:1px solid rgba(224,64,251,0.25); border-radius:12px; max-width:400px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div id="miniMpIcon" style="font-size:1.2rem;">🎵</div>
-                    <div style="flex:1; min-width:0;">
-                        <div style="font-size:0.55rem; color:#E040FB; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">▶ Сейчас играет</div>
-                        <div id="mpTitle" style="font-size:0.75rem; color:#fff; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">—</div>
-                        <div id="mpUser" style="font-size:0.55rem; color:#888; margin-top:1px;">—</div>
-                    </div>
-                </div>
             </div>
 
             <!-- Donate Modal -->
@@ -273,19 +268,6 @@
                         </div>
                         <button class="sp-save-btn" onclick="saveMusicSettings()">💾 Сохранить</button>
 
-                        <!-- 🎵 Сейчас играет (админ) -->
-                        <div class="sp-group">
-                            <div class="sp-group__title">🎵 Сейчас играет</div>
-                            <div id="adminNowPlaying" style="padding:8px 12px; background:rgba(224,64,251,0.08); border:1px solid rgba(224,64,251,0.15); border-radius:8px; margin-bottom:8px;">
-                                <div id="adminMpTitle" style="font-size:0.8rem; color:#E040FB; font-weight:600;">Ничего не играет</div>
-                                <div id="adminMpUser" style="font-size:0.65rem; color:#888; margin-top:2px;">—</div>
-                            </div>
-                            <div style="display:flex; gap:8px;">
-                                <button class="sp-test-btn" onclick="skipMusicTrack()" style="flex:1; background:rgba(255,152,0,0.15); border-color:rgba(255,152,0,0.3); color:#FFB74D;">⏭ Скипнуть</button>
-                                <button class="sp-test-btn" onclick="stopMusicTrack()" style="flex:1; background:rgba(244,67,54,0.15); border-color:rgba(244,67,54,0.3); color:#EF5350;">⏹ Стоп</button>
-                            </div>
-                        </div>
-
                         <div class="sp-group">
                             <div class="sp-group__title">📋 Очередь <button class="sp-refresh" onclick="refreshMusicQueue()">🔄</button></div>
                             <div id="musicQueueList" class="sp-list"><div class="sp-list__empty">Загрузка...</div></div>
@@ -414,143 +396,10 @@
             </a>
         </nav>
 
-    <div id="ytMusicPlayer" style="position:absolute; top:-9999px; width:1px; height:1px;"></div>
+        <div class="watermark">@Mir_tankov_privat_bot</div>
+    </div>
 
     <script src="js/stream.js"></script>
-    
-    <!-- YouTube Music Player Script -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <script>
-    (function() {
-        let ytPlayer = null;
-        let ytReady = false;
-        let musicPlaying = false;
-        let musicPollTimer = null;
-        let musicStopped = false; // По кнопке "Стоп" — не забирать новые
-
-        window.onYouTubeIframeAPIReady = function() {
-            ytPlayer = new YT.Player('ytMusicPlayer', {
-                height: '1', width: '1',
-                playerVars: { autoplay: 1, controls: 0 },
-                events: {
-                    onReady: function() {
-                        ytReady = true;
-                        console.log('[Music] YT ready');
-                        startMusicPoll();
-                    },
-                    onStateChange: function(e) {
-                        if (e.data === YT.PlayerState.ENDED) {
-                            console.log('[Music] Track ended');
-                            musicPlaying = false;
-                            hideMusicBar();
-                            if (!musicStopped) setTimeout(pollMusicQueue, 2000);
-                        }
-                        // Когда видео загрузилось — показать название
-                        if (e.data === YT.PlayerState.PLAYING && ytPlayer.getVideoData) {
-                            try {
-                                const vd = ytPlayer.getVideoData();
-                                if (vd && vd.title) {
-                                    document.getElementById('mpTitle').textContent = vd.title;
-                                    const at = document.getElementById('adminMpTitle');
-                                    if (at) at.textContent = vd.title;
-                                }
-                            } catch(err) {}
-                        }
-                    },
-                    onError: function(e) {
-                        console.log('[Music] YT error:', e.data);
-                        musicPlaying = false;
-                        hideMusicBar();
-                        if (!musicStopped) setTimeout(pollMusicQueue, 3000);
-                    }
-                }
-            });
-        };
-
-        function startMusicPoll() {
-            pollMusicQueue();
-            musicPollTimer = setInterval(function() {
-                if (!musicPlaying && !musicStopped) pollMusicQueue();
-            }, 5000);
-        }
-
-        async function pollMusicQueue() {
-            if (musicPlaying || musicStopped) return;
-            try {
-                const resp = await fetch(`${BOT_API_URL}/api/stream/music/next`);
-                const data = await resp.json();
-                const track = data.track || data;
-                if (track && track.url) {
-                    playMusicTrack(track);
-                }
-            } catch(e) { console.log('[Music] Poll error:', e); }
-        }
-
-        function extractYTId(url) {
-            const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/v\/)([a-zA-Z0-9_-]{11})/);
-            return m ? m[1] : null;
-        }
-
-        function playMusicTrack(track) {
-            const vid = extractYTId(track.url);
-            if (!vid) { console.log('[Music] Bad URL:', track.url); return; }
-            musicPlaying = true;
-            musicStopped = false;
-            // Показать URL пока грузится (потом заменится на название)
-            document.getElementById('mpTitle').textContent = '⏳ Загрузка...';
-            document.getElementById('mpUser').textContent = '🧀 Заказал: ' + (track.username || 'Аноним');
-            showMusicBar();
-            if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
-                ytPlayer.loadVideoById(vid);
-            }
-            console.log('[Music] ▶ Playing:', vid);
-        }
-
-        function showMusicBar() {
-            const mini = document.getElementById('miniMusicPlayer');
-            if (mini) mini.style.display = 'block';
-            // Обновить инфо в настройках админа
-            const adminTitle = document.getElementById('adminMpTitle');
-            const adminUser = document.getElementById('adminMpUser');
-            if (adminTitle) adminTitle.textContent = document.getElementById('mpTitle').textContent;
-            if (adminUser) adminUser.textContent = document.getElementById('mpUser').textContent;
-        }
-
-        function hideMusicBar() {
-            const mini = document.getElementById('miniMusicPlayer');
-            if (mini) mini.style.display = 'none';
-            // Сбросить инфо в настройках
-            const adminTitle = document.getElementById('adminMpTitle');
-            const adminUser = document.getElementById('adminMpUser');
-            if (adminTitle) adminTitle.textContent = 'Ничего не играет';
-            if (adminUser) adminUser.textContent = '—';
-        }
-
-        // ⏭ Скип — пропустить текущий, взять следующий
-        window.skipMusicTrack = function() {
-            if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
-            musicPlaying = false;
-            musicStopped = false;
-            hideMusicBar();
-            showToast('⏭', 'Трек скипнут');
-            setTimeout(pollMusicQueue, 1000);
-        };
-
-        // ⏹ Стоп — полностью остановить, не брать новые
-        window.stopMusicTrack = function() {
-            if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
-            musicPlaying = false;
-            musicStopped = true;
-            hideMusicBar();
-            showToast('⏹', 'Плеер остановлен');
-        };
-
-        // Fallback если YT API не загрузился
-        setTimeout(function() {
-            if (!ytReady) { console.warn('[Music] YT API timeout'); ytReady = true; startMusicPoll(); }
-        }, 8000);
-    })();
-    </script>
 </body>
 
 </html>
