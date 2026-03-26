@@ -287,6 +287,26 @@ function gcShowFinished(ch) {
         });
         html += '</div>';
     }
+    // Admin: add "New Challenge" button directly on finished screen
+    if (isAdmin) {
+        html += `
+            <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
+                <button onclick="document.getElementById('gcAdminPanel').scrollIntoView({behavior:'smooth'})" 
+                    style="width:100%;padding:14px;border-radius:12px;border:2px solid rgba(74,222,128,0.4);
+                    background:linear-gradient(135deg, rgba(74,222,128,0.15), rgba(74,222,128,0.05));
+                    color:#4ade80;font-family:'Russo One',sans-serif;font-size:0.85rem;cursor:pointer;
+                    transition:all 0.3s;letter-spacing:0.5px">
+                    🚀 ЗАПУСТИТЬ НОВЫЙ ЧЕЛЛЕНДЖ
+                </button>
+                <button onclick="gcDeleteChallenge()" data-id="${ch.id}"
+                    style="width:100%;padding:10px;border-radius:10px;border:1px solid rgba(239,68,68,0.2);
+                    background:rgba(239,68,68,0.05);color:#ef4444;font-size:0.7rem;cursor:pointer;
+                    font-weight:700;transition:all 0.2s">
+                    🗑 Удалить этот челлендж из истории
+                </button>
+            </div>`;
+    }
+
     document.getElementById('gcFinalLb').innerHTML = html;
 
     // Widget link hide
