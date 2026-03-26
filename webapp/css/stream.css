@@ -1,5 +1,5 @@
-/* ==========================================
-   STREAM HUB — Стрим + Мультиплатформенный чат
+﻿/* ==========================================
+   STREAM HUB вЂ” РЎС‚СЂРёРј + РњСѓР»СЊС‚РёРїР»Р°С‚С„РѕСЂРјРµРЅРЅС‹Р№ С‡Р°С‚
    ========================================== */
 
 /* Platform Tabs */
@@ -1121,7 +1121,7 @@
     background: rgba(255, 255, 255, 0.08);
 }
 
-/* Admin Panel — Music & Donate */
+/* Admin Panel вЂ” Music & Donate */
 .admin-row {
     display: flex;
     align-items: center;
@@ -1309,7 +1309,7 @@
     font-size: 0.6rem;
 }
 
-/* ⚙️ Gear Button */
+/* вљ™пёЏ Gear Button */
 .admin-gear-btn {
     position: fixed;
     bottom: 70px;
@@ -1569,4 +1569,76 @@
 .sp-upload-status {
     font-size: 0.7rem;
     color: rgba(255,255,255,0.35);
+}
+
+/* ==========================================
+   BOTTOM NAVIGATION (player.html)
+   ========================================== */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(8, 11, 18, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(200, 170, 110, 0.12);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index: 200;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.bottom-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.15s ease;
+    position: relative;
+}
+
+.bottom-nav__item:active {
+    transform: scale(0.88);
+}
+
+.bottom-nav__icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    transition: filter 0.2s;
+}
+
+.bottom-nav__label {
+    font-size: 0.52rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    transition: color 0.2s;
+}
+
+.bottom-nav__item--active .bottom-nav__label {
+    color: #C8AA6E;
+}
+
+.bottom-nav__item--active::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 2px;
+    background: linear-gradient(90deg, #C8AA6E, #f0d080);
+    border-radius: 2px;
+}
+
+/* обавляем отступ снизу чтобы контент не перекрывался навбаром */
+.content-area {
+    padding-bottom: 75px !important;
 }
