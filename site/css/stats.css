@@ -712,3 +712,16 @@ body {
         font-size: 1.2rem;
     }
 }
+
+/* Fix for huge icons */
+.stat-card__icon img {
+    max-width: 40px;
+    max-height: 40px;
+    height: auto;
+}
+
+.detail-row img {
+    max-width: 1.2em;
+    max-height: 1.2em;
+    vertical-align: middle;
+}

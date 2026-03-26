@@ -1910,3 +1910,42 @@
     color: #C8AA6E;
     text-align: right;
 }
+
+/* Fix for huge icons in containers */
+.gc-header__icon img,
+.gc-header__condition img,
+.gc-lb-value img,
+.gc-cond-badges img,
+.gc-lb-rank img,
+.stat-card__icon img,
+.w-icon img {
+    max-width: 100%;
+    max-height: 100%;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Specific sizing for certain elements */
+.gc-header__icon img {
+    width: 32px;
+    height: 32px;
+}
+
+.gc-header__condition img {
+    width: 24px;
+    height: 24px;
+}
+
+.gc-cond-badges img {
+    width: 1.2em;
+    height: 1.2em;
+}
+
+.gc-lb-value img {
+    width: 1.1em;
+    height: 1.1em;
+    margin-right: 3px;
+}

@@ -121,60 +121,6 @@ body {
     filter: drop-shadow(0 4px 12px rgba(200, 170, 110, 0.3));
 }
 
-.search-icon svg {
-    animation: searchPulse 2s ease-in-out infinite;
-}
-
-@keyframes searchPulse {
-    0%, 100% { filter: drop-shadow(0 0 8px rgba(200, 170, 110, 0.3)); transform: scale(1); }
-    50% { filter: drop-shadow(0 0 16px rgba(200, 170, 110, 0.6)); transform: scale(1.05); }
-}
-
-.header-icon {
-    vertical-align: -4px;
-    margin-right: 2px;
-}
-
-.detail-title-icon {
-    vertical-align: -3px;
-    margin-right: 4px;
-}
-
-.detail-icon {
-    vertical-align: -3px;
-    margin-right: 4px;
-}
-
-.stat-card__icon svg {
-    filter: drop-shadow(0 2px 6px rgba(200, 170, 110, 0.25));
-}
-
-.stat-card--battles .stat-card__icon svg {
-    filter: drop-shadow(0 2px 8px rgba(52, 152, 219, 0.4));
-}
-
-.stat-card--winrate .stat-card__icon svg {
-    filter: drop-shadow(0 2px 8px rgba(241, 196, 15, 0.4));
-}
-
-.stat-card--damage .stat-card__icon svg {
-    filter: drop-shadow(0 2px 8px rgba(231, 76, 60, 0.4));
-}
-
-.stat-card--survive .stat-card__icon svg {
-    filter: drop-shadow(0 2px 8px rgba(46, 204, 113, 0.4));
-}
-
-.skill-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.skill-icon svg {
-    filter: drop-shadow(0 2px 8px rgba(46, 204, 113, 0.4));
-}
-
 .search-card h2 {
     font-family: 'Russo One', sans-serif;
     font-size: 1.3rem;
@@ -765,4 +711,17 @@ body {
     .stat-card__value {
         font-size: 1.2rem;
     }
+}
+
+/* Fix for huge icons */
+.stat-card__icon img {
+    max-width: 40px;
+    max-height: 40px;
+    height: auto;
+}
+
+.detail-row img {
+    max-width: 1.2em;
+    max-height: 1.2em;
+    vertical-align: middle;
 }
