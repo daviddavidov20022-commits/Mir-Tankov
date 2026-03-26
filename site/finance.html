@@ -276,15 +276,33 @@
             try {
                 const url = `${API}/api/admin/finance?admin_telegram_id=${tgId}&period=${currentPeriod}&page=${currentPage}`;
                 const resp = await fetch(url);
-                if (resp.status === 403) { showAccessDenied(); return; }
-                finData = await resp.json();
-                if (finData.error) { showAccessDenied(); return; }
+                
+                // Читаем как текст сначала для диагностики
+                const text = await resp.text();
+                
+                // Проверяем что это JSON
+                if (resp.status === 403 || text.trim().startsWith('{') === false) {
+                    // Не JSON — значит route не найден или ошибка сервера
+                    document.getElementById('loadingState').innerHTML = `
+                        <div style="text-align:center;padding:40px;color:#f87171">
+                            ❌ Ошибка сервера (${resp.status})<br>
+                            <span style="font-size:0.7rem;color:#5A6577">API маршрут ещё не задеплоен. Подожди 2-3 мин.</span>
+                        </div>`;
+                    return;
+                }
+                
+                finData = JSON.parse(text);
+                if (finData.error) {
+                    document.getElementById('loadingState').innerHTML = `
+                        <div style="text-align:center;padding:40px;color:#f87171">🔒 ${finData.error}</div>`;
+                    return;
+                }
 
                 renderFinance(finData);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('finContent').style.display = '';
             } catch(e) {
-                document.getElementById('loadingState').innerHTML = `<div style="text-align:center;padding:40px;color:#f87171">❌ Ошибка загрузки: ${e.message}</div>`;
+                document.getElementById('loadingState').innerHTML = `<div style="text-align:center;padding:40px;color:#f87171">❌ Ошибка: ${e.message}</div>`;
             }
         }
 

@@ -437,15 +437,11 @@ function showAdminToast(icon, text) {
     toastIcon.textContent = icon;
     toastText.textContent = text;
 
-    toast.style.display = 'flex';
-    requestAnimationFrame(() => {
-        toast.classList.add('toast--visible');
-    });
+    toast.classList.add('toast--visible');
 
     clearTimeout(window._toastTimer);
     window._toastTimer = setTimeout(() => {
         toast.classList.remove('toast--visible');
-        setTimeout(() => { toast.style.display = 'none'; }, 400);
     }, 3000);
 }
 
