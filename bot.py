@@ -5321,37 +5321,61 @@ async def _do_refresh_stats():
             if not multi_stat:
                 continue
 
-            condition_values_json = None
+            # --- Расчёт очков из batch_stats (дельта от baseline) ---
+            new_battles = max(0, multi_stat["battles"] - p["baseline_battles"])
 
-            # Detect new battles from tank baselines (fills gc_battle_log)
+            # Compute per-condition deltas
+            baseline_vals = {}
+            if p.get("baseline_values"):
+                try:
+                    baseline_vals = json.loads(p["baseline_values"])
+                except Exception:
+                    pass
+
+            cond_deltas = {}
+            total_value = 0
+            for c in ch_conditions:
+                current_stat = multi_stat["per_condition"].get(c, 0)
+                # Для первого условия fallback на baseline_value
+                baseline_stat = baseline_vals.get(c, p.get("baseline_value", 0) if c == ch_conditions[0] else 0)
+                delta = max(0, current_stat - baseline_stat)
+                cond_deltas[c] = delta
+                total_value += delta
+
+            new_value = total_value
+            condition_values_json = json.dumps(cond_deltas)
+
+            # Лимит боёв
+            if max_battles > 0 and new_battles > max_battles:
+                new_battles = max_battles
+
+            # --- Фоновое обнаружение боёв для детализации (не влияет на очки) ---
             try:
-                # Pass the tank list retrieved from batch_stats
-                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, multi_stat["tanks"])
+                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles)
             except Exception as e:
                 logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
 
-            # Source of truth for scores: gc_battle_log (respects max_battles and individual battle stats)
-            with get_db() as conn_calc:
-                # Get battles within limit
-                query = "SELECT * FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? ORDER BY battle_num"
-                if max_battles > 0:
-                    query += f" LIMIT {max_battles}"
-                
-                rows = conn_calc.execute(query, (ch["id"], p["telegram_id"])).fetchall()
-                
-                total_val = 0
-                cond_vals = {c: 0 for c in ch_conditions}
-                battles_cnt = len(rows)
-                
-                for r in rows:
-                    for c in ch_conditions:
-                        val = r.get(c, 0)
-                        cond_vals[c] += val
-                        total_val += val # Simple sum for leaderboard
-                
-                new_value = total_val
-                condition_values_json = json.dumps(cond_vals)
-                new_battles = battles_cnt
+            # --- Если есть лимит боёв И есть записи в battle_log — пересчитываем из лога ---
+            if max_battles > 0:
+                try:
+                    with get_db() as conn_bl:
+                        rows = conn_bl.execute(
+                            "SELECT * FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ? ORDER BY battle_num LIMIT ?",
+                            (ch["id"], p["telegram_id"], max_battles)
+                        ).fetchall()
+                        if rows:
+                            log_total = 0
+                            log_conds = {c: 0 for c in ch_conditions}
+                            for r in rows:
+                                for c in ch_conditions:
+                                    val = r.get(c, 0) or 0
+                                    log_conds[c] += val
+                                    log_total += val
+                            new_value = log_total
+                            condition_values_json = json.dumps(log_conds)
+                            new_battles = len(rows)
+                except Exception as e:
+                    logger.warning(f"GC battle-log recalc error: {e}")
 
             # Update participant record
             with get_db() as conn_up:
