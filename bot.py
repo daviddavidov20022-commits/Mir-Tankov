@@ -7040,6 +7040,211 @@ async def api_stream_chat_twitch_send(request):
 
 
 # ==========================================
+# ФИНАНСЫ / БУХГАЛТЕРИЯ (ТОЛЬКО АДМИН)
+# ==========================================
+
+async def api_admin_finance(request):
+    """GET /api/admin/finance?admin_telegram_id=X&page=1&period=all
+    Сводный финансовый дашборд: доходы, расщепление, история операций, топ плательщиков.
+    """
+    try:
+        admin_tg = int(request.query.get("admin_telegram_id", 0))
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        page = max(1, int(request.query.get("page", 1)))
+        period = request.query.get("period", "all")  # all | month | week
+        per_page = 50
+
+        from database import get_db_read, SUBSCRIPTION_PLANS
+
+        # --- Фильтр по периоду ---
+        if period == "week":
+            date_filter = "AND created_at >= datetime('now', '-7 days')"
+        elif period == "month":
+            date_filter = "AND created_at >= datetime('now', '-30 days')"
+        else:
+            date_filter = ""
+
+        with get_db_read() as conn:
+
+            # ================================================================
+            # 1. ПОДПИСКИ — доход в Stars и RUB
+            # ================================================================
+            subs = conn.execute(f"""
+                SELECT s.id, s.plan, s.price, s.payment_method, s.started_at,
+                       u.telegram_id, u.first_name, u.last_name, u.username,
+                       u.wot_nickname
+                FROM subscriptions s
+                JOIN users u ON u.id = s.user_id
+                WHERE 1=1 {date_filter.replace('created_at', 's.started_at')}
+                ORDER BY s.started_at DESC
+            """).fetchall()
+
+            sub_revenue_rub = sum(s["price"] for s in subs if s["payment_method"] != "stars")
+            sub_revenue_stars = sum(
+                SUBSCRIPTION_PLANS.get(s["plan"], {}).get("stars_price", 0)
+                for s in subs if s["payment_method"] == "stars"
+            )
+            # Stars → RUB: 1 Star ≈ 1.96 RUB (Telegram официально)
+            STAR_TO_RUB = 1.96
+            sub_stars_rub = round(sub_revenue_stars * STAR_TO_RUB)
+
+            # ================================================================
+            # 2. ПОКУПКИ СЫРА
+            # ================================================================
+            cheese = conn.execute(f"""
+                SELECT cp.id, cp.amount, cp.rub_amount, cp.payment_method, cp.created_at,
+                       u.telegram_id, u.first_name, u.last_name, u.username,
+                       u.wot_nickname
+                FROM cheese_purchases cp
+                JOIN users u ON u.id = cp.user_id
+                WHERE cp.status = 'completed' {date_filter.replace('created_at', 'cp.created_at')}
+                ORDER BY cp.created_at DESC
+            """).fetchall()
+
+            cheese_revenue_rub = sum(c["rub_amount"] for c in cheese)
+
+            # ================================================================
+            # 3. ВРАЩЕНИЯ ЗА STARS (из транзакций)
+            # ================================================================
+            wheel_txns = conn.execute(f"""
+                SELECT t.id, t.amount, t.description, t.created_at,
+                       u.telegram_id, u.first_name, u.username, u.wot_nickname
+                FROM transactions t
+                JOIN users u ON u.id = t.user_id
+                WHERE t.type IN ('wheel_stars', 'stars_payment') {date_filter}
+                ORDER BY t.created_at DESC
+            """).fetchall()
+            wheel_revenue_stars = sum(w["amount"] for w in wheel_txns)
+            wheel_revenue_rub = round(wheel_revenue_stars * STAR_TO_RUB)
+
+            # ================================================================
+            # 4. ИТОГО
+            # ================================================================
+            total_rub = sub_revenue_rub + sub_stars_rub + cheese_revenue_rub + wheel_revenue_rub
+            total_stars = sub_revenue_stars + wheel_revenue_stars
+
+            # Расщепление доходов
+            split = {
+                "streamer":    {"pct": 50, "rub": round(total_rub * 0.50)},
+                "partner":     {"pct": 35, "rub": round(total_rub * 0.35)},
+                "development": {"pct": 15, "rub": round(total_rub * 0.15)},
+            }
+
+            # ================================================================
+            # 5. ТОП ПЛАТЕЛЬЩИКОВ (by revenue)
+            # ================================================================
+            user_revenue = {}
+
+            def add_user(tg_id, amount_rub, category, name):
+                if tg_id not in user_revenue:
+                    user_revenue[tg_id] = {"telegram_id": tg_id, "name": name,
+                                           "total_rub": 0, "categories": {}}
+                user_revenue[tg_id]["total_rub"] += amount_rub
+                user_revenue[tg_id]["categories"][category] = \
+                    user_revenue[tg_id]["categories"].get(category, 0) + amount_rub
+
+            for s in subs:
+                tg = s["telegram_id"]
+                name = s["username"] or s["wot_nickname"] or f"{s['first_name'] or ''} {s['last_name'] or ''}".strip() or f"ID {tg}"
+                rub = SUBSCRIPTION_PLANS.get(s["plan"], {}).get("stars_price", 0) * STAR_TO_RUB \
+                      if s["payment_method"] == "stars" else (s["price"] or 0)
+                add_user(tg, round(rub), "subscription", name)
+
+            for c in cheese:
+                tg = c["telegram_id"]
+                name = c["username"] or c["wot_nickname"] or f"{c['first_name'] or ''} {c['last_name'] or ''}".strip() or f"ID {tg}"
+                add_user(tg, c["rub_amount"] or 0, "cheese", name)
+
+            top_users = sorted(user_revenue.values(), key=lambda x: x["total_rub"], reverse=True)
+
+            # ================================================================
+            # 6. ИСТОРИЯ ОПЕРАЦИЙ (пагинация)
+            # ================================================================
+            all_ops = []
+
+            for s in subs:
+                tg = s["telegram_id"]
+                name = s["username"] or s["wot_nickname"] or f"{s['first_name'] or ''}".strip() or f"ID {tg}"
+                plan_name = SUBSCRIPTION_PLANS.get(s["plan"], {}).get("name", s["plan"])
+                rub = SUBSCRIPTION_PLANS.get(s["plan"], {}).get("stars_price", 0) * STAR_TO_RUB \
+                      if s["payment_method"] == "stars" else (s["price"] or 0)
+                all_ops.append({
+                    "id": f"sub_{s['id']}",
+                    "date": str(s["started_at"]),
+                    "type": "subscription",
+                    "type_label": "📦 Подписка",
+                    "user": name,
+                    "telegram_id": tg,
+                    "description": plan_name,
+                    "amount_rub": round(rub),
+                    "amount_stars": SUBSCRIPTION_PLANS.get(s["plan"], {}).get("stars_price", 0)
+                                    if s["payment_method"] == "stars" else 0,
+                    "method": s["payment_method"] or "stars",
+                })
+
+            for c in cheese:
+                tg = c["telegram_id"]
+                name = c["username"] or c["wot_nickname"] or f"{c['first_name'] or ''}".strip() or f"ID {tg}"
+                all_ops.append({
+                    "id": f"cheese_{c['id']}",
+                    "date": str(c["created_at"]),
+                    "type": "cheese",
+                    "type_label": "🧀 Покупка сыра",
+                    "user": name,
+                    "telegram_id": tg,
+                    "description": f"{c['amount']} сыра",
+                    "amount_rub": c["rub_amount"] or 0,
+                    "amount_stars": 0,
+                    "method": c["payment_method"] or "stars",
+                })
+
+            # Сортируем по дате
+            all_ops.sort(key=lambda x: x["date"], reverse=True)
+            total_ops = len(all_ops)
+            page_ops = all_ops[(page - 1) * per_page : page * per_page]
+
+            # ================================================================
+            # 7. ПОМЕСЯЧНАЯ СТАТИСТИКА
+            # ================================================================
+            monthly = conn.execute("""
+                SELECT strftime('%Y-%m', started_at) as month,
+                       COUNT(*) as count, SUM(price) as total
+                FROM subscriptions
+                WHERE payment_method != 'stars'
+                GROUP BY month ORDER BY month DESC LIMIT 12
+            """).fetchall()
+
+            return cors_response({
+                "summary": {
+                    "total_rub": total_rub,
+                    "total_stars": total_stars,
+                    "subscriptions_rub": sub_revenue_rub + sub_stars_rub,
+                    "cheese_rub": cheese_revenue_rub,
+                    "wheel_rub": wheel_revenue_rub,
+                    "subscribers_count": len(set(s["telegram_id"] for s in subs)),
+                    "transactions_count": total_ops,
+                },
+                "split": split,
+                "top_users": top_users[:50],
+                "transactions": page_ops,
+                "pagination": {
+                    "page": page,
+                    "per_page": per_page,
+                    "total": total_ops,
+                    "pages": max(1, (total_ops + per_page - 1) // per_page),
+                },
+                "monthly": [dict(m) for m in monthly],
+                "period": period,
+            })
+
+    except Exception as e:
+        logger.error(f"API admin_finance error: {e}", exc_info=True)
+        return cors_response({"error": str(e)}, 500)
+
+
+# ==========================================
 # ЗАПУСК
 # ==========================================
 
@@ -7120,6 +7325,9 @@ def create_api_app():
     app.router.add_get("/api/global-challenge/history", api_global_challenge_history)
     app.router.add_get("/api/global-challenge/my-history", api_global_challenge_my_history)
     app.router.add_get("/api/global-challenge/battle-log", api_global_challenge_battle_log)
+
+    # Finance / Accounting (admin only)
+    app.router.add_get("/api/admin/finance", api_admin_finance)
 
     # Раздача OBS виджетов через HTTP (file:// не работает с YouTube API)
     obs_dir = os.path.join(os.path.dirname(__file__), 'webapp', 'obs')

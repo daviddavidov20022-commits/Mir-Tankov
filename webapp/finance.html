@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 Бухгалтерия — Мир Танков</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --gold: #C8AA6E;
+            --gold-light: #E8D5A3;
+            --bg: #0a0e14;
+            --card: #111722;
+            --card2: #161d28;
+            --border: rgba(200,170,110,0.15);
+            --text: #E8E6E3;
+            --text2: #9AA4B5;
+            --text3: #5A6577;
+            --green: #4ade80;
+            --red: #f87171;
+            --blue: #60a5fa;
+            --purple: #a78bfa;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        /* ====== HEADER ====== */
+        .fin-header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(10,14,20,0.97);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 8px;
+        }
+        .fin-header__left { display: flex; align-items: center; gap: 10px; }
+        .back-btn {
+            background: rgba(200,170,110,0.1); border: 1px solid var(--border);
+            border-radius: 10px; padding: 7px 12px; cursor: pointer;
+            color: var(--gold); font-size: 0.8rem; font-weight: 600;
+            text-decoration: none; display: flex; align-items: center; gap: 5px;
+        }
+        .fin-header h1 { font-family: 'Russo One'; font-size: 1rem; color: var(--gold); }
+        .fin-badge {
+            font-size: 0.55rem; padding: 3px 8px; border-radius: 20px;
+            background: rgba(200,170,110,0.12); border: 1px solid var(--border);
+            color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Period filter */
+        .period-tabs {
+            display: flex; gap: 4px;
+            background: rgba(0,0,0,0.3); border-radius: 10px; padding: 3px;
+        }
+        .period-tab {
+            padding: 5px 12px; border: none; border-radius: 8px;
+            font-size: 0.7rem; font-weight: 600; cursor: pointer;
+            background: transparent; color: var(--text2); transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .period-tab.active {
+            background: var(--gold); color: #0a0e14;
+        }
+
+        /* ====== MAIN CONTENT ====== */
+        .fin-main { padding: 16px; max-width: 900px; margin: 0 auto; }
+
+        /* ====== ACCESS DENIED ====== */
+        .access-denied {
+            text-align: center; padding: 80px 20px;
+        }
+        .access-denied h2 { color: var(--red); font-size: 1.5rem; margin-bottom: 12px; }
+        .access-denied p { color: var(--text2); }
+
+        /* ====== SUMMARY CARDS ====== */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px; margin-bottom: 16px;
+        }
+        .sum-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px; padding: 14px;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .sum-card--total {
+            background: linear-gradient(135deg, rgba(200,170,110,0.15), rgba(200,170,110,0.05));
+            border-color: rgba(200,170,110,0.4);
+            grid-column: span 2;
+        }
+        .sum-card__label { font-size: 0.6rem; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .sum-card__val { font-family: 'Russo One'; font-size: 1.3rem; color: var(--gold); }
+        .sum-card--total .sum-card__val { font-size: 1.8rem; }
+        .sum-card__sub { font-size: 0.65rem; color: var(--text2); }
+
+        /* ====== REVENUE SPLIT ====== */
+        .split-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px; padding: 16px;
+            margin-bottom: 16px;
+        }
+        .split-section h2 {
+            font-family: 'Russo One'; font-size: 0.85rem; margin-bottom: 14px;
+            color: var(--text);
+        }
+        .split-bars { display: flex; flex-direction: column; gap: 10px; }
+        .split-row { display: flex; align-items: center; gap: 10px; }
+        .split-row__label { font-size: 0.75rem; color: var(--text2); width: 80px; flex-shrink: 0; }
+        .split-row__bar-wrap { flex: 1; height: 10px; background: rgba(0,0,0,0.4); border-radius: 5px; overflow: hidden; }
+        .split-row__bar { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+        .split-row__amt { font-weight: 700; font-size: 0.8rem; min-width: 70px; text-align: right; }
+        .split-row__pct { font-size: 0.65rem; color: var(--text3); min-width: 30px; text-align: right; }
+
+        /* ====== TOP USERS ====== */
+        .section-title {
+            font-family: 'Russo One'; font-size: 0.85rem; color: var(--text);
+            margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+        }
+        .users-table { width: 100%; border-collapse: collapse; }
+        .users-table th {
+            text-align: left; font-size: 0.6rem; color: var(--text3);
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .users-table td { padding: 8px 10px; font-size: 0.78rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .users-table tr:hover td { background: rgba(200,170,110,0.04); }
+        .user-rank { font-family: 'Russo One'; font-size: 0.7rem; color: var(--text3); }
+        .user-rank.gold { color: #FFD700; }
+        .user-rank.silver { color: #C0C0C0; }
+        .user-rank.bronze { color: #CD7F32; }
+        .cat-badge {
+            display: inline-block; padding: 2px 6px; border-radius: 6px;
+            font-size: 0.55rem; font-weight: 600; margin: 1px;
+        }
+        .cat-subscription { background: rgba(96,165,250,0.15); color: var(--blue); }
+        .cat-cheese { background: rgba(200,170,110,0.15); color: var(--gold); }
+
+        /* ====== TRANSACTIONS ====== */
+        .txn-filters { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .txn-filter {
+            padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border);
+            background: transparent; color: var(--text2); font-size: 0.7rem;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s;
+        }
+        .txn-filter.active { background: var(--gold); color: #0a0e14; border-color: var(--gold); font-weight: 700; }
+
+        .txn-list { display: flex; flex-direction: column; gap: 6px; }
+        .txn-row {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--card2); border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 10px; padding: 10px 12px;
+            transition: border-color 0.2s;
+        }
+        .txn-row:hover { border-color: var(--border); }
+        .txn-icon { font-size: 1.1rem; flex-shrink: 0; width: 28px; text-align: center; }
+        .txn-info { flex: 1; min-width: 0; }
+        .txn-user { font-weight: 600; font-size: 0.8rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .txn-desc { font-size: 0.65rem; color: var(--text2); margin-top: 1px; }
+        .txn-date { font-size: 0.6rem; color: var(--text3); flex-shrink: 0; text-align: right; }
+        .txn-amount { font-family: 'Russo One'; font-size: 0.9rem; color: var(--green); flex-shrink: 0; white-space: nowrap; }
+
+        /* Pagination */
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+        .page-btn {
+            padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+            background: transparent; color: var(--text2); font-size: 0.75rem;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s;
+        }
+        .page-btn.active { background: var(--gold); color: #0a0e14; border-color: var(--gold); font-weight: 700; }
+        .page-btn:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
+
+        /* ====== SECTION + CARD ====== */
+        .fin-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 16px; margin-bottom: 16px; overflow-x: auto;
+        }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, var(--card2) 25%, rgba(255,255,255,0.03) 50%, var(--card2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px; height: 40px; margin-bottom: 8px;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        /* Monthly chart mini-bars */
+        .monthly-bars { display: flex; gap: 4px; align-items: flex-end; height: 60px; margin-top: 10px; }
+        .monthly-bar { flex: 1; background: rgba(200,170,110,0.3); border-radius: 4px 4px 0 0; min-height: 4px; cursor: default; position: relative; transition: background 0.2s; }
+        .monthly-bar:hover { background: var(--gold); }
+        .monthly-bar:hover::after { content: attr(data-tip); position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%); background: #0a0e14; border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font-size: 0.6rem; color: var(--text); white-space: nowrap; z-index: 99; }
+        .monthly-labels { display: flex; gap: 4px; margin-top: 4px; }
+        .monthly-label { flex: 1; text-align: center; font-size: 0.5rem; color: var(--text3); }
+
+        /* Stars badge */
+        .stars-badge { color: #FFD700; font-size: 0.65rem; margin-left: 4px; }
+
+        @media (max-width: 420px) {
+            .sum-card--total { grid-column: span 1; }
+            .fin-header h1 { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="fin-header">
+        <div class="fin-header__left">
+            <a href="admin.html" class="back-btn">← Назад</a>
+            <h1>💰 Бухгалтерия</h1>
+            <span class="fin-badge">Только Админ</span>
+        </div>
+        <div class="period-tabs" id="periodTabs">
+            <button class="period-tab active" onclick="setPeriod('all')">Всё время</button>
+            <button class="period-tab" onclick="setPeriod('month')">30 дней</button>
+            <button class="period-tab" onclick="setPeriod('week')">7 дней</button>
+        </div>
+    </header>
+
+    <main class="fin-main" id="finMain">
+        <div id="accessDenied" class="access-denied" style="display:none">
+            <h2>🔒 Нет доступа</h2>
+            <p>Страница доступна только администратору</p>
+        </div>
+        <div id="loadingState">
+            <div class="skeleton"></div>
+            <div class="skeleton" style="height:80px"></div>
+            <div class="skeleton" style="height:120px"></div>
+        </div>
+        <div id="finContent" style="display:none"></div>
+    </main>
+
+    <script>
+        const API = window.location.origin;
+        const ADMIN_ID = 6507474079;
+        let currentPeriod = 'all';
+        let currentPage = 1;
+        let txnFilter = 'all';
+        let finData = null;
+
+        // Получаем admin telegram_id
+        function getAdminTgId() {
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            if (tgUser?.id) return tgUser.id;
+            const p = new URLSearchParams(location.search);
+            if (p.get('telegram_id')) return parseInt(p.get('telegram_id'));
+            return parseInt(localStorage.getItem('my_telegram_id') || '0');
+        }
+
+        function setPeriod(p) {
+            currentPeriod = p;
+            currentPage = 1;
+            document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            loadFinance();
+        }
+
+        async function loadFinance() {
+            const tgId = getAdminTgId();
+            if (!tgId) {
+                showAccessDenied(); return;
+            }
+
+            document.getElementById('loadingState').style.display = '';
+            document.getElementById('finContent').style.display = 'none';
+
+            try {
+                const url = `${API}/api/admin/finance?admin_telegram_id=${tgId}&period=${currentPeriod}&page=${currentPage}`;
+                const resp = await fetch(url);
+                if (resp.status === 403) { showAccessDenied(); return; }
+                finData = await resp.json();
+                if (finData.error) { showAccessDenied(); return; }
+
+                renderFinance(finData);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('finContent').style.display = '';
+            } catch(e) {
+                document.getElementById('loadingState').innerHTML = `<div style="text-align:center;padding:40px;color:#f87171">❌ Ошибка загрузки: ${e.message}</div>`;
+            }
+        }
+
+        function showAccessDenied() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('accessDenied').style.display = '';
+        }
+
+        function renderFinance(d) {
+            const s = d.summary;
+            const split = d.split;
+            const html = `
+                <!-- SUMMARY CARDS -->
+                <div class="summary-grid">
+                    <div class="sum-card sum-card--total">
+                        <div class="sum-card__label">💰 Общий доход</div>
+                        <div class="sum-card__val">${s.total_rub.toLocaleString('ru')} ₽</div>
+                        <div class="sum-card__sub">⭐ ${s.total_stars.toLocaleString('ru')} Stars · ${s.transactions_count} операций</div>
+                    </div>
+                    <div class="sum-card">
+                        <div class="sum-card__label">📦 Подписки</div>
+                        <div class="sum-card__val" style="font-size:1rem">${s.subscriptions_rub.toLocaleString('ru')} ₽</div>
+                        <div class="sum-card__sub">${s.subscribers_count} подписчиков</div>
+                    </div>
+                    <div class="sum-card">
+                        <div class="sum-card__label">🧀 Сыр</div>
+                        <div class="sum-card__val" style="font-size:1rem">${s.cheese_rub.toLocaleString('ru')} ₽</div>
+                        <div class="sum-card__sub">покупки валюты</div>
+                    </div>
+                    <div class="sum-card">
+                        <div class="sum-card__label">🎰 Колесо Stars</div>
+                        <div class="sum-card__val" style="font-size:1rem">${s.wheel_rub.toLocaleString('ru')} ₽</div>
+                        <div class="sum-card__sub">вращения за Stars</div>
+                    </div>
+                </div>
+
+                <!-- REVENUE SPLIT -->
+                <div class="split-section">
+                    <h2>📊 Расщепление доходов</h2>
+                    <div class="split-bars">
+                        <div class="split-row">
+                            <div class="split-row__label">🎮 Стример</div>
+                            <div class="split-row__bar-wrap">
+                                <div class="split-row__bar" style="width:50%;background:linear-gradient(90deg,#C8AA6E,#E8D5A3)"></div>
+                            </div>
+                            <div class="split-row__amt" style="color:#C8AA6E">${split.streamer.rub.toLocaleString('ru')} ₽</div>
+                            <div class="split-row__pct">50%</div>
+                        </div>
+                        <div class="split-row">
+                            <div class="split-row__label">🤝 Партнёр</div>
+                            <div class="split-row__bar-wrap">
+                                <div class="split-row__bar" style="width:35%;background:linear-gradient(90deg,#60a5fa,#93c5fd)"></div>
+                            </div>
+                            <div class="split-row__amt" style="color:#60a5fa">${split.partner.rub.toLocaleString('ru')} ₽</div>
+                            <div class="split-row__pct">35%</div>
+                        </div>
+                        <div class="split-row">
+                            <div class="split-row__label">🔧 Развитие</div>
+                            <div class="split-row__bar-wrap">
+                                <div class="split-row__bar" style="width:15%;background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></div>
+                            </div>
+                            <div class="split-row__amt" style="color:#a78bfa">${split.development.rub.toLocaleString('ru')} ₽</div>
+                            <div class="split-row__pct">15%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MONTHLY CHART -->
+                ${renderMonthly(d.monthly)}
+
+                <!-- TOP PAYERS -->
+                <div class="fin-card">
+                    <div class="section-title">🏆 Топ плательщиков</div>
+                    ${renderTopUsers(d.top_users)}
+                </div>
+
+                <!-- TRANSACTIONS -->
+                <div class="fin-card">
+                    <div class="section-title">📋 История операций
+                        <span style="font-family:Inter;font-weight:400;font-size:0.7rem;color:var(--text3)">(${d.pagination.total} всего)</span>
+                    </div>
+                    <div class="txn-filters">
+                        <button class="txn-filter ${txnFilter==='all'?'active':''}" onclick="setTxnFilter('all')">Все</button>
+                        <button class="txn-filter ${txnFilter==='subscription'?'active':''}" onclick="setTxnFilter('subscription')">Подписки</button>
+                        <button class="txn-filter ${txnFilter==='cheese'?'active':''}" onclick="setTxnFilter('cheese')">Сыр</button>
+                    </div>
+                    <div class="txn-list" id="txnList">
+                        ${renderTxns(d.transactions)}
+                    </div>
+                    ${renderPagination(d.pagination)}
+                </div>
+            `;
+
+            document.getElementById('finContent').innerHTML = html;
+        }
+
+        function renderMonthly(monthly) {
+            if (!monthly || monthly.length === 0) return '';
+            const max = Math.max(...monthly.map(m => m.total || 0), 1);
+            const bars = [...monthly].reverse().map(m => {
+                const h = Math.max(4, Math.round(((m.total || 0) / max) * 60));
+                return `<div class="monthly-bar" style="height:${h}px" data-tip="${m.month}: ${(m.total||0).toLocaleString('ru')} ₽ (${m.count} шт)"></div>`;
+            }).join('');
+            const labels = [...monthly].reverse().map(m => `<div class="monthly-label">${m.month?.slice(5)}</div>`).join('');
+            return `
+                <div class="fin-card">
+                    <div class="section-title">📈 Доход по месяцам</div>
+                    <div class="monthly-bars">${bars}</div>
+                    <div class="monthly-labels">${labels}</div>
+                </div>`;
+        }
+
+        function renderTopUsers(users) {
+            if (!users || users.length === 0) return '<div style="color:var(--text3);font-size:0.8rem;text-align:center;padding:20px">Нет данных</div>';
+            const ranks = ['🥇','🥈','🥉'];
+            const rankCls = ['gold','silver','bronze'];
+            return `<table class="users-table">
+                <thead><tr>
+                    <th>#</th><th>Пользователь</th><th>Источник</th><th style="text-align:right">Сумма</th>
+                </tr></thead>
+                <tbody>${users.map((u,i) => {
+                    const cats = Object.entries(u.categories || {}).map(([k,v]) =>
+                        `<span class="cat-badge cat-${k}">${k === 'subscription' ? '📦 '+v.toLocaleString('ru')+'₽' : '🧀 '+v.toLocaleString('ru')+'₽'}</span>`
+                    ).join('');
+                    return `<tr>
+                        <td><span class="user-rank ${rankCls[i]||''}">${ranks[i]||'#'+(i+1)}</span></td>
+                        <td><div style="font-weight:600;font-size:0.8rem">${escHtml(u.name)}</div>
+                            <div style="font-size:0.6rem;color:var(--text3)">ID: ${u.telegram_id}</div></td>
+                        <td>${cats}</td>
+                        <td style="text-align:right;font-family:'Russo One';color:var(--green)">${u.total_rub.toLocaleString('ru')} ₽</td>
+                    </tr>`;
+                }).join('')}</tbody>
+            </table>`;
+        }
+
+        function renderTxns(txns) {
+            const filtered = txnFilter === 'all' ? txns : txns.filter(t => t.type === txnFilter);
+            if (!filtered || filtered.length === 0) {
+                return '<div style="color:var(--text3);font-size:0.8rem;text-align:center;padding:20px">Операций нет</div>';
+            }
+            const icons = { subscription: '📦', cheese: '🧀', wheel_stars: '🎰' };
+            return filtered.map(t => {
+                const d = new Date(t.date);
+                const dateStr = d.toLocaleDateString('ru', {day:'numeric',month:'short'});
+                const timeStr = d.toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'});
+                return `<div class="txn-row">
+                    <div class="txn-icon">${icons[t.type] || '💳'}</div>
+                    <div class="txn-info">
+                        <div class="txn-user">${escHtml(t.user)}</div>
+                        <div class="txn-desc">${escHtml(t.description)}${t.amount_stars ? ` <span class="stars-badge">⭐ ${t.amount_stars}</span>` : ''}</div>
+                    </div>
+                    <div class="txn-date">${dateStr}<br>${timeStr}</div>
+                    <div class="txn-amount">+${(t.amount_rub||0).toLocaleString('ru')} ₽</div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderPagination(pag) {
+            if (pag.pages <= 1) return '';
+            let html = '<div class="pagination">';
+            const start = Math.max(1, pag.page - 2);
+            const end = Math.min(pag.pages, pag.page + 2);
+            if (start > 1) html += `<button class="page-btn" onclick="goPage(1)">1</button>`;
+            if (start > 2) html += `<span style="color:var(--text3);padding:6px">…</span>`;
+            for (let i = start; i <= end; i++) {
+                html += `<button class="page-btn ${i===pag.page?'active':''}" onclick="goPage(${i})">${i}</button>`;
+            }
+            if (end < pag.pages - 1) html += `<span style="color:var(--text3);padding:6px">…</span>`;
+            if (end < pag.pages) html += `<button class="page-btn" onclick="goPage(${pag.pages})">${pag.pages}</button>`;
+            html += '</div>';
+            return html;
+        }
+
+        function setTxnFilter(f) {
+            txnFilter = f;
+            document.querySelectorAll('.txn-filter').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            if (finData) {
+                document.getElementById('txnList').innerHTML = renderTxns(finData.transactions);
+            }
+        }
+
+        function goPage(p) {
+            currentPage = p;
+            loadFinance();
+            window.scrollTo(0, 0);
+        }
+
+        function escHtml(str) {
+            return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // Init
+        const tg = window.Telegram?.WebApp;
+        if (tg) { tg.ready(); tg.expand(); }
+        setTimeout(loadFinance, 600);
+    </script>
+</body>
+</html>
