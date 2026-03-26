@@ -4671,13 +4671,21 @@ async def gc_fetch_batch_stats(account_ids, conditions_str):
                    f"?application_id={get_lesta_app_id()}&account_id={aid}"
                    f"&fields={fields_str}")
             async with session.get(url) as resp:
-                data = await resp.json()
+                raw_data = await resp.text()
+                data = json.loads(raw_data)
             
             if data.get("status") != "ok":
+                err = data.get("error", {})
+                logger.warning(f"Lesta API Error for {aid}: {err.get('message')} (Code: {err.get('code')})")
                 return None
             
             tanks = data["data"].get(str(aid))
-            if not tanks:
+            if tanks is None: # Account not found or invalid
+                logger.warning(f"Lesta API: Account {aid} not found in data")
+                return None
+            
+            if not tanks: # Public profile has tanks, private or empty has [] or None
+                logger.info(f"Lesta API: Account {aid} has NO public tanks (Profile might be PRIVATE)")
                 return None
             
             # Суммируем стату по всем танкам
@@ -5199,11 +5207,19 @@ async def api_global_challenge_join(request):
                     baseline_value = multi_stat["value"]
                     baseline_battles = multi_stat["battles"]
                     baseline_values_json = json.dumps(multi_stat["per_condition"])
+                else:
+                    return cors_response({
+                        "error": "❌ Не удалось получить статистику. Проверьте, что ваш профиль в игре ОТКРЫТ (не скрыт)!"
+                    }, 400)
             else:
                 stat = await gc_fetch_player_stat(account_id, ch_data["condition"])
                 if stat:
                     baseline_value = stat["value"]
                     baseline_battles = stat["battles"]
+                else:
+                    return cors_response({
+                        "error": "❌ Не удалось получить статистику. Проверьте, что ваш профиль в игре ОТКРЫТ (не скрыт)!"
+                    }, 400)
 
         with get_db() as conn:
             try:
