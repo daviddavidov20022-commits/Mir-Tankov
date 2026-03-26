@@ -7417,6 +7417,10 @@ def create_api_app():
         return web.Response(text="Not found", status=404)
     
     app.router.add_get('/quiz.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'quiz.html')))
+    app.router.add_get('/finance.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'finance.html')))
+    app.router.add_get('/admin.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'admin.html')))
+    # Любой другой .html файл из webapp
+    app.router.add_get('/{filename:[a-zA-Z0-9_-]+\\.html}', serve_webapp_file)
     
     return app
 
