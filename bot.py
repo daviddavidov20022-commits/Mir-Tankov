@@ -5346,13 +5346,16 @@ async def _do_refresh_stats():
 
         # === STEP 2: BATCH запрос — все игроки за 1-10 API запросов ===
         all_account_ids = [aid for _, aid in participant_data]
+        logger.info(f"GC refresh: api_keys={len(LESTA_APP_IDS)}, players={len(participant_data)}, cond={ch['condition']}")
         batch_stats = await gc_fetch_batch_stats(all_account_ids, ch["condition"])
+        logger.info(f"GC batch: got stats for {len(batch_stats)}/{len(participant_data)} players")
 
         # === STEP 3: Обновляем каждого участника из кэша ===
         updated = 0
         for p, account_id in participant_data:
             multi_stat = batch_stats.get(account_id)
             if not multi_stat:
+                logger.warning(f"GC: NO DATA for {p['nickname']} (acct={account_id})")
                 continue
 
             # --- Расчёт очков из batch_stats (дельта от baseline) ---
@@ -5375,7 +5378,9 @@ async def _do_refresh_stats():
                 delta = max(0, current_stat - baseline_stat)
                 cond_deltas[c] = delta
                 total_value += delta
+                logger.info(f"GC {p['nickname']} [{c}]: cur={current_stat} base={baseline_stat} delta={delta}")
 
+            logger.info(f"GC {p['nickname']}: base_battles={p['baseline_battles']} cur_battles={multi_stat['battles']} new_battles={new_battles} SCORE={total_value}")
             new_value = total_value
             condition_values_json = json.dumps(cond_deltas)
 
