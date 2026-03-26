@@ -17,13 +17,13 @@
     <header class="admin-header">
         <div class="admin-header__left">
             <a href="index.html" class="back-link">← Назад</a>
-            <h1>⚙️ Админ-панель</h1>
-            <span class="admin-badge">Колесо Фортуны</span>
+            <h1 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">⚙️ Админ-панель</h1>
+            <span class="admin-badge" style="flex-shrink:0">Колесо</span>
         </div>
-        <div class="admin-header__actions">
-            <a href="finance.html" class="btn btn--outline btn--small btn--icon-compact" title="Бухгалтерия">💰 <span class="btn-label">Финансы</span></a>
-            <button class="btn btn--outline btn--small btn--icon-compact" onclick="resetToDefault()" title="Сбросить настройки">🔄 <span class="btn-label">Сброс</span></button>
-            <button class="btn btn--primary btn--small btn--icon-compact" onclick="saveConfig()" title="Сохранить настройки">💾 <span class="btn-label">Сохранить</span></button>
+        <div class="admin-header__actions" style="display:flex;gap:6px;flex-shrink:0">
+            <a href="finance.html" title="Бухгалтерия" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(200,170,110,0.12);border:1px solid rgba(200,170,110,0.3);border-radius:8px;font-size:1rem;text-decoration:none;flex-shrink:0">💰</a>
+            <button onclick="resetToDefault()" title="Сброс" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(200,170,110,0.3);border-radius:8px;font-size:1rem;cursor:pointer;flex-shrink:0">🔄</button>
+            <button onclick="saveConfig()" title="Сохранить" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#C8AA6E,#E8D5A3);border:none;border-radius:8px;font-size:1rem;cursor:pointer;flex-shrink:0">💾</button>
         </div>
     </header>
 

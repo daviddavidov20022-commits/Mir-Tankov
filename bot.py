@@ -7419,8 +7419,9 @@ def create_api_app():
     app.router.add_get('/quiz.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'quiz.html')))
     app.router.add_get('/finance.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'finance.html')))
     app.router.add_get('/admin.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'admin.html')))
-    # Любой другой .html файл из webapp
-    app.router.add_get('/{filename:[a-zA-Z0-9_-]+\\.html}', serve_webapp_file)
+    app.router.add_get('/wheel.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'wheel.html')))
+    app.router.add_get('/challenges.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'challenges.html')))
+    app.router.add_get('/player.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'player.html')))
     
     return app
 
