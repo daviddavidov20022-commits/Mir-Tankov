@@ -64,7 +64,23 @@ from events import (
 # ============================================================
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 WEBAPP_URL = "https://daviddavidov20022-commits.github.io/Mir-Tankov/webapp/"
-LESTA_APP_IDS = [s.strip() for s in os.getenv("LESTA_APP_ID", "").split(",") if s.strip()]
+# Настройка API-ключей Lesta (поддержка нескольких ключей через запятую или по отдельности)
+LESTA_APP_IDS = []
+# 1. Проверяем LESTA_APP_IDS (множественное)
+env_multi = os.getenv("LESTA_APP_IDS", "").split(",")
+# 2. Проверяем LESTA_APP_ID (единичное)
+env_single = os.getenv("LESTA_APP_ID", "").split(",")
+# 3. Собираем всё вместе и чистим
+raw_keys = env_multi + env_single
+# 4. Также ищем ключи вида LESTA_APP_ID_1, LESTA_APP_ID_2 и т.д.
+for key, val in os.environ.items():
+    if key.startswith("LESTA_APP_ID_") and val.strip():
+        raw_keys.append(val.strip())
+
+LESTA_APP_IDS = [s.strip() for s in raw_keys if s.strip()]
+# Убираем дубликаты
+LESTA_APP_IDS = list(dict.fromkeys(LESTA_APP_IDS))
+
 _lesta_key_index = 0
 
 def get_lesta_app_id():
