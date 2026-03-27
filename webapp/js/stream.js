@@ -870,6 +870,7 @@ let currentChatMode = 'unified'; // 'unified' или 'widget'
 
 function saveStreamConfig() {
     const config = {
+        unifiedChatWidget: document.getElementById('adminUnifiedChatWidget')?.value?.trim() || '',
         twitch: {
             enabled: document.getElementById('adminTwitchEnabled')?.checked || false,
             channel: document.getElementById('adminTwitchChannel')?.value?.trim() || '',
@@ -933,6 +934,10 @@ async function loadStreamConfig() {
 }
 
 function fillAdminForm(config) {
+    // Unified widget
+    const uw = document.getElementById('adminUnifiedChatWidget');
+    if (uw && config.unifiedChatWidget) uw.value = config.unifiedChatWidget;
+    
     if (config.twitch) {
         const el = document.getElementById('adminTwitchEnabled');
         if (el) el.checked = config.twitch.enabled;
@@ -1004,6 +1009,15 @@ function loadChatWidget() {
     const container = document.getElementById('chatWidgetContainer');
     if (!iframe || !container) return;
     
+    // 1. Приоритет: единый виджет (DonationAlerts и т.д.)
+    const unifiedUrl = currentStreamConfig.unifiedChatWidget || '';
+    if (unifiedUrl) {
+        iframe.src = unifiedUrl;
+        container.style.display = 'block';
+        return;
+    }
+    
+    // 2. Fallback: виджет конкретной платформы
     const config = currentStreamConfig[currentPlatform];
     const widgetUrl = config?.chatWidget || '';
     
@@ -1011,7 +1025,7 @@ function loadChatWidget() {
         iframe.src = widgetUrl;
         container.style.display = 'block';
     } else {
-        // Автоматический fallback — Twitch chat embed
+        // 3. Автоматический fallback — Twitch chat embed
         if (currentPlatform === 'twitch') {
             const parent = window.location.hostname || 'localhost';
             const ch = config?.channel || currentChannel;
