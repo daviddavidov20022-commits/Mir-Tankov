@@ -8,9 +8,12 @@ import aiohttp
 from aiohttp import web
 from dotenv import load_dotenv
 
-# ⚠️ ВАЖНО: загрузка .env ПЕРЕД импортом модулей,
-# чтобы LESTA_APP_ID и другие ключи были доступны при инициализации
+# ⚠️ ВАЖНО: загрузка .env ПЕРЕД импортом модулей
 load_dotenv()
+
+# Настройка логирования ПЕРЕД использованием в коде
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command
@@ -124,8 +127,6 @@ TWITCH_BOT_TOKEN = os.getenv("TWITCH_BOT_TOKEN", "")  # oauth:xxxx...
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "webapp", "prizes-config.json")
 # ============================================================
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
