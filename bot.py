@@ -5730,15 +5730,31 @@ async def api_global_challenge_search_tanks(request):
         if not search or len(search) < 2:
             return cors_response({"data": {}, "status": "ok"})
         
-        limit = min(int(request.query.get("limit", 10)), 20)
+        limit = min(int(request.query.get("limit", 10)), 15)
         
         timeout = aiohttp.ClientTimeout(total=10)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/encyclopedia/vehicles/"
                    f"?application_id={get_lesta_app_id()}"
-                   f"&search={search}&fields=name,tier,type,tank_id&limit={limit}")
+                   f"&search={search}&fields=name,tier,type,tank_id")
             async with session.get(url) as resp:
                 data = await resp.json()
+        
+        # Lesta API возвращает ВСЕ танки при search. Обрезаем на нашей стороне.
+        if data.get("status") == "ok" and data.get("data"):
+            all_tanks = data["data"]
+            search_lower = search.lower()
+            # Сортируем: сначала те, чье имя начинается с запроса, потом по уровню (высший первый)
+            sorted_items = sorted(
+                [(k, v) for k, v in all_tanks.items() if v is not None],
+                key=lambda x: (
+                    0 if (x[1].get("name") or "").lower().startswith(search_lower) else 1,
+                    -(x[1].get("tier") or 0)
+                )
+            )
+            limited = dict(sorted_items[:limit])
+            data["data"] = limited
+            data["meta"]["count"] = len(limited)
         
         return cors_response(data)
     except Exception as e:
