@@ -600,7 +600,8 @@ function renderChatMessage(msg) {
 
     const el = document.createElement('div');
     el.className = `chat-msg chat-msg--${msg.platform}`;
-    const platformIcon = msg.platform === 'twitch' ? '💜' : '📱';
+    const platformIcons = { twitch: '💜', vkplay: '🔵', youtube: '🔴', telegram: '📱' };
+    const platformIcon = platformIcons[msg.platform] || '💬';
     const timeStr = msg.time.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 
     el.innerHTML = `
@@ -713,12 +714,16 @@ async function pollChatMessages() {
                 if (shownMessageIds.has(msg.id)) continue;
                 shownMessageIds.add(msg.id);
 
+                const platformColors = { twitch: '#9146FF', vkplay: '#0077FF', youtube: '#FF0000', telegram: '#29B6F6' };
+                const platformBadges = { twitch: '', vkplay: '', youtube: '', telegram: '📱' };
+                const plat = msg.platform || 'telegram';
+
                 addChatMessage({
-                    platform: 'telegram',
+                    platform: plat,
                     username: msg.username,
                     text: msg.text,
-                    color: '#29B6F6',
-                    badges: '📱',
+                    color: msg.color || platformColors[plat] || '#29B6F6',
+                    badges: msg.badges || platformBadges[plat] || '',
                     time: new Date(msg.timestamp * 1000),
                 });
                 lastChatTimestamp = Math.max(lastChatTimestamp, msg.timestamp);

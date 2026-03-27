@@ -6273,7 +6273,7 @@ stream_channels = [
 stream_config = {
     "twitch": {"enabled": True, "channel": "iserveri"},
     "youtube": {"enabled": False, "channel": ""},
-    "vk": {"enabled": False, "channel": ""},
+    "vk": {"enabled": True, "channel": "iserveri"},
 }
 
 def _load_stream_config():
@@ -6440,6 +6440,302 @@ class TwitchChatReader:
 
 # Глобальный ридер
 twitch_reader = TwitchChatReader()
+
+
+# ==========================================
+# СЕРВЕРНОЕ ЧТЕНИЕ VK PLAY ЧАТА (HTTP POLL)
+# ==========================================
+class VKPlayChatReader:
+    """Читает VK Play Live чат через публичный API и складывает в общую очередь"""
+    
+    def __init__(self):
+        self.channel = None
+        self.running = False
+        self.seen_ids = set()
+        self.poll_interval = 3  # секунды
+    
+    async def start(self, channel):
+        """Запустить чтение канала"""
+        self.channel = channel.lower().strip()
+        self.running = True
+        asyncio.create_task(self._run())
+        logger.info(f"[VKPlayReader] Запущен для {self.channel}")
+    
+    async def stop(self):
+        self.running = False
+    
+    async def change_channel(self, channel):
+        await self.stop()
+        await asyncio.sleep(1)
+        await self.start(channel)
+    
+    async def _run(self):
+        """Основной цикл — polling VK Play chat API"""
+        while self.running:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    # VK Play Live public chat API
+                    url = f"https://api.vkplay.live/v1/blog/{self.channel}/public_video_stream/chat"
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                        "Origin": "https://vkplay.live",
+                        "Referer": f"https://vkplay.live/{self.channel}",
+                    }
+                    
+                    while self.running:
+                        try:
+                            async with session.get(url, headers=headers,
+                                                   timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                                if resp.status == 200:
+                                    data = await resp.json()
+                                    messages = data if isinstance(data, list) else data.get("messages", data.get("data", []))
+                                    if isinstance(messages, list):
+                                        for msg in messages:
+                                            self._process_message(msg)
+                                elif resp.status == 404:
+                                    # Стрим не идёт — тихо ждём
+                                    pass
+                                else:
+                                    logger.debug(f"[VKPlayReader] HTTP {resp.status}")
+                        except asyncio.TimeoutError:
+                            pass
+                        except Exception as e:
+                            logger.debug(f"[VKPlayReader] Poll error: {e}")
+                        
+                        await asyncio.sleep(self.poll_interval)
+                        
+            except Exception as e:
+                logger.warning(f"[VKPlayReader] Session error: {e}")
+            
+            if self.running:
+                await asyncio.sleep(5)
+    
+    def _process_message(self, msg):
+        """Обработать одно сообщение VK Play"""
+        try:
+            # VK Play API формат: {"id": ..., "author": {"displayName": ...}, "data": [{"type": "text", "content": ...}], ...}
+            msg_id = str(msg.get("id", ""))
+            if not msg_id or msg_id in self.seen_ids:
+                return
+            self.seen_ids.add(msg_id)
+            if len(self.seen_ids) > 1000:
+                self.seen_ids = set(list(self.seen_ids)[-500:])
+            
+            author = msg.get("author", {})
+            display_name = author.get("displayName", author.get("name", author.get("nickname", "Unknown")))
+            
+            # Извлекаем текст из data-массива
+            text_parts = []
+            data = msg.get("data", msg.get("message", []))
+            if isinstance(data, list):
+                for part in data:
+                    if isinstance(part, dict):
+                        content = part.get("content", part.get("text", ""))
+                        if content:
+                            text_parts.append(str(content))
+                    elif isinstance(part, str):
+                        text_parts.append(part)
+            elif isinstance(data, str):
+                text_parts.append(data)
+            
+            # Fallback: если текст в поле "text" или "content"  
+            if not text_parts:
+                fallback = msg.get("text", msg.get("content", ""))
+                if fallback:
+                    text_parts.append(str(fallback))
+            
+            text = " ".join(text_parts).strip()
+            if not text or not display_name:
+                return
+            
+            # Определяем бейджи
+            badges = ""
+            role = author.get("role", "") or msg.get("role", "")
+            if role in ("owner", "broadcaster"):
+                badges = "🎬"
+            elif role == "moderator":
+                badges = "🗡️"
+            
+            stream_chat_messages.append({
+                "id": f"vk_{msg_id}",
+                "platform": "vkplay",
+                "username": display_name,
+                "text": text,
+                "color": "#0077FF",
+                "badges": badges,
+                "timestamp": _time.time(),
+                "telegram_id": 0,
+            })
+        except Exception:
+            pass
+
+
+# Глобальный ридер VK Play
+vkplay_reader = VKPlayChatReader()
+
+
+# ==========================================
+# СЕРВЕРНОЕ ЧТЕНИЕ YOUTUBE LIVE CHAT (API v3)
+# ==========================================
+class YouTubeChatReader:
+    """Читает YouTube Live Chat через Data API v3 и складывает в общую очередь"""
+    
+    def __init__(self):
+        self.api_key = None
+        self.channel_id = None  # YouTube channel ID
+        self.running = False
+        self.seen_ids = set()
+        self.poll_interval = 5  # YouTube API квота — не чаще 5 сек
+        self.live_chat_id = None
+        self.next_page_token = None
+    
+    async def start(self, channel_id, api_key):
+        """Запустить чтение"""
+        self.channel_id = channel_id
+        self.api_key = api_key
+        self.running = True
+        asyncio.create_task(self._run())
+        logger.info(f"[YTChatReader] Запущен для channel={self.channel_id}")
+    
+    async def stop(self):
+        self.running = False
+        self.live_chat_id = None
+        self.next_page_token = None
+    
+    async def _run(self):
+        """Основной цикл"""
+        while self.running:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    # Ищем активный live stream
+                    while self.running:
+                        if not self.live_chat_id:
+                            self.live_chat_id = await self._find_live_chat(session)
+                            if not self.live_chat_id:
+                                # Нет активного стрима — ждём и проверяем снова
+                                await asyncio.sleep(60)
+                                continue
+                            logger.info(f"[YTChatReader] Найден live chat: {self.live_chat_id}")
+                        
+                        # Читаем сообщения
+                        try:
+                            await self._poll_messages(session)
+                        except Exception as e:
+                            logger.debug(f"[YTChatReader] Poll error: {e}")
+                            self.live_chat_id = None  # Сброс — стрим мог закончиться
+                        
+                        await asyncio.sleep(self.poll_interval)
+                        
+            except Exception as e:
+                logger.warning(f"[YTChatReader] Session error: {e}")
+            
+            if self.running:
+                await asyncio.sleep(10)
+    
+    async def _find_live_chat(self, session):
+        """Найти liveChatId текущего стрима"""
+        try:
+            # Ищем по channel ID
+            url = (
+                f"https://www.googleapis.com/youtube/v3/search"
+                f"?part=snippet&channelId={self.channel_id}"
+                f"&eventType=live&type=video&key={self.api_key}"
+            )
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status != 200:
+                    return None
+                data = await resp.json()
+                items = data.get("items", [])
+                if not items:
+                    return None
+                
+                video_id = items[0].get("id", {}).get("videoId")
+                if not video_id:
+                    return None
+            
+            # Получаем liveChatId
+            url2 = (
+                f"https://www.googleapis.com/youtube/v3/videos"
+                f"?part=liveStreamingDetails&id={video_id}&key={self.api_key}"
+            )
+            async with session.get(url2, timeout=aiohttp.ClientTimeout(total=10)) as resp2:
+                if resp2.status != 200:
+                    return None
+                data2 = await resp2.json()
+                items2 = data2.get("items", [])
+                if not items2:
+                    return None
+                return items2[0].get("liveStreamingDetails", {}).get("activeLiveChatId")
+                
+        except Exception as e:
+            logger.debug(f"[YTChatReader] Find live chat error: {e}")
+            return None
+    
+    async def _poll_messages(self, session):
+        """Прочитать новые сообщения из live chat"""
+        url = (
+            f"https://www.googleapis.com/youtube/v3/liveChat/messages"
+            f"?liveChatId={self.live_chat_id}&part=snippet,authorDetails"
+            f"&key={self.api_key}"
+        )
+        if self.next_page_token:
+            url += f"&pageToken={self.next_page_token}"
+        
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            if resp.status == 403:
+                # API квота превышена или чат закрыт
+                logger.warning("[YTChatReader] 403 — квота или чат закрыт")
+                self.live_chat_id = None
+                return
+            if resp.status != 200:
+                return
+            
+            data = await resp.json()
+            self.next_page_token = data.get("nextPageToken")
+            
+            # YouTube рекомендует pollingIntervalMillis
+            interval = data.get("pollingIntervalMillis", 5000) / 1000
+            self.poll_interval = max(interval, 4)  # Не чаще 4 сек
+            
+            for item in data.get("items", []):
+                msg_id = item.get("id", "")
+                if msg_id in self.seen_ids:
+                    continue
+                self.seen_ids.add(msg_id)
+                if len(self.seen_ids) > 1000:
+                    self.seen_ids = set(list(self.seen_ids)[-500:])
+                
+                snippet = item.get("snippet", {})
+                author = item.get("authorDetails", {})
+                text = snippet.get("displayMessage", snippet.get("textMessageDetails", {}).get("messageText", ""))
+                display_name = author.get("displayName", "YouTube User")
+                
+                if not text:
+                    continue
+                
+                # Бейджи
+                badges = ""
+                if author.get("isChatOwner"):
+                    badges = "🎬"
+                elif author.get("isChatModerator"):
+                    badges = "🗡️"
+                elif author.get("isChatSponsor"):
+                    badges = "⭐"
+                
+                stream_chat_messages.append({
+                    "id": f"yt_{msg_id}",
+                    "platform": "youtube",
+                    "username": display_name,
+                    "text": text,
+                    "color": "#FF0000",
+                    "badges": badges,
+                    "timestamp": _time.time(),
+                    "telegram_id": 0,
+                })
+
+
+# Глобальный ридер YouTube
+youtube_reader = YouTubeChatReader()
 
 
 
@@ -7763,6 +8059,22 @@ async def main():
     if twitch_ch:
         await twitch_reader.start(twitch_ch)
         logger.info(f"TwitchChatReader запущен для #{twitch_ch}")
+
+    # Запускаем серверное чтение VK Play чата
+    vk_config = stream_config.get('vk', {})
+    vk_ch = vk_config.get('channel', 'iserveri')
+    if vk_ch and vk_config.get('enabled', True):
+        await vkplay_reader.start(vk_ch)
+        logger.info(f"VKPlayChatReader запущен для {vk_ch}")
+
+    # Запускаем серверное чтение YouTube Live Chat
+    yt_config = stream_config.get('youtube', {})
+    yt_channel_id = os.getenv("YOUTUBE_CHANNEL_ID", "UClMCysoDnCFN2oQUu9fcQRg")  # ISERVERI channel ID
+    yt_api_key = os.getenv("YOUTUBE_API_KEY", "AIzaSyAT7aSehc7wNkebqwXWrwAwIauUw7TUMAc")
+    if yt_channel_id and yt_api_key and yt_config.get('enabled', False):
+        await youtube_reader.start(yt_channel_id, yt_api_key)
+        logger.info(f"YouTubeChatReader запущен для {yt_channel_id}")
+
 
     # Запускаем бот
     await dp.start_polling(bot)
