@@ -849,29 +849,29 @@ function updateStreamPreview(platform) {
     const platLabel = document.getElementById('previewPlatform');
     const glow = document.querySelector('.stream-preview__glow');
     
-    // VK Play — показываем iframe embed прямо в TG
+    // Проверяем есть ли embed URL из админ-настроек
     const platformConfig = currentStreamConfig[platform] || {};
-    const configChannel = platformConfig.channel || '';
+    const embedUrl = platformConfig.embedUrl || '';  // Админ может вставить рабочий embed
     
-    if (platform === 'vk') {
-        const vkChannel = configChannel || 'iserveri';
+    if (embedUrl) {
+        // Есть настроенный embed — показываем iframe
         if (embedWrap && embedIframe) {
-            embedIframe.src = `https://vkplay.live/${vkChannel}/embed`;
+            embedIframe.src = embedUrl;
             embedWrap.style.display = 'block';
         }
         if (scThumb) scThumb.style.display = 'none';
         if (scHint) scHint.textContent = 'Смотри прямо здесь ↑';
     } else {
-        // Twitch / YouTube — превью-карточка + открытие в браузере
+        // Нет embed — превью-карточка + открытие в браузере
         if (embedWrap) {
             embedWrap.style.display = 'none';
-            if (embedIframe) embedIframe.src = '';  // останавливаем VK embed
+            if (embedIframe) embedIframe.src = '';
         }
         if (scThumb) scThumb.style.display = 'block';
         if (scHint) scHint.textContent = 'Откроется в браузере';
     }
     
-    // Обновляем превью-карточку (для Twitch/YouTube)
+    // Обновляем превью-карточку
     if (icon) icon.textContent = data.icon;
     if (channel) channel.textContent = data.channel;
     if (platLabel) {
@@ -908,16 +908,19 @@ function saveStreamConfig() {
             enabled: document.getElementById('adminTwitchEnabled')?.checked || false,
             channel: document.getElementById('adminTwitchChannel')?.value?.trim() || '',
             chatWidget: document.getElementById('adminTwitchChatWidget')?.value?.trim() || '',
+            embedUrl: document.getElementById('adminTwitchEmbed')?.value?.trim() || '',
         },
         youtube: {
             enabled: document.getElementById('adminYoutubeEnabled')?.checked || false,
             channel: document.getElementById('adminYoutubeChannel')?.value?.trim() || '',
             chatWidget: document.getElementById('adminYoutubeChatWidget')?.value?.trim() || '',
+            embedUrl: document.getElementById('adminYoutubeEmbed')?.value?.trim() || '',
         },
         vk: {
             enabled: document.getElementById('adminVkEnabled')?.checked || false,
             channel: document.getElementById('adminVkChannel')?.value?.trim() || '',
             chatWidget: document.getElementById('adminVkChatWidget')?.value?.trim() || '',
+            embedUrl: document.getElementById('adminVkEmbed')?.value?.trim() || '',
         },
     };
     
@@ -978,6 +981,8 @@ function fillAdminForm(config) {
         if (ch && config.twitch.channel) ch.value = config.twitch.channel;
         const cw = document.getElementById('adminTwitchChatWidget');
         if (cw && config.twitch.chatWidget) cw.value = config.twitch.chatWidget;
+        const em = document.getElementById('adminTwitchEmbed');
+        if (em && config.twitch.embedUrl) em.value = config.twitch.embedUrl;
     }
     if (config.youtube) {
         const el = document.getElementById('adminYoutubeEnabled');
@@ -986,6 +991,8 @@ function fillAdminForm(config) {
         if (ch && config.youtube.channel) ch.value = config.youtube.channel;
         const cw = document.getElementById('adminYoutubeChatWidget');
         if (cw && config.youtube.chatWidget) cw.value = config.youtube.chatWidget;
+        const em = document.getElementById('adminYoutubeEmbed');
+        if (em && config.youtube.embedUrl) em.value = config.youtube.embedUrl;
     }
     if (config.vk) {
         const el = document.getElementById('adminVkEnabled');
@@ -994,6 +1001,8 @@ function fillAdminForm(config) {
         if (ch && config.vk.channel) ch.value = config.vk.channel;
         const cw = document.getElementById('adminVkChatWidget');
         if (cw && config.vk.chatWidget) cw.value = config.vk.chatWidget;
+        const em = document.getElementById('adminVkEmbed');
+        if (em && config.vk.embedUrl) em.value = config.vk.embedUrl;
     }
 }
 
