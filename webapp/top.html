@@ -24,7 +24,7 @@
         </button>
         <div class="header-title">
             <h1>🏆 Игроки Клуба</h1>
-            <span class="header-sub" id="headerSub">Все участники</span>
+            <span class="header-sub" id="headerSub">Подписчики канала</span>
         </div>
         <div class="header-count" id="headerCount">
             <span class="count-num" id="totalCount">—</span>
@@ -36,27 +36,27 @@
     <div class="category-tabs-wrap">
         <div class="category-tabs" id="categoryTabs">
             <button class="cat-tab cat-tab--active" data-cat="all" onclick="switchCategory('all')">
-                <span class="cat-tab__icon">👥</span>
+                <span class="cat-tab__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                 <span class="cat-tab__label">Все</span>
             </button>
             <button class="cat-tab" data-cat="wn8" onclick="switchCategory('wn8')">
-                <span class="cat-tab__icon">🎖</span>
+                <span class="cat-tab__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
                 <span class="cat-tab__label">WN8</span>
             </button>
             <button class="cat-tab" data-cat="damage" onclick="switchCategory('damage')">
-                <span class="cat-tab__icon">💥</span>
+                <span class="cat-tab__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg></span>
                 <span class="cat-tab__label">Урон</span>
             </button>
             <button class="cat-tab" data-cat="veteran" onclick="switchCategory('veteran')">
-                <span class="cat-tab__icon">📅</span>
+                <span class="cat-tab__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15l-3.5-2L2 17l2-6.5L2 7h5l3-5 3 5h5l-2 3.5L18 17l-6.5-2z" stroke-linejoin="round"/><line x1="8" y1="21" x2="16" y2="21" stroke-linecap="round"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/></svg></span>
                 <span class="cat-tab__label">Ветеран</span>
             </button>
             <button class="cat-tab" data-cat="battles" onclick="switchCategory('battles')">
-                <span class="cat-tab__icon">⚔️</span>
+                <span class="cat-tab__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5" stroke-linejoin="round"/><path d="M13 7l4-4 4 4-4 4" stroke-linejoin="round"/><path d="M7 13l-4 4 4 4 4-4" stroke-linejoin="round"/><path d="M9.5 6.5L17.5 14.5" stroke-linecap="round"/></svg></span>
                 <span class="cat-tab__label">Бои</span>
             </button>
             <button class="cat-tab" data-cat="playtime" onclick="switchCategory('playtime')">
-                <span class="cat-tab__icon">⏱</span>
+                <span class="cat-tab__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
                 <span class="cat-tab__label">Часы</span>
             </button>
         </div>
@@ -69,10 +69,6 @@
             <input type="text" id="filterInput" class="filter-input" placeholder="Поиск по нику..."
                 oninput="filterTable()">
         </div>
-        <button class="online-toggle" id="onlineToggle" onclick="toggleOnlineFilter()" title="Только онлайн">
-            <span class="online-dot-filter"></span>
-            <span class="online-label">ОНЛАЙН</span>
-        </button>
         <button class="refresh-btn" id="refreshBtn" onclick="loadAllPlayers()" title="Обновить">
             <span class="refresh-icon">🔄</span>
         </button>
