@@ -6272,7 +6272,7 @@ stream_channels = [
 # Конфиг трансляции (какие платформы включены)
 stream_config = {
     "twitch": {"enabled": True, "channel": "iserveri"},
-    "youtube": {"enabled": False, "channel": ""},
+    "youtube": {"enabled": True, "channel": "ISERVERI"},
     "vk": {"enabled": True, "channel": "iserveri"},
 }
 
@@ -6585,9 +6585,10 @@ class YouTubeChatReader:
         self.channel_id = None  # YouTube channel ID
         self.running = False
         self.seen_ids = set()
-        self.poll_interval = 5  # YouTube API квота — не чаще 5 сек
+        self.poll_interval = 8  # YouTube API квота — экономим (8-10 сек)
         self.live_chat_id = None
         self.next_page_token = None
+        self.search_interval = 300  # Искать стрим каждые 5 мин (search.list = 100 единиц квоты!)
     
     async def start(self, channel_id, api_key):
         """Запустить чтение"""
@@ -6613,7 +6614,8 @@ class YouTubeChatReader:
                             self.live_chat_id = await self._find_live_chat(session)
                             if not self.live_chat_id:
                                 # Нет активного стрима — ждём и проверяем снова
-                                await asyncio.sleep(60)
+                                # search.list стоит 100 единиц квоты, поэтому ждём 5 мин
+                                await asyncio.sleep(self.search_interval)
                                 continue
                             logger.info(f"[YTChatReader] Найден live chat: {self.live_chat_id}")
                         
@@ -6694,8 +6696,8 @@ class YouTubeChatReader:
             self.next_page_token = data.get("nextPageToken")
             
             # YouTube рекомендует pollingIntervalMillis
-            interval = data.get("pollingIntervalMillis", 5000) / 1000
-            self.poll_interval = max(interval, 4)  # Не чаще 4 сек
+            interval = data.get("pollingIntervalMillis", 8000) / 1000
+            self.poll_interval = max(interval, 8)  # Не чаще 8 сек (экономим квоту)
             
             for item in data.get("items", []):
                 msg_id = item.get("id", "")
@@ -8071,7 +8073,7 @@ async def main():
     yt_config = stream_config.get('youtube', {})
     yt_channel_id = os.getenv("YOUTUBE_CHANNEL_ID", "UClMCysoDnCFN2oQUu9fcQRg")  # ISERVERI channel ID
     yt_api_key = os.getenv("YOUTUBE_API_KEY", "AIzaSyAT7aSehc7wNkebqwXWrwAwIauUw7TUMAc")
-    if yt_channel_id and yt_api_key and yt_config.get('enabled', False):
+    if yt_channel_id and yt_api_key and yt_config.get('enabled', True):
         await youtube_reader.start(yt_channel_id, yt_api_key)
         logger.info(f"YouTubeChatReader запущен для {yt_channel_id}")
 
