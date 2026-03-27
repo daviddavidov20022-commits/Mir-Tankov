@@ -66,20 +66,35 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 WEBAPP_URL = "https://daviddavidov20022-commits.github.io/Mir-Tankov/webapp/"
 # Настройка API-ключей Lesta (поддержка нескольких ключей через запятую или по отдельности)
 LESTA_APP_IDS = []
-# 1. Проверяем LESTA_APP_IDS (множественное)
-env_multi = os.getenv("LESTA_APP_IDS", "").split(",")
+# 1. Проверяем LESTA_APP_IDS (множественное) - заменяем переносы строк на запятые для надежности
+multi_str = os.getenv("LESTA_APP_IDS", "").replace("\n", ",").replace("\r", ",")
+env_multi = multi_str.split(",")
+
 # 2. Проверяем LESTA_APP_ID (единичное)
-env_single = os.getenv("LESTA_APP_ID", "").split(",")
-# 3. Проверяем LESTA_APP_I (опечатка из скриншота)
-env_typo = os.getenv("LESTA_APP_I", "").split(",")
+single_str = os.getenv("LESTA_APP_ID", "").replace("\n", ",").replace("\r", ",")
+env_single = single_str.split(",")
+
+# 3. Проверяем LESTA_APP_I (опечатка)
+typo_str = os.getenv("LESTA_APP_I", "").replace("\n", ",").replace("\r", ",")
+env_typo = typo_str.split(",")
+
 # 4. Собираем всё вместе и чистим
 raw_keys = env_multi + env_single + env_typo
 # 5. Также ищем ключи вида LESTA_APP_ID_1, LESTA_APP_ID_2 и т.д.
 for key, val in os.environ.items():
     if (key.startswith("LESTA_APP_ID_") or key.startswith("LESTA_APP_I_")) and val.strip():
-        raw_keys.append(val.strip())
+        # В отдельных переменных тоже могут быть списки через запятую
+        raw_keys.extend(val.replace("\n", ",").replace("\r", ",").split(","))
 
-LESTA_APP_IDS = [s.strip() for s in raw_keys if s.strip()]
+LESTA_APP_IDS = []
+for s in raw_keys:
+    s = s.strip()
+    # Ключ Lesta всегда 32 символа (hex)
+    if len(s) == 32:
+        LESTA_APP_IDS.append(s)
+    elif s:
+        logger.warning(f"Игнорирую невалидный Lesta API ключ: {s[:10]}... (длина {len(s)}, ожидалось 32)")
+
 # Убираем дубликаты
 LESTA_APP_IDS = list(dict.fromkeys(LESTA_APP_IDS))
 
@@ -5852,8 +5867,8 @@ async def api_global_challenge_tank_list(request):
         if not tanks:
             # Проверяем, есть ли вообще ключи
             if not LESTA_APP_IDS:
-                return cors_response({"error": "Критическая ошибка: В .env не прописан LESTA_APP_ID. Без API-ключа список танков недоступен."}, 500)
-            return cors_response({"error": f"Ошибка Lesta API: {_last_lesta_error or 'Нет связи с сервером Lesta'}. Проверьте ключи в настройках Railway."}, 500)
+                return cors_response({"error": "Критическая ошибка: Бот не видит валидных LESTA_APP_ID в Railway. Проверьте формат ключей (32 символа)."}, 500)
+            return cors_response({"error": f"Ошибка Lesta API: {_last_lesta_error or 'Нет связи'}. Загружено ключей: {len(LESTA_APP_IDS)}. Проверьте их валидность."}, 500)
         
         nation = request.query.get("nation", "").strip()
         tank_type = request.query.get("type", "").strip()
