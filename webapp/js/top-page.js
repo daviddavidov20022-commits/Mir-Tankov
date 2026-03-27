@@ -102,7 +102,7 @@ const CATEGORIES = {
 // ============================================================
 // INITIALIZATION
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+function initTopPage() {
     // Try to load cached data first for instant display
     const cached = localStorage.getItem('top_players_cache');
     if (cached) {
@@ -121,7 +121,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Then refresh from API
     loadAllPlayers();
-});
+}
+
+// Скрипт загружается динамически — DOM уже готов к этому моменту
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTopPage);
+} else {
+    initTopPage();
+}
 
 // ============================================================
 // LOAD ALL PLAYERS FROM BOT API + LESTA STATS
