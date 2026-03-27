@@ -5722,6 +5722,29 @@ async def api_global_challenge_battle_log(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_global_challenge_search_tanks(request):
+    """GET /api/global-challenge/search-tanks?search=ИС&limit=10 — прокси для поиска танков через Lesta API"""
+    import aiohttp
+    try:
+        search = request.query.get("search", "").strip()
+        if not search or len(search) < 2:
+            return cors_response({"data": {}, "status": "ok"})
+        
+        limit = min(int(request.query.get("limit", 10)), 20)
+        
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            url = (f"https://api.tanki.su/wot/encyclopedia/vehicles/"
+                   f"?application_id={get_lesta_app_id()}"
+                   f"&search={search}&fields=name,tier,type,tank_id&limit={limit}")
+            async with session.get(url) as resp:
+                data = await resp.json()
+        
+        return cors_response(data)
+    except Exception as e:
+        logger.error(f"API search-tanks error: {e}")
+        return cors_response({"error": str(e), "status": "error"}, 500)
+
 async def api_global_challenge_history(request):
     """GET /api/global-challenge/history?telegram_id=X — завершенные челленджи (с личным результатом если указан TG ID)"""
     try:
@@ -7427,6 +7450,7 @@ def create_api_app():
     app.router.add_get("/api/global-challenge/history", api_global_challenge_history)
     app.router.add_get("/api/global-challenge/my-history", api_global_challenge_my_history)
     app.router.add_get("/api/global-challenge/battle-log", api_global_challenge_battle_log)
+    app.router.add_get("/api/global-challenge/search-tanks", api_global_challenge_search_tanks)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)

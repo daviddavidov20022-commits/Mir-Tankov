@@ -900,7 +900,7 @@ async function gcSearchTank(query) {
     _gcSearchTimeout = setTimeout(async () => {
         try {
             resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:4px">🔄 Поиск...</div>';
-            const resp = await fetch(`https://api.tanki.su/wot/encyclopedia/vehicles/?application_id=9c2bae60336940659a6db8bb9b745baf&search=${encodeURIComponent(query)}&fields=name,tier,type,tank_id&limit=10`);
+            const resp = await fetch(`${BOT_API_URL}/api/global-challenge/search-tanks?search=${encodeURIComponent(query)}&limit=10`);
             const data = await resp.json();
             
             if (data.status !== 'ok' || !data.data) {
