@@ -840,24 +840,57 @@ function updateStreamPreview(platform) {
     const data = STREAM_PREVIEW_DATA[platform];
     if (!data) return;
     
+    const embedWrap = document.getElementById('streamEmbedWrap');
+    const embedIframe = document.getElementById('streamEmbedIframe');
+    const scThumb = document.getElementById('scThumb');
+    const scHint = document.getElementById('scHint');
     const icon = document.getElementById('previewIcon');
     const channel = document.getElementById('previewChannel');
     const platLabel = document.getElementById('previewPlatform');
-    const btn = document.getElementById('previewBtn');
     const glow = document.querySelector('.stream-preview__glow');
     
+    // VK Play — показываем iframe embed прямо в TG
+    const platformConfig = currentStreamConfig[platform] || {};
+    const configChannel = platformConfig.channel || '';
+    
+    if (platform === 'vk') {
+        const vkChannel = configChannel || 'iserveri';
+        if (embedWrap && embedIframe) {
+            embedIframe.src = `https://vkplay.live/${vkChannel}/embed`;
+            embedWrap.style.display = 'block';
+        }
+        if (scThumb) scThumb.style.display = 'none';
+        if (scHint) scHint.textContent = 'Смотри прямо здесь ↑';
+    } else {
+        // Twitch / YouTube — превью-карточка + открытие в браузере
+        if (embedWrap) {
+            embedWrap.style.display = 'none';
+            if (embedIframe) embedIframe.src = '';  // останавливаем VK embed
+        }
+        if (scThumb) scThumb.style.display = 'block';
+        if (scHint) scHint.textContent = 'Откроется в браузере';
+    }
+    
+    // Обновляем превью-карточку (для Twitch/YouTube)
     if (icon) icon.textContent = data.icon;
     if (channel) channel.textContent = data.channel;
     if (platLabel) {
         platLabel.textContent = data.platform;
         platLabel.style.color = data.color;
     }
-    if (btn) {
-        btn.style.background = data.gradient;
-        btn.onclick = () => openStreamLink(platform);
-    }
     if (glow) {
         glow.style.background = `radial-gradient(circle, ${data.color}26, transparent 70%)`;
+    }
+    
+    // Обновляем фон карточки
+    const scThumbBg = document.getElementById('scThumbBg');
+    if (scThumbBg) {
+        const colors = {
+            twitch: 'rgba(145,70,255,0.15)',
+            vk: 'rgba(0,119,255,0.15)',
+            youtube: 'rgba(255,0,0,0.15)'
+        };
+        scThumbBg.style.background = `radial-gradient(ellipse at 30% 50%,${colors[platform] || colors.twitch},transparent 60%)`;
     }
 }
 

@@ -6525,11 +6525,15 @@ class VKPlayChatReader:
             display_name = author.get("displayName", author.get("name", author.get("nickname", "Unknown")))
             
             # Извлекаем текст из data-массива
+            # VK Play формат: data: [["текст", "unstyled", []], ["ещё текст", "unstyled", []]]
             text_parts = []
             data = msg.get("data", msg.get("message", []))
             if isinstance(data, list):
                 for part in data:
-                    if isinstance(part, dict):
+                    if isinstance(part, list) and len(part) > 0:
+                        # Формат: ["текст", "стиль", [вложения]]
+                        text_parts.append(str(part[0]))
+                    elif isinstance(part, dict):
                         content = part.get("content", part.get("text", ""))
                         if content:
                             text_parts.append(str(content))

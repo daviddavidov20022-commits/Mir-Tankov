@@ -434,8 +434,13 @@
 </div>
 
 <!-- STREAM CARD -->
-<div class="stream-card" id="streamCard" onclick="handleStreamCardClick()">
-    <div class="sc-thumb" id="scThumb">
+<div class="stream-card" id="streamCard">
+    <!-- Iframe embed (для VK Play — работает в TG WebView) -->
+    <div id="streamEmbedWrap" style="display:none;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:14px 14px 0 0;">
+        <iframe id="streamEmbedIframe" style="width:100%;height:100%;border:none;" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    </div>
+    <!-- Preview карточка (для Twitch/YouTube — открываются в браузере) -->
+    <div class="sc-thumb" id="scThumb" onclick="handleStreamCardClick()">
         <div class="sc-thumb-bg" id="scThumbBg"></div>
         <div class="sc-thumb-lines"></div>
         <div class="sc-center">
@@ -454,7 +459,7 @@
                 <span id="streamViewers">нет данных</span>
             </div>
         </div>
-        <div class="sc-hint">Откроется в браузере</div>
+        <div class="sc-hint" id="scHint">Откроется в браузере</div>
         <button class="sc-open-link" id="scOpenBtn" onclick="event.stopPropagation();openCurrentStream()">
             ▶ Смотреть
         </button>
