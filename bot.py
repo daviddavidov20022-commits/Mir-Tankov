@@ -4548,6 +4548,7 @@ GC_CONDITION_TO_STAT = {
     "spotting": "spotted",
     "blocked": "damage_received",
     "wins": "wins",
+    "combined": ["damage_dealt", "spotted"],  # Суммарка: урон + засвет
 }
 
 
@@ -4555,13 +4556,18 @@ async def gc_fetch_player_stat(account_id, condition):
     """Получить текущий суммарный стат игрока из Lesta API (через tanks/stats — актуальные данные)"""
     import aiohttp
     stat_field = GC_CONDITION_TO_STAT.get(condition, "damage_dealt")
+    is_multi_field = isinstance(stat_field, list)
 
     try:
         timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
+            if is_multi_field:
+                fields_str = ",".join(f"all.{f}" for f in stat_field) + ",all.battles,tank_id"
+            else:
+                fields_str = f"all.{stat_field},all.battles,tank_id"
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
-                   f"&fields=all.{stat_field},all.battles,tank_id")
+                   f"&fields={fields_str}")
             async with session.get(url) as resp:
                 data = await resp.json()
 
@@ -4572,7 +4578,13 @@ async def gc_fetch_player_stat(account_id, condition):
             if not tanks:
                 return None
 
-            total_value = sum(t.get("all", {}).get(stat_field, 0) for t in tanks)
+            if is_multi_field:
+                total_value = sum(
+                    sum(t.get("all", {}).get(f, 0) for f in stat_field)
+                    for t in tanks
+                )
+            else:
+                total_value = sum(t.get("all", {}).get(stat_field, 0) for t in tanks)
             total_battles = sum(t.get("all", {}).get("battles", 0) for t in tanks)
             return {
                 "value": total_value,
@@ -4583,8 +4595,12 @@ async def gc_fetch_player_stat(account_id, condition):
         return None
 
 
-async def gc_fetch_player_multi_stats(account_id, conditions_str):
-    """Получить стату по нескольким условиям сразу (через tanks/stats — актуальные данные)"""
+async def gc_fetch_player_multi_stats(account_id, conditions_str, tank_class=None, tank_tier=None, tank_id_filter=None):
+    """Получить стату по нескольким условиям сразу (через tanks/stats — актуальные данные)
+    
+    Поддерживает фильтрацию по классу техники, уровню и конкретному танку.
+    Поддерживает условие 'combined' = damage + spotting.
+    """
     import aiohttp
     conditions = [c.strip() for c in conditions_str.split(",") if c.strip()]
     if not conditions:
@@ -4597,12 +4613,18 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str):
         "spotting": "spotted",
         "blocked": "damage_received",
         "wins": "wins",
+        "combined": ["damage_dealt", "spotted"],  # Суммарка
     }
     
     # Собираем все нужные поля для tanks/stats
     tank_fields = set(["battles"])
     for cond in conditions:
-        tank_fields.add(COND_TO_FIELD.get(cond, "damage_dealt"))
+        field = COND_TO_FIELD.get(cond, "damage_dealt")
+        if isinstance(field, list):
+            for f in field:
+                tank_fields.add(f)
+        else:
+            tank_fields.add(field)
     fields_str = ",".join(f"all.{f}" for f in tank_fields) + ",tank_id"
     
     try:
@@ -4621,16 +4643,41 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str):
         if not tanks:
             return None
         
-        # Суммируем стату по всем танкам
+        # Если есть фильтр по классу/уровню/танку — получаем encyclop данные
+        tank_info_map = {}
+        if tank_class or tank_tier or tank_id_filter:
+            all_tank_ids = [t["tank_id"] for t in tanks]
+            tank_info_map = await gc_get_tank_names(all_tank_ids)
+        
+        # Суммируем стату по танкам (с фильтрацией)
         total_battles = 0
         per_condition = {c: 0 for c in conditions}
         
         for t in tanks:
+            tid = t["tank_id"]
             all_stats = t.get("all", {})
+            
+            # Фильтрация по конкретному танку
+            if tank_id_filter and tid != tank_id_filter:
+                continue
+            
+            # Фильтрация по классу и уровню
+            if tank_class or tank_tier:
+                info = tank_info_map.get(tid, {})
+                if tank_class and info.get("type") != tank_class:
+                    continue
+                if tank_tier and info.get("tier") != tank_tier:
+                    continue
+            
             total_battles += all_stats.get("battles", 0)
             for cond in conditions:
                 field = COND_TO_FIELD.get(cond, "damage_dealt")
-                per_condition[cond] += all_stats.get(field, 0)
+                if isinstance(field, list):
+                    # combined: сумма нескольких полей
+                    val = sum(all_stats.get(f, 0) for f in field)
+                else:
+                    val = all_stats.get(field, 0)
+                per_condition[cond] += val
         
         first_cond = conditions[0]
         result = {
@@ -4645,14 +4692,17 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str):
         return None
 
 
-async def gc_fetch_batch_stats(account_ids, conditions_str):
+async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tank_tier=None, tank_id_filter=None):
     """Получить стату ПАКЕТНО для игроков.
     
     ВАЖНО: Используем tanks/stats вместо account/info, т.к. account/info 
     кэшируется на стороне Lesta на часы/дни и показывает устаревшие данные.
     tanks/stats обновляется СРАЗУ после боя.
     
-    Для каждого игрока суммируем стату по всем танкам.
+    Поддерживает фильтрацию по классу техники, уровню и конкретному танку.
+    Поддерживает условие 'combined' = damage + spotting.
+    
+    Для каждого игрока суммируем стату по танкам (с учётом фильтров).
     Возвращает dict: {account_id: {"battles": N, "per_condition": {cond: val}, "value": V}}
     """
     import aiohttp
@@ -4671,13 +4721,22 @@ async def gc_fetch_batch_stats(account_ids, conditions_str):
         "spotting": "spotted",
         "blocked": "damage_received",
         "wins": "wins",
+        "combined": ["damage_dealt", "spotted"],  # Суммарка
     }
     
     # Собираем поля для запроса tanks/stats
     tank_fields = set(["battles"])
     for cond in conditions:
-        tank_fields.add(COND_TO_TANK_FIELD.get(cond, "damage_dealt"))
+        field = COND_TO_TANK_FIELD.get(cond, "damage_dealt")
+        if isinstance(field, list):
+            for f in field:
+                tank_fields.add(f)
+        else:
+            tank_fields.add(field)
     fields_str = ",".join(f"all.{f}" for f in tank_fields) + ",tank_id"
+    
+    # Предзагрузка информации о танках для фильтрации (один раз для всех)
+    need_tank_filter = bool(tank_class or tank_tier or tank_id_filter)
     
     results = {}
     
@@ -4706,16 +4765,40 @@ async def gc_fetch_batch_stats(account_ids, conditions_str):
                 logger.info(f"Lesta API: Account {aid} has NO public tanks (Profile might be PRIVATE)")
                 return None
             
-            # Суммируем стату по всем танкам
+            # Получаем информацию о танках если нужна фильтрация
+            tank_info_map = {}
+            if need_tank_filter:
+                all_tank_ids = [t["tank_id"] for t in tanks]
+                tank_info_map = await gc_get_tank_names(all_tank_ids)
+            
+            # Суммируем стату по танкам (с учётом фильтров)
             total_battles = 0
             per_condition = {c: 0 for c in conditions}
             
             for t in tanks:
+                tid = t["tank_id"]
                 all_stats = t.get("all", {})
+                
+                # Фильтрация по конкретному танку
+                if tank_id_filter and tid != tank_id_filter:
+                    continue
+                
+                # Фильтрация по классу и уровню
+                if tank_class or tank_tier:
+                    info = tank_info_map.get(tid, {})
+                    if tank_class and info.get("type") != tank_class:
+                        continue
+                    if tank_tier and info.get("tier") != tank_tier:
+                        continue
+                
                 total_battles += all_stats.get("battles", 0)
                 for cond in conditions:
                     field = COND_TO_TANK_FIELD.get(cond, "damage_dealt")
-                    per_condition[cond] += all_stats.get(field, 0)
+                    if isinstance(field, list):
+                        val = sum(all_stats.get(f, 0) for f in field)
+                    else:
+                        val = all_stats.get(field, 0)
+                    per_condition[cond] += val
             
             first_cond = conditions[0]
             result = {
@@ -4858,6 +4941,12 @@ async def api_global_challenge_create(request):
         max_battles = int(data.get("max_battles", 0))
         reward_coins = int(data.get("reward_coins", 500))
         reward_description = data.get("reward_description", f"{reward_coins} 🧀")
+        
+        # Фильтры техники
+        tank_class = data.get("tank_class") or None  # heavyTank, mediumTank, etc.
+        tank_tier_filter = int(data.get("tank_tier_filter") or 0) or None  # 1-10
+        tank_id_filter = int(data.get("tank_id_filter") or 0) or None  # конкретный tank_id
+        tank_name_filter = data.get("tank_name_filter") or None  # название танка для отображения
 
         from database import get_db
         from datetime import datetime, timedelta, timezone
@@ -4872,10 +4961,12 @@ async def api_global_challenge_create(request):
             cursor = conn.execute("""
                 INSERT INTO global_challenges 
                 (title, description, icon, condition, duration_minutes, max_battles,
-                 reward_coins, reward_description, status, created_by, ends_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)
+                 reward_coins, reward_description, status, created_by, ends_at,
+                 tank_class, tank_tier_filter, tank_id_filter, tank_name_filter)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?)
             """, (title, description, icon, condition, duration_minutes, max_battles,
-                  reward_coins, reward_description, admin_tg, ends_at))
+                  reward_coins, reward_description, admin_tg, ends_at,
+                  tank_class, tank_tier_filter, tank_id_filter, tank_name_filter))
             challenge_id = cursor.lastrowid
 
         # Админ автоматически вступает
@@ -4915,8 +5006,8 @@ async def api_global_challenge_create(request):
 
         if admin_account_id:
             conditions = [c.strip() for c in condition.split(",") if c.strip()]
-            if len(conditions) > 1:
-                multi_stat = await gc_fetch_player_multi_stats(admin_account_id, condition)
+            if len(conditions) > 1 or condition == 'combined':
+                multi_stat = await gc_fetch_player_multi_stats(admin_account_id, condition, tank_class, tank_tier_filter, tank_id_filter)
                 if multi_stat:
                     baseline_value = multi_stat["value"]
                     baseline_battles = multi_stat["battles"]
@@ -4965,14 +5056,16 @@ def _internal_finish_challenge(conn, challenge_id):
         winner_tg = winner["telegram_id"] if winner else None
         winner_nick = winner["nickname"] if winner else None
         winner_val = winner["current_value"] if winner else 0
+        winner_cond_vals = winner["condition_values"] if winner else None
         
         # 2. Обновляем статус челленджа
         conn.execute("""
             UPDATE global_challenges 
             SET status = 'finished', finished_at = datetime('now'),
-                winner_telegram_id = ?, winner_nickname = ?, winner_value = ?
+                winner_telegram_id = ?, winner_nickname = ?, winner_value = ?,
+                winner_condition_values = ?
             WHERE id = ?
-        """, (winner_tg, winner_nick, winner_val, challenge_id))
+        """, (winner_tg, winner_nick, winner_val, winner_cond_vals, challenge_id))
         
         logger.info(f"🏆 Челлендж {challenge_id} завершён. Победитель: {winner_nick} ({winner_val})")
         
@@ -5219,8 +5312,11 @@ async def api_global_challenge_join(request):
 
         if account_id:
             ch_conditions = [c.strip() for c in (ch_data["condition"] or "damage").split(",") if c.strip()]
-            if len(ch_conditions) > 1:
-                multi_stat = await gc_fetch_player_multi_stats(account_id, ch_data["condition"])
+            ch_tank_class = ch_data.get("tank_class")
+            ch_tank_tier = ch_data.get("tank_tier_filter")
+            ch_tank_id = ch_data.get("tank_id_filter")
+            if len(ch_conditions) > 1 or ch_data["condition"] == 'combined':
+                multi_stat = await gc_fetch_player_multi_stats(account_id, ch_data["condition"], ch_tank_class, ch_tank_tier, ch_tank_id)
                 if multi_stat:
                     baseline_value = multi_stat["value"]
                     baseline_battles = multi_stat["battles"]
@@ -5326,10 +5422,16 @@ async def _do_refresh_stats():
                 (ch["id"],)
             ).fetchall()
 
-        stat_field = GC_CONDITION_TO_STAT.get((ch["condition"] or "damage").split(",")[0].strip(), "damage_dealt")
+        _raw_field = GC_CONDITION_TO_STAT.get((ch["condition"] or "damage").split(",")[0].strip(), "damage_dealt")
+        stat_field = _raw_field if isinstance(_raw_field, str) else "damage_dealt"  # For _detect_new_battles
         max_battles = ch.get("max_battles", 0) or 0
         ch_conditions = [c.strip() for c in (ch["condition"] or "damage").split(",") if c.strip()]
         is_multi_cond = len(ch_conditions) > 1
+        
+        # Фильтры техники из челленджа
+        ch_tank_class = ch.get("tank_class")
+        ch_tank_tier = ch.get("tank_tier_filter")
+        ch_tank_id = ch.get("tank_id_filter")
 
         # === STEP 1: Собираем все account_id ===
         participant_data = []  # [(p_dict, account_id)]
@@ -5346,8 +5448,8 @@ async def _do_refresh_stats():
 
         # === STEP 2: BATCH запрос — все игроки за 1-10 API запросов ===
         all_account_ids = [aid for _, aid in participant_data]
-        logger.info(f"GC refresh: api_keys={len(LESTA_APP_IDS)}, players={len(participant_data)}, cond={ch['condition']}")
-        batch_stats = await gc_fetch_batch_stats(all_account_ids, ch["condition"])
+        logger.info(f"GC refresh: api_keys={len(LESTA_APP_IDS)}, players={len(participant_data)}, cond={ch['condition']}, tank_class={ch_tank_class}, tier={ch_tank_tier}")
+        batch_stats = await gc_fetch_batch_stats(all_account_ids, ch["condition"], ch_tank_class, ch_tank_tier, ch_tank_id)
         logger.info(f"GC batch: got stats for {len(batch_stats)}/{len(participant_data)} players")
 
         # === STEP 3: Обновляем каждого участника из кэша ===

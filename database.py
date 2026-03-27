@@ -452,6 +452,19 @@ def init_db():
         except Exception:
             pass
 
+        # Миграции для фильтров техники в челленджах
+        for col, default in [
+            ("tank_class", "TEXT"),           # heavyTank, mediumTank, lightTank, AT-SPG, SPG
+            ("tank_tier_filter", "INTEGER"),   # 1-10 (уровень техники)
+            ("tank_id_filter", "INTEGER"),     # конкретный tank_id
+            ("tank_name_filter", "TEXT"),      # название танка для отображения
+            ("winner_condition_values", "TEXT"),  # JSON: per-condition values для победителя
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE global_challenges ADD COLUMN {col} {default}")
+            except Exception:
+                pass
+
         # ===== СТРИМ МЕДИА (звуки/видео для донат-алертов) =====
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS stream_media (

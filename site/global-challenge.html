@@ -77,6 +77,8 @@
                         <div class="gc-stat__label">Условие</div>
                     </div>
                 </div>
+                <!-- Vehicle filter badges -->
+                <div id="gcVehicleFilter" style="display:none;text-align:center;margin-top:6px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap"></div>
                 <!-- Multi-condition badges -->
                 <div class="gc-cond-badges" id="gcCondBadges" style="display:none;margin:-4px 0 8px;text-align:center"></div>
 
@@ -159,8 +161,48 @@
                         Засвет</button>
                     <button class="gc-cond-btn" data-cond="blocked" onclick="gcToggleCond('blocked', this)"><img src="img/military/cond_blocked.png">
                         Блок</button>
+                    <button class="gc-cond-btn" data-cond="combined" onclick="gcToggleCond('combined', this)" title="Урон + Засвет">💥👁 Суммарка</button>
                 </div>
                 <div id="gcCondSelected" style="margin-top:6px;font-size:0.6rem;color:#C8AA6E;display:flex;flex-wrap:wrap;gap:4px"></div>
+
+                <!-- Фильтр техники -->
+                <label class="gc-admin__label" style="margin-top:12px">🪖 Техника <span style="font-size:0.55rem;color:#5A6577;font-weight:400">(опционально)</span></label>
+                <div class="gc-admin__row">
+                    <div>
+                        <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">Класс</label>
+                        <select class="gc-admin__input" id="adminGcTankClass" onchange="gcOnTankClassChange()" style="font-size:0.65rem">
+                            <option value="">Любой</option>
+                            <option value="heavyTank">🛡️ Тяжёлый (ТТ)</option>
+                            <option value="mediumTank">⚙️ Средний (СТ)</option>
+                            <option value="lightTank">🏎️ Лёгкий (ЛТ)</option>
+                            <option value="AT-SPG">🎯 ПТ-САУ</option>
+                            <option value="SPG">💣 САУ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">Уровень</label>
+                        <select class="gc-admin__input" id="adminGcTankTier" onchange="gcOnTankTierChange()" style="font-size:0.65rem">
+                            <option value="0">Любой</option>
+                            <option value="1">I</option>
+                            <option value="2">II</option>
+                            <option value="3">III</option>
+                            <option value="4">IV</option>
+                            <option value="5">V</option>
+                            <option value="6">VI</option>
+                            <option value="7">VII</option>
+                            <option value="8">VIII</option>
+                            <option value="9">IX</option>
+                            <option value="10">X</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top:6px">
+                    <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">🔍 Конкретный танк</label>
+                    <input type="text" class="gc-admin__input" id="adminGcTankSearch" placeholder="Начните вводить название (напр. ИС-7)"
+                        oninput="gcSearchTank(this.value)" autocomplete="off">
+                    <div id="adminGcTankResults" style="max-height:120px;overflow-y:auto;margin-top:4px"></div>
+                    <div id="adminGcTankSelected" style="margin-top:4px;font-size:0.6rem;color:#4ade80"></div>
+                </div>
 
                 <div class="gc-admin__row">
                     <div>

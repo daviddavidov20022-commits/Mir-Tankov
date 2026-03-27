@@ -12,11 +12,16 @@ const GC_CONDITION_MAP = {
     spotting: { icon: '<img src="img/military/cond_spotting.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Засвет', unit: 'засвета' },
     blocked: { icon: '<img src="img/military/cond_blocked.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Блок', unit: 'блока' },
     wins: { icon: '<img src="img/military/cond_wins.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Победы', unit: 'побед' },
+    combined: { icon: '💥👁', name: 'Суммарка', unit: 'суммарки' },
 };
 
 let gcCurrentChallenge = null;
 let gcTimerInterval = null;
 let gcAdminConditions = ['damage'];
+let gcAdminTankClass = null;
+let gcAdminTankTier = null;
+let gcAdminTankId = null;
+let gcAdminTankName = null;
 let gcAllSubscribers = [];
 let _gcLastDataHash = null;
 let _gcIsFirstLoad = true;
@@ -172,6 +177,26 @@ function gcShowActive(ch) {
     // Stats
     document.getElementById('gcParticipants').textContent = ch.participants_count || 0;
     document.getElementById('gcReward').textContent = `🧀 ${ch.reward_coins || 0}`;
+
+    // Vehicle filter badges
+    const filterEl = document.getElementById('gcVehicleFilter');
+    if (filterEl) {
+        const hasFilter = ch.tank_class || ch.tank_tier_filter || ch.tank_name_filter;
+        if (hasFilter) {
+            filterEl.style.display = '';
+            let parts = [];
+            const classNames = { heavyTank: '🛡️ ТТ', mediumTank: '⚙️ СТ', lightTank: '🏎️ ЛТ', 'AT-SPG': '🎯 ПТ', SPG: '💣 САУ' };
+            if (ch.tank_name_filter) parts.push(`🪖 ${ch.tank_name_filter}`);
+            else if (ch.tank_class) parts.push(classNames[ch.tank_class] || ch.tank_class);
+            if (ch.tank_tier_filter) {
+                const tierLabels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+                parts.push(`${tierLabels[ch.tank_tier_filter] || ch.tank_tier_filter} ур.`);
+            }
+            filterEl.innerHTML = parts.map(p => `<span style="display:inline-block;padding:3px 10px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:20px;font-size:0.6rem;color:#4ade80;font-weight:600">${p}</span>`).join(' ');
+        } else {
+            filterEl.style.display = 'none';
+        }
+    }
 
     // Timer
     gcStartTimer(ch.ends_at, ch.duration_minutes);
@@ -806,13 +831,27 @@ function gcToggleCond(cond, btn) {
         gcAdminConditions.splice(idx, 1);
         btn.classList.remove('gc-cond-btn--active');
     } else {
-        // Select — limit to 3
-        if (gcAdminConditions.length >= 3) {
-            showToast('⚠️ Максимум 3 условия');
-            return;
+        // Combined is exclusive — deselect all others
+        if (cond === 'combined') {
+            gcAdminConditions = ['combined'];
+            document.querySelectorAll('.gc-cond-btn').forEach(b => b.classList.remove('gc-cond-btn--active'));
+            btn.classList.add('gc-cond-btn--active');
+        } else {
+            // If combined was selected, deselect it first
+            const combIdx = gcAdminConditions.indexOf('combined');
+            if (combIdx >= 0) {
+                gcAdminConditions.splice(combIdx, 1);
+                const combBtn = document.querySelector('.gc-cond-btn[data-cond="combined"]');
+                if (combBtn) combBtn.classList.remove('gc-cond-btn--active');
+            }
+            // Select — limit to 3
+            if (gcAdminConditions.length >= 3) {
+                showToast('⚠️ Максимум 3 условия');
+                return;
+            }
+            gcAdminConditions.push(cond);
+            btn.classList.add('gc-cond-btn--active');
         }
-        gcAdminConditions.push(cond);
-        btn.classList.add('gc-cond-btn--active');
     }
     gcUpdateCondSelectedBadges();
     if (typeof gcUpdatePreview === 'function') gcUpdatePreview();
@@ -829,6 +868,115 @@ function gcUpdateCondSelectedBadges() {
         const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage;
         return `<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:rgba(200,170,110,0.12);border:1px solid rgba(200,170,110,0.25);border-radius:16px;font-size:0.55rem;color:#C8AA6E;font-weight:600">${ci.icon} ${ci.name}</span>`;
     }).join('');
+}
+
+// === Vehicle filter admin functions ===
+function gcOnTankClassChange() {
+    const sel = document.getElementById('adminGcTankClass');
+    gcAdminTankClass = sel.value || null;
+    // Если выбрали класс — сбросить конкретный танк
+    if (gcAdminTankClass) gcClearTank();
+}
+
+function gcOnTankTierChange() {
+    const sel = document.getElementById('adminGcTankTier');
+    gcAdminTankTier = parseInt(sel.value) || null;
+    // Если выбрали уровень — сбросить конкретный танк
+    if (gcAdminTankTier) gcClearTank();
+}
+
+let _gcSearchTimeout = null;
+async function gcSearchTank(query) {
+    const resultsEl = document.getElementById('adminGcTankResults');
+    if (!resultsEl) return;
+    
+    if (!query || query.length < 2) {
+        resultsEl.innerHTML = '';
+        return;
+    }
+    
+    // Debounce 300ms
+    clearTimeout(_gcSearchTimeout);
+    _gcSearchTimeout = setTimeout(async () => {
+        try {
+            resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:4px">🔄 Поиск...</div>';
+            const resp = await fetch(`https://api.tanki.su/wot/encyclopedia/vehicles/?application_id=9c2bae60336940659a6db8bb9b745baf&search=${encodeURIComponent(query)}&fields=name,tier,type,tank_id&limit=10`);
+            const data = await resp.json();
+            
+            if (data.status !== 'ok' || !data.data) {
+                resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#ff6b6b;padding:4px">❌ Ошибка поиска</div>';
+                return;
+            }
+            
+            const classNames = { heavyTank: '🛡️ТТ', mediumTank: '⚙️СТ', lightTank: '🏎️ЛТ', 'AT-SPG': '🎯ПТ', SPG: '💣САУ' };
+            const tierLabels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+            
+            const tanks = Object.entries(data.data)
+                .filter(([_, v]) => v !== null)
+                .map(([id, v]) => ({ id: parseInt(id), ...v }))
+                .sort((a, b) => (b.tier || 0) - (a.tier || 0));
+            
+            if (!tanks.length) {
+                resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:4px">Ничего не найдено</div>';
+                return;
+            }
+            
+            resultsEl.innerHTML = tanks.map(t => `
+                <div onclick="gcSelectTank(${t.id}, '${(t.name || '').replace(/'/g, "\\'")}', '${t.type || ''}', ${t.tier || 0})" 
+                     style="padding:6px 8px;font-size:0.6rem;color:#e0e0e0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:6px;transition:background 0.15s"
+                     onmouseover="this.style.background='rgba(200,170,110,0.08)'" onmouseout="this.style.background=''">
+                    <span style="color:#C8AA6E;font-weight:600">${tierLabels[t.tier] || '?'}</span>
+                    <span>${classNames[t.type] || ''}</span>
+                    <span style="flex:1">${t.name || 'Неизвестно'}</span>
+                </div>
+            `).join('');
+        } catch (e) {
+            resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#ff6b6b;padding:4px">❌ Нет подключения</div>';
+        }
+    }, 300);
+}
+
+function gcSelectTank(tankId, name, type, tier) {
+    gcAdminTankId = tankId;
+    gcAdminTankName = name;
+    gcAdminTankClass = type || null;
+    gcAdminTankTier = tier || null;
+    
+    // Update UI
+    const resultsEl = document.getElementById('adminGcTankResults');
+    const selectedEl = document.getElementById('adminGcTankSelected');
+    const searchEl = document.getElementById('adminGcTankSearch');
+    if (resultsEl) resultsEl.innerHTML = '';
+    if (searchEl) searchEl.value = '';
+    
+    const classNames = { heavyTank: '🛡️ТТ', mediumTank: '⚙️СТ', lightTank: '🏎️ЛТ', 'AT-SPG': '🎯ПТ', SPG: '💣САУ' };
+    const tierLabels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+    
+    if (selectedEl) {
+        selectedEl.innerHTML = `
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;font-size:0.65rem">
+                <span style="color:#C8AA6E;font-weight:700">${tierLabels[tier] || '?'}</span>
+                <span>${classNames[type] || ''}</span>
+                <span style="color:#4ade80;font-weight:600">${name}</span>
+                <span onclick="gcClearTank()" style="cursor:pointer;color:#ff6b6b;font-size:0.8rem;margin-left:4px">✕</span>
+            </div>
+        `;
+    }
+    
+    // Sync dropdowns
+    const classEl = document.getElementById('adminGcTankClass');
+    const tierEl = document.getElementById('adminGcTankTier');
+    if (classEl) classEl.value = type || '';
+    if (tierEl) tierEl.value = tier || '0';
+    
+    showToast(`🪖 Выбран: ${name}`);
+}
+
+function gcClearTank() {
+    gcAdminTankId = null;
+    gcAdminTankName = null;
+    const selectedEl = document.getElementById('adminGcTankSelected');
+    if (selectedEl) selectedEl.innerHTML = '';
 }
 
 function gcSetDuration(min) {
@@ -865,7 +1013,11 @@ async function gcLaunchChallenge() {
                 reward_coins: reward,
                 reward_description: `${reward} 🧀`,
                 wot_nickname: localStorage.getItem('wot_nickname') || '',
-                wot_account_id: localStorage.getItem('wot_account_id') || ''
+                wot_account_id: localStorage.getItem('wot_account_id') || '',
+                tank_class: gcAdminTankClass || '',
+                tank_tier_filter: gcAdminTankTier || 0,
+                tank_id_filter: gcAdminTankId || 0,
+                tank_name_filter: gcAdminTankName || ''
             })
         });
         const data = await resp.json();
