@@ -3,7 +3,8 @@
  * Управление данными пользователя, навигация, бонусы
  */
 
-const BOT_API_URL = window.location.origin;
+let BOT_API_URL = 'https://mir-tankov-production.up.railway.app';
+
 
 // ==========================================
 // ДАННЫЕ ПОЛЬЗОВАТЕЛЯ

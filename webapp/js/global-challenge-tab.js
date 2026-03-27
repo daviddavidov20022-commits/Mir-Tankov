@@ -879,16 +879,36 @@ async function gcLoadNations() {
     if (_gcNationsLoaded) return;
     const sel = document.getElementById('adminGcTankNation');
     if (!sel) return;
+    
+    // Индикация загрузки
+    sel.innerHTML = '<option value="">⏳ Загрузка наций...</option>';
+    
     try {
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/tank-list`);
         const data = await resp.json();
-        if (!data.nations) return;
+        
+        if (data.error) {
+            console.error('API Error:', data.error);
+            showToast('❌', 'Ошибка API: ' + data.error);
+            sel.innerHTML = '<option value="">⚠️ ' + data.error + '</option>';
+            return;
+        }
+        
+        if (!data.nations) {
+            sel.innerHTML = '<option value="">🌎 Нации не найдены</option>';
+            return;
+        }
+        
         sel.innerHTML = '<option value="">🌍 Любая</option>';
         data.nations.forEach(n => {
             sel.innerHTML += `<option value="${n.id}">${n.name}</option>`;
         });
         _gcNationsLoaded = true;
-    } catch (e) { console.error('Failed to load nations', e); }
+    } catch (e) { 
+        console.error('Failed to load nations', e);
+        showToast('❌', 'Ошибка сети при загрузке наций');
+        sel.innerHTML = '<option value="">❌ Ошибка сети</option>';
+    }
 }
 
 async function gcOnNationChange() {
@@ -906,12 +926,22 @@ async function gcOnNationChange() {
     try {
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/tank-list?nation=${nation}`);
         const data = await resp.json();
+        
+        if (data.error) {
+            showToast('❌', 'Ошибка типов: ' + data.error);
+            classEl.innerHTML = '<option value="">⚠️ ' + data.error + '</option>';
+            return;
+        }
+        
         if (!data.types || !classEl) return;
         classEl.innerHTML = '<option value="">Любой</option>';
         data.types.forEach(t => {
             classEl.innerHTML += `<option value="${t.id}">${t.name}</option>`;
         });
-    } catch (e) { console.error('Failed to load types', e); }
+    } catch (e) { 
+        console.error('Failed to load types', e);
+        showToast('❌', 'Ошибка сети при загрузке типов');
+    }
 }
 
 async function gcOnTankClassChange() {
@@ -928,12 +958,22 @@ async function gcOnTankClassChange() {
     try {
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/tank-list?nation=${nation}&type=${cls}`);
         const data = await resp.json();
+        
+        if (data.error) {
+            showToast('❌', 'Ошибка уровней: ' + data.error);
+            tierEl.innerHTML = '<option value="0">⚠️ ' + data.error + '</option>';
+            return;
+        }
+        
         if (!data.tiers || !tierEl) return;
         tierEl.innerHTML = '<option value="0">Любой</option>';
         data.tiers.forEach(t => {
             tierEl.innerHTML += `<option value="${t.id}">${t.name}</option>`;
         });
-    } catch (e) { console.error('Failed to load tiers', e); }
+    } catch (e) { 
+        console.error('Failed to load tiers', e);
+        showToast('❌', 'Ошибка сети при загрузке уровней');
+    }
 }
 
 async function gcOnTankTierChange() {

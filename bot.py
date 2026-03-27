@@ -5806,7 +5806,16 @@ async def _load_tank_encyclopedia():
                 async with session.get(url) as resp:
                     data = await resp.json()
             
-            if data.get("status") != "ok" or not data.get("data"):
+            if data.get("status") != "ok":
+                err = data.get("error", {})
+                logger.error(f"Lesta API Error while loading tank dictionary: {err}")
+                if not all_tanks:
+                     # Если на первой же странице ошибка — прерываем
+                     break
+                # Если уже что-то загрузили, пробуем следующую или выходим
+                break
+            
+            if not data.get("data"):
                 break
             
             for tid, info in data["data"].items():
@@ -5838,7 +5847,10 @@ async def api_global_challenge_tank_list(request):
     try:
         tanks = await _load_tank_encyclopedia()
         if not tanks:
-            return cors_response({"error": "Не удалось загрузить энциклопедию"}, 500)
+            # Проверяем, есть ли вообще ключи
+            if not LESTA_APP_IDS:
+                return cors_response({"error": "Критическая ошибка: В .env не прописан LESTA_APP_ID. Без API-ключа список танков недоступен."}, 500)
+            return cors_response({"error": "Не удалось загрузить энциклопедию из Lesta API. Проверьте соединение или ключи."}, 500)
         
         nation = request.query.get("nation", "").strip()
         tank_type = request.query.get("type", "").strip()
@@ -7723,6 +7735,9 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", API_PORT)
     await site.start()
     logger.info(f"API сервер запущен на порту {API_PORT}")
+
+    # Предзагрузка энциклопедии танков, чтобы админка открывалась мгновенно
+    asyncio.create_task(_load_tank_encyclopedia())
 
     # Запускаем серверное чтение Twitch чата
     twitch_ch = stream_config.get('twitch', {}).get('channel', 'iserveri')
