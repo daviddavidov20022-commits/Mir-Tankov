@@ -32,28 +32,34 @@ let _gcLastRefreshTime = 0; // throttle refresh-stats
 // LOAD CHALLENGE
 // ============================================================
 async function gcLoadChallenge(forceRefresh) {
-    // Предотвращаем параллельные запросы (причина мерцания)
+    // Предотвращаем параллельные запросы
     if (_gcLoadInProgress) return;
     _gcLoadInProgress = true;
 
-    try {
-        // Всегда проверяем админ-статус ПЕРВЫМ ДЕЛОМ (до загрузки челленджа)
-        if (!isAdmin && myTelegramId) {
-            try {
-                const meResp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
-                const meData = await meResp.json();
-                if (meData.is_admin) {
-                    isAdmin = true;
-                    const adminTab = document.getElementById('adminTab');
-                    if (adminTab) adminTab.style.display = '';
-                }
-            } catch(e) {}
-        }
+    // Убеждаемся, что используем глобальные переменные (для синхронизации с arena.js)
+    if (typeof window.isAdmin !== 'undefined' && !window.isAdmin && (window.myTelegramId || localStorage.getItem('my_telegram_id'))) {
+        const tid = window.myTelegramId || localStorage.getItem('my_telegram_id');
+        try {
+            const meResp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${tid}`);
+            const meData = await meResp.json();
+            if (meData.is_admin) {
+                window.isAdmin = true;
+                if (typeof isAdmin !== 'undefined') isAdmin = true; // Fallback for local scope
+            }
+        } catch(e) { console.error('Admin check failed', e); }
+    }
 
+    try {
+        const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
+        
         // Показываем админ-панель СРАЗУ если админ
-        if (isAdmin) {
+        if (isAdminNow) {
             const adminPanel = document.getElementById('gcAdminPanel');
-            if (adminPanel) adminPanel.style.display = '';
+            if (adminPanel) {
+                adminPanel.style.display = '';
+                // Принудительно убираем display:none если оно там застряло
+                adminPanel.classList.remove('hidden'); 
+            }
             gcLoadNations(); // Load nation dropdown
         }
 
@@ -111,7 +117,7 @@ async function gcLoadChallenge(forceRefresh) {
         }
 
         // Повторно убеждаемся что админ-панель показана
-        if (isAdmin) {
+        if (isAdminNow) {
             const adminPanel = document.getElementById('gcAdminPanel');
             if (adminPanel) adminPanel.style.display = '';
         }
@@ -123,7 +129,7 @@ async function gcLoadChallenge(forceRefresh) {
             gcShowEmpty();
         }
         // Даже при ошибке — показываем admin panel
-        if (isAdmin) {
+        if (isAdminNow) {
             const adminPanel = document.getElementById('gcAdminPanel');
             if (adminPanel) adminPanel.style.display = '';
         }
