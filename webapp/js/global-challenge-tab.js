@@ -12,7 +12,7 @@ const GC_CONDITION_MAP = {
     spotting: { icon: '<img src="img/military/cond_spotting.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Засвет', unit: 'засвета' },
     blocked: { icon: '<img src="img/military/cond_blocked.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Блок', unit: 'блока' },
     wins: { icon: '<img src="img/military/cond_wins.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Победы', unit: 'побед' },
-    combined: { icon: '💥👁', name: 'Суммарка', unit: 'суммарки' },
+    combined: { icon: '<img src="img/military/cond_combined.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Суммарка', unit: 'суммарки' },
 };
 
 let gcCurrentChallenge = null;
@@ -54,6 +54,7 @@ async function gcLoadChallenge(forceRefresh) {
         if (isAdmin) {
             const adminPanel = document.getElementById('gcAdminPanel');
             if (adminPanel) adminPanel.style.display = '';
+            gcLoadNations(); // Load nation dropdown
         }
 
         // Обновляем статистику в фоне НЕ ЧАЩЕ раз в 30 секунд
@@ -871,87 +872,113 @@ function gcUpdateCondSelectedBadges() {
 }
 
 // === Vehicle filter admin functions ===
-function gcOnTankClassChange() {
-    const sel = document.getElementById('adminGcTankClass');
-    gcAdminTankClass = sel.value || null;
-    // Если выбрали класс — сбросить конкретный танк
-    if (gcAdminTankClass) gcClearTank();
+// Cascading selectors: Нация → Класс → Уровень → Танк
+let _gcNationsLoaded = false;
+
+async function gcLoadNations() {
+    if (_gcNationsLoaded) return;
+    const sel = document.getElementById('adminGcTankNation');
+    if (!sel) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/tank-list`);
+        const data = await resp.json();
+        if (!data.nations) return;
+        sel.innerHTML = '<option value="">🌍 Любая</option>';
+        data.nations.forEach(n => {
+            sel.innerHTML += `<option value="${n.id}">${n.name}</option>`;
+        });
+        _gcNationsLoaded = true;
+    } catch (e) { console.error('Failed to load nations', e); }
 }
 
-function gcOnTankTierChange() {
-    const sel = document.getElementById('adminGcTankTier');
-    gcAdminTankTier = parseInt(sel.value) || null;
-    // Если выбрали уровень — сбросить конкретный танк
-    if (gcAdminTankTier) gcClearTank();
+async function gcOnNationChange() {
+    const nation = document.getElementById('adminGcTankNation')?.value || '';
+    const classEl = document.getElementById('adminGcTankClass');
+    const tierEl = document.getElementById('adminGcTankTier');
+    const tankEl = document.getElementById('adminGcTankPicker');
+    if (classEl) classEl.innerHTML = '<option value="">Любой</option>';
+    if (tierEl) tierEl.innerHTML = '<option value="0">Любой</option>';
+    if (tankEl) { tankEl.innerHTML = ''; tankEl.style.display = 'none'; }
+    gcAdminTankClass = null;
+    gcAdminTankTier = null;
+    gcClearTank();
+    if (!nation) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/tank-list?nation=${nation}`);
+        const data = await resp.json();
+        if (!data.types || !classEl) return;
+        classEl.innerHTML = '<option value="">Любой</option>';
+        data.types.forEach(t => {
+            classEl.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+        });
+    } catch (e) { console.error('Failed to load types', e); }
 }
 
-let _gcSearchTimeout = null;
-async function gcSearchTank(query) {
-    const resultsEl = document.getElementById('adminGcTankResults');
-    if (!resultsEl) return;
-    
-    if (!query || query.length < 2) {
-        resultsEl.innerHTML = '';
-        return;
-    }
-    
-    // Debounce 300ms
-    clearTimeout(_gcSearchTimeout);
-    _gcSearchTimeout = setTimeout(async () => {
-        try {
-            resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:4px">🔄 Поиск...</div>';
-            const resp = await fetch(`${BOT_API_URL}/api/global-challenge/search-tanks?search=${encodeURIComponent(query)}&limit=10`);
-            const data = await resp.json();
-            
-            if (data.status !== 'ok' || !data.data) {
-                resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#ff6b6b;padding:4px">❌ Ошибка поиска</div>';
-                return;
-            }
-            
-            const classNames = { heavyTank: '🛡️ТТ', mediumTank: '⚙️СТ', lightTank: '🏎️ЛТ', 'AT-SPG': '🎯ПТ', SPG: '💣САУ' };
-            const tierLabels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-            
-            const tanks = Object.entries(data.data)
-                .filter(([_, v]) => v !== null)
-                .map(([id, v]) => ({ id: parseInt(id), ...v }))
-                .sort((a, b) => (b.tier || 0) - (a.tier || 0));
-            
-            if (!tanks.length) {
-                resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:4px">Ничего не найдено</div>';
-                return;
-            }
-            
-            resultsEl.innerHTML = tanks.map(t => `
-                <div onclick="gcSelectTank(${t.id}, '${(t.name || '').replace(/'/g, "\\'")}', '${t.type || ''}', ${t.tier || 0})" 
-                     style="padding:6px 8px;font-size:0.6rem;color:#e0e0e0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:6px;transition:background 0.15s"
-                     onmouseover="this.style.background='rgba(200,170,110,0.08)'" onmouseout="this.style.background=''">
-                    <span style="color:#C8AA6E;font-weight:600">${tierLabels[t.tier] || '?'}</span>
-                    <span>${classNames[t.type] || ''}</span>
-                    <span style="flex:1">${t.name || 'Неизвестно'}</span>
-                </div>
-            `).join('');
-        } catch (e) {
-            resultsEl.innerHTML = '<div style="font-size:0.55rem;color:#ff6b6b;padding:4px">❌ Нет подключения</div>';
+async function gcOnTankClassChange() {
+    const nation = document.getElementById('adminGcTankNation')?.value || '';
+    const cls = document.getElementById('adminGcTankClass')?.value || '';
+    gcAdminTankClass = cls || null;
+    const tierEl = document.getElementById('adminGcTankTier');
+    const tankEl = document.getElementById('adminGcTankPicker');
+    if (tierEl) tierEl.innerHTML = '<option value="0">Любой</option>';
+    if (tankEl) { tankEl.innerHTML = ''; tankEl.style.display = 'none'; }
+    gcAdminTankTier = null;
+    gcClearTank();
+    if (!nation || !cls) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/tank-list?nation=${nation}&type=${cls}`);
+        const data = await resp.json();
+        if (!data.tiers || !tierEl) return;
+        tierEl.innerHTML = '<option value="0">Любой</option>';
+        data.tiers.forEach(t => {
+            tierEl.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+        });
+    } catch (e) { console.error('Failed to load tiers', e); }
+}
+
+async function gcOnTankTierChange() {
+    const nation = document.getElementById('adminGcTankNation')?.value || '';
+    const cls = document.getElementById('adminGcTankClass')?.value || '';
+    const tier = parseInt(document.getElementById('adminGcTankTier')?.value || '0');
+    gcAdminTankTier = tier || null;
+    const tankEl = document.getElementById('adminGcTankPicker');
+    if (tankEl) { tankEl.innerHTML = ''; tankEl.style.display = 'none'; }
+    gcClearTank();
+    if (!nation || !cls || !tier) return;
+    try {
+        if (tankEl) {
+            tankEl.style.display = '';
+            tankEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:6px;text-align:center">⏳ Загрузка...</div>';
         }
-    }, 300);
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/tank-list?nation=${nation}&type=${cls}&tier=${tier}`);
+        const data = await resp.json();
+        if (!data.tanks || !tankEl) return;
+        if (!data.tanks.length) {
+            tankEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:6px;text-align:center">Нет танков</div>';
+            return;
+        }
+        const classNames = { heavyTank: '🛡️', mediumTank: '⚙️', lightTank: '🏎️', 'AT-SPG': '🎯', SPG: '💣' };
+        tankEl.innerHTML = data.tanks.map(t => `
+            <div onclick="gcSelectTank(${t.id}, '${(t.name || '').replace(/'/g, "\\'")}', '${t.type || ''}', ${t.tier || 0})" 
+                 style="padding:7px 10px;font-size:0.65rem;color:#e0e0e0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:6px;transition:background 0.15s;border-radius:6px"
+                 onmouseover="this.style.background='rgba(200,170,110,0.1)'" onmouseout="this.style.background=''">
+                <span>${classNames[t.type] || ''}</span>
+                <span style="flex:1;font-weight:500">${t.name}</span>
+            </div>
+        `).join('');
+    } catch (e) {
+        if (tankEl) tankEl.innerHTML = '<div style="font-size:0.55rem;color:#ff6b6b;padding:6px;text-align:center">❌ Ошибка</div>';
+    }
 }
 
 function gcSelectTank(tankId, name, type, tier) {
     gcAdminTankId = tankId;
     gcAdminTankName = name;
-    gcAdminTankClass = type || null;
-    gcAdminTankTier = tier || null;
-    
-    // Update UI
-    const resultsEl = document.getElementById('adminGcTankResults');
+    const tankEl = document.getElementById('adminGcTankPicker');
     const selectedEl = document.getElementById('adminGcTankSelected');
-    const searchEl = document.getElementById('adminGcTankSearch');
-    if (resultsEl) resultsEl.innerHTML = '';
-    if (searchEl) searchEl.value = '';
-    
+    if (tankEl) tankEl.style.display = 'none';
     const classNames = { heavyTank: '🛡️ТТ', mediumTank: '⚙️СТ', lightTank: '🏎️ЛТ', 'AT-SPG': '🎯ПТ', SPG: '💣САУ' };
     const tierLabels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-    
     if (selectedEl) {
         selectedEl.innerHTML = `
             <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;font-size:0.65rem">
@@ -962,13 +989,6 @@ function gcSelectTank(tankId, name, type, tier) {
             </div>
         `;
     }
-    
-    // Sync dropdowns
-    const classEl = document.getElementById('adminGcTankClass');
-    const tierEl = document.getElementById('adminGcTankTier');
-    if (classEl) classEl.value = type || '';
-    if (tierEl) tierEl.value = tier || '0';
-    
     showToast(`🪖 Выбран: ${name}`);
 }
 

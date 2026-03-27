@@ -5507,16 +5507,29 @@ async def _do_refresh_stats():
                         if rows:
                             log_total = 0
                             log_conds = {c: 0 for c in ch_conditions}
+                            # Маппинг условия на колонку в gc_battle_log
+                            LOG_COL_MAP = {
+                                "damage": "damage",
+                                "frags": "frags",
+                                "xp": "xp",
+                                "spotting": "spotting",
+                                "blocked": "blocked",
+                                "wins": "wins"
+                            }
                             for r in rows:
                                 for c in ch_conditions:
-                                    val = r.get(c, 0) or 0
+                                    if c == "combined":
+                                        val = (r["damage"] or 0) + (r["spotting"] or 0)
+                                    else:
+                                        col = LOG_COL_MAP.get(c, "damage")
+                                        val = r[col] or 0
                                     log_conds[c] += val
                                     log_total += val
                             new_value = log_total
                             condition_values_json = json.dumps(log_conds)
                             new_battles = len(rows)
                 except Exception as e:
-                    logger.warning(f"GC battle-log recalc error: {e}")
+                    logger.warning(f"GC battle-log recalc error for {p['nickname']}: {e}")
 
             # Update participant record
             with get_db() as conn_up:
@@ -5760,6 +5773,125 @@ async def api_global_challenge_search_tanks(request):
     except Exception as e:
         logger.error(f"API search-tanks error: {e}")
         return cors_response({"error": str(e), "status": "error"}, 500)
+
+# Кеш энциклопедии танков (загружается один раз)
+_tank_encyclopedia_cache = None
+_tank_encyclopedia_loading = False
+
+async def _load_tank_encyclopedia():
+    """Загрузить ВСЮ энциклопедию танков в память (один раз)"""
+    global _tank_encyclopedia_cache, _tank_encyclopedia_loading
+    if _tank_encyclopedia_cache is not None:
+        return _tank_encyclopedia_cache
+    if _tank_encyclopedia_loading:
+        # Ждём пока другой запрос загрузит
+        import asyncio
+        for _ in range(50):
+            await asyncio.sleep(0.2)
+            if _tank_encyclopedia_cache is not None:
+                return _tank_encyclopedia_cache
+        return {}
+    
+    _tank_encyclopedia_loading = True
+    import aiohttp
+    all_tanks = {}
+    try:
+        timeout = aiohttp.ClientTimeout(total=30)
+        page = 1
+        while True:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                url = (f"https://api.tanki.su/wot/encyclopedia/vehicles/"
+                       f"?application_id={get_lesta_app_id()}"
+                       f"&fields=name,tier,type,tank_id,nation&page_no={page}&limit=100")
+                async with session.get(url) as resp:
+                    data = await resp.json()
+            
+            if data.get("status") != "ok" or not data.get("data"):
+                break
+            
+            for tid, info in data["data"].items():
+                if info is not None:
+                    all_tanks[tid] = info
+            
+            meta = data.get("meta", {})
+            total_pages = meta.get("page_total", 1)
+            if page >= total_pages:
+                break
+            page += 1
+        
+        _tank_encyclopedia_cache = all_tanks
+        logger.info(f"Tank encyclopedia loaded: {len(all_tanks)} tanks")
+    except Exception as e:
+        logger.error(f"Failed to load tank encyclopedia: {e}")
+        _tank_encyclopedia_loading = False
+        return {}
+    
+    _tank_encyclopedia_loading = False
+    return all_tanks
+
+
+async def api_global_challenge_tank_list(request):
+    """GET /api/global-challenge/tank-list?nation=ussr&type=heavyTank&tier=10
+    Возвращает список танков по фильтрам (нация/класс/уровень).
+    Без параметров — возвращает доступные нации.
+    """
+    try:
+        tanks = await _load_tank_encyclopedia()
+        if not tanks:
+            return cors_response({"error": "Не удалось загрузить энциклопедию"}, 500)
+        
+        nation = request.query.get("nation", "").strip()
+        tank_type = request.query.get("type", "").strip()
+        tier = int(request.query.get("tier", 0))
+        
+        # Если ничего не выбрано — вернуть список наций
+        if not nation:
+            nations = set()
+            for t in tanks.values():
+                if t and t.get("nation"):
+                    nations.add(t["nation"])
+            nation_labels = {
+                "ussr": "🇷🇺 СССР", "germany": "🇩🇪 Германия", "usa": "🇺🇸 США",
+                "france": "🇫🇷 Франция", "uk": "🇬🇧 Британия", "china": "🇨🇳 Китай",
+                "japan": "🇯🇵 Япония", "czech": "🇨🇿 Чехословакия", "sweden": "🇸🇪 Швеция",
+                "poland": "🇵🇱 Польша", "italy": "🇮🇹 Италия", "israel": "🇮🇱 Израиль",
+                "mongolia": "🇲🇳 Монголия",
+            }
+            result = [{"id": n, "name": nation_labels.get(n, n)} for n in sorted(nations)]
+            return cors_response({"nations": result})
+        
+        # Фильтруем по нации
+        filtered = [t for t in tanks.values() if t and t.get("nation") == nation]
+        
+        # Если нет класса — вернуть доступные классы для этой нации
+        if not tank_type:
+            types = set(t.get("type") for t in filtered if t.get("type"))
+            type_labels = {
+                "heavyTank": "🛡️ ТТ", "mediumTank": "⚙️ СТ", "lightTank": "🏎️ ЛТ",
+                "AT-SPG": "🎯 ПТ-САУ", "SPG": "💣 САУ"
+            }
+            result = [{"id": tp, "name": type_labels.get(tp, tp)} for tp in sorted(types)]
+            return cors_response({"types": result})
+        
+        # Фильтруем по классу
+        filtered = [t for t in filtered if t.get("type") == tank_type]
+        
+        # Если нет уровня — вернуть доступные уровни
+        if not tier:
+            tiers = sorted(set(t.get("tier", 0) for t in filtered if t.get("tier")))
+            tier_labels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI']
+            result = [{"id": t, "name": tier_labels[t] if t < len(tier_labels) else str(t)} for t in tiers]
+            return cors_response({"tiers": result})
+        
+        # Финальный фильтр — конкретные танки
+        filtered = [t for t in filtered if t.get("tier") == tier]
+        filtered.sort(key=lambda t: t.get("name", ""))
+        result = [{"id": t["tank_id"], "name": t["name"], "tier": t["tier"], "type": t["type"]} for t in filtered]
+        return cors_response({"tanks": result})
+        
+    except Exception as e:
+        logger.error(f"API tank-list error: {e}")
+        return cors_response({"error": str(e)}, 500)
 
 async def api_global_challenge_history(request):
     """GET /api/global-challenge/history?telegram_id=X — завершенные челленджи (с личным результатом если указан TG ID)"""
@@ -7467,6 +7599,7 @@ def create_api_app():
     app.router.add_get("/api/global-challenge/my-history", api_global_challenge_my_history)
     app.router.add_get("/api/global-challenge/battle-log", api_global_challenge_battle_log)
     app.router.add_get("/api/global-challenge/search-tanks", api_global_challenge_search_tanks)
+    app.router.add_get("/api/global-challenge/tank-list", api_global_challenge_tank_list)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)
