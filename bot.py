@@ -5777,6 +5777,7 @@ async def api_global_challenge_search_tanks(request):
 # Кеш энциклопедии танков (загружается один раз)
 _tank_encyclopedia_cache = None
 _tank_encyclopedia_loading = False
+_last_lesta_error = ""  # Для отладки ошибок ключей
 
 async def _load_tank_encyclopedia():
     """Загрузить ВСЮ энциклопедию танков в память (один раз)"""
@@ -5808,6 +5809,8 @@ async def _load_tank_encyclopedia():
             
             if data.get("status") != "ok":
                 err = data.get("error", {})
+                global _last_lesta_error
+                _last_lesta_error = f"{err.get('message', 'Unknown error')} (code: {err.get('code', '?')})"
                 logger.error(f"Lesta API Error while loading tank dictionary: {err}")
                 if not all_tanks:
                      # Если на первой же странице ошибка — прерываем
@@ -5850,7 +5853,7 @@ async def api_global_challenge_tank_list(request):
             # Проверяем, есть ли вообще ключи
             if not LESTA_APP_IDS:
                 return cors_response({"error": "Критическая ошибка: В .env не прописан LESTA_APP_ID. Без API-ключа список танков недоступен."}, 500)
-            return cors_response({"error": "Не удалось загрузить энциклопедию из Lesta API. Проверьте соединение или ключи."}, 500)
+            return cors_response({"error": f"Ошибка Lesta API: {_last_lesta_error or 'Нет связи с сервером Lesta'}. Проверьте ключи в настройках Railway."}, 500)
         
         nation = request.query.get("nation", "").strip()
         tank_type = request.query.get("type", "").strip()
