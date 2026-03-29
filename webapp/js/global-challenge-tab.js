@@ -346,7 +346,6 @@ function gcRenderEnrollmentList(participants) {
     const titleEl = container.querySelector('.gc-lb-title');
     if (titleEl) titleEl.innerHTML = `📋 Участники (${participants.length})`;
 
-    const listEl = container.querySelector('.gc-lb-list') || container;
     const items = participants.map((p, i) => {
         const nick = p.nickname || 'Танкист';
         const myTgId = myTelegramId || localStorage.getItem('my_telegram_id');
@@ -364,16 +363,19 @@ function gcRenderEnrollmentList(participants) {
             </div>`;
     }).join('');
 
-    // Find or create list container
-    const existing = container.querySelector('.gc-lb-items');
-    if (existing) {
-        existing.innerHTML = items || '<div class="gc-lb-empty">Пока никто не записался</div>';
-    } else {
-        const listDiv = document.createElement('div');
-        listDiv.className = 'gc-lb-items';
-        listDiv.innerHTML = items || '<div class="gc-lb-empty">Пока никто не записался</div>';
+    // Always use gc-lb-list div to render into
+    let listDiv = container.querySelector('.gc-lb-list');
+    if (!listDiv) {
+        // Create if missing
+        listDiv = document.createElement('div');
+        listDiv.className = 'gc-lb-list';
         container.appendChild(listDiv);
     }
+    // Remove any old gc-lb-items wrapper to avoid duplication
+    const oldItems = container.querySelector('.gc-lb-items');
+    if (oldItems) oldItems.remove();
+
+    listDiv.innerHTML = items || '<div class="gc-lb-empty">Пока никто не записался</div>';
 }
 
 // ============================================================
@@ -1007,12 +1009,23 @@ async function gcJoinChallenge() {
 
         if (data.success) {
             showToast(data.message || `🎯 Вы вступили! Условия приняты — вперёд!`);
-            btn.textContent = '✅ ВЫ УЧАСТВУЕТЕ — статистика обновляется автоматически';
-            gcLoadChallenge();
+            btn.disabled = true;
+            btn.textContent = '✅ ВЫ УЧАСТВУЕТЕ';
+            btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+            setTimeout(() => gcLoadChallenge(true), 700); // Small delay for DB WAL sync
         } else {
-            showToast(`❌ ${data.error}`);
-            btn.disabled = false;
-            btn.textContent = '⚔️ ВСТУПИТЬ В ЧЕЛЛЕНДЖ';
+            // If "already joined" — show as enrolled, not an error
+            if (data.error && (data.error.includes('уже участвуете') || data.error.includes('уже записан'))) {
+                btn.disabled = true;
+                btn.textContent = '✅ ВЫ УЖЕ ЗАПИСАНЫ';
+                btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+                showToast('✅ Вы уже участвуете в челлендже!');
+                setTimeout(() => gcLoadChallenge(true), 700);
+            } else {
+                showToast(`❌ ${data.error}`);
+                btn.disabled = false;
+                btn.textContent = '⚔️ ВСТУПИТЬ В ЧЕЛЛЕНДЖ';
+            }
         }
     } catch (e) {
         showToast('❌ Нет подключения');
