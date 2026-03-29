@@ -247,7 +247,7 @@
                 </div>
             </div>
 
-            <div class="feature-card" onclick="openGame('global-challenge.html')">
+            <div class="feature-card" onclick="openGame('challenges.html?tab=challenge')">
                 <span class="feature-card__badge feature-card__badge--premium">Premium</span>
                 <div class="feature-card__icon" style="background:rgba(231,76,60,0.12);">
                     <img src="img/icons/challenge.png" alt="Челленджи">
@@ -613,11 +613,12 @@
                         livePreview.classList.add('is-live');
                         const iframe = document.getElementById('livePreviewIframe');
                         if (iframe && !iframe.src) {
-                            // Pick best embed source
-                            if (data.twitch && data.twitch.live) {
+                            // Pick best embed source (VK Play first — works in Russia)
+                            if (data.vkplay && data.vkplay.live) {
+                                iframe.src = `https://vkplay.live/iserveri/embed`;
+                            } else if (data.twitch && data.twitch.live) {
                                 iframe.src = `https://player.twitch.tv/?channel=serverenok&parent=${window.location.hostname}&muted=true`;
                             } else if (data.youtube && data.youtube.live) {
-                                // YouTube live embed via channel
                                 iframe.src = `https://www.youtube.com/embed/live_stream?channel=UClMCysoDnCFN2oQUu9fcQRg&autoplay=1&mute=1`;
                             }
                         }

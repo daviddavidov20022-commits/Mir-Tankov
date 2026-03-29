@@ -64,6 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (opponent && opponentId) {
         selectOpponent(opponent, parseInt(opponentId), null);
     }
+
+    // Auto-switch to Global Challenge tab if coming from Челленджи card
+    const tab = params.get('tab');
+    if (tab === 'challenge') {
+        const globalTabBtn = document.querySelectorAll('.arena-tab')[1]; // "Общий" tab
+        if (globalTabBtn) {
+            setTimeout(() => switchTab('global', globalTabBtn), 100);
+        }
+    }
 });
 
 async function loadMyProfile() {
