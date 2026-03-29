@@ -314,20 +314,24 @@ function gcShowActive(ch) {
             const totalPlayers = (ch.leaderboard || []).length;
             const donePlayers = (ch.leaderboard || []).filter(p => p.battles_played >= ch.max_battles).length;
             
+            
             if (allDone && totalPlayers > 0) {
                 const finishDiv = document.createElement('div');
                 finishDiv.style.cssText = 'padding:12px 0;';
+                const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
                 finishDiv.innerHTML = `
                     <div style="text-align:center;margin-bottom:8px;font-size:0.7rem;color:#4ade80">
                         ✅ Все ${totalPlayers} участников отыграли ${ch.max_battles} боёв!
                     </div>
-                    <button onclick="gcForceFinishAndWheel(${ch.id})" id="gcFinishWheelBtn"
+                    ${isAdminNow ? `<button onclick="gcForceFinishAndWheel(${ch.id})" id="gcFinishWheelBtn"
                         style="width:100%;padding:16px;border:none;border-radius:14px;
                         font-family:'Russo One',sans-serif;font-size:0.9rem;cursor:pointer;
                         background:linear-gradient(135deg,#f5be0b,#C8AA6E);color:#0a0e14;
                         letter-spacing:1px;box-shadow:0 6px 24px rgba(245,190,11,0.3)">
                         🎡 ЗАВЕРШИТЬ И ЗАПУСТИТЬ РУЛЕТКУ
-                    </button>
+                    </button>` : `<div style="text-align:center;font-size:0.65rem;color:#5A6577">
+                        ⏳ Ожидание завершения администратором...
+                    </div>`}
                 `;
                 joinBtn.parentElement.insertBefore(finishDiv, joinBtn.nextSibling);
             } else if (totalPlayers > 0) {
