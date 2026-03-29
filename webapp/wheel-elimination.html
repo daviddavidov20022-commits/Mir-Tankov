@@ -689,7 +689,15 @@
         const modal = document.createElement('div');
         modal.className = 'wh-winner-modal';
         modal.innerHTML = `
-            <div class="wh-winner-card">
+            <div class="wh-winner-card" style="position:relative">
+                <button onclick="this.closest('.wh-winner-modal').remove()" 
+                    style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);
+                    border:1px solid rgba(255,255,255,0.2);border-radius:50%;width:32px;height:32px;
+                    color:#999;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;
+                    justify-content:center;transition:all 0.2s"
+                    onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.1)'"
+                >✕</button>
                 <div class="wh-winner-card__crown">👑</div>
                 <div class="wh-winner-card__title">ПОБЕДИТЕЛЬ!</div>
                 <div class="wh-winner-card__name">${nick}</div>
@@ -697,6 +705,12 @@
                 <div style="margin-top:20px;font-size:0.65rem;color:#5A6577">
                     Поздравляем! Колесо фортуны выбрало победителя!
                 </div>
+                <button onclick="history.back()" 
+                    style="margin-top:20px;padding:12px 32px;background:linear-gradient(135deg,#f5be0b,#C8AA6E);
+                    border:none;border-radius:12px;color:#0a0e14;font-family:'Russo One',sans-serif;
+                    font-size:0.8rem;cursor:pointer;letter-spacing:1px">
+                    ← Назад
+                </button>
             </div>
         `;
         document.body.appendChild(modal);
