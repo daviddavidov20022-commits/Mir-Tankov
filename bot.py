@@ -5352,7 +5352,7 @@ async def api_global_challenge_join(request):
 
         with get_db() as conn:
             ch = conn.execute(
-                "SELECT * FROM global_challenges WHERE id = ? AND status = 'active'",
+                "SELECT * FROM global_challenges WHERE id = ? AND status IN ('active', 'enrollment')",
                 (challenge_id,)
             ).fetchone()
             if not ch:
