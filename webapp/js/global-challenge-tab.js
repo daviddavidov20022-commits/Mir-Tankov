@@ -246,16 +246,17 @@ function gcShowActive(ch) {
 
     // Timer
     const timerContainer = document.getElementById('gcTimerContainer');
+    const isBattleChallenge = !ch.challenge_duration_minutes || ch.challenge_duration_minutes <= 0;
     if (timerContainer) {
-        // Hide timer if enrollment is over and no duration is set
-        if (ch.status === 'active' && (!ch.duration_minutes || !ch.ends_at)) {
+        // Hide timer if challenge is active and based on battle count (not time)
+        if (ch.status === 'active' && isBattleChallenge) {
             timerContainer.style.display = 'none';
         } else {
             timerContainer.style.display = '';
-            gcStartTimer(ch.ends_at, ch.duration_minutes);
+            gcStartTimer(ch.ends_at, ch.challenge_duration_minutes || ch.duration_minutes, ch.status === 'enrollment');
         }
-    } else {
-        gcStartTimer(ch.ends_at, ch.duration_minutes);
+    } else if (!isBattleChallenge || ch.status === 'enrollment') {
+        gcStartTimer(ch.ends_at, ch.challenge_duration_minutes || ch.duration_minutes, ch.status === 'enrollment');
     }
 
     // Leaderboard
