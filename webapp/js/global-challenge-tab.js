@@ -319,7 +319,8 @@ function gcShowEnrollment(ch) {
 
     // Timer → countdown to enrollment end
     const enrollmentEnd = ch.enrollment_ends_at || ch.ends_at;
-    gcStartTimer(enrollmentEnd, ch.created_at, true); // true = enrollment phase
+    const enrollDuration = ch.enrollment_duration_minutes || ch.duration_minutes || 60;
+    gcStartTimer(enrollmentEnd, enrollDuration, true); // true = enrollment phase
 
     // Stats bar  
     const maxBattles = ch.max_battles || 0;
@@ -659,8 +660,14 @@ function gcShowFinished(ch) {
 function gcStartTimer(endsAtStr, durationMinutes, isEnrollment) {
     if (gcTimerInterval) clearInterval(gcTimerInterval);
 
-    const endsAt = new Date(endsAtStr);
-    const totalSeconds = (durationMinutes || 60) * 60;
+    // Robust Date parsing: Replace space with 'T' and add 'Z' if missing for UTC
+    let dateStr = String(endsAtStr || '');
+    if (dateStr && !dateStr.includes('T') && dateStr.includes(' ')) dateStr = dateStr.replace(' ', 'T');
+    if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+')) dateStr += 'Z';
+    
+    const endsAt = new Date(dateStr);
+    const durMins = parseInt(durationMinutes) || 60;
+    const totalSeconds = durMins * 60;
     const circumference = 2 * Math.PI * 90;
 
     const progressEl = document.getElementById('gcTimerProgress');
@@ -675,8 +682,13 @@ function gcStartTimer(endsAtStr, durationMinutes, isEnrollment) {
 
     function tick() {
         const now = new Date();
-        const diff = Math.max(0, Math.floor((endsAt - now) / 1000));
+        const diff = Math.floor((endsAt - now) / 1000);
 
+        if (isNaN(diff)) {
+            valueEl.textContent = '--:--';
+            return;
+        }
+        
         if (diff <= 0) {
             valueEl.textContent = '00:00';
             progressEl.style.strokeDashoffset = circumference;

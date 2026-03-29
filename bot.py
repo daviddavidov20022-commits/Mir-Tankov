@@ -262,7 +262,7 @@ async def cmd_start(message: types.Message):
 
     if sub and sub.get("active") or is_admin:
         # === ПОДПИСЧИК / АДМИН — полный доступ ===
-        user_webapp_url = f"{WEBAPP_URL}?v=26&telegram_id={message.from_user.id}"
+        user_webapp_url = f"{WEBAPP_URL}?v=27&telegram_id={message.from_user.id}"
         reply_keyboard = ReplyKeyboardMarkup(
             keyboard=[
                 [
@@ -5241,8 +5241,13 @@ async def api_global_challenge_active(request):
                         entry["condition_values"] = None
             ch["leaderboard"] = lb
 
-            if ch.get("ends_at") and not str(ch["ends_at"]).endswith("Z") and "+" not in str(ch["ends_at"]):
-                ch["ends_at"] = str(ch["ends_at"]) + "Z"
+            # Ensure all dates are properly formatted with Z suffix for JS
+            for date_key in ["ends_at", "enrollment_ends_at", "created_at", "finished_at"]:
+                val = ch.get(date_key)
+                if val and not str(val).endswith("Z") and "+" not in str(val):
+                    ch[date_key] = str(val).replace(" ", "T") + "Z"
+                elif val and " " in str(val):
+                    ch[date_key] = str(val).replace(" ", "T")
 
         return cors_response({"challenge": ch, "status": ch.get("status", "active")})
     except Exception as e:
