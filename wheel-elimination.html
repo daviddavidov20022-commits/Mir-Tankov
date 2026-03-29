@@ -361,6 +361,7 @@
     <script>
     var BOT_API_URL = localStorage.getItem('bot_api_url') || 
         (location.hostname === 'localhost' ? 'http://localhost:8443' : 'https://mir-tankov-production.up.railway.app');
+    var myTelegramId = localStorage.getItem('my_telegram_id') || '';
 
     var COLORS_TOP = ['#f5be0b', '#FFD700', '#C8AA6E', '#f59e0b', '#eab308'];
     var COLORS_OTHER = ['#1e293b', '#334155', '#1e293b', '#334155', '#0f172a'];
@@ -408,7 +409,10 @@
             renderEliminated();
             drawWheel();
 
-            if (participants.length === 1) {
+            // Check if wheel already completed
+            if (data.challenge.wheel_spun === 1 && data.challenge.wheel_winner_nickname) {
+                showWinnerCompleted(data.challenge.wheel_winner_nickname, data.challenge.prize_description);
+            } else if (participants.length === 1) {
                 showWinner(participants[0]);
             }
         })
@@ -709,6 +713,40 @@
         var prize = (wheelData && wheelData.challenge && wheelData.challenge.prize_description) || 'ПРИЗ';
 
         document.getElementById('whSpinBtn').style.display = 'none';
+
+        // IMPORTANT: Save winner to server → status becomes 'completed'
+        var params = new URLSearchParams(location.search);
+        var cid = params.get('challenge_id');
+        fetch(BOT_API_URL + '/api/global-challenge/wheel-winner', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                admin_telegram_id: parseInt(myTelegramId) || 0,
+                challenge_id: parseInt(cid) || 0,
+                winner_telegram_id: winner.telegram_id
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            console.log('Winner saved:', d);
+        })
+        .catch(function(e) {
+            console.error('Failed to save winner:', e);
+        });
+
+        showWinnerModal(nick, prize);
+    }
+
+    // Show winner when page loads and wheel was already completed
+    function showWinnerCompleted(winnerNick, prizeDesc) {
+        var nick = winnerNick || 'Танкист';
+        var prize = prizeDesc || 'ПРИЗ';
+        document.getElementById('whSpinBtn').style.display = 'none';
+        showWinnerModal(nick, prize);
+    }
+
+    function showWinnerModal(nick, prize) {
+        launchConfetti();
 
         var modal = document.createElement('div');
         modal.className = 'winner-overlay';

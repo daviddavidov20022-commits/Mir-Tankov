@@ -470,6 +470,12 @@ function gcRenderEnrollmentList(participants) {
 function gcShowWheelPending(ch) {
     gcCurrentChallenge = ch;
 
+    // If wheel was already spun and winner determined → show as completed
+    if (ch.wheel_spun === 1 && ch.wheel_winner_nickname) {
+        gcShowWheelCompleted(ch);
+        return;
+    }
+
     document.getElementById('gcEmpty').style.display = 'none';
     document.getElementById('gcActive').style.display = 'none';
     document.getElementById('gcFinished').style.display = '';
@@ -533,6 +539,81 @@ function gcShowWheelPending(ch) {
                     ⏳ Ожидание запуска колеса фортуны администратором...
                 </div>
             `}
+        </div>`;
+}
+
+// ============================================================
+// WHEEL COMPLETED — winner was determined
+// ============================================================
+function gcShowWheelCompleted(ch) {
+    gcCurrentChallenge = ch;
+
+    document.getElementById('gcEmpty').style.display = 'none';
+    document.getElementById('gcActive').style.display = 'none';
+    document.getElementById('gcFinished').style.display = '';
+
+    const container = document.getElementById('gcFinished');
+    const condInfo = GC_CONDITION_MAP[ch.condition?.split(',')[0]] || GC_CONDITION_MAP.damage;
+    const prizeDesc = ch.prize_description || 'ПРИЗ';
+    const winnerNick = ch.wheel_winner_nickname || 'Победитель';
+    const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
+
+    container.innerHTML = `
+        <div class="gc-wheel-pending" style="animation: widgetAppear 0.5s ease">
+            <!-- Winner Header -->
+            <div style="text-align:center;padding:30px 20px 16px">
+                <div style="font-size:3.5rem;filter:drop-shadow(0 0 20px rgba(245,190,11,0.5))">👑</div>
+                <div style="font-family:'Russo One',sans-serif;font-size:1.1rem;
+                     background:linear-gradient(135deg,#f5be0b,#C8AA6E,#f59e0b);
+                     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                     margin:12px 0 4px;letter-spacing:2px">КОЛЕСО ЗАВЕРШЕНО</div>
+                <div style="font-size:0.72rem;color:#5A6577">Победитель определён!</div>
+            </div>
+
+            <!-- Winner Card -->
+            <div style="margin:0 20px 16px;padding:20px;background:linear-gradient(145deg,rgba(245,190,11,0.15),rgba(200,170,110,0.05));
+                 border:1px solid rgba(245,190,11,0.3);border-radius:16px;text-align:center">
+                <div style="font-size:2rem;margin-bottom:6px">🏆</div>
+                <div style="font-family:'Russo One',sans-serif;font-size:1.3rem;color:#fff;
+                     text-shadow:0 0 20px rgba(245,190,11,0.4)">${winnerNick}</div>
+                <div style="font-size:0.65rem;color:#C8AA6E;margin-top:6px;letter-spacing:2px;text-transform:uppercase">
+                    Победитель рулетки
+                </div>
+                <div style="margin-top:12px;padding:10px 16px;background:rgba(245,190,11,0.08);
+                     border-radius:12px;border:1px solid rgba(245,190,11,0.15)">
+                    <div style="font-family:'Russo One',sans-serif;font-size:0.85rem;color:#f5be0b">
+                        🎁 ${prizeDesc}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div style="padding:0 20px 12px">
+                <div style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#C8AA6E;margin-bottom:8px">
+                    📊 ФИНАЛЬНАЯ ТАБЛИЦА
+                </div>
+                ${gcRenderWheelLeaderboard(ch.leaderboard || [], ch.prize_top_count || 10, condInfo)}
+            </div>
+
+            <!-- Status -->
+            <div style="text-align:center;padding:12px 20px 20px">
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;
+                     background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);
+                     border-radius:50px;font-size:0.7rem;color:#22c55e;font-weight:600">
+                    ✅ Челлендж завершён
+                </div>
+            </div>
+
+            ${isAdminNow ? `
+                <div style="padding:0 20px 20px">
+                    <button onclick="gcDeleteChallenge()" id="adminGcDeleteBtn" data-id="${ch.id}"
+                        style="width:100%;padding:12px;border:1px solid rgba(239,68,68,0.3);
+                        border-radius:12px;background:rgba(239,68,68,0.08);color:#ef4444;
+                        font-size:0.7rem;cursor:pointer;font-family:'Russo One',sans-serif">
+                        🗑 УДАЛИТЬ ЧЕЛЛЕНДЖ
+                    </button>
+                </div>
+            ` : ''}
         </div>`;
 }
 
