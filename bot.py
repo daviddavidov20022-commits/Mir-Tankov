@@ -6251,7 +6251,6 @@ async def api_global_challenge_finish(request):
             return cors_response({"error": "Нет доступа"}, 403)
 
         from database import get_db
-        from datetime import datetime
 
         with get_db() as conn:
             ch = conn.execute(
@@ -6261,33 +6260,20 @@ async def api_global_challenge_finish(request):
             if not ch:
                 return cors_response({"error": "Челлендж не найден"}, 404)
 
-            # Определяем победителя
-            winner = conn.execute("""
-                SELECT * FROM global_challenge_participants 
-                WHERE challenge_id = ?
-                ORDER BY current_value DESC LIMIT 1
-            """, (challenge_id,)).fetchone()
+            # Use _internal_finish_challenge which handles prize_mode → wheel_pending
+            result = _internal_finish_challenge(conn, challenge_id)
 
-            winner_tg = winner["telegram_id"] if winner else None
-            winner_nick = winner["nickname"] if winner else None
-            winner_val = winner["current_value"] if winner else 0
-
-            conn.execute("""
-                UPDATE global_challenges 
-                SET status = 'finished', finished_at = ?, 
-                    winner_telegram_id = ?, winner_nickname = ?, winner_value = ?
-                WHERE id = ?
-            """, (datetime.now(), winner_tg, winner_nick, winner_val, challenge_id))
-
-            # Выдать приз победителю
-            if winner_tg and ch["reward_coins"] > 0:
-                from database import buy_cheese
-                buy_cheese(winner_tg, ch["reward_coins"], method="challenge_reward")
-
-        return cors_response({
-            "success": True,
-            "winner": {"nickname": winner_nick, "value": winner_val} if winner_nick else None
-        })
+        if result:
+            # Re-read to get new status
+            with get_db() as conn2:
+                updated = conn2.execute("SELECT status, winner_nickname, winner_value FROM global_challenges WHERE id = ?", (challenge_id,)).fetchone()
+            return cors_response({
+                "success": True,
+                "new_status": updated["status"] if updated else "finished",
+                "winner": {"nickname": updated["winner_nickname"], "value": updated["winner_value"]} if updated else None
+            })
+        else:
+            return cors_response({"error": "Не удалось завершить"}, 500)
     except Exception as e:
         logger.error(f"API global_challenge_finish error: {e}")
         return cors_response({"error": str(e)}, 500)
