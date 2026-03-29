@@ -901,6 +901,9 @@
 
         // ═══════ BUILDERS ═══════
         function buildLayout1(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
+            const ctaText = ch.prize_cta || '';
+            
             return `<div class="L1" style="background:linear-gradient(180deg,${AC}22,${AC}08)">
                 <div class="wi" style="background:${BG}">
                     ${showLive ? `<div class="w-badge" style="background:linear-gradient(135deg,#f44,#c00)">LIVE</div>` : ''}
@@ -912,13 +915,14 @@
                     ${showTimer ? `<div class="w-time"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div><div id="wTimerLabel" style="font-size:.5rem;color:${AC};opacity:.6;letter-spacing:2px;margin-top:2px"></div></div>` : ''}
                     <div class="w-row"><span>👥 <span class="w-rv" style="color:${AC}">${ch.participants_count || 0}</span> игроков</span><span>${ch.prize_description ? `🏆 <span class="w-rv" style="color:${AC}">${ch.prize_description}</span>` : `🧀 <span class="w-rv" style="color:${AC}">${ch.reward_coins || 0}</span> приз`}</span></div>
                     ${ch.prize_image_url ? `<div style="text-align:center;margin:6px 0"><img src="${ch.prize_image_url}" alt="Приз" style="max-width:120px;max-height:60px;border-radius:8px;border:1px solid ${AC}33;object-fit:contain" onerror="this.style.display='none'"></div>` : ''}
+                    ${isEnroll && ctaText ? `<div style="text-align:center;margin:8px 4px;padding:8px 12px;background:linear-gradient(135deg,${AC}15,${AC}08);border:1px solid ${AC}22;border-radius:8px;font-size:.55rem;color:${T.tc};line-height:1.4;opacity:.9">${ctaText}</div>` : ''}
                     ${buildCondBadges((ch.condition || 'damage').split(','))}
-                    ${showMe && me ? `<div class="w-me" style="border:1px solid ${AC}33;background:${AC}0d">
+                    ${!isEnroll && showMe && me ? `<div class="w-me" style="border:1px solid ${AC}33;background:${AC}0d">
                         <div class="w-av" style="background:linear-gradient(135deg,${AC},${T.acD});color:${T.bg.split(',')[0].replace('rgba(', '')};border:2px solid ${AC}">${(me.nickname || 'T').substring(0, 2).toUpperCase()}</div>
                         <div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}</div>
                         <div class="w-ms"><div class="w-msv" style="color:${T.tc};text-shadow:0 0 10px ${AC}44">${formatCondValue(me, ch)}</div><div class="w-msu">${cond.unit}</div></div>
                     </div>`: ''}
-                    ${showTop ? `<div class="w-lbt">Top ${topCount} Leaderboard</div>${top3.map((p, i) => {
+                    ${!isEnroll && showTop ? `<div class="w-lbt">Top ${topCount} Leaderboard</div>${top3.map((p, i) => {
                 const n = p.nickname || 'Танкист'; const isMe = p.telegram_id === myId; return `<div class="w-li" style="background:${AC}${['14', '08', '06'][i] || '04'};border:1px solid ${AC}${['22', '11', '0a'][i] || '08'}">
                         <div class="w-lr" style="color:${T.tc}">${i + 1}</div>
                         <div class="w-la" style="background:linear-gradient(135deg,${AC},${T.acD})">${n.substring(0, 2).toUpperCase()}</div>
@@ -929,21 +933,24 @@
         }
 
         function buildLayout2(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
+            const ctaText = ch.prize_cta || '';
             return `<div class="L2" style="background:linear-gradient(90deg,${AC}22,${AC}08)">
                 <div class="wi" style="background:${BG};position:relative">
                     ${showLive ? `<div class="w-badge" style="background:linear-gradient(135deg,#f44,#c00)">LIVE</div>` : ''}
                     <div class="w-top">
-                        ${showTimer ? `<div class="w-left"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div><div class="w-tlab" style="color:${AC}">осталось</div></div>` : ''}
+                        ${showTimer ? `<div class="w-left"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div><div id="wTimerLabel" class="w-tlab" style="color:${AC}">осталось</div></div>` : ''}
                         <div class="w-right">
                             <div class="w-ttl" style="color:${T.tc}">${ch.icon || '🔥'} ${ch.title || 'Челлендж'}</div>
-                            ${showMe && me ? `<div class="w-me-line" style="background:${AC}0d;border:1px solid ${AC}22">
+                            ${!isEnroll && showMe && me ? `<div class="w-me-line" style="background:${AC}0d;border:1px solid ${AC}22">
                                 <div class="w-av" style="background:linear-gradient(135deg,${AC},${T.acD})">${(me.nickname || 'T').substring(0, 2).toUpperCase()}</div>
                                 <div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}</div>
                                 <div class="w-msv" style="color:${T.tc}">${formatCondValue(me, ch)}</div>
                             </div>`: ''}
+                            ${isEnroll && ctaText ? `<div style="font-size:.45rem;color:${T.tc};opacity:.8;margin-top:4px">${ctaText}</div>` : ''}
                         </div>
                     </div>
-                    ${showTop ? `<div class="w-bot">${top3.map((p, i) => {
+                    ${!isEnroll && showTop ? `<div class="w-bot">${top3.map((p, i) => {
                 const n = p.nickname || 'Танкист'; return `<div class="w-li" style="background:${AC}${['10', '08', '06'][i]};border:1px solid ${AC}15">
                         <div class="w-lr" style="color:${T.tc}">${i + 1}</div>
                         <div class="w-ln">${n}</div>
@@ -953,6 +960,7 @@
         }
 
         function buildLayout3(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
             return `<div class="L3" style="background:${AC}33">
                 <div class="wi" style="background:${BG}">
                     ${showLive ? `<div class="w-badge" style="background:#e00">LIVE</div>` : ''}
@@ -960,18 +968,20 @@
                     <div class="w-ttl" style="color:${T.tc}">${ch.icon || '🔥'} ${ch.title || 'Челлендж'}</div>
                     <div class="w-sep" style="background:${AC}"></div>
                     ${showTimer ? `<div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div>` : ''}
-                    ${showMe && me ? `<><div class="w-sep" style="background:${AC}"></div><div class="w-me-mini"><div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}:</div><div class="w-msv" style="color:${T.tc}">${formatCondValue(me, ch)}</div></div></>` : ''}
-                    ${showTop && top3.length ? `<div class="w-sep" style="background:${AC}"></div><div class="w-top3">${top3.map((p, i) => `<div class="w-ti"><span class="w-tr" style="color:${AC}">${['🥇', '🥈', '🥉'][i]}</span><span class="w-tn">${p.nickname || '?'}</span><span class="w-tval" style="color:${T.tc}">${formatCondValue(p, ch)}</span></div>`).join('')}</div>` : ''}
+                    ${!isEnroll && showMe && me ? `<><div class="w-sep" style="background:${AC}"></div><div class="w-me-mini"><div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}:</div><div class="w-msv" style="color:${T.tc}">${formatCondValue(me, ch)}</div></div></>` : ''}
+                    ${!isEnroll && showTop && top3.length ? `<div class="w-sep" style="background:${AC}"></div><div class="w-top3">${top3.map((p, i) => `<div class="w-ti"><span class="w-tr" style="color:${AC}">${['🥇', '🥈', '🥉'][i]}</span><span class="w-tn">${p.nickname || '?'}</span><span class="w-tval" style="color:${T.tc}">${formatCondValue(p, ch)}</span></div>`).join('')}</div>` : ''}
                 </div></div>`;
         }
 
         function buildLayout4(ch, cond, me, top3) {
-            const all = top3.map((p, i) => {
+            const isEnroll = currentPhase === 'enrollment';
+            const ctaText = ch.prize_cta || '';
+            const all = !isEnroll ? top3.map((p, i) => {
                 const isMe = p.telegram_id === myId; return `<div class="w-li${isMe ? ' w-li--me' : ''}" style="${isMe ? `background:${AC}12;border-left:3px solid ${AC}` : ''}">
                 <div class="w-lr" style="color:${['#ffd700', '#c0c0c0', '#cd7f32'][i] || T.tc}">${i + 1}</div>
                 <div class="w-ln">${isMe ? '⭐ ' : ''}${p.nickname || 'Танкист'}</div>
                 <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
-            </div>`}).join('');
+            </div>`}).join('') : '';
             return `<div class="L4" style="border:1px solid ${AC}33">
                 <div class="wi" style="background:${BG}">
                     ${showLive ? `<div class="w-badge" style="background:#e00">LIVE</div>` : ''}
@@ -980,12 +990,14 @@
                         ${showTimer ? `<div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div>` : ''}
                     </div>
                     <div class="w-stats"><span>👥 <span class="w-rv" style="color:${AC}">${ch.participants_count || 0}</span> игроков</span><span>${ch.prize_description ? `🏆 <span class="w-rv" style="color:${AC}">${ch.prize_description}</span>` : `🧀 <span class="w-rv" style="color:${AC}">${ch.reward_coins || 0}</span>`}</span></div>
+                    ${isEnroll && ctaText ? `<div style="text-align:center;padding:6px 10px;font-size:.4rem;color:${T.tc};opacity:.8">${ctaText}</div>` : ''}
                     ${buildCondBadges((ch.condition || 'damage').split(','))}
-                    ${showTop ? `<div class="w-thead"><span>#</span><span>Игрок</span><span>${cond.unit}</span></div>${all}` : ''}
+                    ${!isEnroll && showTop ? `<div class="w-thead"><span>#</span><span>Игрок</span><span>${cond.unit}</span></div>${all}` : ''}
                 </div></div>`;
         }
 
         function buildLayout5(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
             return `<div class="L5">
                 <div class="wi">
                     ${showLive ? `<div class="w-badge" style="background:${AC};color:#000">LIVE</div>` : ''}
@@ -995,14 +1007,14 @@
                             ${showTimer ? `<div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div>` : ''}
                             <div class="w-ttl" style="color:${AC}">${ch.icon || '🔥'} ${ch.title || 'Челлендж'}</div>
                         </div>
-                        ${showMe && me ? `<div class="w-corner" style="background:${BG};border-color:${AC}">
+                        ${!isEnroll && showMe && me ? `<div class="w-corner" style="background:${BG};border-color:${AC}">
                             <div class="w-c-label" style="color:${AC}">👤 ${cond.unit}</div>
                             <div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}</div>
                             <div class="w-c-val" style="color:${T.tc}">${formatCondValue(me, ch)}</div>
                             <div class="w-c-sub">${cond.unit}</div>
                         </div>`: ''}
                     </div>
-                    ${showTop ? `<div class="w-bar" style="background:${BG};display:flex;gap:4px;padding:4px">${top3.map((p, i) => `<div class="w-li" style="background:${AC}${['12', '0a', '06'][i]};border:1px solid ${AC}20;border-radius:6px">
+                    ${!isEnroll && showTop ? `<div class="w-bar" style="background:${BG};display:flex;gap:4px;padding:4px">${top3.map((p, i) => `<div class="w-li" style="background:${AC}${['12', '0a', '06'][i]};border:1px solid ${AC}20;border-radius:6px">
                         <div class="w-lr" style="color:${['#ffd700', '#c0c0c0', '#cd7f32'][i]}">${i + 1}</div>
                         <div class="w-ln">${p.nickname || '?'}</div>
                         <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>

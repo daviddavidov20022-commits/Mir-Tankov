@@ -1528,6 +1528,7 @@ async function gcLaunchChallenge() {
 
     const prizeDesc = document.getElementById('adminGcPrizeDesc')?.value || '';
     const prizeImageUrl = document.getElementById('adminGcPrizeImage')?.value || '';
+    const prizeCta = document.getElementById('adminGcPrizeCta')?.value || '';
     const challengeDuration = parseInt(document.getElementById('adminGcChallengeDuration')?.value) || 0;
 
     const btn = document.getElementById('adminGcLaunchBtn');
@@ -1557,6 +1558,7 @@ async function gcLaunchChallenge() {
                 prize_mode: gcPrizeModeEnabled ? 1 : 0,
                 prize_description: prizeDesc,
                 prize_image_url: prizeImageUrl,
+                prize_cta: prizeCta,
                 prize_top_count: 10,
                 challenge_duration_minutes: challengeDuration
             })

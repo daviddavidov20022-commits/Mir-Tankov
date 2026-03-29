@@ -4970,6 +4970,7 @@ async def api_global_challenge_create(request):
         prize_mode = int(data.get("prize_mode", 0))
         prize_description = data.get("prize_description", "") or None
         prize_image_url = data.get("prize_image_url", "") or None
+        prize_cta = data.get("prize_cta", "") or None
         prize_top_count = int(data.get("prize_top_count", 10))
         challenge_duration_minutes = int(data.get("challenge_duration_minutes", 0))
 
@@ -4999,13 +5000,13 @@ async def api_global_challenge_create(request):
                 (title, description, icon, condition, duration_minutes, max_battles,
                  reward_coins, reward_description, status, created_by, ends_at,
                  tank_class, tank_tier_filter, tank_id_filter, tank_name_filter,
-                 prize_mode, prize_description, prize_image_url, prize_top_count, 
+                 prize_mode, prize_description, prize_image_url, prize_cta, prize_top_count, 
                  challenge_duration_minutes, enrollment_ends_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (title, description, icon, condition, duration_minutes, max_battles,
                   reward_coins, reward_description, initial_status, admin_tg, ends_at,
                   tank_class, tank_tier_filter, tank_id_filter, tank_name_filter,
-                  prize_mode, prize_description, prize_image_url, prize_top_count,
+                  prize_mode, prize_description, prize_image_url, prize_cta, prize_top_count,
                   challenge_duration_minutes, enrollment_ends_at))
             challenge_id = cursor.lastrowid
 

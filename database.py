@@ -470,6 +470,7 @@ def init_db():
             ("prize_mode", "INTEGER DEFAULT 0"),           # включён ли призовой режим
             ("prize_description", "TEXT"),                  # "iPhone 16 Pro"
             ("prize_image_url", "TEXT"),                    # URL картинки приза
+            ("prize_cta", "TEXT"),                          # CTA текст для виджета
             ("prize_top_count", "INTEGER DEFAULT 10"),      # ТОП-N с бонусом
             ("challenge_duration_minutes", "INTEGER DEFAULT 0"),  # доп. таймер активной фазы
             ("enrollment_ends_at", "TIMESTAMP"),            # когда заканчивается набор
