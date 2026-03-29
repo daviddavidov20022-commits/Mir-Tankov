@@ -280,12 +280,16 @@ function claimDailyBonus() {
 // ==========================================
 // НАВИГАЦИЯ
 // ==========================================
+// Cache-busting version — increment when HTML files change
+const CB_VERSION = 50;
+
 function openGame(url) {
-    // Передаём telegram_id на все внутренние страницы
+    // Always add cache-busting version + telegram_id to all internal pages
+    const sep = url.includes('?') ? '&' : '?';
+    url += `${sep}v=${CB_VERSION}`;
     const myId = localStorage.getItem('my_telegram_id');
     if (myId) {
-        const sep = url.includes('?') ? '&' : '?';
-        url += `${sep}telegram_id=${myId}`;
+        url += `&telegram_id=${myId}`;
     }
     window.location.href = url;
 }
