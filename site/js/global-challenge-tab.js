@@ -1945,8 +1945,15 @@ function gcUpdatePreview() {
 
     // Prize image for widget preview
     const prizeImgUrl = document.getElementById('adminGcPrizeImage')?.value || '';
-    const isPrizeModeOn = document.getElementById('prizeModeToggle')?.querySelector('input')?.checked;
+    const isPrizeModeOn = typeof gcPrizeModeEnabled !== 'undefined' && gcPrizeModeEnabled;
     const prizeImgHtml = (isPrizeModeOn && prizeImgUrl) ? `<div style="text-align:center;margin:4px 0"><img src="${prizeImgUrl}" alt="Приз" style="max-width:60px;max-height:40px;border-radius:6px;border:1px solid ${ac}33;object-fit:contain" onerror="this.style.display='none'"></div>` : '';
+
+    // Prize mode info for preview
+    const prizeDesc = document.getElementById('adminGcPrizeDesc')?.value || '';
+    const rewardVal = document.getElementById('adminGcReward')?.value || '500';
+    const previewInfoLine = isPrizeModeOn && prizeDesc 
+        ? `👥 3 · 🏆 ${prizeDesc.substring(0, 20)}`
+        : `👥 3 · 🧀 ${rewardVal}`;
 
     // Border
     let border = `2px solid ${ac}`;
@@ -1964,7 +1971,7 @@ function gcUpdatePreview() {
                 ${live}
                 <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${tc};margin-bottom:4px">${condIcons} Челлендж</div>
                 ${timerHtml}
-                <div style="font-size:.28rem;opacity:.4;margin:3px 0 6px">👥 3 · 🧀 500</div>
+                <div style="font-size:.28rem;opacity:.4;margin:3px 0 6px">${previewInfoLine}</div>
                 ${prizeImgHtml}
                 ${condBadgeHtml}
                 ${meHtml}
