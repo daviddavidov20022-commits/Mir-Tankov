@@ -496,7 +496,7 @@
             <span class="nav-icon">🏠</span>
             <span class="nav-label">Главная</span>
         </div>
-        <div class="nav-item" onclick="location.href='challenges.html'">
+        <div class="nav-item" onclick="location.href='challenges.html?v=25'">
             <span class="nav-icon">⚔️</span>
             <span class="nav-label">Арена</span>
         </div>
@@ -518,9 +518,10 @@
     <script>
         // These variables are normally set in arena.js, 
         // but this standalone page needs them too
-        const BOT_API_URL = localStorage.getItem('bot_api_url') || 'https://mir-tankov-production.up.railway.app';
-        let myTelegramId = 0;
-        let isAdmin = false;
+        // IMPORTANT: use var (not let) so they register on window.* for global-challenge-tab.js
+        var BOT_API_URL = localStorage.getItem('bot_api_url') || 'https://mir-tankov-production.up.railway.app';
+        var myTelegramId = 0;
+        var isAdmin = false;
 
         // Identify user
         (function() {
@@ -569,12 +570,28 @@
         // Stub switchTab so the shared JS doesn't error
         function switchTab() {}
 
+        // Check admin BEFORE loading challenge
+        async function _checkAdminAndLoad() {
+            if (myTelegramId) {
+                try {
+                    const resp = await fetch(`${BOT_API_URL}/api/me?telegram_id=${myTelegramId}`);
+                    const data = await resp.json();
+                    if (data.is_admin) {
+                        isAdmin = true;
+                        window.isAdmin = true;
+                        console.log('[GC Standalone] Admin confirmed for', myTelegramId);
+                    }
+                } catch(e) { console.error('Admin check failed:', e); }
+            }
+            gcLoadChallenge(true);
+        }
+
         // Load challenge on DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
-            gcLoadChallenge();
+            _checkAdminAndLoad();
         });
     </script>
-    <script src="js/global-challenge-tab.js?v=11"></script>
+    <script src="js/global-challenge-tab.js?v=28"></script>
     <script src="js/gc-obs-links.js?v=2"></script>
 </body>
 

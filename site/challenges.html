@@ -10,10 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=23">
-    <link rel="stylesheet" href="css/arena.css?v=23">
-    <link rel="stylesheet" href="css/global-challenge.css?v=23">
+    <script src="js/site-page.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=28">
+    <link rel="stylesheet" href="css/arena.css?v=28">
+    <link rel="stylesheet" href="css/global-challenge.css?v=28">
 </head>
 
 <body>
@@ -385,7 +385,7 @@
                             </svg>
                             <div class="gc-timer-inner">
                                 <div class="gc-timer-value" id="gcTimerValue">59:59</div>
-                                <div class="gc-timer-label">осталось</div>
+                                <div class="gc-timer-label" id="gcTimerLabel">осталось</div>
                             </div>
                         </div>
                     </div>
@@ -408,6 +408,14 @@
                     <div id="gcVehicleFilter" style="display:none;text-align:center;margin-top:6px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap"></div>
                     <!-- Multi-condition badges -->
                     <div class="gc-cond-badges" id="gcCondBadges" style="display:none;margin:-4px 0 8px;text-align:center"></div>
+
+                    <!-- Prize badge (for prize_mode challenges) -->
+                    <div id="gcPrizeBadge" style="display:none;text-align:center;padding:8px 20px;margin:0 20px 12px;
+                         background:linear-gradient(145deg,rgba(245,190,11,0.08),rgba(200,170,110,0.03));
+                         border:1px solid rgba(245,190,11,0.15);border-radius:12px;
+                         font-size:0.72rem;color:#C8AA6E;font-weight:600;
+                         animation:winnerGlow 3s ease-in-out infinite">
+                    </div>
 
                     <button class="gc-join-btn" id="gcJoinBtn" onclick="gcJoinChallenge()">
                         ⚔️ ВСТУПИТЬ В ЧЕЛЛЕНДЖ
@@ -567,6 +575,40 @@
                         <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 мин</button>
                         <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 час</button>
                         <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 часа</button>
+                    </div>
+
+                    <!-- ====== PRIZE MODE ====== -->
+                    <div style="margin-top:16px;padding:14px;background:linear-gradient(145deg,rgba(245,190,11,0.06),rgba(200,170,110,0.02));
+                         border:1px solid rgba(245,190,11,0.15);border-radius:14px">
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:0" onclick="gcTogglePrizeMode()">
+                            <div id="prizeModeToggle" style="width:44px;height:24px;border-radius:12px;
+                                 background:rgba(255,255,255,0.08);transition:all 0.3s;position:relative;flex-shrink:0;
+                                 border:1px solid rgba(255,255,255,0.1)">
+                                <div style="width:20px;height:20px;border-radius:50%;background:#5A6577;
+                                     position:absolute;top:1px;left:1px;transition:all 0.3s"></div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Russo One',sans-serif;font-size:0.72rem;color:#C8AA6E">🏆 Призовой режим</div>
+                                <div style="font-size:0.55rem;color:#5A6577;margin-top:2px">Колесо фортуны для определения победителя</div>
+                            </div>
+                        </label>
+
+                        <div id="prizeModeFields" style="display:none;margin-top:12px">
+                            <label class="gc-admin__label">🎁 Описание приза</label>
+                            <input type="text" class="gc-admin__input" id="adminGcPrizeDesc" 
+                                   placeholder="iPhone 16 Pro" style="font-size:0.75rem">
+
+                            <label class="gc-admin__label">⏱ Длительность боевой фазы (мин, 0 = по кол-ву боёв)</label>
+                            <input type="number" class="gc-admin__input" id="adminGcChallengeDuration" 
+                                   value="0" min="0" max="10080" placeholder="0 = только по боям">
+                            
+                            <div style="margin-top:8px;padding:8px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);
+                                 border-radius:10px;font-size:0.55rem;color:#4ade80;line-height:1.5">
+                                💡 <strong>Таймер</strong> = время набора участников<br>
+                                💡 <strong>Боевая фаза</strong> начнётся после набора<br>
+                                💡 <strong>Колесо</strong> запустится после завершения боёв
+                            </div>
+                        </div>
                     </div>
 
                     <!-- ====== WIDGET CONSTRUCTOR ====== -->
@@ -874,9 +916,9 @@
     <canvas id="confettiCanvas"
         style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999"></canvas>
 
-    <script src="js/arena.js?v=23"></script>
-    <script src="js/global-challenge-tab.js?v=23"></script>
-    <script src="js/gc-obs-links.js?v=23"></script>
+    <script src="js/arena.js?v=28"></script>
+    <script src="js/global-challenge-tab.js?v=28"></script>
+    <script src="js/gc-obs-links.js?v=28"></script>
 </body>
 
 </html>
