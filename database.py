@@ -465,6 +465,37 @@ def init_db():
             except Exception:
                 pass
 
+        # ===== Призовой челлендж: колесо фортуны =====
+        for col, default in [
+            ("prize_mode", "INTEGER DEFAULT 0"),           # включён ли призовой режим
+            ("prize_description", "TEXT"),                  # "iPhone 16 Pro"
+            ("prize_top_count", "INTEGER DEFAULT 10"),      # ТОП-N с бонусом
+            ("challenge_duration_minutes", "INTEGER DEFAULT 0"),  # доп. таймер активной фазы
+            ("enrollment_ends_at", "TIMESTAMP"),            # когда заканчивается набор
+            ("wheel_winner_telegram_id", "INTEGER"),        # кто выиграл колесо
+            ("wheel_winner_nickname", "TEXT"),              # ник победителя колеса
+            ("wheel_spun", "INTEGER DEFAULT 0"),            # колесо уже крутили?
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE global_challenges ADD COLUMN {col} {default}")
+            except Exception:
+                pass
+
+        # Таблица элиминированных на колесе
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS gc_wheel_eliminations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                challenge_id INTEGER NOT NULL,
+                telegram_id INTEGER NOT NULL,
+                nickname TEXT,
+                eliminated_order INTEGER NOT NULL,
+                eliminated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (challenge_id) REFERENCES global_challenges(id),
+                UNIQUE(challenge_id, telegram_id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_gc_wheel_elim ON gc_wheel_eliminations(challenge_id);
+        """)
+
         # ===== СТРИМ МЕДИА (звуки/видео для донат-алертов) =====
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS stream_media (

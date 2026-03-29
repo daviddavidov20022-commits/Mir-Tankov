@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎡 Колесо Элиминации</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #0a0e14;
+            color: #E8E6E3;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(245, 190, 11, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(200, 170, 110, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.02) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wheel-page {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .wh-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .wh-header__icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 20px rgba(245, 190, 11, 0.5));
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .wh-header__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, #f5be0b, #C8AA6E, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 8px 0 4px;
+            letter-spacing: 3px;
+        }
+
+        .wh-header__prize {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: linear-gradient(145deg, rgba(245, 190, 11, 0.1), rgba(200, 170, 110, 0.04));
+            border: 1px solid rgba(245, 190, 11, 0.2);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #f5be0b;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        /* Wheel container */
+        .wh-wheel-wrap {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .wh-canvas-container {
+            position: relative;
+            width: 360px;
+            height: 360px;
+        }
+
+        #wheelCanvas {
+            width: 360px;
+            height: 360px;
+            filter: drop-shadow(0 0 30px rgba(245, 190, 11, 0.15));
+        }
+
+        /* Pointer */
+        .wh-pointer {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 14px solid transparent;
+            border-right: 14px solid transparent;
+            border-top: 28px solid #f5be0b;
+            filter: drop-shadow(0 4px 12px rgba(245, 190, 11, 0.5));
+            z-index: 10;
+        }
+
+        /* Counter */
+        .wh-counter {
+            text-align: center;
+            margin: 16px 0;
+            font-family: 'Russo One', sans-serif;
+        }
+
+        .wh-counter__num {
+            font-size: 2.5rem;
+            color: #C8AA6E;
+            text-shadow: 0 0 20px rgba(200, 170, 110, 0.3);
+        }
+
+        .wh-counter__label {
+            font-size: 0.65rem;
+            color: #5A6577;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Spin button */
+        .wh-spin-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: white;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
+            margin-bottom: 12px;
+        }
+
+        .wh-spin-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(239, 68, 68, 0.4);
+        }
+
+        .wh-spin-btn:disabled {
+            background: linear-gradient(135deg, #374151, #1f2937);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .wh-spin-btn:disabled:hover { transform: none; }
+
+        .wh-spin-btn--winner {
+            background: linear-gradient(135deg, #f5be0b, #C8AA6E) !important;
+            color: #0a0e14 !important;
+            box-shadow: 0 8px 32px rgba(245, 190, 11, 0.4) !important;
+        }
+
+        /* Eliminated list */
+        .wh-elim-list {
+            margin-top: 16px;
+        }
+
+        .wh-elim-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.75rem;
+            color: #5A6577;
+            margin-bottom: 8px;
+        }
+
+        .wh-elim-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            border-radius: 10px;
+            margin-bottom: 4px;
+            font-size: 0.7rem;
+            animation: elimSlide 0.3s ease;
+        }
+
+        @keyframes elimSlide {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .wh-elim-item__order {
+            color: #ef4444;
+            font-weight: 800;
+            font-size: 0.6rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .wh-elim-item__name {
+            flex: 1;
+            color: #5A6577;
+            text-decoration: line-through;
+        }
+
+        .wh-elim-item__x {
+            color: #ef4444;
+            font-size: 0.8rem;
+        }
+
+        /* Winner modal */
+        .wh-winner-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .wh-winner-card {
+            background: linear-gradient(145deg, #111820, #0d1117);
+            border: 2px solid rgba(245, 190, 11, 0.3);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 60px rgba(245, 190, 11, 0.2);
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .wh-winner-card__crown {
+            font-size: 4rem;
+            animation: float 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(245, 190, 11, 0.6));
+        }
+
+        .wh-winner-card__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, #f5be0b, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 12px 0;
+            letter-spacing: 3px;
+        }
+
+        .wh-winner-card__name {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.6rem;
+            color: #E8E6E3;
+            margin: 8px 0;
+            text-shadow: 0 0 20px rgba(245, 190, 11, 0.3);
+        }
+
+        .wh-winner-card__prize {
+            font-size: 0.85rem;
+            color: #f5be0b;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        /* Confetti canvas */
+        #confettiCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Loading */
+        .wh-loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #5A6577;
+        }
+
+        .wh-loading__spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(200, 170, 110, 0.15);
+            border-top-color: #C8AA6E;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="wheel-page">
+        <div class="wh-header">
+            <div class="wh-header__icon">🎡</div>
+            <div class="wh-header__title">КОЛЕСО ЭЛИМИНАЦИИ</div>
+            <div class="wh-header__prize" id="whPrize">🏆 Загрузка...</div>
+        </div>
+
+        <div class="wh-loading" id="whLoading">
+            <div class="wh-loading__spinner"></div>
+            <div>Загрузка данных...</div>
+        </div>
+
+        <div id="whContent" style="display:none">
+            <div class="wh-wheel-wrap">
+                <div class="wh-canvas-container">
+                    <div class="wh-pointer"></div>
+                    <canvas id="wheelCanvas" width="720" height="720"></canvas>
+                </div>
+            </div>
+
+            <div class="wh-counter">
+                <div class="wh-counter__num" id="whRemaining">0</div>
+                <div class="wh-counter__label">осталось участников</div>
+            </div>
+
+            <button class="wh-spin-btn" id="whSpinBtn" onclick="spinWheel()">
+                🎡 КРУТИТЬ КОЛЕСО
+            </button>
+
+            <div class="wh-elim-list" id="whElimList"></div>
+        </div>
+    </div>
+
+    <canvas id="confettiCanvas"></canvas>
+
+    <script>
+    // ==========================================
+    // CONFIG
+    // ==========================================
+    const BOT_API_URL = localStorage.getItem('bot_api_url') || 
+        (location.hostname === 'localhost' ? 'http://localhost:8443' : 'https://mir-tankov-production.up.railway.app');
+    const myTelegramId = localStorage.getItem('my_telegram_id') || '';
+
+    const COLORS_TOP = [
+        '#f5be0b', '#FFD700', '#C8AA6E', '#f59e0b', '#eab308',
+        '#d4a017', '#b8860b', '#daa520', '#CD853F', '#D2B48C'
+    ];
+    const COLORS_OTHER = [
+        '#4a6741', '#3d5a80', '#5e4b8a', '#8b4557', '#4a7c7e',
+        '#6b5b3e', '#6e5494', '#4e6e58', '#746d75', '#5a6577'
+    ];
+
+    let wheelData = null;
+    let participants = [];
+    let spinning = false;
+    let currentRotation = 0;
+    let eliminatedList = [];
+
+    // ==========================================
+    // LOAD DATA
+    // ==========================================
+    async function loadWheelData() {
+        const params = new URLSearchParams(location.search);
+        const challengeId = params.get('challenge_id');
+        if (!challengeId) {
+            document.getElementById('whLoading').innerHTML = '<div style="color:#ef4444">❌ Нет challenge_id</div>';
+            return;
+        }
+
+        try {
+            const resp = await fetch(`${BOT_API_URL}/api/global-challenge/wheel-data?challenge_id=${challengeId}`);
+            wheelData = await resp.json();
+
+            if (wheelData.error) {
+                document.getElementById('whLoading').innerHTML = `<div style="color:#ef4444">❌ ${wheelData.error}</div>`;
+                return;
+            }
+
+            // Set prize
+            document.getElementById('whPrize').textContent = 
+                `🏆 ${wheelData.challenge.prize_description || 'ПРИЗ'}`;
+
+            // Filter to remaining participants
+            participants = wheelData.participants.filter(p => !p.eliminated);
+            eliminatedList = wheelData.participants
+                .filter(p => p.eliminated)
+                .sort((a, b) => (a.eliminated_order || 0) - (b.eliminated_order || 0));
+
+            document.getElementById('whRemaining').textContent = participants.length;
+            document.getElementById('whLoading').style.display = 'none';
+            document.getElementById('whContent').style.display = '';
+
+            renderEliminated();
+            drawWheel();
+
+            // If only 1 left, show winner
+            if (participants.length === 1) {
+                showWinner(participants[0]);
+            }
+        } catch (e) {
+            document.getElementById('whLoading').innerHTML = `<div style="color:#ef4444">❌ Ошибка: ${e.message}</div>`;
+        }
+    }
+
+    // ==========================================
+    // DRAW WHEEL
+    // ==========================================
+    function drawWheel() {
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+        const cx = W / 2;
+        const cy = H / 2;
+        const radius = W / 2 - 20;
+
+        ctx.clearRect(0, 0, W, H);
+
+        if (!participants.length) return;
+
+        // Calculate total weight for proportional segments
+        const totalWeight = participants.reduce((s, p) => s + (p.multiplier || 1), 0);
+
+        let startAngle = currentRotation;
+
+        participants.forEach((p, i) => {
+            const weight = p.multiplier || 1;
+            const sliceAngle = (weight / totalWeight) * Math.PI * 2;
+
+            // Draw segment
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, radius, startAngle, startAngle + sliceAngle);
+            ctx.closePath();
+
+            const colorIdx = i % (p.is_top ? COLORS_TOP.length : COLORS_OTHER.length);
+            ctx.fillStyle = p.is_top ? COLORS_TOP[colorIdx] : COLORS_OTHER[colorIdx];
+            ctx.fill();
+
+            // Border
+            ctx.strokeStyle = 'rgba(10, 14, 20, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Top glow border
+            if (p.is_top) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius - 1, startAngle, startAngle + sliceAngle);
+                ctx.strokeStyle = 'rgba(245, 190, 11, 0.3)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            // Text
+            const midAngle = startAngle + sliceAngle / 2;
+            const textRadius = radius * 0.65;
+            const tx = cx + Math.cos(midAngle) * textRadius;
+            const ty = cy + Math.sin(midAngle) * textRadius;
+
+            ctx.save();
+            ctx.translate(tx, ty);
+            ctx.rotate(midAngle);
+
+            // Nick
+            const nick = (p.nickname || 'Танкист').substring(0, 12);
+            const fontSize = Math.min(14, Math.max(9, sliceAngle * radius * 0.12));
+            ctx.font = `800 ${fontSize}px 'Inter', sans-serif`;
+            ctx.fillStyle = p.is_top ? '#0a0e14' : '#E8E6E3';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(nick, 0, 0);
+
+            // Multiplier badge
+            if (p.is_top && p.multiplier > 1) {
+                const badgeText = `×${p.multiplier}`;
+                ctx.font = `700 ${fontSize * 0.7}px 'Inter', sans-serif`;
+                ctx.fillStyle = p.is_top ? 'rgba(10,14,20,0.6)' : 'rgba(200,170,110,0.8)';
+                ctx.fillText(badgeText, 0, fontSize * 0.9);
+            }
+
+            ctx.restore();
+
+            startAngle += sliceAngle;
+        });
+
+        // Center circle
+        ctx.beginPath();
+        ctx.arc(cx, cy, 40, 0, Math.PI * 2);
+        ctx.fillStyle = '#0a0e14';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(245, 190, 11, 0.4)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Center text
+        ctx.font = "bold 20px 'Russo One', sans-serif";
+        ctx.fillStyle = '#C8AA6E';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(participants.length.toString(), cx, cy);
+    }
+
+    // ==========================================
+    // SPIN WHEEL
+    // ==========================================
+    function spinWheel() {
+        if (spinning || participants.length <= 1) return;
+        spinning = true;
+
+        const btn = document.getElementById('whSpinBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Крутится...';
+
+        // Pick who to eliminate based on INVERSE weights
+        // (higher weight = harder to eliminate)
+        const totalInverseWeight = participants.reduce((s, p) => {
+            return s + (1 / (p.multiplier || 1));
+        }, 0);
+
+        let random = Math.random() * totalInverseWeight;
+        let eliminatedIdx = 0;
+        for (let i = 0; i < participants.length; i++) {
+            random -= 1 / (participants[i].multiplier || 1);
+            if (random <= 0) {
+                eliminatedIdx = i;
+                break;
+            }
+        }
+
+        // Calculate target angle to land on eliminated participant
+        const totalWeight = participants.reduce((s, p) => s + (p.multiplier || 1), 0);
+        let angleSum = 0;
+        for (let i = 0; i < eliminatedIdx; i++) {
+            angleSum += (participants[i].multiplier || 1) / totalWeight * Math.PI * 2;
+        }
+        const targetMid = angleSum + ((participants[eliminatedIdx].multiplier || 1) / totalWeight * Math.PI * 2) / 2;
+
+        // Pointer is at top (270° = -π/2), we need the target segment at the pointer
+        const pointerAngle = -Math.PI / 2;
+        const targetRotation = pointerAngle - targetMid;
+
+        // Add full rotations for drama
+        const fullRotations = 4 + Math.floor(Math.random() * 3); // 4-6 full spins
+        const finalRotation = targetRotation + fullRotations * Math.PI * 2;
+
+        // Animate
+        const startRotation = currentRotation;
+        const duration = 3000 + Math.random() * 2000; // 3-5 seconds
+        const startTime = Date.now();
+
+        function animate() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Easing: cubic-bezier for deceleration
+            const eased = 1 - Math.pow(1 - progress, 3);
+
+            currentRotation = startRotation + (finalRotation - startRotation) * eased;
+            drawWheel();
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Spin complete — eliminate!
+                const eliminated = participants[eliminatedIdx];
+                eliminateParticipant(eliminated);
+            }
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    async function eliminateParticipant(player) {
+        const params = new URLSearchParams(location.search);
+        const challengeId = params.get('challenge_id');
+
+        try {
+            const resp = await fetch(`${BOT_API_URL}/api/global-challenge/wheel-eliminate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    admin_telegram_id: myTelegramId,
+                    challenge_id: parseInt(challengeId),
+                    telegram_id: player.telegram_id
+                })
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                // Remove from participants
+                participants = participants.filter(p => p.telegram_id !== player.telegram_id);
+                eliminatedList.push({
+                    ...player,
+                    eliminated_order: data.eliminated.order
+                });
+
+                // Update UI
+                document.getElementById('whRemaining').textContent = participants.length;
+                renderEliminated();
+
+                // Flash red on the eliminated
+                drawWheel();
+
+                spinning = false;
+                const btn = document.getElementById('whSpinBtn');
+
+                if (participants.length === 1) {
+                    // We have a WINNER!
+                    btn.textContent = '🏆 ОБЪЯВИТЬ ПОБЕДИТЕЛЯ';
+                    btn.disabled = false;
+                    btn.className = 'wh-spin-btn wh-spin-btn--winner';
+                    btn.onclick = () => declareWinner(participants[0]);
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = `🎡 КРУТИТЬ (осталось ${participants.length})`;
+                }
+            }
+        } catch (e) {
+            console.error('Eliminate error:', e);
+            spinning = false;
+            document.getElementById('whSpinBtn').disabled = false;
+            document.getElementById('whSpinBtn').textContent = '🎡 КРУТИТЬ КОЛЕСО';
+        }
+    }
+
+    async function declareWinner(winner) {
+        const params = new URLSearchParams(location.search);
+        const challengeId = params.get('challenge_id');
+
+        try {
+            await fetch(`${BOT_API_URL}/api/global-challenge/wheel-winner`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    admin_telegram_id: myTelegramId,
+                    challenge_id: parseInt(challengeId),
+                    winner_telegram_id: winner.telegram_id
+                })
+            });
+        } catch (e) {
+            console.error('Winner error:', e);
+        }
+
+        showWinner(winner);
+    }
+
+    function showWinner(winner) {
+        // Confetti!
+        launchConfetti();
+
+        const nick = winner.nickname || 'Танкист';
+        const prize = wheelData?.challenge?.prize_description || 'ПРИЗ';
+
+        // Hide spin button
+        document.getElementById('whSpinBtn').style.display = 'none';
+
+        // Show modal
+        const modal = document.createElement('div');
+        modal.className = 'wh-winner-modal';
+        modal.innerHTML = `
+            <div class="wh-winner-card">
+                <div class="wh-winner-card__crown">👑</div>
+                <div class="wh-winner-card__title">ПОБЕДИТЕЛЬ!</div>
+                <div class="wh-winner-card__name">${nick}</div>
+                <div class="wh-winner-card__prize">🏆 ${prize}</div>
+                <div style="margin-top:20px;font-size:0.65rem;color:#5A6577">
+                    Поздравляем! Колесо фортуны выбрало победителя!
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // ==========================================
+    // RENDER ELIMINATED
+    // ==========================================
+    function renderEliminated() {
+        const container = document.getElementById('whElimList');
+        if (!eliminatedList.length) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const items = eliminatedList.slice().reverse().map(p => `
+            <div class="wh-elim-item">
+                <div class="wh-elim-item__order">#${p.eliminated_order || '?'}</div>
+                <div class="wh-elim-item__name">${p.nickname || 'Танкист'}</div>
+                <div class="wh-elim-item__x">✕</div>
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <div class="wh-elim-title">❌ Выбыли (${eliminatedList.length})</div>
+            ${items}
+        `;
+    }
+
+    // ==========================================
+    // CONFETTI
+    // ==========================================
+    function launchConfetti() {
+        const canvas = document.getElementById('confettiCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const colors = ['#f5be0b', '#C8AA6E', '#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ffd700'];
+
+        for (let i = 0; i < 200; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: -20 - Math.random() * 200,
+                w: 4 + Math.random() * 8,
+                h: 8 + Math.random() * 10,
+                vx: (Math.random() - 0.5) * 6,
+                vy: 3 + Math.random() * 5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rot: Math.random() * 360,
+                rotSpeed: (Math.random() - 0.5) * 10,
+                opacity: 1,
+            });
+        }
+
+        let frame = 0;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = 0;
+
+            particles.forEach(p => {
+                if (p.opacity <= 0) return;
+                alive++;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.05;
+                p.rot += p.rotSpeed;
+                if (p.y > canvas.height + 30) { p.opacity = 0; return; }
+                if (frame > 100) p.opacity -= 0.01;
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.opacity);
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rot * Math.PI) / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                ctx.restore();
+            });
+
+            frame++;
+            if (alive > 0 && frame < 300) {
+                requestAnimationFrame(animate);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        animate();
+    }
+
+    // Init
+    loadWheelData();
+    </script>
+</body>
+</html>

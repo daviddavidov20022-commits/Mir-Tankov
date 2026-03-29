@@ -22,6 +22,7 @@ let gcAdminTankClass = null;
 let gcAdminTankTier = null;
 let gcAdminTankId = null;
 let gcAdminTankName = null;
+let gcPrizeModeEnabled = false;
 let gcAllSubscribers = [];
 let _gcLastDataHash = null;
 let _gcIsFirstLoad = true;
@@ -106,7 +107,24 @@ async function gcLoadChallenge(forceRefresh) {
 
             if (data.status === 'active' && data.challenge) {
                 gcShowActive(data.challenge);
-            } else if (data.status === 'finished' && data.challenge) {
+            } else if (data.status === 'enrollment' && data.challenge) {
+                // Auto-start if enrollment timer expired
+                const enrollEnd = data.challenge.enrollment_ends_at || data.challenge.ends_at;
+                if (enrollEnd && new Date(enrollEnd) <= new Date()) {
+                    const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
+                    if (isAdminNow && myTelegramId) {
+                        // Auto-trigger start
+                        fetch(`${BOT_API_URL}/api/global-challenge/start-active`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ admin_telegram_id: myTelegramId, challenge_id: data.challenge.id })
+                        }).then(() => setTimeout(() => gcLoadChallenge(true), 2000)).catch(() => {});
+                    }
+                }
+                gcShowEnrollment(data.challenge);
+            } else if (data.status === 'wheel_pending' && data.challenge) {
+                gcShowWheelPending(data.challenge);
+            } else if ((data.status === 'finished' || data.status === 'completed') && data.challenge) {
                 gcShowFinished(data.challenge);
             } else {
                 gcShowEmpty();
@@ -259,6 +277,262 @@ function gcShowActive(ch) {
     }
 }
 
+
+// ============================================================
+// ENROLLMENT (набор участников)
+// ============================================================
+function gcShowEnrollment(ch) {
+    gcCurrentChallenge = ch;
+
+    document.getElementById('gcEmpty').style.display = 'none';
+    document.getElementById('gcActive').style.display = '';
+    document.getElementById('gcFinished').style.display = 'none';
+
+    const isPrize = ch.prize_mode == 1;
+    const prizeDesc = ch.prize_description || '';
+    const condInfo = GC_CONDITION_MAP[ch.condition?.split(',')[0]] || GC_CONDITION_MAP.damage;
+
+    // Header
+    document.getElementById('gcActiveIcon').textContent = isPrize ? '🏆' : (ch.icon || '🔥');
+    document.getElementById('gcActiveTitle').innerHTML = ch.title || 'Челлендж';
+    document.getElementById('gcActiveDesc').innerHTML = ch.description || '';
+    document.getElementById('gcActiveCond').innerHTML = condInfo.icon;
+
+    // Show prize badge
+    const prizeBadge = document.getElementById('gcPrizeBadge');
+    if (prizeBadge) {
+        if (isPrize && prizeDesc) {
+            prizeBadge.style.display = '';
+            prizeBadge.innerHTML = `🎁 ПРИЗ: <strong style="color:#f5be0b">${prizeDesc}</strong>`;
+        } else {
+            prizeBadge.style.display = 'none';
+        }
+    }
+
+    // Timer → countdown to enrollment end
+    const enrollmentEnd = ch.enrollment_ends_at || ch.ends_at;
+    gcStartTimer(enrollmentEnd, ch.created_at, true); // true = enrollment phase
+
+    // Stats bar  
+    const maxBattles = ch.max_battles || 0;
+    document.getElementById('gcStatParticipants').textContent = ch.participants_count || 0;
+    document.getElementById('gcStatBattles').textContent = maxBattles > 0 ? `${maxBattles} боёв` : '∞';
+    document.getElementById('gcStatReward').textContent = isPrize && prizeDesc ? `🏆 ${prizeDesc}` : (ch.reward_description || `${ch.reward_coins} 🧀`);
+
+    // Join button — always active during enrollment
+    const joinBtn = document.getElementById('gcJoinBtn');
+    const myTgId = myTelegramId || localStorage.getItem('my_telegram_id');
+    const alreadyJoined = (ch.leaderboard || []).some(p => String(p.telegram_id) === String(myTgId));
+    
+    if (alreadyJoined) {
+        joinBtn.disabled = true;
+        joinBtn.textContent = '✅ ВЫ ЗАПИСАНЫ';
+    } else {
+        joinBtn.disabled = false;
+        joinBtn.textContent = '🎯 ЗАПИСАТЬСЯ В ЧЕЛЛЕНДЖ';
+    }
+
+    // Leaderboard (just names, no stats during enrollment)
+    gcRenderEnrollmentList(ch.leaderboard || []);
+
+    // Admin controls
+    gcUpdateAdminButtons(ch, 'enrollment');
+}
+
+function gcRenderEnrollmentList(participants) {
+    const container = document.getElementById('gcLeaderboard');
+    if (!container) return;
+
+    const titleEl = container.querySelector('.gc-lb-title');
+    if (titleEl) titleEl.innerHTML = `📋 Участники (${participants.length})`;
+
+    const listEl = container.querySelector('.gc-lb-list') || container;
+    const items = participants.map((p, i) => {
+        const nick = p.nickname || 'Танкист';
+        const myTgId = myTelegramId || localStorage.getItem('my_telegram_id');
+        const isMe = String(p.telegram_id) === String(myTgId);
+
+        return `
+            <div class="gc-lb-item gc-lb-item--other ${isMe ? 'gc-lb-item--me' : ''}" 
+                 style="animation-delay:${i * 0.04}s">
+                <div class="gc-lb-rank gc-lb-rank--other">${i + 1}</div>
+                <div class="gc-lb-info">
+                    <div class="gc-lb-name">${nick} ${isMe ? '(вы)' : ''}</div>
+                    <div class="gc-lb-battles" style="color:#4ade80">✅ Записан</div>
+                </div>
+                <div class="gc-lb-value" style="font-size:0.65rem;color:#5A6577">Ожидание старта</div>
+            </div>`;
+    }).join('');
+
+    // Find or create list container
+    const existing = container.querySelector('.gc-lb-items');
+    if (existing) {
+        existing.innerHTML = items || '<div class="gc-lb-empty">Пока никто не записался</div>';
+    } else {
+        const listDiv = document.createElement('div');
+        listDiv.className = 'gc-lb-items';
+        listDiv.innerHTML = items || '<div class="gc-lb-empty">Пока никто не записался</div>';
+        container.appendChild(listDiv);
+    }
+}
+
+// ============================================================
+// WHEEL PENDING (колесо фортуны)
+// ============================================================
+function gcShowWheelPending(ch) {
+    gcCurrentChallenge = ch;
+
+    document.getElementById('gcEmpty').style.display = 'none';
+    document.getElementById('gcActive').style.display = 'none';
+    document.getElementById('gcFinished').style.display = '';
+
+    const container = document.getElementById('gcFinished');
+    const condInfo = GC_CONDITION_MAP[ch.condition?.split(',')[0]] || GC_CONDITION_MAP.damage;
+    const prizeDesc = ch.prize_description || 'ПРИЗ';
+    const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
+
+    // Build wheel pending UI
+    container.innerHTML = `
+        <div class="gc-wheel-pending" style="animation: widgetAppear 0.5s ease">
+            <!-- Trophy Header -->
+            <div style="text-align:center;padding:30px 20px 16px">
+                <div style="font-size:3.5rem;animation:crownBounce 1.5s ease-in-out infinite;
+                     filter:drop-shadow(0 0 20px rgba(245,190,11,0.5))">🎡</div>
+                <div style="font-family:'Russo One',sans-serif;font-size:1.1rem;
+                     background:linear-gradient(135deg,#f5be0b,#C8AA6E,#f59e0b);
+                     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                     margin:12px 0 4px;letter-spacing:2px">КОЛЕСО ФОРТУНЫ</div>
+                <div style="font-size:0.72rem;color:#5A6577">Соревнование завершено — время розыгрыша!</div>
+            </div>
+
+            <!-- Prize Card -->
+            <div style="margin:0 20px 16px;padding:16px;background:linear-gradient(145deg,rgba(245,190,11,0.12),rgba(200,170,110,0.05));
+                 border:1px solid rgba(245,190,11,0.2);border-radius:16px;text-align:center;
+                 animation:winnerGlow 2s ease-in-out infinite">
+                <div style="font-size:1.5rem;margin-bottom:4px">🏆</div>
+                <div style="font-family:'Russo One',sans-serif;font-size:1rem;color:#f5be0b">${prizeDesc}</div>
+                <div style="font-size:0.6rem;color:#5A6577;margin-top:4px;letter-spacing:1px">ГЛАВНЫЙ ПРИЗ</div>
+            </div>
+
+            <!-- Top Players Summary -->
+            <div style="padding:0 20px 12px">
+                <div style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#C8AA6E;margin-bottom:8px">
+                    📊 ФИНАЛЬНАЯ ТАБЛИЦА
+                </div>
+                ${gcRenderWheelLeaderboard(ch.leaderboard || [], ch.prize_top_count || 10, condInfo)}
+            </div>
+
+            <!-- Admin: Open Wheel Button -->
+            ${isAdminNow ? `
+                <div style="padding:8px 20px 24px">
+                    <button onclick="gcOpenWheel(${ch.id})" 
+                        style="width:100%;padding:18px;border:none;border-radius:16px;
+                        font-family:'Russo One',sans-serif;font-size:0.95rem;cursor:pointer;
+                        background:linear-gradient(135deg,#f5be0b,#C8AA6E);color:#0a0e14;
+                        letter-spacing:2px;transition:all 0.3s;position:relative;overflow:hidden;
+                        box-shadow:0 8px 32px rgba(245,190,11,0.3)">
+                        🎡 ЗАПУСТИТЬ КОЛЕСО ЭЛИМИНАЦИИ
+                    </button>
+                    <button onclick="gcDeleteChallenge()" id="adminGcDeleteBtn" data-id="${ch.id}"
+                        style="width:100%;margin-top:8px;padding:12px;border:1px solid rgba(239,68,68,0.3);
+                        border-radius:12px;background:rgba(239,68,68,0.08);color:#ef4444;
+                        font-size:0.7rem;cursor:pointer;font-family:'Russo One',sans-serif">
+                        🗑 УДАЛИТЬ ЧЕЛЛЕНДЖ
+                    </button>
+                </div>
+            ` : `
+                <div style="text-align:center;padding:16px 20px 24px;font-size:0.72rem;color:#5A6577">
+                    ⏳ Ожидание запуска колеса фортуны администратором...
+                </div>
+            `}
+        </div>`;
+}
+
+function gcRenderWheelLeaderboard(leaderboard, topCount, condInfo) {
+    if (!leaderboard.length) return '<div style="color:#3E4A5C;font-size:0.72rem;text-align:center;padding:12px">Нет участников</div>';
+
+    const MULTIPLIERS = [10, 8, 6, 5, 4, 3.5, 3, 2.5, 2, 1.5];
+    const totalWeight = leaderboard.reduce((sum, _, i) => {
+        return sum + (i < MULTIPLIERS.length && i < topCount ? MULTIPLIERS[i] : 1);
+    }, 0);
+
+    return leaderboard.slice(0, 15).map((p, i) => {
+        const nick = p.nickname || 'Танкист';
+        const value = (p.current_value || 0).toLocaleString('ru-RU');
+        const isTop = i < topCount;
+        const multiplier = isTop && i < MULTIPLIERS.length ? MULTIPLIERS[i] : 1;
+        const chance = ((multiplier / totalWeight) * 100).toFixed(1);
+        
+        const medals = ['🥇', '🥈', '🥉'];
+        const rankDisplay = i < 3 ? medals[i] : `${i + 1}`;
+        const rankClass = i === 0 ? 'gc-lb-item--1st' : i === 1 ? 'gc-lb-item--2nd' : i === 2 ? 'gc-lb-item--3rd' : 'gc-lb-item--other';
+
+        return `
+            <div class="gc-lb-item ${rankClass}" style="animation-delay:${i * 0.04}s">
+                <div class="gc-lb-rank ${i < 3 ? `gc-lb-rank--${['1st','2nd','3rd'][i]}` : 'gc-lb-rank--other'}">${rankDisplay}</div>
+                <div class="gc-lb-info">
+                    <div class="gc-lb-name">${nick}</div>
+                    <div class="gc-lb-battles">${value} ${condInfo.unit} • ${p.battles_played || 0} боёв</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                    <div class="gc-lb-value" style="font-size:0.75rem">${isTop ? `×${multiplier}` : '×1'}</div>
+                    <div style="font-size:0.5rem;color:${isTop ? '#4ade80' : '#5A6577'}">${chance}%</div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function gcOpenWheel(challengeId) {
+    // Open wheel elimination page
+    window.open(`wheel-elimination.html?challenge_id=${challengeId}`, '_blank');
+}
+
+function gcUpdateAdminButtons(ch, phase) {
+    const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
+    if (!isAdminNow) return;
+
+    const stopBtn = document.getElementById('adminGcStopBtn');
+    const deleteBtn = document.getElementById('adminGcDeleteBtn');
+
+    if (phase === 'enrollment') {
+        if (stopBtn) {
+            stopBtn.setAttribute('data-id', ch.id);
+            stopBtn.textContent = '🚀 НАЧАТЬ ЧЕЛЛЕНДЖ СЕЙЧАС';
+            stopBtn.onclick = function() { gcStartChallengeNow(ch.id); };
+            stopBtn.style.display = '';
+            stopBtn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+        }
+        if (deleteBtn) {
+            deleteBtn.setAttribute('data-id', ch.id);
+            deleteBtn.style.display = '';
+        }
+    }
+}
+
+async function gcStartChallengeNow(challengeId) {
+    if (!confirm('Начать челлендж прямо сейчас? Статистика всех участников будет зафиксирована.')) return;
+    
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/start-active`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                admin_telegram_id: myTelegramId,
+                challenge_id: challengeId
+            })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast(`🚀 Челлендж начался! ${data.participants_count} участников`);
+            gcLoadChallenge(true);
+        } else {
+            showToast(`❌ ${data.error}`);
+        }
+    } catch (e) {
+        showToast('❌ Нет подключения');
+    }
+}
+
 function gcShowFinished(ch) {
     gcCurrentChallenge = ch;
 
@@ -366,7 +640,7 @@ function gcShowFinished(ch) {
 // ============================================================
 // TIMER
 // ============================================================
-function gcStartTimer(endsAtStr, durationMinutes) {
+function gcStartTimer(endsAtStr, durationMinutes, isEnrollment) {
     if (gcTimerInterval) clearInterval(gcTimerInterval);
 
     const endsAt = new Date(endsAtStr);
@@ -375,7 +649,13 @@ function gcStartTimer(endsAtStr, durationMinutes) {
 
     const progressEl = document.getElementById('gcTimerProgress');
     const valueEl = document.getElementById('gcTimerValue');
+    const labelEl = document.getElementById('gcTimerLabel');
     progressEl.style.strokeDasharray = circumference;
+
+    // Update label based on phase
+    if (labelEl) {
+        labelEl.textContent = isEnrollment ? 'ДО СТАРТА' : 'ОСТАЛОСЬ';
+    }
 
     function tick() {
         const now = new Date();
@@ -385,6 +665,10 @@ function gcStartTimer(endsAtStr, durationMinutes) {
             valueEl.textContent = '00:00';
             progressEl.style.strokeDashoffset = circumference;
             clearInterval(gcTimerInterval);
+            if (isEnrollment) {
+                valueEl.textContent = '🚀';
+                if (labelEl) labelEl.textContent = 'СТАРТУЕМ!';
+            }
             setTimeout(gcLoadChallenge, 2000);
             return;
         }
@@ -1051,6 +1335,25 @@ function gcSetDuration(min) {
     event.target.classList.add('gc-preset-btn--active');
 }
 
+function gcTogglePrizeMode() {
+    gcPrizeModeEnabled = !gcPrizeModeEnabled;
+    const toggle = document.getElementById('prizeModeToggle');
+    const fields = document.getElementById('prizeModeFields');
+    const dot = toggle?.querySelector('div');
+    
+    if (gcPrizeModeEnabled) {
+        toggle.style.background = 'linear-gradient(135deg, #f5be0b, #C8AA6E)';
+        toggle.style.borderColor = 'rgba(245,190,11,0.3)';
+        if (dot) { dot.style.transform = 'translateX(20px)'; dot.style.background = '#0a0e14'; }
+        fields.style.display = '';
+    } else {
+        toggle.style.background = 'rgba(255,255,255,0.08)';
+        toggle.style.borderColor = 'rgba(255,255,255,0.1)';
+        if (dot) { dot.style.transform = 'translateX(0)'; dot.style.background = '#5A6577'; }
+        fields.style.display = 'none';
+    }
+}
+
 async function gcLaunchChallenge() {
     if (!myTelegramId) { showToast('⚠️ Нет Telegram ID'); return; }
 
@@ -1072,7 +1375,7 @@ async function gcLaunchChallenge() {
                 admin_telegram_id: myTelegramId,
                 title,
                 description: desc,
-                icon: '🔥',
+                icon: gcPrizeModeEnabled ? '🏆' : '🔥',
                 condition: gcAdminConditions.join(','),
                 duration_minutes: duration,
                 max_battles: maxBattles,
@@ -1083,13 +1386,17 @@ async function gcLaunchChallenge() {
                 tank_class: gcAdminTankClass || '',
                 tank_tier_filter: gcAdminTankTier || 0,
                 tank_id_filter: gcAdminTankId || 0,
-                tank_name_filter: gcAdminTankName || ''
+                tank_name_filter: gcAdminTankName || '',
+                prize_mode: gcPrizeModeEnabled ? 1 : 0,
+                prize_description: document.getElementById('adminGcPrizeDesc')?.value || '',
+                prize_top_count: 10,
+                challenge_duration_minutes: parseInt(document.getElementById('adminGcChallengeDuration')?.value) || 0
             })
         });
         const data = await resp.json();
 
         if (data.success) {
-            showToast('🚀 Челлендж запущен! Вы автоматически вступили.');
+            showToast(gcPrizeModeEnabled ? '🏆 Призовой челлендж создан! Набор участников начался.' : '🚀 Челлендж запущен!');
             gcLoadChallenge();
         } else {
             showToast(`❌ ${data.error}`);
