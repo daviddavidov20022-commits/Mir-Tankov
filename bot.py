@@ -262,7 +262,7 @@ async def cmd_start(message: types.Message):
 
     if sub and sub.get("active") or is_admin:
         # === ПОДПИСЧИК / АДМИН — полный доступ ===
-        user_webapp_url = f"{WEBAPP_URL}?telegram_id={message.from_user.id}"
+        user_webapp_url = f"{WEBAPP_URL}?v=25&telegram_id={message.from_user.id}"
         reply_keyboard = ReplyKeyboardMarkup(
             keyboard=[
                 [
