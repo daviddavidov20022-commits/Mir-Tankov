@@ -5709,7 +5709,7 @@ async def _do_refresh_stats():
 
             # --- Фоновое обнаружение боёв для детализации (не влияет на очки) ---
             try:
-                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles)
+                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles, max_battles)
             except Exception as e:
                 logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
 
@@ -5783,10 +5783,20 @@ async def _do_refresh_stats():
         return cors_response({"error": str(e)}, 500)
 
 
-async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field, total_new_battles):
+async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field, total_new_battles, max_battles=0):
     """Обнаружить новые бои путём сравнения по-танковой статы с baseline"""
     from database import get_db
     from datetime import datetime
+
+    # Если уже есть лимит боёв в логе — выходим сразу
+    with get_db() as conn_check:
+        existing_logs = conn_check.execute(
+            "SELECT COUNT(*) as cnt FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ?",
+            (challenge_id, telegram_id)
+        ).fetchone()
+        existing_count = existing_logs["cnt"] if existing_logs else 0
+        if max_battles > 0 and existing_count >= max_battles:
+            return
 
     # Получаем текущую стату по танкам
     tanks = await gc_fetch_tank_stats(account_id)
@@ -5803,9 +5813,7 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
             "SELECT COUNT(*) as cnt FROM gc_battle_log WHERE challenge_id = ? AND telegram_id = ?",
             (challenge_id, telegram_id)
         ).fetchone()
-
-    baseline_map = {b["tank_id"]: dict(b) for b in baselines}
-    existing_count = existing_logs["cnt"] if existing_logs else 0
+        existing_count = existing_logs["cnt"] if existing_logs else 0
 
     # Если нет baselines — пропускаем
     if not baseline_map:
@@ -5889,6 +5897,8 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
             per_battle = {k: v // new_count for k, v in b["deltas"].items()}
             
             for j in range(new_count):
+                if max_battles > 0 and battle_num > max_battles:
+                    break
                 this_battle = {}
                 for k, v in b["deltas"].items():
                     if j == new_count - 1: # Остаток в последний бой
@@ -6576,7 +6586,7 @@ async def api_global_challenge_auto_start(request):
             if challenge_duration > 0:
                 new_ends_at = now + timedelta(minutes=challenge_duration)
             else:
-                new_ends_at = now + timedelta(days=30)
+                new_ends_at = None # No timer for battle-count challenges
 
             conn.execute("""
                 UPDATE global_challenges SET status = 'active', ends_at = ? WHERE id = ?

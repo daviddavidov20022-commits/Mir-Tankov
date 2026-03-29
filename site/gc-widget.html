@@ -1113,7 +1113,15 @@
                     const enrollEnd = ch.enrollment_ends_at || ch.ends_at;
                     startTimer(enrollEnd, 'ДО СТАРТА');
                 } else if (currentPhase === 'active') {
-                    startTimer(ch.ends_at, 'ОСТАЛОСЬ');
+                    // Hide timer if it's a battle-count challenge (duration = 0)
+                    if (ch.challenge_duration_minutes > 0 && ch.ends_at) {
+                        startTimer(ch.ends_at, 'ОСТАЛОСЬ');
+                    } else {
+                        const tel = document.getElementById('wTimer');
+                        const tlbl = document.getElementById('wTimerLabel');
+                        if (tel) tel.textContent = 'АКТИВЕН';
+                        if (tlbl) tlbl.textContent = 'СТАТИСТИКА ВКЛ';
+                    }
                 }
             }
         }

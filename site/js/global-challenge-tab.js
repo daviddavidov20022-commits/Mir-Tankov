@@ -245,7 +245,18 @@ function gcShowActive(ch) {
     }
 
     // Timer
-    gcStartTimer(ch.ends_at, ch.duration_minutes);
+    const timerContainer = document.getElementById('gcTimerContainer');
+    if (timerContainer) {
+        // Hide timer if enrollment is over and no duration is set
+        if (ch.status === 'active' && (!ch.duration_minutes || !ch.ends_at)) {
+            timerContainer.style.display = 'none';
+        } else {
+            timerContainer.style.display = '';
+            gcStartTimer(ch.ends_at, ch.duration_minutes);
+        }
+    } else {
+        gcStartTimer(ch.ends_at, ch.duration_minutes);
+    }
 
     // Leaderboard
     gcRenderLeaderboard(ch.leaderboard || []);
