@@ -1438,12 +1438,78 @@ function gcSetEnrollDuration(mins) {
 function gcPreviewPrizeImage(url) {
     const preview = document.getElementById('prizeImagePreview');
     const img = document.getElementById('prizeImagePreviewImg');
-    if (url && url.startsWith('http')) {
-        img.src = url;
+    if (url && (url.startsWith('http') || url.startsWith('img/'))) {
+        // For relative paths, prepend server URL
+        const fullUrl = url.startsWith('http') ? url : `${BOT_API_URL}/webapp/${url}`;
+        img.src = fullUrl;
         preview.style.display = '';
         img.onerror = () => { preview.style.display = 'none'; };
     } else {
         preview.style.display = 'none';
+    }
+    // Update widget preview too
+    if (typeof gcUpdatePreview === 'function') gcUpdatePreview();
+}
+
+async function gcUploadPrizeImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Max 5MB
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('⚠️ Файл слишком большой (макс 5 МБ)');
+        return;
+    }
+    
+    const status = document.getElementById('prizeImageStatus');
+    if (status) status.textContent = '⏳ Загрузка...';
+    
+    try {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64 = e.target.result;
+            
+            try {
+                const resp = await fetch(`${BOT_API_URL}/api/upload-prize-image`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64, filename: file.name })
+                });
+                const data = await resp.json();
+                
+                if (data.url) {
+                    // Set the URL in the input field
+                    const urlInput = document.getElementById('adminGcPrizeImage');
+                    // Build full URL for the widget
+                    const fullUrl = `${BOT_API_URL}/webapp/${data.url}`;
+                    if (urlInput) urlInput.value = fullUrl;
+                    
+                    // Show preview
+                    gcPreviewPrizeImage(fullUrl);
+                    
+                    if (status) {
+                        status.textContent = '✅ Картинка загружена!';
+                        status.style.color = '#4ade80';
+                    }
+                    showToast('✅ Картинка приза загружена!');
+                } else {
+                    if (status) {
+                        status.textContent = '❌ Ошибка загрузки';
+                        status.style.color = '#ef4444';
+                    }
+                    showToast('❌ Ошибка: ' + (data.error || 'unknown'));
+                }
+            } catch (err) {
+                if (status) {
+                    status.textContent = '❌ Ошибка сети';
+                    status.style.color = '#ef4444';
+                }
+                showToast('❌ Ошибка сети при загрузке');
+            }
+        };
+        reader.readAsDataURL(file);
+    } catch (err) {
+        showToast('❌ Ошибка чтения файла');
     }
 }
 

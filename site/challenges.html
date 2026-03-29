@@ -614,14 +614,28 @@
                                    placeholder="Например: iPhone 16 Pro" style="margin-bottom:10px">
 
                             <!-- Картинка приза -->
-                            <label class="gc-admin__label">🖼 Картинка приза <span style="font-size:0.5rem;color:#5A6577">(URL)</span></label>
-                            <input type="url" class="gc-admin__input" id="adminGcPrizeImage"
-                                   placeholder="https://..." style="margin-bottom:6px"
+                            <label class="gc-admin__label">🖼 Картинка приза</label>
+                            <input type="file" id="adminGcPrizeFile" accept="image/*" 
+                                   style="display:none" onchange="gcUploadPrizeImage(this)">
+                            <div style="display:flex;gap:8px;margin-bottom:6px">
+                                <button type="button" onclick="document.getElementById('adminGcPrizeFile').click()"
+                                    style="flex:1;padding:10px;border:1px dashed rgba(200,170,110,0.3);
+                                           border-radius:10px;background:rgba(200,170,110,0.06);color:#C8AA6E;
+                                           font-size:0.65rem;cursor:pointer;font-family:'Inter',sans-serif;
+                                           transition:all 0.3s"
+                                    onmouseover="this.style.background='rgba(200,170,110,0.12)'"
+                                    onmouseout="this.style.background='rgba(200,170,110,0.06)'">
+                                    📤 Загрузить с компьютера
+                                </button>
+                            </div>
+                            <input type="text" class="gc-admin__input" id="adminGcPrizeImage"
+                                   placeholder="или вставить прямую ссылку https://..." style="margin-bottom:6px;font-size:0.55rem"
                                    oninput="gcPreviewPrizeImage(this.value)">
                             <div id="prizeImagePreview" style="display:none;margin-bottom:10px;text-align:center">
                                 <img id="prizeImagePreviewImg" src="" alt="Приз" 
                                      style="max-width:100%;max-height:120px;border-radius:10px;
                                             border:1px solid rgba(245,190,11,0.3);object-fit:contain">
+                                <div id="prizeImageStatus" style="font-size:0.5rem;color:#4ade80;margin-top:4px"></div>
                             </div>
 
                             <div style="padding:8px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);

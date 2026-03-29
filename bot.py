@@ -5258,6 +5258,53 @@ async def api_global_challenge_active(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_upload_prize_image(request):
+    """POST /api/upload-prize-image — загрузка картинки приза (base64)"""
+    try:
+        data = await request.json()
+        image_data = data.get("image", "")
+        filename = data.get("filename", "prize")
+        
+        if not image_data:
+            return cors_response({"error": "No image data"}, 400)
+        
+        # Remove data:image/...;base64, prefix if present
+        if "," in image_data:
+            image_data = image_data.split(",", 1)[1]
+        
+        import base64
+        image_bytes = base64.b64decode(image_data)
+        
+        # Determine extension from first bytes
+        ext = "png"
+        if image_bytes[:3] == b'\xff\xd8\xff':
+            ext = "jpg"
+        elif image_bytes[:4] == b'\x89PNG':
+            ext = "png"
+        elif image_bytes[:4] == b'RIFF':
+            ext = "webp"
+        
+        # Save to webapp/img/prizes/
+        prizes_dir = os.path.join(os.path.dirname(__file__), "webapp", "img", "prizes")
+        os.makedirs(prizes_dir, exist_ok=True)
+        
+        # Use timestamp for unique filename
+        import time
+        safe_name = f"prize_{int(time.time())}.{ext}"
+        filepath = os.path.join(prizes_dir, safe_name)
+        
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
+        
+        # Return relative URL path
+        image_url = f"img/prizes/{safe_name}"
+        
+        logger.info(f"Prize image uploaded: {safe_name} ({len(image_bytes)} bytes)")
+        return cors_response({"url": image_url, "filename": safe_name})
+    except Exception as e:
+        logger.error(f"Upload prize image error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
 async def api_global_challenge_join(request):
     """POST /api/global-challenge/join — присоединиться к общему челленджу"""
     try:
@@ -8293,6 +8340,7 @@ def create_api_app():
     app.router.add_post("/api/global-challenge/wheel-eliminate", api_global_challenge_wheel_eliminate)
     app.router.add_post("/api/global-challenge/wheel-winner", api_global_challenge_wheel_winner)
     app.router.add_post("/api/global-challenge/start-active", api_global_challenge_start_active)
+    app.router.add_post("/api/upload-prize-image", api_upload_prize_image)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)

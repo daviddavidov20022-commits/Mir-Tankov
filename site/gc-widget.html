@@ -909,7 +909,7 @@
                         <div class="w-ttl" style="color:${T.tc};text-shadow:${T.ts}">${ch.title || 'Челлендж'}</div>
                         ${ch.description ? `<div class="w-desc">${ch.description}</div>` : ''}
                     </div>
-                    ${showTimer ? `<div class="w-time"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div></div>` : ''}
+                    ${showTimer ? `<div class="w-time"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div><div id="wTimerLabel" style="font-size:.5rem;color:${AC};opacity:.6;letter-spacing:2px;margin-top:2px"></div></div>` : ''}
                     <div class="w-row"><span>👥 <span class="w-rv" style="color:${AC}">${ch.participants_count || 0}</span> игроков</span><span>${ch.prize_description ? `🏆 <span class="w-rv" style="color:${AC}">${ch.prize_description}</span>` : `🧀 <span class="w-rv" style="color:${AC}">${ch.reward_coins || 0}</span> приз`}</span></div>
                     ${ch.prize_image_url ? `<div style="text-align:center;margin:6px 0"><img src="${ch.prize_image_url}" alt="Приз" style="max-width:120px;max-height:60px;border-radius:8px;border:1px solid ${AC}33;object-fit:contain" onerror="this.style.display='none'"></div>` : ''}
                     ${buildCondBadges((ch.condition || 'damage').split(','))}
@@ -991,7 +991,7 @@
                     ${showLive ? `<div class="w-badge" style="background:${AC};color:#000">LIVE</div>` : ''}
                     <div class="w-corners">
                         <div class="w-corner" style="background:${BG};border-color:${AC}">
-                            <div class="w-c-label" style="color:${AC}">⏱ Осталось</div>
+                            <div id="wTimerLabel" class="w-c-label" style="color:${AC}">⏱ Осталось</div>
                             ${showTimer ? `<div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div>` : ''}
                             <div class="w-ttl" style="color:${AC}">${ch.icon || '🔥'} ${ch.title || 'Челлендж'}</div>
                         </div>
@@ -1013,13 +1013,21 @@
         const BUILDERS = { 1: buildLayout1, 2: buildLayout2, 3: buildLayout3, 4: buildLayout4, 5: buildLayout5 };
 
         // ═══════ LOAD & RENDER ═══════
+        let currentPhase = 'none';
+
         async function loadWidget() {
             try {
                 try { await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' }); } catch (e) { }
                 const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
                 const data = await resp.json();
-                if (data.status === 'active' && data.challenge) showChallenge(data.challenge);
-                else showEmpty();
+                
+                if ((data.status === 'active' || data.status === 'enrollment' || data.status === 'wheel_pending') && data.challenge) {
+                    currentPhase = data.status;
+                    showChallenge(data.challenge);
+                } else {
+                    currentPhase = 'none';
+                    showEmpty();
+                }
             } catch (e) { showEmpty(); }
         }
 
@@ -1029,11 +1037,9 @@
         }
         function formatCondValue(player, ch) {
             const conditions = (ch.condition || 'damage').split(',');
-            // Single condition — just show the number
             if (conditions.length <= 1) {
                 return (player.current_value || 0).toLocaleString('ru');
             }
-            // Multi-condition — show icon + value for each
             let cv = player.condition_values;
             if (typeof cv === 'string') {
                 try { cv = JSON.parse(cv); } catch (e) { cv = null; }
@@ -1048,7 +1054,6 @@
             return (player.current_value || 0).toLocaleString('ru');
         }
 
-        // Build condition badge strip for multi-condition challenges
         function buildCondBadges(conditions) {
             if (conditions.length <= 1) return '';
             return `<div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin:6px 0">${conditions.map(c => {
@@ -1060,10 +1065,8 @@
         function showChallenge(ch) {
             document.getElementById('wEmpty').style.display = 'none';
             const conditions = (ch.condition || 'damage').split(',');
-            // Create a COPY — never mutate the shared COND object!
             const baseCond = COND[conditions[0]] || COND.damage;
             const cond = { ...baseCond };
-            // Multi-condition: build combined unit string on the copy
             if (conditions.length > 1) {
                 cond.unit = conditions.map(c => (COND[c] || COND.damage).short).join('+');
                 cond.icon = conditions.map(c => (COND[c] || COND.damage).icon).join(' ');
@@ -1078,11 +1081,18 @@
             const w = document.getElementById('widget').firstElementChild;
             if (w && fontScale !== 1) w.style.fontSize = (fontScale * 16) + 'px';
 
-            // Start timer
-            if (showTimer) startTimer(ch.ends_at);
+            // Start timer based on phase
+            if (showTimer) {
+                if (currentPhase === 'enrollment') {
+                    const enrollEnd = ch.enrollment_ends_at || ch.ends_at;
+                    startTimer(enrollEnd, 'ДО СТАРТА');
+                } else if (currentPhase === 'active') {
+                    startTimer(ch.ends_at, 'ОСТАЛОСЬ');
+                }
+            }
         }
 
-        function startTimer(endsAtStr) {
+        function startTimer(endsAtStr, label) {
             if (timerInterval) clearInterval(timerInterval);
             const endsAt = new Date(endsAtStr);
             function tick() {
