@@ -1128,18 +1128,27 @@
                 if (labelEl && label) labelEl.textContent = label;
             }, 50);
             
+            async function onTimerEnd() {
+                clearInterval(timerInterval);
+                const el = document.getElementById('wTimer');
+                if (el) el.textContent = '00:00';
+                
+                // If enrollment just ended — trigger auto-start on server
+                if (currentPhase === 'enrollment') {
+                    try {
+                        await fetch(`${BOT_API_URL}/api/global-challenge/auto-start`, { method: 'POST' });
+                    } catch(e) {}
+                }
+                // Reload widget after server processes transition
+                setTimeout(loadWidget, 1500);
+                setTimeout(loadWidget, 4000);
+            }
+            
             function tick() {
                 const el = document.getElementById('wTimer');
                 if (!el) return;
                 const diff = Math.max(0, Math.floor((endsAt - new Date()) / 1000));
-                if (diff <= 0) {
-                    el.textContent = '00:00';
-                    clearInterval(timerInterval);
-                    // Rapid reload for phase transition
-                    setTimeout(loadWidget, 2000);
-                    setTimeout(loadWidget, 5000);
-                    return;
-                }
+                if (diff <= 0) { onTimerEnd(); return; }
                 const h = Math.floor(diff / 3600), m = Math.floor((diff % 3600) / 60), s = diff % 60;
                 el.textContent = h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
                 if (diff < 60) el.classList.add('w-tv--danger'); else el.classList.remove('w-tv--danger');

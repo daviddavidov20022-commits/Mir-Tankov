@@ -6472,6 +6472,137 @@ async def api_global_challenge_wheel_winner(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_global_challenge_auto_start(request):
+    """POST /api/global-challenge/auto-start — публичный авто-старт: enrollment→active когда время истекло"""
+    try:
+        from database import get_db, get_db_read
+        from datetime import datetime, timedelta, timezone
+
+        now = datetime.now(timezone.utc)
+        now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+
+        with get_db_read() as conn:
+            ch = conn.execute("""
+                SELECT * FROM global_challenges 
+                WHERE status = 'enrollment'
+                ORDER BY created_at DESC LIMIT 1
+            """).fetchone()
+
+        if not ch:
+            return cors_response({"skipped": True, "reason": "no enrollment challenge"})
+
+        ch_data = dict(ch)
+        challenge_id = ch_data["id"]
+
+        # Проверяем что время набора РЕАЛЬНО истекло
+        enroll_end_str = ch_data.get("enrollment_ends_at", "")
+        if not enroll_end_str:
+            return cors_response({"skipped": True, "reason": "no enrollment_ends_at"})
+
+        enroll_end_clean = str(enroll_end_str).replace("T", " ").replace("Z", "").strip()
+        try:
+            enroll_end = datetime.strptime(enroll_end_clean, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        except Exception:
+            return cors_response({"skipped": True, "reason": "bad enrollment_ends_at"})
+
+        if now < enroll_end:
+            seconds_left = int((enroll_end - now).total_seconds())
+            return cors_response({"skipped": True, "reason": "not expired", "seconds_left": seconds_left})
+
+        logger.info(f"⏰ Public auto-start triggered for challenge {challenge_id}")
+
+        condition = ch_data.get("condition", "damage")
+        conditions = [c.strip() for c in condition.split(",") if c.strip()]
+        is_multi = len(conditions) > 1
+        tank_class = ch_data.get("tank_class")
+        tank_tier = ch_data.get("tank_tier_filter")
+        tank_id = ch_data.get("tank_id_filter")
+
+        # Получаем участников
+        with get_db() as conn:
+            participants = conn.execute(
+                "SELECT * FROM global_challenge_participants WHERE challenge_id = ?",
+                (challenge_id,)
+            ).fetchall()
+
+        # Собираем account_ids
+        account_ids = []
+        tg_to_account = {}
+        for p in participants:
+            p_dict = dict(p)
+            aid = p_dict.get("wot_account_id")
+            if aid:
+                try:
+                    aid = int(aid)
+                    account_ids.append(aid)
+                    tg_to_account[p_dict["telegram_id"]] = aid
+                except (ValueError, TypeError):
+                    pass
+
+        # Получаем baseline stats
+        batch_stats = {}
+        if account_ids:
+            try:
+                batch_stats = await gc_fetch_batch_stats(account_ids, condition, tank_class, tank_tier, tank_id)
+            except Exception as e:
+                logger.warning(f"Auto-start batch stats error: {e}")
+
+        # Записываем baselines и переводим в active
+        with get_db() as conn:
+            for p in participants:
+                p_dict = dict(p)
+                tg_id = p_dict["telegram_id"]
+                aid = tg_to_account.get(tg_id)
+
+                baseline_value = 0
+                baseline_battles = 0
+                baseline_values_json = None
+
+                if aid and aid in batch_stats:
+                    stat = batch_stats[aid]
+                    baseline_value = stat["value"]
+                    baseline_battles = stat["battles"]
+                    if is_multi:
+                        baseline_values_json = json.dumps(stat.get("per_condition", {}))
+
+                conn.execute("""
+                    UPDATE global_challenge_participants 
+                    SET baseline_value = ?, baseline_battles = ?, baseline_values = ?,
+                        current_value = 0, battles_played = 0
+                    WHERE challenge_id = ? AND telegram_id = ?
+                """, (baseline_value, baseline_battles, baseline_values_json, challenge_id, tg_id))
+
+            challenge_duration = ch_data.get("challenge_duration_minutes", 0) or 0
+            if challenge_duration > 0:
+                new_ends_at = now + timedelta(minutes=challenge_duration)
+            else:
+                new_ends_at = now + timedelta(days=30)
+
+            conn.execute("""
+                UPDATE global_challenges SET status = 'active', ends_at = ? WHERE id = ?
+            """, (new_ends_at, challenge_id))
+
+        # Сохраняем baseline танки для каждого
+        for p in participants:
+            p_dict = dict(p)
+            aid = tg_to_account.get(p_dict["telegram_id"])
+            if aid:
+                try:
+                    await gc_save_tank_baselines(challenge_id, p_dict["telegram_id"], aid)
+                except Exception:
+                    pass
+
+        logger.info(f"🚀 Challenge {challenge_id} auto-started via public endpoint! {len(participants)} participants")
+        return cors_response({
+            "success": True,
+            "challenge_id": challenge_id,
+            "participants": len(participants)
+        })
+    except Exception as e:
+        logger.error(f"API auto_start error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 async def api_global_challenge_start_active(request):
     """POST /api/global-challenge/start-active — перевести из enrollment в active (записать baselines)"""
     try:
@@ -8448,6 +8579,7 @@ def create_api_app():
     app.router.add_post("/api/global-challenge/wheel-eliminate", api_global_challenge_wheel_eliminate)
     app.router.add_post("/api/global-challenge/wheel-winner", api_global_challenge_wheel_winner)
     app.router.add_post("/api/global-challenge/start-active", api_global_challenge_start_active)
+    app.router.add_post("/api/global-challenge/auto-start", api_global_challenge_auto_start)
     app.router.add_post("/api/upload-prize-image", api_upload_prize_image)
 
     # Finance / Accounting (admin only)

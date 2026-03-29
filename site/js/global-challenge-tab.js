@@ -109,18 +109,13 @@ async function gcLoadChallenge(forceRefresh) {
                 gcSyncAdminForm(data.challenge);
                 gcShowActive(data.challenge);
             } else if (data.status === 'enrollment' && data.challenge) {
-                // Auto-start if enrollment timer expired
+                // Auto-start if enrollment timer expired — uses public endpoint (no admin required)
                 const enrollEnd = data.challenge.enrollment_ends_at || data.challenge.ends_at;
                 if (enrollEnd && new Date(enrollEnd) <= new Date()) {
-                    const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
-                    if (isAdminNow && myTelegramId) {
-                        // Auto-trigger start
-                        fetch(`${BOT_API_URL}/api/global-challenge/start-active`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ admin_telegram_id: myTelegramId, challenge_id: data.challenge.id })
-                        }).then(() => setTimeout(() => gcLoadChallenge(true), 2000)).catch(() => {});
-                    }
+                    // Call public auto-start endpoint — no admin check needed
+                    fetch(`${BOT_API_URL}/api/global-challenge/auto-start`, {
+                        method: 'POST'
+                    }).then(() => setTimeout(() => gcLoadChallenge(true), 2000)).catch(() => {});
                 }
                 gcSyncAdminForm(data.challenge);
                 gcShowEnrollment(data.challenge);
