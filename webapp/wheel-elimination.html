@@ -12,8 +12,6 @@
             --primary-gold: #f5be0b;
             --secondary-gold: #C8AA6E;
             --bg-dark: #07090d;
-            --card-glass: rgba(13, 17, 23, 0.7);
-            --neon-glow: 0 0 20px rgba(245, 190, 11, 0.4);
             --danger-red: #ef4444;
         }
 
@@ -28,7 +26,6 @@
             align-items: center;
         }
 
-        /* Ambient background nebulas */
         .ambient-bg {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -138,7 +135,6 @@
             align-items: center;
         }
         
-        /* Inner decorative ring */
         .wh-inner-ring {
             position: absolute;
             top: 10px; left: 10px; right: 10px; bottom: 10px;
@@ -178,7 +174,7 @@
             border-radius: 4px;
         }
 
-        /* LCD Counter */
+        /* Counter */
         .wh-counter {
             text-align: center;
             margin-bottom: 24px;
@@ -199,7 +195,7 @@
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
 
-        /* Premium Spin Button */
+        /* Spin Button */
         .wh-spin-btn {
             width: 100%;
             padding: 22px;
@@ -220,20 +216,10 @@
             margin-bottom: 25px;
         }
 
-        .wh-spin-btn::after {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
         .wh-spin-btn:hover:not(:disabled) {
             transform: translateY(-4px) scale(1.02);
             box-shadow: 0 15px 45px rgba(239, 68, 68, 0.4);
         }
-        .wh-spin-btn:hover::after { opacity: 1; }
 
         .wh-spin-btn:active { transform: translateY(0); }
 
@@ -244,7 +230,7 @@
             cursor: not-allowed;
         }
 
-        /* Eliminated List - New Design */
+        /* Eliminated List */
         .wh-elim-section {
             background: rgba(255, 255, 255, 0.02);
             border-radius: 20px;
@@ -307,7 +293,7 @@
             margin-right: 10px;
         }
 
-        /* Winner Modal - Premium Edition */
+        /* Winner Modal */
         .wh-winner-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -397,7 +383,7 @@
         }
         .modal-back-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(245, 190, 11, 0.4); }
 
-        /* Loading Skeleton */
+        /* Loading */
         .wh-loading {
             padding: 100px 0;
             display: flex;
@@ -413,16 +399,14 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-
     </style>
 </head>
 <body>
     <div class="ambient-bg"></div>
     <div class="wheel-page">
-        <!-- New Navigation -->
         <div class="wh-nav">
             <button class="wh-back-btn" onclick="history.back()">
-                <span>←</span> Назад
+                <span>&larr;</span> Назад
             </button>
             <div style="font-size:0.6rem; color:#5A6577; text-transform:uppercase; letter-spacing:1px">Колесо Элиминации</div>
         </div>
@@ -465,85 +449,13 @@
         </div>
     </div>
 
-        /* Loading */
-        .wh-loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: #5A6577;
-        }
-
-        .wh-loading__spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(200, 170, 110, 0.15);
-            border-top-color: #C8AA6E;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-    <div class="wheel-page">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <button onclick="history.back()" style="background:rgba(200,170,110,0.1);border:1px solid rgba(200,170,110,0.2);
-                border-radius:12px;padding:10px 16px;color:#C8AA6E;cursor:pointer;font-size:0.8rem;
-                font-family:'Inter',sans-serif;font-weight:600;transition:all 0.2s"
-                onmouseover="this.style.background='rgba(200,170,110,0.2)'"
-                onmouseout="this.style.background='rgba(200,170,110,0.1)'"
-            >← Назад</button>
-            <div style="font-size:0.6rem;color:#5A6577">Колесо Элиминации</div>
-        </div>
-        <div class="wh-header">
-            <div class="wh-header__icon">🎡</div>
-            <div class="wh-header__title">КОЛЕСО ЭЛИМИНАЦИИ</div>
-            <div class="wh-header__prize" id="whPrize">🏆 Загрузка...</div>
-        </div>
-
-        <div class="wh-loading" id="whLoading">
-            <div class="wh-loading__spinner"></div>
-            <div>Загрузка данных...</div>
-        </div>
-
-        <div id="whContent" style="display:none">
-            <div class="wh-wheel-wrap">
-                <div class="wh-canvas-container">
-                    <div class="wh-pointer"></div>
-                    <canvas id="wheelCanvas" width="720" height="720"></canvas>
-                </div>
-            </div>
-
-            <div class="wh-counter">
-                <div class="wh-counter__num" id="whRemaining">0</div>
-                <div class="wh-counter__label">осталось участников</div>
-            </div>
-
-            <button class="wh-spin-btn" id="whSpinBtn" onclick="spinWheel()">
-                🎡 КРУТИТЬ КОЛЕСО
-            </button>
-
-            <div class="wh-elim-list" id="whElimList"></div>
-        </div>
-    </div>
-
-    <canvas id="confettiCanvas"></canvas>
-
     <script>
-    // ==========================================
-    // CONFIG
-    // ==========================================
     const BOT_API_URL = localStorage.getItem('bot_api_url') || 
         (location.hostname === 'localhost' ? 'http://localhost:8443' : 'https://mir-tankov-production.up.railway.app');
     const myTelegramId = localStorage.getItem('my_telegram_id') || '';
 
-    const COLORS_TOP = [
-        '#f5be0b', '#FFD700', '#C8AA6E', '#f59e0b', '#eab308'
-    ];
-    const COLORS_OTHER = [
-        '#1e293b', '#334155', '#1e293b', '#334155', '#0f172a'
-    ];
+    const COLORS_TOP = ['#f5be0b', '#FFD700', '#C8AA6E', '#f59e0b', '#eab308'];
+    const COLORS_OTHER = ['#1e293b', '#334155', '#1e293b', '#334155', '#0f172a'];
 
     let wheelData = null;
     let participants = [];
@@ -558,28 +470,25 @@
         const params = new URLSearchParams(location.search);
         const challengeId = params.get('challenge_id');
         if (!challengeId) {
-            document.getElementById('whLoading').innerHTML = '<div style="color:#ef4444">❌ Нет challenge_id</div>';
+            document.getElementById('whLoading').innerHTML = '<div style="color:#ef4444">No challenge_id</div>';
             return;
         }
 
         try {
-            const resp = await fetch(`${BOT_API_URL}/api/global-challenge/wheel-data?challenge_id=${challengeId}`);
+            const resp = await fetch(BOT_API_URL + '/api/global-challenge/wheel-data?challenge_id=' + challengeId);
             wheelData = await resp.json();
 
             if (wheelData.error) {
-                document.getElementById('whLoading').innerHTML = `<div style="color:#ef4444">❌ ${wheelData.error}</div>`;
+                document.getElementById('whLoading').innerHTML = '<div style="color:#ef4444">' + wheelData.error + '</div>';
                 return;
             }
 
-            // Set prize
-            document.getElementById('whPrize').innerHTML = 
-                `<span style="margin-right:8px">🏆</span> ${wheelData.challenge.prize_description || 'ПРИЗ'}`;
+            document.getElementById('whPrize').textContent = '🏆 ' + (wheelData.challenge.prize_description || 'ПРИЗ');
 
-            // Filter to remaining participants
-            participants = wheelData.participants.filter(p => !p.eliminated);
+            participants = wheelData.participants.filter(function(p) { return !p.eliminated; });
             eliminatedList = wheelData.participants
-                .filter(p => p.eliminated)
-                .sort((a, b) => (a.eliminated_order || 0) - (b.eliminated_order || 0));
+                .filter(function(p) { return p.eliminated; })
+                .sort(function(a, b) { return (a.eliminated_order || 0) - (b.eliminated_order || 0); });
 
             document.getElementById('whRemaining').textContent = participants.length;
             document.getElementById('whLoading').style.display = 'none';
@@ -588,41 +497,39 @@
             renderEliminated();
             drawWheel();
 
-            // If only 1 left, show winner
             if (participants.length === 1) {
                 showWinner(participants[0]);
             }
         } catch (e) {
-            document.getElementById('whLoading').innerHTML = `<div style="color:#ef4444">❌ Ошибка: ${e.message}</div>`;
+            document.getElementById('whLoading').innerHTML = '<div style="color:#ef4444">Error: ' + e.message + '</div>';
         }
     }
 
     // ==========================================
-    // DRAW WHEEL (PREMIUM RENDERING)
+    // DRAW WHEEL
     // ==========================================
     function drawWheel() {
-        const canvas = document.getElementById('wheelCanvas');
-        const ctx = canvas.getContext('2d');
-        const W = canvas.width;
-        const H = canvas.height;
-        const cx = W / 2;
-        const cy = H / 2;
-        const radius = W / 2 - 10;
+        var canvas = document.getElementById('wheelCanvas');
+        var ctx = canvas.getContext('2d');
+        var W = canvas.width;
+        var H = canvas.height;
+        var cx = W / 2;
+        var cy = H / 2;
+        var radius = W / 2 - 10;
 
         ctx.clearRect(0, 0, W, H);
         if (!participants.length) return;
 
-        const totalWeight = participants.reduce((s, p) => s + (p.multiplier || 1), 0);
-        let startAngle = currentRotation;
+        var totalWeight = participants.reduce(function(s, p) { return s + (p.multiplier || 1); }, 0);
+        var startAngle = currentRotation;
 
-        participants.forEach((p, i) => {
-            const weight = p.multiplier || 1;
-            const sliceAngle = (weight / totalWeight) * Math.PI * 2;
+        participants.forEach(function(p, i) {
+            var weight = p.multiplier || 1;
+            var sliceAngle = (weight / totalWeight) * Math.PI * 2;
 
-            // --- Draw segment with radial gradient ---
-            const grad = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius);
-            const colorIdx = i % (p.is_top ? COLORS_TOP.length : COLORS_OTHER.length);
-            const baseColor = p.is_top ? COLORS_TOP[colorIdx] : COLORS_OTHER[colorIdx];
+            var grad = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius);
+            var colorIdx = i % (p.is_top ? COLORS_TOP.length : COLORS_OTHER.length);
+            var baseColor = p.is_top ? COLORS_TOP[colorIdx] : COLORS_OTHER[colorIdx];
             
             grad.addColorStop(0, hexToRgba(baseColor, 0.9));
             grad.addColorStop(1, hexToRgba(baseColor, 0.7));
@@ -634,46 +541,43 @@
             ctx.fillStyle = grad;
             ctx.fill();
 
-            // --- Border and Glow ---
             ctx.strokeStyle = p.is_top ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // --- Text rendering ---
-            const midAngle = startAngle + sliceAngle / 2;
-            const textRadius = radius * 0.7;
-            const tx = cx + Math.cos(midAngle) * textRadius;
-            const ty = cy + Math.sin(midAngle) * textRadius;
+            var midAngle = startAngle + sliceAngle / 2;
+            var textRadius = radius * 0.7;
+            var tx = cx + Math.cos(midAngle) * textRadius;
+            var ty = cy + Math.sin(midAngle) * textRadius;
 
             ctx.save();
             ctx.translate(tx, ty);
             ctx.rotate(midAngle);
 
-            const nick = (p.nickname || 'Танкист').substring(0, 15);
-            const fontSize = Math.min(24, Math.max(12, sliceAngle * radius * 0.15));
-            ctx.font = `800 ${fontSize}px 'Inter', sans-serif`;
+            var nick = (p.nickname || 'Player').substring(0, 15);
+            var fontSize = Math.min(24, Math.max(12, sliceAngle * radius * 0.15));
+            ctx.font = '800 ' + fontSize + "px 'Inter', sans-serif";
             ctx.fillStyle = p.is_top ? '#000' : '#E8E6E3';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             
-            // Subtle shadow for text
             ctx.shadowColor = 'rgba(0,0,0,0.5)';
             ctx.shadowBlur = 4;
             ctx.fillText(nick, 0, 0);
             ctx.shadowBlur = 0;
 
             if (p.multiplier > 1) {
-                ctx.font = `700 ${fontSize * 0.65}px 'Inter', sans-serif`;
+                ctx.font = '700 ' + (fontSize * 0.65) + "px 'Inter', sans-serif";
                 ctx.fillStyle = p.is_top ? 'rgba(0,0,0,0.5)' : '#f5be0b';
-                ctx.fillText(`x${p.multiplier}`, 0, fontSize * 0.85);
+                ctx.fillText('x' + p.multiplier, 0, fontSize * 0.85);
             }
 
             ctx.restore();
             startAngle += sliceAngle;
         });
 
-        // --- Outer reflective gloss ---
-        const gloss = ctx.createLinearGradient(0, 0, W, H);
+        // Gloss overlay
+        var gloss = ctx.createLinearGradient(0, 0, W, H);
         gloss.addColorStop(0, 'rgba(255,255,255,0.1)');
         gloss.addColorStop(0.5, 'transparent');
         gloss.addColorStop(1, 'rgba(255,255,255,0.05)');
@@ -682,10 +586,10 @@
         ctx.fillStyle = gloss;
         ctx.fill();
 
-        // --- Center cap ---
+        // Center cap
         ctx.beginPath();
         ctx.arc(cx, cy, 50, 0, Math.PI * 2);
-        const centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 50);
+        var centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 50);
         centerGrad.addColorStop(0, '#222');
         centerGrad.addColorStop(1, '#000');
         ctx.fillStyle = centerGrad;
@@ -694,7 +598,6 @@
         ctx.lineWidth = 4;
         ctx.stroke();
 
-        // Center icon/count
         ctx.font = "bold 26px 'Russo One', sans-serif";
         ctx.fillStyle = '#f5be0b';
         ctx.textAlign = 'center';
@@ -703,17 +606,17 @@
     }
 
     function hexToRgba(hex, alpha) {
-        let r = 0, g = 0, b = 0;
+        var r = 0, g = 0, b = 0;
         if (hex.length === 4) {
-            r = "0x" + hex[1] + hex[1];
-            g = "0x" + hex[2] + hex[2];
-            b = "0x" + hex[3] + hex[3];
+            r = parseInt(hex[1] + hex[1], 16);
+            g = parseInt(hex[2] + hex[2], 16);
+            b = parseInt(hex[3] + hex[3], 16);
         } else if (hex.length === 7) {
-            r = "0x" + hex[1] + hex[2];
-            g = "0x" + hex[3] + hex[4];
-            b = "0x" + hex[5] + hex[6];
+            r = parseInt(hex.substring(1, 3), 16);
+            g = parseInt(hex.substring(3, 5), 16);
+            b = parseInt(hex.substring(5, 7), 16);
         }
-        return `rgba(${+r}, ${+g}, ${+b}, ${alpha})`;
+        return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
     }
 
     // ==========================================
@@ -723,42 +626,40 @@
         if (spinning || participants.length <= 1) return;
         spinning = true;
 
-        const btn = document.getElementById('whSpinBtn');
+        var btn = document.getElementById('whSpinBtn');
         btn.disabled = true;
         btn.textContent = 'УДАЧА РЕШАЕТ...';
 
-        const totalInverseWeight = participants.reduce((s, p) => s + (1 / (p.multiplier || 1)), 0);
-        let random = Math.random() * totalInverseWeight;
-        let eliminatedIdx = 0;
-        for (let i = 0; i < participants.length; i++) {
+        var totalInverseWeight = participants.reduce(function(s, p) { return s + (1 / (p.multiplier || 1)); }, 0);
+        var random = Math.random() * totalInverseWeight;
+        var eliminatedIdx = 0;
+        for (var i = 0; i < participants.length; i++) {
             random -= 1 / (participants[i].multiplier || 1);
             if (random <= 0) { eliminatedIdx = i; break; }
         }
 
-        const totalWeight = participants.reduce((s, p) => s + (p.multiplier || 1), 0);
-        let angleSum = 0;
-        for (let i = 0; i < eliminatedIdx; i++) {
-            angleSum += (participants[i].multiplier || 1) / totalWeight * Math.PI * 2;
+        var totalWeight = participants.reduce(function(s, p) { return s + (p.multiplier || 1); }, 0);
+        var angleSum = 0;
+        for (var j = 0; j < eliminatedIdx; j++) {
+            angleSum += (participants[j].multiplier || 1) / totalWeight * Math.PI * 2;
         }
-        const sliceAngle = (participants[eliminatedIdx].multiplier || 1) / totalWeight * Math.PI * 2;
-        const targetMid = angleSum + sliceAngle / 2;
+        var sliceAngle = (participants[eliminatedIdx].multiplier || 1) / totalWeight * Math.PI * 2;
+        var targetMid = angleSum + sliceAngle / 2;
 
-        const pointerAngle = -Math.PI / 2;
-        const targetRotation = pointerAngle - targetMid;
+        var pointerAngle = -Math.PI / 2;
+        var targetRotation = pointerAngle - targetMid;
 
-        const fullRotations = 6 + Math.floor(Math.random() * 4);
-        const finalRotation = targetRotation + fullRotations * Math.PI * 2;
+        var fullRotations = 6 + Math.floor(Math.random() * 4);
+        var finalRotation = targetRotation + fullRotations * Math.PI * 2;
 
-        const startRotation = currentRotation;
-        const duration = 4000 + Math.random() * 2000;
-        const startTime = Date.now();
+        var startRotation = currentRotation;
+        var duration = 4000 + Math.random() * 2000;
+        var startTime = Date.now();
 
         function animate() {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // Custom ease-out
-            const eased = 1 - Math.pow(1 - progress, 4);
+            var elapsed = Date.now() - startTime;
+            var progress = Math.min(elapsed / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 4);
 
             currentRotation = startRotation + (finalRotation - startRotation) * eased;
             drawWheel();
@@ -772,84 +673,85 @@
         animate();
     }
 
-    async function eliminateParticipant(p) {
-        try {
-            const params = new URLSearchParams(location.search);
-            const challengeId = params.get('challenge_id');
-            const resp = await fetch(`${BOT_API_URL}/api/global-challenge/wheel-eliminate`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ challenge_id: challengeId, telegram_id: p.telegram_id })
-            });
-            const data = await resp.json();
-            
+    function eliminateParticipant(p) {
+        var params = new URLSearchParams(location.search);
+        var challengeId = params.get('challenge_id');
+        fetch(BOT_API_URL + '/api/global-challenge/wheel-eliminate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: challengeId, telegram_id: p.telegram_id })
+        })
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
             if (data.success) {
-                loadWheelData().then(() => {
+                loadWheelData().then(function() {
                     spinning = false;
-                    const btn = document.getElementById('whSpinBtn');
+                    var btn = document.getElementById('whSpinBtn');
                     btn.disabled = false;
                     btn.textContent = 'КРУТИТЬ КОЛЕСО';
                 });
             } else {
-                alert('Ошибка сервера: ' + data.error);
+                alert('Server error: ' + data.error);
                 spinning = false;
             }
-        } catch (e) {
-            alert('Ошибка сети: ' + e.message);
+        })
+        .catch(function(e) {
+            alert('Network error: ' + e.message);
             spinning = false;
-        }
+        });
     }
 
     function showWinner(winner) {
         launchConfetti();
 
-        const nick = winner.nickname || 'Танкист';
-        const prize = wheelData?.challenge?.prize_description || 'ПРИЗ';
+        var nick = winner.nickname || 'Player';
+        var prize = (wheelData && wheelData.challenge && wheelData.challenge.prize_description) || 'ПРИЗ';
 
         document.getElementById('whSpinBtn').style.display = 'none';
 
-        const modal = document.createElement('div');
+        var modal = document.createElement('div');
         modal.className = 'wh-winner-modal';
-        modal.innerHTML = `
-            <div class="wh-winner-card">
-                <button class="modal-close" onclick="this.closest('.wh-winner-modal').remove()">✕</button>
-                <div class="winner-crown">👑</div>
-                <div class="winner-name">${nick}</div>
-                <div class="winner-title">ПОБЕДИТЕЛЬ!</div>
-                <div class="winner-prize">🏆 ${prize}</div>
-                <div>
-                   <button class="modal-back-btn" onclick="history.back()">ВЕРНУТЬСЯ НА АРЕНУ</button>
-                </div>
-            </div>
-        `;
+        modal.innerHTML = 
+            '<div class="wh-winner-card">' +
+                '<button class="modal-close" onclick="this.closest(\'.wh-winner-modal\').remove()">&#10005;</button>' +
+                '<div class="winner-crown">👑</div>' +
+                '<div class="winner-name">' + nick + '</div>' +
+                '<div class="winner-title">ПОБЕДИТЕЛЬ!</div>' +
+                '<div class="winner-prize">🏆 ' + prize + '</div>' +
+                '<div>' +
+                   '<button class="modal-back-btn" onclick="history.back()">ВЕРНУТЬСЯ НА АРЕНУ</button>' +
+                '</div>' +
+            '</div>';
         document.body.appendChild(modal);
     }
 
     function renderEliminated() {
-        const container = document.getElementById('whElimList');
+        var container = document.getElementById('whElimList');
         if (!eliminatedList || !eliminatedList.length) {
             container.innerHTML = '<div style="text-align:center;color:#334155;font-size:0.75rem;padding:20px">Никто еще не выбыл</div>';
             return;
         }
 
-        const itemsHtml = eliminatedList.map((p, i) => `
-            <div class="wh-elim-item" style="animation-delay: ${i * 0.1}s">
-                <span class="wh-elim-item__num">#${p.eliminated_order}</span>
-                <span class="wh-elim-item__name">${p.nickname}</span>
-                <span style="font-size:0.9rem">❌</span>
-            </div>
-        `).join('');
-
-        container.innerHTML = itemsHtml;
+        var html = '';
+        for (var i = 0; i < eliminatedList.length; i++) {
+            var p = eliminatedList[i];
+            html += '<div class="wh-elim-item" style="animation-delay: ' + (i * 0.1) + 's">' +
+                '<span class="wh-elim-item__num">#' + p.eliminated_order + '</span>' +
+                '<span class="wh-elim-item__name">' + p.nickname + '</span>' +
+                '<span style="font-size:0.9rem">&#10060;</span>' +
+            '</div>';
+        }
+        container.innerHTML = html;
     }
 
     // ==========================================
-    // CONFETTI (PREMIUM)
+    // CONFETTI
     // ==========================================
     function launchConfetti() {
         if (typeof confetti === 'function') {
             runConfetti();
         } else {
-            const script = document.createElement('script');
+            var script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
             script.onload = runConfetti;
             document.head.appendChild(script);
@@ -857,24 +759,17 @@
     }
 
     function runConfetti() {
-        const duration = 5 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2000 };
+        var duration = 5000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2000 };
 
-        function randomInRange(min, max) {
-            return Math.random() * (max - min) + min;
-        }
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) { clearInterval(interval); return; }
 
-        const interval = setInterval(function() {
-            const timeLeft = animationEnd - Date.now();
-
-            if (timeLeft <= 0) {
-                return clearInterval(interval);
-            }
-
-            const particleCount = 50 * (timeLeft / duration);
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+            var particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount: particleCount, origin: { x: 0.1 + Math.random() * 0.2, y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount: particleCount, origin: { x: 0.7 + Math.random() * 0.2, y: Math.random() - 0.2 } }));
         }, 250);
     }
 
