@@ -6144,7 +6144,7 @@ async def api_global_challenge_history(request):
         with get_db_read() as conn:
             rows = conn.execute("""
                 SELECT * FROM global_challenges 
-                WHERE status = 'finished' 
+                WHERE status IN ('finished', 'wheel_pending', 'completed') 
                 ORDER BY finished_at DESC 
                 LIMIT 20
             """).fetchall()
@@ -6212,7 +6212,7 @@ async def api_global_challenge_my_history(request):
                        p.current_value, p.battles_played, p.condition_values
                 FROM global_challenge_participants p
                 JOIN global_challenges gc ON gc.id = p.challenge_id
-                WHERE p.telegram_id = ? AND gc.status = 'finished'
+                WHERE p.telegram_id = ? AND gc.status IN ('finished', 'wheel_pending', 'completed')
                 ORDER BY gc.finished_at DESC LIMIT 20
             """, (int(telegram_id),)).fetchall()
             

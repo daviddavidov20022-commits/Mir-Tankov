@@ -164,7 +164,7 @@ function switchTab(tabId, btn) {
     btn.classList.add('arena-tab--active');
 
     if (tabId === 'active') loadChallenges();
-    if (tabId === 'history') loadChallenges();
+    if (tabId === 'history') { loadChallenges(); loadGcHistory(); }
     if (tabId === 'admin') loadAdminUsers();
     if (tabId === 'global' && typeof gcLoadChallenge === 'function') gcLoadChallenge(true);
 }
@@ -1213,4 +1213,135 @@ async function toggleAdmin(targetTgId) {
     } catch (e) {
         showToast('❌ Нет подключения', 'error');
     }
+}
+
+// ============================================================
+// GLOBAL CHALLENGE HISTORY
+// ============================================================
+const GC_COND_ICONS = {
+    damage: '💥', frags: '🎯', xp: '⭐', spotting: '👁',
+    blocked: '🛡', wins: '🏆', combined: '📊'
+};
+const GC_COND_NAMES = {
+    damage: 'Урон', frags: 'Фраги', xp: 'Опыт', spotting: 'Засвет',
+    blocked: 'Заблокировано', wins: 'Победы', combined: 'Комбинированный'
+};
+
+async function loadGcHistory() {
+    const container = document.getElementById('gcHistoryList');
+    if (!container) return;
+
+    try {
+        const url = isAdmin
+            ? `${BOT_API_URL}/api/global-challenge/history?telegram_id=${myTelegramId}`
+            : `${BOT_API_URL}/api/global-challenge/history?telegram_id=${myTelegramId}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        if (!data.history || data.history.length === 0) {
+            container.innerHTML = `<div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:20px">
+                <div style="font-size:1.5rem;margin-bottom:8px">🏆</div>
+                Завершённых челленджей пока нет
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = data.history.map(ch => renderGcHistoryCard(ch)).join('');
+    } catch (e) {
+        console.error('loadGcHistory error:', e);
+        container.innerHTML = '<div style="text-align:center;color:#ef4444;font-size:0.7rem;padding:16px">❌ Ошибка загрузки</div>';
+    }
+}
+
+function renderGcHistoryCard(ch) {
+    const condIcon = GC_COND_ICONS[ch.condition] || '🏆';
+    const condName = GC_COND_NAMES[ch.condition] || ch.condition;
+    const date = ch.finished_at ? new Date(ch.finished_at).toLocaleDateString('ru', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    const statusLabel = ch.status === 'wheel_pending' ? '🎡 Рулетка' : '✅ Завершён';
+    const statusColor = ch.status === 'wheel_pending' ? '#f5be0b' : '#4ade80';
+
+    // Top-3 leaderboard
+    const medals = ['🥇', '🥈', '🥉'];
+    let top3Html = '';
+    if (ch.leaderboard_top3 && ch.leaderboard_top3.length > 0) {
+        top3Html = ch.leaderboard_top3.map((p, i) => `
+            <div style="display:flex;align-items:center;gap:8px;padding:4px 0">
+                <span style="font-size:0.8rem">${medals[i] || `#${i+1}`}</span>
+                <span style="flex:1;color:#E8E6E3;font-size:0.7rem">${p.nickname}</span>
+                <span style="color:#C8AA6E;font-size:0.7rem;font-weight:700">${condIcon} ${(p.current_value || 0).toLocaleString('ru')}</span>
+            </div>
+        `).join('');
+    }
+
+    // My result
+    let myResultHtml = '';
+    if (ch.my_result) {
+        const placeColor = ch.my_result.place <= 3 ? '#4ade80' : '#E8E6E3';
+        myResultHtml = `
+            <div style="margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(200,170,110,0.06);
+                border:1px solid rgba(200,170,110,0.1)">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:0.65rem;color:#8a94a6">Мой результат</span>
+                    <span style="font-size:0.75rem;color:${placeColor};font-weight:700">
+                        ${ch.my_result.place} место · ${condIcon} ${(ch.my_result.value || 0).toLocaleString('ru')}
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+
+    // Prize / wheel winner
+    let prizeHtml = '';
+    if (ch.prize_mode) {
+        const prizeDesc = ch.prize_description || ch.reward_description || '';
+        if (ch.wheel_winner_nickname) {
+            prizeHtml = `
+                <div style="margin-top:8px;padding:10px 12px;border-radius:10px;
+                    background:linear-gradient(135deg,rgba(245,190,11,0.08),rgba(200,170,110,0.05));
+                    border:1px solid rgba(245,190,11,0.2)">
+                    <div style="text-align:center">
+                        <span style="font-size:0.65rem;color:#f5be0b">🎡 Победитель рулетки</span>
+                        <div style="font-size:0.85rem;color:#E8E6E3;font-weight:700;margin-top:4px">${ch.wheel_winner_nickname}</div>
+                        <div style="font-size:0.65rem;color:#C8AA6E;margin-top:2px">🏆 ${prizeDesc}</div>
+                    </div>
+                </div>`;
+        } else if (prizeDesc) {
+            prizeHtml = `
+                <div style="margin-top:8px;text-align:center;font-size:0.65rem;color:#f5be0b">
+                    🏆 Приз: ${prizeDesc}
+                    ${ch.status === 'wheel_pending' ? ' · 🎡 Ожидает рулетку' : ''}
+                </div>`;
+        }
+    }
+
+    // Reward coins (non-prize mode)
+    let rewardHtml = '';
+    if (!ch.prize_mode && ch.reward_coins > 0 && ch.winner_nickname) {
+        rewardHtml = `
+            <div style="margin-top:6px;text-align:center;font-size:0.65rem;color:#4ade80">
+                🏆 ${ch.winner_nickname} получил 🧀 ${ch.reward_coins}
+            </div>`;
+    }
+
+    return `
+        <div class="duel-card" style="margin-bottom:10px;border-color:${statusColor}20">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+                <div>
+                    <div style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#E8E6E3">
+                        ${ch.icon || '🏆'} ${ch.title || 'Челлендж #' + ch.id}
+                    </div>
+                    <div style="font-size:0.6rem;color:#5A6577;margin-top:2px">
+                        ${condIcon} ${condName} · ${ch.participants_count || 0} участников
+                    </div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:0.6rem;color:${statusColor};font-weight:600">${statusLabel}</div>
+                    <div style="font-size:0.55rem;color:#5A6577;margin-top:2px">${date}</div>
+                </div>
+            </div>
+            ${top3Html ? `<div style="padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)">${top3Html}</div>` : ''}
+            ${myResultHtml}
+            ${prizeHtml}
+            ${rewardHtml}
+        </div>`;
 }
