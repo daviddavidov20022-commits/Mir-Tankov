@@ -1881,7 +1881,8 @@ function gcUpdatePreview() {
     const fontScale = (document.getElementById('wcFontSize')?.value || 100) / 100;
     const showTimer = document.getElementById('wcShowTimer')?.checked !== false;
     const showMe = document.getElementById('wcShowMyStats')?.checked !== false;
-    const showTop = document.getElementById('wcShowTop3')?.checked !== false;
+    const topCount = parseInt(document.getElementById('wcTopCount')?.value || '3');
+    const showTop = topCount > 0;
     const showLive = document.getElementById('wcShowLive')?.checked !== false;
 
     const bgVal = document.getElementById('wcBgVal');
@@ -1929,10 +1930,23 @@ function gcUpdatePreview() {
         <div style="width:16px;height:16px;border-radius:50%;background:${theme.avatarBg};display:flex;align-items:center;justify-content:center;font-size:.25rem;font-weight:900">FA</div>
         <div style="flex:1;font-size:.35rem;font-weight:700;color:${theme.meNick}">Fara777</div>
         <div style="font-family:'Russo One',sans-serif;font-size:${isMulti ? '.3' : '.45'}rem;color:${theme.meVal}">${fakeMultiMeVal}</div></div>` : '';
-    const topHtml = showTop ? `<div style="font-size:.25rem">
-        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}10;border-left:2px solid ${ac};margin-bottom:1px"><span style="color:${tc};font-weight:900">1</span><span style="flex:1">TankAce</span><span style="color:${theme.lbVal};font-weight:700;font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP1}</span></div>
-        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}08;border-left:2px solid #aaa;margin-bottom:1px"><span style="color:#aaa;font-weight:900">2</span><span style="flex:1">Fara777</span><span style="color:${theme.lbVal};font-weight:700;font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP2}</span></div>
-        <div style="display:flex;gap:3px;padding:2px 4px;background:${ac}06;border-left:2px solid #cd7f32"><span style="color:#cd7f32;font-weight:900">3</span><span style="flex:1">Wolf</span><span style="color:${theme.lbVal};font-weight:700;font-size:${isMulti ? '.2' : '.25'}rem">${fakeMultiP3}</span></div></div>` : '';
+    // Generate top rows based on topCount
+    const fakeTopNames = ['TankAce','Fara777','Wolf','DragonKill','SteelX','Hunter42','Blaze','Raptor','Viper','IronFist'];
+    const fakeTopVals = [18500,15230,12100,11200,10050,9800,8700,7600,6900,6100];
+    const topColors = ['${ac}','#aaa','#cd7f32','#5A6577','#5A6577','#5A6577','#5A6577','#5A6577','#5A6577','#5A6577'];
+    let topRows = '';
+    for (let i = 0; i < topCount && i < 10; i++) {
+        const bg = i === 0 ? `${ac}10` : i === 1 ? `${ac}08` : `${ac}06`;
+        const brdCol = topColors[i] || '#5A6577';
+        const val = fakeTopVals[i]?.toLocaleString('ru') || '0';
+        topRows += `<div style="display:flex;gap:3px;padding:2px 4px;background:${bg};border-left:2px solid ${brdCol};margin-bottom:1px"><span style="color:${brdCol};font-weight:900">${i+1}</span><span style="flex:1">${fakeTopNames[i]}</span><span style="color:${theme.lbVal};font-weight:700;font-size:.25rem">${val}</span></div>`;
+    }
+    const topHtml = showTop ? `<div style="font-size:.25rem">${topRows}</div>` : '';
+
+    // Prize image for widget preview
+    const prizeImgUrl = document.getElementById('adminGcPrizeImage')?.value || '';
+    const isPrizeModeOn = document.getElementById('prizeModeToggle')?.querySelector('input')?.checked;
+    const prizeImgHtml = (isPrizeModeOn && prizeImgUrl) ? `<div style="text-align:center;margin:4px 0"><img src="${prizeImgUrl}" alt="Приз" style="max-width:60px;max-height:40px;border-radius:6px;border:1px solid ${ac}33;object-fit:contain" onerror="this.style.display='none'"></div>` : '';
 
     // Border
     let border = `2px solid ${ac}`;
@@ -1951,6 +1965,7 @@ function gcUpdatePreview() {
                 <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${tc};margin-bottom:4px">${condIcons} Челлендж</div>
                 ${timerHtml}
                 <div style="font-size:.28rem;opacity:.4;margin:3px 0 6px">👥 3 · 🧀 500</div>
+                ${prizeImgHtml}
                 ${condBadgeHtml}
                 ${meHtml}
                 <div style="margin-top:4px">${topHtml}</div>
@@ -2037,7 +2052,8 @@ function gcGetWidgetConfig() {
         fontSize: parseInt(document.getElementById('wcFontSize')?.value || 100),
         showTimer: document.getElementById('wcShowTimer')?.checked !== false,
         showMyStats: document.getElementById('wcShowMyStats')?.checked !== false,
-        showTop3: document.getElementById('wcShowTop3')?.checked !== false,
+        topCount: parseInt(document.getElementById('wcTopCount')?.value || '3'),
+        showTop3: parseInt(document.getElementById('wcTopCount')?.value || '3') > 0,
         showLive: document.getElementById('wcShowLive')?.checked !== false,
     };
 }
@@ -2057,6 +2073,7 @@ function gcCopyCustomWidgetLink() {
     params.set('font', config.fontSize);
     if (!config.showTimer) params.set('timer', '0');
     if (!config.showMyStats) params.set('me', '0');
+    params.set('topcount', config.topCount);
     if (!config.showTop3) params.set('top', '0');
     if (!config.showLive) params.set('live', '0');
 

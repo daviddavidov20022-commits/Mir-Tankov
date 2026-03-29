@@ -49,6 +49,7 @@ function gcCopyObsLinkWithConfig() {
     params.set('font', config.fontSize);
     if (!config.showTimer) params.set('timer', '0');
     if (!config.showMyStats) params.set('me', '0');
+    params.set('topcount', config.topCount || 3);
     if (!config.showTop3) params.set('top', '0');
     if (!config.showLive) params.set('live', '0');
     const url = base + '?' + params.toString();

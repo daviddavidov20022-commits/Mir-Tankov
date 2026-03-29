@@ -837,8 +837,15 @@
                                             <span>Мой счёт</span>
                                         </label>
                                         <label class="wc-check">
-                                            <input type="checkbox" checked id="wcShowTop3" onchange="gcUpdatePreview()">
-                                            <span>Топ 3</span>
+                                            <select id="wcTopCount" onchange="gcUpdatePreview()" 
+                                                style="background:#131a24;color:#C8AA6E;border:1px solid rgba(200,170,110,0.2);
+                                                       border-radius:6px;padding:2px 6px;font-size:0.55rem;cursor:pointer;
+                                                       font-family:'Inter',sans-serif">
+                                                <option value="3" selected>Топ 3</option>
+                                                <option value="5">Топ 5</option>
+                                                <option value="10">Топ 10</option>
+                                                <option value="0">Скрыть</option>
+                                            </select>
                                         </label>
                                         <label class="wc-check">
                                             <input type="checkbox" checked id="wcShowLive" onchange="gcUpdatePreview()">
