@@ -6279,6 +6279,46 @@ async def api_global_challenge_finish(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_global_challenge_force_wheel(request):
+    """POST /api/global-challenge/force-wheel — простейший переход в wheel_pending"""
+    try:
+        data = await request.json()
+        admin_tg = int(data.get("admin_telegram_id", 0))
+        challenge_id = int(data.get("challenge_id", 0))
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        from database import get_db
+        from datetime import datetime
+
+        with get_db() as conn:
+            # Определяем победителя
+            winner = conn.execute("""
+                SELECT telegram_id, nickname, current_value, condition_values
+                FROM global_challenge_participants 
+                WHERE challenge_id = ? ORDER BY current_value DESC LIMIT 1
+            """, (challenge_id,)).fetchone()
+
+            conn.execute("""
+                UPDATE global_challenges 
+                SET status = 'wheel_pending', finished_at = ?,
+                    winner_telegram_id = ?, winner_nickname = ?, winner_value = ?
+                WHERE id = ?
+            """, (
+                datetime.now().isoformat(),
+                winner["telegram_id"] if winner else None,
+                winner["nickname"] if winner else None,
+                winner["current_value"] if winner else 0,
+                challenge_id
+            ))
+
+        return cors_response({"success": True, "new_status": "wheel_pending"})
+    except Exception as e:
+        logger.error(f"API force-wheel error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 async def api_global_challenge_wheel_data(request):
     """GET /api/global-challenge/wheel-data?challenge_id=X — данные для колеса элиминации"""
     try:
@@ -8577,6 +8617,7 @@ def create_api_app():
     app.router.add_post("/api/global-challenge/start-active", api_global_challenge_start_active)
     app.router.add_post("/api/global-challenge/auto-start", api_global_challenge_auto_start)
     app.router.add_post("/api/upload-prize-image", api_upload_prize_image)
+    app.router.add_post("/api/global-challenge/force-wheel", api_global_challenge_force_wheel)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)

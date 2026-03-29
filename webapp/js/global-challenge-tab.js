@@ -581,28 +581,50 @@ async function gcForceFinishAndWheel(challengeId) {
         btn.disabled = true;
         btn.textContent = '⏳ Завершаю...';
     }
-    try {
-        const myTgId = myTelegramId || localStorage.getItem('my_telegram_id');
-        const resp = await fetch(`${BOT_API_URL}/api/global-challenge/finish`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                admin_telegram_id: parseInt(myTgId),
-                challenge_id: challengeId
-            })
-        });
-        const data = await resp.json();
-        if (data.success) {
-            // Reload to see wheel_pending state
-            setTimeout(() => gcLoadChallenge(true), 1500);
-        } else {
-            alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
-            if (btn) { btn.disabled = false; btn.textContent = '🎡 ЗАВЕРШИТЬ И ЗАПУСТИТЬ РУЛЕТКУ'; }
+
+    const myTgId = myTelegramId || localStorage.getItem('my_telegram_id');
+    const body = JSON.stringify({
+        admin_telegram_id: parseInt(myTgId),
+        challenge_id: challengeId
+    });
+    const headers = {'Content-Type': 'application/json'};
+
+    // Try endpoints in order: force-wheel (simple) → finish (complex) → just open wheel
+    const endpoints = [
+        '/api/global-challenge/force-wheel',
+        '/api/global-challenge/finish'
+    ];
+
+    let success = false;
+    for (const ep of endpoints) {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+            const resp = await fetch(`${BOT_API_URL}${ep}`, {
+                method: 'POST', headers, body, signal: controller.signal
+            });
+            clearTimeout(timeout);
+            const data = await resp.json();
+            if (data.success) {
+                success = true;
+                break;
+            }
+        } catch (e) {
+            console.warn(`${ep} failed:`, e.message);
         }
-    } catch (e) {
-        console.error('Force finish error:', e);
-        alert('Ошибка соединения с сервером');
-        if (btn) { btn.disabled = false; btn.textContent = '🎡 ЗАВЕРШИТЬ И ЗАПУСТИТЬ РУЛЕТКУ'; }
+    }
+
+    if (success) {
+        // Wait for server to process, then reload
+        if (btn) btn.textContent = '✅ Готово! Загрузка...';
+        setTimeout(() => gcLoadChallenge(true), 1500);
+    } else {
+        // Fallback: just open wheel page directly (wheel-data works regardless of status)
+        if (btn) btn.textContent = '🎡 Открываю рулетку...';
+        window.open(`wheel-elimination.html?challenge_id=${challengeId}`, '_blank');
+        setTimeout(() => {
+            if (btn) { btn.disabled = false; btn.textContent = '🎡 ЗАВЕРШИТЬ И ЗАПУСТИТЬ РУЛЕТКУ'; }
+        }, 2000);
     }
 }
 
