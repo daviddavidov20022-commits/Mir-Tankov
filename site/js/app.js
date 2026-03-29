@@ -280,13 +280,11 @@ function claimDailyBonus() {
 // ==========================================
 // НАВИГАЦИЯ
 // ==========================================
-// Cache-busting version — increment when HTML files change
-const CB_VERSION = 50;
-
+// Cache-busting: use timestamp to guarantee fresh page loads every time
 function openGame(url) {
-    // Always add cache-busting version + telegram_id to all internal pages
+    // Add unique timestamp + telegram_id to bypass ALL caching layers
     const sep = url.includes('?') ? '&' : '?';
-    url += `${sep}v=${CB_VERSION}`;
+    url += `${sep}_t=${Date.now()}`;
     const myId = localStorage.getItem('my_telegram_id');
     if (myId) {
         url += `&telegram_id=${myId}`;

@@ -344,10 +344,12 @@ function claimDailyBonus() {
 // НАВИГАЦИЯ
 // ==========================================
 function openGame(url) {
+    // Add timestamp to bypass Telegram WebView cache
+    const sep = url.includes('?') ? '&' : '?';
+    url += `${sep}_t=${Date.now()}`;
     const myId = siteAuth.getTelegramId();
     if (myId) {
-        const sep = url.includes('?') ? '&' : '?';
-        url += `${sep}telegram_id=${myId}`;
+        url += `&telegram_id=${myId}`;
     }
     window.location.href = url;
 }
