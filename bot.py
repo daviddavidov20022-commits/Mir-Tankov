@@ -5221,6 +5221,113 @@ async def api_global_challenge_active(request):
                     return cors_response({"challenge": last, "status": "finished"})
                 return cors_response({"challenge": None, "status": "none"})
 
+        # ═══ AUTO-TRANSITION: enrollment → active ═══
+        # Если enrollment время истекло — автоматически стартуем активную фазу
+        if ch and dict(ch).get("status") == "enrollment":
+            ch_dict = dict(ch)
+            enroll_end_str = ch_dict.get("enrollment_ends_at", "")
+            if enroll_end_str:
+                try:
+                    enroll_end_clean = str(enroll_end_str).replace("T", " ").replace("Z", "").strip()
+                    enroll_end = datetime.strptime(enroll_end_clean, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+                    now = datetime.now(timezone.utc)
+                    
+                    if now >= enroll_end:
+                        logger.info(f"⏰ Auto-starting challenge {ch_dict['id']} (enrollment expired)")
+                        
+                        from datetime import timedelta
+                        challenge_id = ch_dict["id"]
+                        condition = ch_dict.get("condition", "damage")
+                        conditions = [c.strip() for c in condition.split(",") if c.strip()]
+                        is_multi = len(conditions) > 1
+                        tank_class = ch_dict.get("tank_class")
+                        tank_tier = ch_dict.get("tank_tier_filter")
+                        tank_id = ch_dict.get("tank_id_filter")
+                        
+                        with get_db() as conn:
+                            participants = conn.execute(
+                                "SELECT * FROM global_challenge_participants WHERE challenge_id = ?",
+                                (challenge_id,)
+                            ).fetchall()
+                        
+                        # Собираем account_ids для batch
+                        account_ids = []
+                        tg_to_account = {}
+                        for p in participants:
+                            p_dict = dict(p)
+                            aid = p_dict.get("wot_account_id")
+                            if aid:
+                                try:
+                                    aid = int(aid)
+                                    account_ids.append(aid)
+                                    tg_to_account[p_dict["telegram_id"]] = aid
+                                except (ValueError, TypeError):
+                                    pass
+                        
+                        # Получаем baselines
+                        batch_stats = {}
+                        if account_ids:
+                            try:
+                                batch_stats = await gc_fetch_batch_stats(account_ids, condition, tank_class, tank_tier, tank_id)
+                            except Exception as e:
+                                logger.warning(f"Batch stats fetch failed: {e}")
+                        
+                        # Записываем baselines и обновляем статус
+                        with get_db() as conn:
+                            for p in participants:
+                                p_dict = dict(p)
+                                tg_id = p_dict["telegram_id"]
+                                aid = tg_to_account.get(tg_id)
+                                
+                                baseline_value = 0
+                                baseline_battles = 0
+                                baseline_values_json = None
+                                
+                                if aid and aid in batch_stats:
+                                    stat = batch_stats[aid]
+                                    baseline_value = stat["value"]
+                                    baseline_battles = stat["battles"]
+                                    if is_multi:
+                                        baseline_values_json = json.dumps(stat.get("per_condition", {}))
+                                
+                                conn.execute("""
+                                    UPDATE global_challenge_participants 
+                                    SET baseline_value = ?, baseline_battles = ?, baseline_values = ?,
+                                        current_value = 0, battles_played = 0
+                                    WHERE challenge_id = ? AND telegram_id = ?
+                                """, (baseline_value, baseline_battles, baseline_values_json, challenge_id, tg_id))
+                            
+                            # Обновляем статус на active
+                            challenge_duration = ch_dict.get("challenge_duration_minutes", 0) or 0
+                            if challenge_duration > 0:
+                                new_ends_at = now + timedelta(minutes=challenge_duration)
+                            else:
+                                new_ends_at = now + timedelta(days=30)
+                            
+                            conn.execute("""
+                                UPDATE global_challenges 
+                                SET status = 'active', ends_at = ?
+                                WHERE id = ?
+                            """, (new_ends_at, challenge_id))
+                        
+                        # Сохраним baselines танков
+                        for p in participants:
+                            p_dict = dict(p)
+                            aid = tg_to_account.get(p_dict["telegram_id"])
+                            if aid:
+                                try:
+                                    await gc_save_tank_baselines(challenge_id, p_dict["telegram_id"], aid)
+                                except Exception:
+                                    pass
+                        
+                        logger.info(f"🚀 Challenge {challenge_id} auto-started! {len(participants)} participants")
+                        
+                        # Перечитываем челлендж с обновлённым статусом
+                        with get_db_read() as conn:
+                            ch = conn.execute("SELECT * FROM global_challenges WHERE id = ?", (challenge_id,)).fetchone()
+                except Exception as e:
+                    logger.error(f"Auto-start enrollment->active error: {e}")
+
         # Если челлендж активен — собираем статику тоже через Read-Only
         with get_db_read() as conn:
             ch = dict(ch)

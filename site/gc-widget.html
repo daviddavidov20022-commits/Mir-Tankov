@@ -1026,21 +1026,37 @@
 
         // ═══════ LOAD & RENDER ═══════
         let currentPhase = 'none';
+        let lastDataHash = '';
 
         async function loadWidget() {
             try {
-                try { await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' }); } catch (e) { }
+                if (currentPhase !== 'enrollment') {
+                    try { await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' }); } catch (e) { }
+                }
                 const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
                 const data = await resp.json();
                 
                 if ((data.status === 'active' || data.status === 'enrollment' || data.status === 'wheel_pending') && data.challenge) {
+                    const hash = JSON.stringify({
+                        s: data.status,
+                        id: data.challenge.id,
+                        pc: data.challenge.participants_count,
+                        lb: (data.challenge.leaderboard || []).map(p => `${p.telegram_id}:${p.current_value}`)
+                    });
+                    
+                    const phaseChanged = currentPhase !== data.status;
                     currentPhase = data.status;
-                    showChallenge(data.challenge);
+                    
+                    if (hash !== lastDataHash || phaseChanged) {
+                        lastDataHash = hash;
+                        showChallenge(data.challenge);
+                    }
                 } else {
                     currentPhase = 'none';
+                    lastDataHash = '';
                     showEmpty();
                 }
-            } catch (e) { showEmpty(); }
+            } catch (e) { }
         }
 
         function showEmpty() {
@@ -1089,11 +1105,9 @@
             const builder = BUILDERS[layout] || BUILDERS[1];
             document.getElementById('widget').innerHTML = builder(ch, cond, me, top3);
 
-            // Apply font scale
             const w = document.getElementById('widget').firstElementChild;
             if (w && fontScale !== 1) w.style.fontSize = (fontScale * 16) + 'px';
 
-            // Start timer based on phase
             if (showTimer) {
                 if (currentPhase === 'enrollment') {
                     const enrollEnd = ch.enrollment_ends_at || ch.ends_at;
@@ -1107,11 +1121,25 @@
         function startTimer(endsAtStr, label) {
             if (timerInterval) clearInterval(timerInterval);
             const endsAt = new Date(endsAtStr);
+            
+            // Set label once at start
+            setTimeout(() => {
+                const labelEl = document.getElementById('wTimerLabel');
+                if (labelEl && label) labelEl.textContent = label;
+            }, 50);
+            
             function tick() {
                 const el = document.getElementById('wTimer');
                 if (!el) return;
                 const diff = Math.max(0, Math.floor((endsAt - new Date()) / 1000));
-                if (diff <= 0) { el.textContent = '00:00'; clearInterval(timerInterval); setTimeout(loadWidget, 3000); return; }
+                if (diff <= 0) {
+                    el.textContent = '00:00';
+                    clearInterval(timerInterval);
+                    // Rapid reload for phase transition
+                    setTimeout(loadWidget, 2000);
+                    setTimeout(loadWidget, 5000);
+                    return;
+                }
                 const h = Math.floor(diff / 3600), m = Math.floor((diff % 3600) / 60), s = diff % 60;
                 el.textContent = h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
                 if (diff < 60) el.classList.add('w-tv--danger'); else el.classList.remove('w-tv--danger');
