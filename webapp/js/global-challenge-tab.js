@@ -1410,39 +1410,56 @@ async function gcLaunchChallenge() {
 }
 
 async function gcStopChallenge() {
-    if (!confirm('Завершить челлендж досрочно? Победитель будет определён по текущим результатам.')) return;
-
     const btn = document.getElementById('adminGcStopBtn');
-    const challengeId = btn.getAttribute('data-id');
+    const challengeId = btn && btn.getAttribute('data-id') || (gcCurrentChallenge && gcCurrentChallenge.id);
 
+    if (!challengeId) { showToast('❌ Не найден ID челленджа'); return; }
+
+    // During enrollment — act as "Start Now"
+    if (gcCurrentChallenge && gcCurrentChallenge.status === 'enrollment') {
+        if (!confirm('🚀 Начать челлендж прямо сейчас? Набор участников завершится.')) return;
+        try {
+            const resp = await fetch(`${BOT_API_URL}/api/global-challenge/start-active`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ admin_telegram_id: myTelegramId, challenge_id: parseInt(challengeId) })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                showToast(`🚀 Челлендж начался!`);
+                gcLoadChallenge(true);
+            } else {
+                showToast(`❌ ${data.error}`);
+            }
+        } catch (e) { showToast('❌ Нет подключения'); }
+        return;
+    }
+
+    // During active — finish
+    if (!confirm('Завершить челлендж досрочно? Победитель будет определён по текущим результатам.')) return;
     try {
         const resp = await fetch(`${BOT_API_URL}/api/global-challenge/finish`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                admin_telegram_id: myTelegramId,
-                challenge_id: parseInt(challengeId)
-            })
+            body: JSON.stringify({ admin_telegram_id: myTelegramId, challenge_id: parseInt(challengeId) })
         });
         const data = await resp.json();
-
         if (data.success) {
             showToast('✅ Челлендж завершён!');
             gcLoadChallenge();
         } else {
             showToast(`❌ ${data.error}`);
         }
-    } catch (e) {
-        showToast('❌ Нет подключения');
-    }
+    } catch (e) { showToast('❌ Нет подключения'); }
 }
 
 async function gcDeleteChallenge() {
     if (!confirm('🗑 Удалить челлендж полностью? Все результаты будут утеряны!')) return;
 
     const deleteBtn = document.getElementById('adminGcDeleteBtn');
-    const challengeId = deleteBtn.getAttribute('data-id') ||
-        (document.getElementById('adminGcStopBtn').getAttribute('data-id'));
+    const challengeId = (deleteBtn && deleteBtn.getAttribute('data-id')) ||
+        (document.getElementById('adminGcStopBtn')?.getAttribute('data-id')) ||
+        (gcCurrentChallenge && String(gcCurrentChallenge.id));
 
     if (!challengeId) {
         showToast('❌ Не найден ID челленджа');
