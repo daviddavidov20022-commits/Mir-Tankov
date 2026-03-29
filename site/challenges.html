@@ -10,10 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <script src="js/site-page.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=28">
-    <link rel="stylesheet" href="css/arena.css?v=28">
-    <link rel="stylesheet" href="css/global-challenge.css?v=28">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=29">
+    <link rel="stylesheet" href="css/arena.css?v=29">
+    <link rel="stylesheet" href="css/global-challenge.css?v=29">
 </head>
 
 <body>
@@ -550,35 +550,35 @@
                     <div id="adminGcTankSelected" style="margin-top:6px;font-size:0.6rem;color:#4ade80"></div>
 
 
-                    <div class="gc-admin__row">
-                        <div>
-                            <label class="gc-admin__label">⏱ Таймер (мин)</label>
-                            <input type="number" class="gc-admin__input" id="adminGcDuration" value="60" min="5"
-                                max="1440">
+                    <!-- Без призового режима: таймер = продолжительность, приз = монеты -->
+                    <div id="normalModeFields">
+                        <div class="gc-admin__row">
+                            <div>
+                                <label class="gc-admin__label">⏱ Длительность (мин)</label>
+                                <input type="number" class="gc-admin__input" id="adminGcDuration" value="60" min="5" max="1440">
+                            </div>
+                            <div>
+                                <label class="gc-admin__label">🧀 Награда (сыр)</label>
+                                <input type="number" class="gc-admin__input" id="adminGcReward" value="500" min="0">
+                            </div>
                         </div>
-                        <div>
-                            <label class="gc-admin__label">🧀 Приз</label>
-                            <input type="number" class="gc-admin__input" id="adminGcReward" value="500" min="0">
+                        <div class="gc-admin__presets">
+                            <button class="gc-preset-btn" onclick="gcSetDuration(15)">15 мин</button>
+                            <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 мин</button>
+                            <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 час</button>
+                            <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 часа</button>
                         </div>
                     </div>
 
-                    <div class="gc-admin__row">
+                    <div class="gc-admin__row" style="margin-top:12px">
                         <div>
-                            <label class="gc-admin__label">🎯 Кол-во боёв (0 = без лимита)</label>
-                            <input type="number" class="gc-admin__input" id="adminGcMaxBattles" value="0" min="0"
-                                max="100" placeholder="0 = без лимита">
+                            <label class="gc-admin__label">🎯 Кол-во боёв <span style="font-size:0.5rem;color:#5A6577">(0 = без лимита)</span></label>
+                            <input type="number" class="gc-admin__input" id="adminGcMaxBattles" value="0" min="0" max="100" placeholder="0 = без лимита">
                         </div>
-                    </div>
-
-                    <div class="gc-admin__presets">
-                        <button class="gc-preset-btn" onclick="gcSetDuration(15)">15 мин</button>
-                        <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 мин</button>
-                        <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 час</button>
-                        <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 часа</button>
                     </div>
 
                     <!-- ====== PRIZE MODE ====== -->
-                    <div style="margin-top:16px;padding:14px;background:linear-gradient(145deg,rgba(245,190,11,0.06),rgba(200,170,110,0.02));
+                    <div id="prizeModeSection" style="margin-top:16px;padding:14px;background:linear-gradient(145deg,rgba(245,190,11,0.06),rgba(200,170,110,0.02));
                          border:1px solid rgba(245,190,11,0.15);border-radius:14px">
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:0" onclick="gcTogglePrizeMode()">
                             <div id="prizeModeToggle" style="width:44px;height:24px;border-radius:12px;
@@ -593,20 +593,44 @@
                             </div>
                         </label>
 
-                        <div id="prizeModeFields" style="display:none;margin-top:12px">
-                            <label class="gc-admin__label">🎁 Описание приза</label>
-                            <input type="text" class="gc-admin__input" id="adminGcPrizeDesc" 
-                                   placeholder="iPhone 16 Pro" style="font-size:0.75rem">
+                        <div id="prizeModeFields" style="display:none;margin-top:14px">
 
-                            <label class="gc-admin__label">⏱ Длительность боевой фазы (мин, 0 = по кол-ву боёв)</label>
+                            <!-- Время набора -->
+                            <label class="gc-admin__label">⏱ Время набора (мин)</label>
+                            <input type="number" class="gc-admin__input" id="adminGcEnrollDuration" value="60" min="1" max="1440" style="margin-bottom:4px">
+                            <div class="gc-admin__presets" style="margin-bottom:14px">
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(15)">15 мин</button>
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(30)">30 мин</button>
+                                <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetEnrollDuration(60)">1 час</button>
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(120)">2 часа</button>
+                            </div>
+
+                            <!-- Описание приза -->
+                            <label class="gc-admin__label">🎁 Что разыгрывается</label>
+                            <input type="text" class="gc-admin__input" id="adminGcPrizeDesc"
+                                   placeholder="Например: iPhone 16 Pro" style="margin-bottom:10px">
+
+                            <!-- Картинка приза -->
+                            <label class="gc-admin__label">🖼 Картинка приза <span style="font-size:0.5rem;color:#5A6577">(URL)</span></label>
+                            <input type="url" class="gc-admin__input" id="adminGcPrizeImage"
+                                   placeholder="https://..." style="margin-bottom:6px"
+                                   oninput="gcPreviewPrizeImage(this.value)">
+                            <div id="prizeImagePreview" style="display:none;margin-bottom:10px;text-align:center">
+                                <img id="prizeImagePreviewImg" src="" alt="Приз" 
+                                     style="max-width:100%;max-height:120px;border-radius:10px;
+                                            border:1px solid rgba(245,190,11,0.3);object-fit:contain">
+                            </div>
+
+                            <!-- Боевая фаза -->
+                            <label class="gc-admin__label">⚔️ Длительность боевой фазы (мин) <span style="font-size:0.5rem;color:#5A6577">(0 = по кол-ву боёв)</span></label>
                             <input type="number" class="gc-admin__input" id="adminGcChallengeDuration" 
-                                   value="0" min="0" max="10080" placeholder="0 = только по боям">
-                            
-                            <div style="margin-top:8px;padding:8px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);
-                                 border-radius:10px;font-size:0.55rem;color:#4ade80;line-height:1.5">
-                                💡 <strong>Таймер</strong> = время набора участников<br>
-                                💡 <strong>Боевая фаза</strong> начнётся после набора<br>
-                                💡 <strong>Колесо</strong> запустится после завершения боёв
+                                   value="0" min="0" max="10080" style="margin-bottom:10px">
+                             
+                            <div style="padding:8px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);
+                                 border-radius:10px;font-size:0.55rem;color:#4ade80;line-height:1.6">
+                                ⏱ <strong>Таймер набора</strong> → участники подписываются<br>
+                                ⚔️ <strong>Боевая фаза</strong> начнётся автоматически после набора<br>
+                                🎡 <strong>Колесо</strong> запустится после завершения боёв
                             </div>
                         </div>
                     </div>
@@ -916,9 +940,9 @@
     <canvas id="confettiCanvas"
         style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999"></canvas>
 
-    <script src="js/arena.js?v=28"></script>
-    <script src="js/global-challenge-tab.js?v=28"></script>
-    <script src="js/gc-obs-links.js?v=28"></script>
+    <script src="js/arena.js?v=29"></script>
+    <script src="js/global-challenge-tab.js?v=29"></script>
+    <script src="js/gc-obs-links.js?v=29"></script>
 </body>
 
 </html>

@@ -226,6 +226,29 @@ function gcShowActive(ch) {
         }
     }
 
+    // Prize badge with image (for active prize mode challenges)
+    const activePrizeBadge = document.getElementById('gcPrizeBadge');
+    if (activePrizeBadge) {
+        const isPrize = ch.prize_mode == 1;
+        const prizeDesc = ch.prize_description || '';
+        if (isPrize && prizeDesc) {
+            const prizeImg = ch.prize_image_url || '';
+            activePrizeBadge.style.display = '';
+            activePrizeBadge.innerHTML = `
+                ${prizeImg ? `<div style="margin-bottom:8px"><img src="${prizeImg}" alt="${prizeDesc}" 
+                    style="max-width:140px;max-height:100px;border-radius:10px;object-fit:contain;
+                           border:1px solid rgba(245,190,11,0.3);box-shadow:0 4px 20px rgba(245,190,11,0.15)"
+                    onerror="this.style.display='none'"></div>` : ''}
+                🏆 ПРИЗ: <strong style="color:#f5be0b;font-size:0.85rem">${prizeDesc}</strong>
+            `;
+            // Update reward element to show prize name
+            const rewardEl = document.getElementById('gcReward');
+            if (rewardEl) rewardEl.textContent = prizeDesc;
+        } else {
+            activePrizeBadge.style.display = 'none';
+        }
+    }
+
     // Timer
     gcStartTimer(ch.ends_at, ch.duration_minutes);
 
@@ -306,12 +329,19 @@ function gcShowEnrollment(ch) {
     if (descEl) descEl.innerHTML = ch.description || '';
     if (condEl) condEl.innerHTML = condInfo.icon;
 
-    // Show prize badge
+    // Show prize badge with image
     const prizeBadge = document.getElementById('gcPrizeBadge');
     if (prizeBadge) {
         if (isPrize && prizeDesc) {
+            const prizeImg = ch.prize_image_url || '';
             prizeBadge.style.display = '';
-            prizeBadge.innerHTML = `🎁 ПРИЗ: <strong style="color:#f5be0b">${prizeDesc}</strong>`;
+            prizeBadge.innerHTML = `
+                ${prizeImg ? `<div style="margin-bottom:8px"><img src="${prizeImg}" alt="${prizeDesc}" 
+                    style="max-width:140px;max-height:100px;border-radius:10px;object-fit:contain;
+                           border:1px solid rgba(245,190,11,0.3);box-shadow:0 4px 20px rgba(245,190,11,0.15)"
+                    onerror="this.style.display='none'"></div>` : ''}
+                🏆 ПРИЗ: <strong style="color:#f5be0b;font-size:0.85rem">${prizeDesc}</strong>
+            `;
         } else {
             prizeBadge.style.display = 'none';
         }
@@ -1378,18 +1408,42 @@ function gcTogglePrizeMode() {
     gcPrizeModeEnabled = !gcPrizeModeEnabled;
     const toggle = document.getElementById('prizeModeToggle');
     const fields = document.getElementById('prizeModeFields');
+    const normalFields = document.getElementById('normalModeFields');
     const dot = toggle?.querySelector('div');
     
     if (gcPrizeModeEnabled) {
         toggle.style.background = 'linear-gradient(135deg, #f5be0b, #C8AA6E)';
         toggle.style.borderColor = 'rgba(245,190,11,0.3)';
         if (dot) { dot.style.transform = 'translateX(20px)'; dot.style.background = '#0a0e14'; }
-        fields.style.display = '';
+        if (fields) fields.style.display = '';
+        if (normalFields) normalFields.style.display = 'none'; // Прячем обычные поля таймера/награды
     } else {
         toggle.style.background = 'rgba(255,255,255,0.08)';
         toggle.style.borderColor = 'rgba(255,255,255,0.1)';
         if (dot) { dot.style.transform = 'translateX(0)'; dot.style.background = '#5A6577'; }
-        fields.style.display = 'none';
+        if (fields) fields.style.display = 'none';
+        if (normalFields) normalFields.style.display = ''; // Показываем обычные поля
+    }
+}
+
+function gcSetEnrollDuration(mins) {
+    const inp = document.getElementById('adminGcEnrollDuration');
+    if (inp) inp.value = mins;
+    // Update active preset button
+    document.querySelectorAll('#prizeModeFields .gc-preset-btn').forEach(btn => {
+        btn.classList.toggle('gc-preset-btn--active', btn.textContent.includes(mins >= 60 ? (mins/60)+' ч' : mins+' м'));
+    });
+}
+
+function gcPreviewPrizeImage(url) {
+    const preview = document.getElementById('prizeImagePreview');
+    const img = document.getElementById('prizeImagePreviewImg');
+    if (url && url.startsWith('http')) {
+        img.src = url;
+        preview.style.display = '';
+        img.onerror = () => { preview.style.display = 'none'; };
+    } else {
+        preview.style.display = 'none';
     }
 }
 
@@ -1398,9 +1452,17 @@ async function gcLaunchChallenge() {
 
     const title = document.getElementById('adminGcTitle').value || 'Общий Челлендж';
     const desc = document.getElementById('adminGcDesc').value || '';
-    const duration = parseInt(document.getElementById('adminGcDuration').value) || 60;
-    const reward = parseInt(document.getElementById('adminGcReward').value) || 500;
+    const reward = parseInt(document.getElementById('adminGcReward')?.value) || 500;
     const maxBattles = parseInt(document.getElementById('adminGcMaxBattles')?.value) || 0;
+
+    // В призовом режиме читаем время набора из отдельного поля, в обычном — длительность челленджа
+    const duration = gcPrizeModeEnabled
+        ? (parseInt(document.getElementById('adminGcEnrollDuration')?.value) || 60)
+        : (parseInt(document.getElementById('adminGcDuration')?.value) || 60);
+
+    const prizeDesc = document.getElementById('adminGcPrizeDesc')?.value || '';
+    const prizeImageUrl = document.getElementById('adminGcPrizeImage')?.value || '';
+    const challengeDuration = parseInt(document.getElementById('adminGcChallengeDuration')?.value) || 0;
 
     const btn = document.getElementById('adminGcLaunchBtn');
     btn.disabled = true;
@@ -1419,7 +1481,7 @@ async function gcLaunchChallenge() {
                 duration_minutes: duration,
                 max_battles: maxBattles,
                 reward_coins: reward,
-                reward_description: `${reward} 🧀`,
+                reward_description: gcPrizeModeEnabled ? (prizeDesc || '🏆 Приз') : `${reward} 🧀`,
                 wot_nickname: localStorage.getItem('wot_nickname') || '',
                 wot_account_id: localStorage.getItem('wot_account_id') || '',
                 tank_class: gcAdminTankClass || '',
@@ -1427,15 +1489,18 @@ async function gcLaunchChallenge() {
                 tank_id_filter: gcAdminTankId || 0,
                 tank_name_filter: gcAdminTankName || '',
                 prize_mode: gcPrizeModeEnabled ? 1 : 0,
-                prize_description: document.getElementById('adminGcPrizeDesc')?.value || '',
+                prize_description: prizeDesc,
+                prize_image_url: prizeImageUrl,
                 prize_top_count: 10,
-                challenge_duration_minutes: parseInt(document.getElementById('adminGcChallengeDuration')?.value) || 0
+                challenge_duration_minutes: challengeDuration
             })
         });
         const data = await resp.json();
 
         if (data.success) {
-            showToast(gcPrizeModeEnabled ? '🏆 Призовой челлендж создан! Набор участников начался.' : '🚀 Челлендж запущен!');
+            showToast(gcPrizeModeEnabled
+                ? `🏆 Призовой челлендж запущен! Набор ${duration} мин.`
+                : '🚀 Челлендж запущен!');
             gcLoadChallenge();
         } else {
             showToast(`❌ ${data.error}`);
@@ -1450,30 +1515,55 @@ async function gcLaunchChallenge() {
 
 function gcSyncAdminForm(ch) {
     if (!isAdmin) return;
-    const titleInp = document.getElementById('adminTitle');
-    const descInp = document.getElementById('adminDesc');
-    const rewardInp = document.getElementById('adminReward');
-    const timerInp = document.getElementById('adminTimer');
-    const battlesInp = document.getElementById('adminBattles');
-    const prizeDescInp = document.getElementById('adminPrizeDesc');
-    const prizeToggle = document.getElementById('adminPrizeMode');
+    const titleInp = document.getElementById('adminGcTitle');
+    const descInp = document.getElementById('adminGcDesc');
+    const rewardInp = document.getElementById('adminGcReward');
+    const timerInp = document.getElementById('adminGcDuration');
+    const enrollInp = document.getElementById('adminGcEnrollDuration');
+    const battlesInp = document.getElementById('adminGcMaxBattles');
+    const prizeDescInp = document.getElementById('adminGcPrizeDesc');
+    const prizeImgInp = document.getElementById('adminGcPrizeImage');
+    const challengeDurInp = document.getElementById('adminGcChallengeDuration');
 
     if (titleInp && ch.title) titleInp.value = ch.title;
     if (descInp && ch.description) descInp.value = ch.description;
-    if (rewardInp) rewardInp.value = ch.reward_coins || 0;
+    if (rewardInp) rewardInp.value = ch.reward_coins || 500;
     if (timerInp) timerInp.value = ch.duration_minutes || 60;
+    if (enrollInp && ch.enrollment_ends_at) {
+        // Calculate remaining enrollment minutes
+        const remaining = Math.max(0, Math.floor((new Date(ch.enrollment_ends_at) - new Date()) / 60000));
+        enrollInp.value = ch.duration_minutes || 60;
+    }
     if (battlesInp) battlesInp.value = ch.max_battles || 0;
     if (prizeDescInp) prizeDescInp.value = ch.prize_description || '';
-    if (prizeToggle) prizeToggle.checked = !!ch.prize_mode;
+    if (prizeImgInp && ch.prize_image_url) {
+        prizeImgInp.value = ch.prize_image_url;
+        gcPreviewPrizeImage(ch.prize_image_url);
+    }
+    if (challengeDurInp) challengeDurInp.value = ch.challenge_duration_minutes || 0;
+
+    // Sync prize mode toggle
+    if (ch.prize_mode && !gcPrizeModeEnabled) {
+        gcPrizeModeEnabled = true;
+        gcTogglePrizeMode(); // re-run to update UI (then toggle back)
+        gcPrizeModeEnabled = true; // ensure it stays on
+        const toggle = document.getElementById('prizeModeToggle');
+        const dot = toggle?.querySelector('div');
+        if (toggle) { toggle.style.background = 'linear-gradient(135deg, #f5be0b, #C8AA6E)'; toggle.style.borderColor = 'rgba(245,190,11,0.3)'; }
+        if (dot) { dot.style.transform = 'translateX(20px)'; dot.style.background = '#0a0e14'; }
+        const fields = document.getElementById('prizeModeFields');
+        const normalFields = document.getElementById('normalModeFields');
+        if (fields) fields.style.display = '';
+        if (normalFields) normalFields.style.display = 'none';
+    }
 
     // Sync condition selection buttons
     const conds = (ch.condition || 'damage').split(',');
-    const btnWrappers = document.querySelectorAll('.gc-admin__conds .gc-admin__icon-btn');
-    btnWrappers.forEach(btn => {
+    document.querySelectorAll('#gcCondButtons .gc-cond-btn').forEach(btn => {
         const c = btn.getAttribute('data-cond');
-        if (conds.includes(c)) btn.classList.add('active');
-        else btn.classList.remove('active');
+        btn.classList.toggle('gc-cond-btn--active', conds.includes(c));
     });
+    gcAdminConditions = conds;
 }
 async function gcStopChallenge() {
     const btn = document.getElementById('adminGcStopBtn');
