@@ -106,6 +106,7 @@ async function gcLoadChallenge(forceRefresh) {
             }
 
             if (data.status === 'active' && data.challenge) {
+                gcSyncAdminForm(data.challenge);
                 gcShowActive(data.challenge);
             } else if (data.status === 'enrollment' && data.challenge) {
                 // Auto-start if enrollment timer expired
@@ -121,8 +122,10 @@ async function gcLoadChallenge(forceRefresh) {
                         }).then(() => setTimeout(() => gcLoadChallenge(true), 2000)).catch(() => {});
                     }
                 }
+                gcSyncAdminForm(data.challenge);
                 gcShowEnrollment(data.challenge);
             } else if (data.status === 'wheel_pending' && data.challenge) {
+                gcSyncAdminForm(data.challenge);
                 gcShowWheelPending(data.challenge);
             } else if ((data.status === 'finished' || data.status === 'completed') && data.challenge) {
                 gcShowFinished(data.challenge);
@@ -293,10 +296,15 @@ function gcShowEnrollment(ch) {
     const condInfo = GC_CONDITION_MAP[ch.condition?.split(',')[0]] || GC_CONDITION_MAP.damage;
 
     // Header
-    document.getElementById('gcActiveIcon').textContent = isPrize ? '🏆' : (ch.icon || '🔥');
-    document.getElementById('gcActiveTitle').innerHTML = ch.title || 'Челлендж';
-    document.getElementById('gcActiveDesc').innerHTML = ch.description || '';
-    document.getElementById('gcActiveCond').innerHTML = condInfo.icon;
+    const iconEl = document.getElementById('gcIcon') || document.getElementById('gcActiveIcon');
+    const titleEl = document.getElementById('gcTitle') || document.getElementById('gcActiveTitle');
+    const descEl = document.getElementById('gcDesc') || document.getElementById('gcActiveDesc');
+    const condEl = document.getElementById('gcCondition') || document.getElementById('gcActiveCond');
+    
+    if (iconEl) iconEl.textContent = isPrize ? '🏆' : (ch.icon || '🔥');
+    if (titleEl) titleEl.innerHTML = ch.title || 'Челлендж';
+    if (descEl) descEl.innerHTML = ch.description || '';
+    if (condEl) condEl.innerHTML = condInfo.icon;
 
     // Show prize badge
     const prizeBadge = document.getElementById('gcPrizeBadge');
@@ -315,9 +323,15 @@ function gcShowEnrollment(ch) {
 
     // Stats bar  
     const maxBattles = ch.max_battles || 0;
-    document.getElementById('gcStatParticipants').textContent = ch.participants_count || 0;
-    document.getElementById('gcStatBattles').textContent = maxBattles > 0 ? `${maxBattles} боёв` : '∞';
-    document.getElementById('gcStatReward').textContent = isPrize && prizeDesc ? `🏆 ${prizeDesc}` : (ch.reward_description || `${ch.reward_coins} 🧀`);
+    const participantsEl = document.getElementById('gcParticipants') || document.getElementById('gcStatParticipants');
+    const battlesEl = document.getElementById('gcStatBattles'); // Might not exist
+    const rewardEl = document.getElementById('gcReward') || document.getElementById('gcStatReward');
+    
+    if (participantsEl) participantsEl.textContent = ch.participants_count || 0;
+    if (battlesEl) battlesEl.textContent = maxBattles > 0 ? `${maxBattles} боёв` : '∞';
+    if (rewardEl) {
+        rewardEl.textContent = isPrize && prizeDesc ? prizeDesc : (ch.reward_description || `${ch.reward_coins} 🧀`);
+    }
 
     // Join button — always active during enrollment
     const joinBtn = document.getElementById('gcJoinBtn');
@@ -1422,6 +1436,33 @@ async function gcLaunchChallenge() {
     btn.textContent = '🚀 ЗАПУСТИТЬ ЧЕЛЛЕНДЖ';
 }
 
+function gcSyncAdminForm(ch) {
+    if (!isAdmin) return;
+    const titleInp = document.getElementById('adminTitle');
+    const descInp = document.getElementById('adminDesc');
+    const rewardInp = document.getElementById('adminReward');
+    const timerInp = document.getElementById('adminTimer');
+    const battlesInp = document.getElementById('adminBattles');
+    const prizeDescInp = document.getElementById('adminPrizeDesc');
+    const prizeToggle = document.getElementById('adminPrizeMode');
+
+    if (titleInp && ch.title) titleInp.value = ch.title;
+    if (descInp && ch.description) descInp.value = ch.description;
+    if (rewardInp) rewardInp.value = ch.reward_coins || 0;
+    if (timerInp) timerInp.value = ch.duration_minutes || 60;
+    if (battlesInp) battlesInp.value = ch.max_battles || 0;
+    if (prizeDescInp) prizeDescInp.value = ch.prize_description || '';
+    if (prizeToggle) prizeToggle.checked = !!ch.prize_mode;
+
+    // Sync condition selection buttons
+    const conds = (ch.condition || 'damage').split(',');
+    const btnWrappers = document.querySelectorAll('.gc-admin__conds .gc-admin__icon-btn');
+    btnWrappers.forEach(btn => {
+        const c = btn.getAttribute('data-cond');
+        if (conds.includes(c)) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+}
 async function gcStopChallenge() {
     const btn = document.getElementById('adminGcStopBtn');
     const challengeId = btn && btn.getAttribute('data-id') || (gcCurrentChallenge && gcCurrentChallenge.id);
