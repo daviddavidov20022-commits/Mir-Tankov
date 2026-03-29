@@ -8,296 +8,462 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        :root {
+            --primary-gold: #f5be0b;
+            --secondary-gold: #C8AA6E;
+            --bg-dark: #07090d;
+            --card-glass: rgba(13, 17, 23, 0.7);
+            --neon-glow: 0 0 20px rgba(245, 190, 11, 0.4);
+            --danger-red: #ef4444;
+        }
+
         body {
-            background: #0a0e14;
+            background: var(--bg-dark);
             color: #E8E6E3;
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* Background particles */
-        body::before {
-            content: '';
+        /* Ambient background nebulas */
+        .ambient-bg {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: 
-                radial-gradient(circle at 20% 80%, rgba(245, 190, 11, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(200, 170, 110, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.02) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
+                radial-gradient(circle at 10% 20%, rgba(245, 190, 11, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(200, 170, 110, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(20, 24, 33, 1) 0%, var(--bg-dark) 100%);
+            z-index: -1;
         }
 
         .wheel-page {
-            max-width: 600px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 500px;
             padding: 20px 16px;
             position: relative;
             z-index: 1;
         }
 
+        /* Top Nav */
+        .wh-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .wh-back-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 15px;
+            color: var(--secondary-gold);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(10px);
+        }
+
+        .wh-back-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(-4px);
+        }
+
         /* Header */
         .wh-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .wh-header__icon {
-            font-size: 3rem;
-            filter: drop-shadow(0 0 20px rgba(245, 190, 11, 0.5));
-            animation: float 2s ease-in-out infinite;
+            font-size: 3.5rem;
+            filter: drop-shadow(0 0 30px rgba(245, 190, 11, 0.6));
+            animation: float 2.5s ease-in-out infinite;
+            margin-bottom: 10px;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+            0%, 100% { transform: translateY(0) scale(1.0); }
+            50% { transform: translateY(-10px) scale(1.05); }
         }
 
         .wh-header__title {
             font-family: 'Russo One', sans-serif;
-            font-size: 1.3rem;
-            background: linear-gradient(135deg, #f5be0b, #C8AA6E, #f59e0b);
+            font-size: 1.6rem;
+            letter-spacing: 4px;
+            background: linear-gradient(to right, #fff, var(--primary-gold), #fff);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin: 8px 0 4px;
-            letter-spacing: 3px;
+            text-transform: uppercase;
         }
 
         .wh-header__prize {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 16px;
-            background: linear-gradient(145deg, rgba(245, 190, 11, 0.1), rgba(200, 170, 110, 0.04));
+            padding: 8px 20px;
+            background: rgba(245, 190, 11, 0.06);
             border: 1px solid rgba(245, 190, 11, 0.2);
-            border-radius: 20px;
-            font-size: 0.75rem;
-            color: #f5be0b;
+            border-radius: 50px;
+            color: var(--primary-gold);
             font-weight: 700;
-            margin-top: 8px;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
         }
 
-        /* Wheel container */
-        .wh-wheel-wrap {
+        /* Premium Wheel Container */
+        .wh-frame {
             position: relative;
+            width: 380px;
+            height: 380px;
+            margin: 30px auto;
+            border-radius: 50%;
+            padding: 15px;
+            background: linear-gradient(145deg, #1a1e26, #0a0e14);
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.8),
+                0 10px 40px rgba(0, 0, 0, 0.5),
+                0 0 2px 1px rgba(245, 190, 11, 0.15);
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 20px 0;
+        }
+        
+        /* Inner decorative ring */
+        .wh-inner-ring {
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border-radius: 50%;
+            border: 1px dashed rgba(245, 190, 11, 0.1);
+            pointer-events: none;
+            animation: rotateClockwise 60s linear infinite;
         }
 
-        .wh-canvas-container {
-            position: relative;
-            width: 360px;
-            height: 360px;
+        @keyframes rotateClockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         #wheelCanvas {
-            width: 360px;
-            height: 360px;
-            filter: drop-shadow(0 0 30px rgba(245, 190, 11, 0.15));
+            width: 350px;
+            height: 350px;
+            filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
+            border-radius: 50%;
         }
 
-        /* Pointer */
+        /* Futuristic Pointer */
         .wh-pointer {
             position: absolute;
-            top: -8px;
+            top: -15px;
             left: 50%;
             transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 14px solid transparent;
-            border-right: 14px solid transparent;
-            border-top: 28px solid #f5be0b;
-            filter: drop-shadow(0 4px 12px rgba(245, 190, 11, 0.5));
-            z-index: 10;
+            z-index: 100;
+            filter: drop-shadow(0 5px 15px rgba(245, 190, 11, 0.6));
         }
 
-        /* Counter */
+        .wh-pointer-shape {
+            width: 30px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary-gold), #b38b00);
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            border-radius: 4px;
+        }
+
+        /* LCD Counter */
         .wh-counter {
             text-align: center;
-            margin: 16px 0;
-            font-family: 'Russo One', sans-serif;
-        }
-
-        .wh-counter__num {
-            font-size: 2.5rem;
-            color: #C8AA6E;
-            text-shadow: 0 0 20px rgba(200, 170, 110, 0.3);
+            margin-bottom: 24px;
         }
 
         .wh-counter__label {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: #5A6577;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            margin-bottom: 4px;
         }
 
-        /* Spin button */
-        .wh-spin-btn {
-            display: block;
-            width: 100%;
-            padding: 18px;
-            border: none;
-            border-radius: 16px;
+        .wh-counter__num {
             font-family: 'Russo One', sans-serif;
-            font-size: 1rem;
-            cursor: pointer;
-            background: linear-gradient(135deg, #ef4444, #b91c1c);
-            color: white;
+            font-size: 3rem;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Premium Spin Button */
+        .wh-spin-btn {
+            width: 100%;
+            padding: 22px;
+            border: none;
+            border-radius: 20px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
             letter-spacing: 2px;
-            transition: all 0.3s;
+            cursor: pointer;
+            text-transform: uppercase;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
-            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ef4444, #991b1b);
+            color: white;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 25px;
         }
 
-        .wh-spin-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 40px rgba(239, 68, 68, 0.4);
+        .wh-spin-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
+
+        .wh-spin-btn:hover:not(:disabled) {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 45px rgba(239, 68, 68, 0.4);
+        }
+        .wh-spin-btn:hover::after { opacity: 1; }
+
+        .wh-spin-btn:active { transform: translateY(0); }
 
         .wh-spin-btn:disabled {
-            background: linear-gradient(135deg, #374151, #1f2937);
+            background: linear-gradient(135deg, #2d3542, #1a1e26);
+            color: #4b5563;
             box-shadow: none;
             cursor: not-allowed;
         }
 
-        .wh-spin-btn:disabled:hover { transform: none; }
-
-        .wh-spin-btn--winner {
-            background: linear-gradient(135deg, #f5be0b, #C8AA6E) !important;
-            color: #0a0e14 !important;
-            box-shadow: 0 8px 32px rgba(245, 190, 11, 0.4) !important;
-        }
-
-        /* Eliminated list */
-        .wh-elim-list {
-            margin-top: 16px;
+        /* Eliminated List - New Design */
+        .wh-elim-section {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .wh-elim-title {
             font-family: 'Russo One', sans-serif;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #5A6577;
-            margin-bottom: 8px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wh-elim-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .wh-elim-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .wh-elim-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: rgba(239, 68, 68, 0.06);
+            background: rgba(239, 68, 68, 0.04);
             border: 1px solid rgba(239, 68, 68, 0.1);
-            border-radius: 10px;
-            margin-bottom: 4px;
-            font-size: 0.7rem;
-            animation: elimSlide 0.3s ease;
+            border-radius: 12px;
+            padding: 10px 15px;
+            animation: slideInR 0.4s ease forwards;
         }
 
-        @keyframes elimSlide {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .wh-elim-item__order {
-            color: #ef4444;
-            font-weight: 800;
-            font-size: 0.6rem;
-            width: 24px;
-            text-align: center;
+        @keyframes slideInR {
+            from { transform: translateX(30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .wh-elim-item__name {
             flex: 1;
+            font-size: 0.8rem;
             color: #5A6577;
             text-decoration: line-through;
+            font-weight: 500;
         }
 
-        .wh-elim-item__x {
-            color: #ef4444;
-            font-size: 0.8rem;
+        .wh-elim-item__num {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.6rem;
+            color: var(--danger-red);
+            opacity: 0.6;
+            margin-right: 10px;
         }
 
-        /* Winner modal */
+        /* Winner Modal - Premium Edition */
         .wh-winner-modal {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            backdrop-filter: blur(10px);
         }
 
         .wh-winner-card {
-            background: linear-gradient(145deg, #111820, #0d1117);
-            border: 2px solid rgba(245, 190, 11, 0.3);
-            border-radius: 24px;
-            padding: 40px 30px;
-            text-align: center;
-            max-width: 350px;
+            background: 
+                radial-gradient(circle at 50% 0%, rgba(245, 190, 11, 0.15) 0%, transparent 70%),
+                linear-gradient(145deg, #0d1117, #07090d);
+            border: 1px solid rgba(245, 190, 11, 0.3);
+            border-radius: 32px;
+            padding: 50px 40px;
             width: 90%;
-            animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 0 60px rgba(245, 190, 11, 0.2);
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8), 0 0 40px rgba(245, 190, 11, 0.2);
+            animation: winnerIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.5); }
-            to { opacity: 1; transform: scale(1); }
+        @keyframes winnerIn {
+            from { transform: scale(0.6) translateY(50px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
         }
 
-        .wh-winner-card__crown {
-            font-size: 4rem;
-            animation: float 1.5s ease-in-out infinite;
-            filter: drop-shadow(0 0 20px rgba(245, 190, 11, 0.6));
+        .modal-close {
+            position: absolute; top: 15px; right: 15px;
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.05);
+            border: none; border-radius: 50%;
+            color: #666; font-size: 1.2rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { color: #fff; background: rgba(255,0,0,0.2); }
+
+        .winner-crown {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px var(--primary-gold));
         }
 
-        .wh-winner-card__title {
+        .winner-title {
             font-family: 'Russo One', sans-serif;
-            font-size: 1.3rem;
-            background: linear-gradient(135deg, #f5be0b, #ffd700);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 12px 0;
-            letter-spacing: 3px;
+            font-size: 1.1rem;
+            color: #888;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
         }
 
-        .wh-winner-card__name {
+        .winner-name {
             font-family: 'Russo One', sans-serif;
-            font-size: 1.6rem;
-            color: #E8E6E3;
-            margin: 8px 0;
-            text-shadow: 0 0 20px rgba(245, 190, 11, 0.3);
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(245, 190, 11, 0.5);
         }
 
-        .wh-winner-card__prize {
-            font-size: 0.85rem;
-            color: #f5be0b;
-            font-weight: 700;
-            margin-top: 8px;
+        .winner-prize {
+            background: rgba(245, 190, 11, 0.1);
+            color: var(--primary-gold);
+            padding: 12px 20px;
+            border-radius: 15px;
+            font-weight: 800;
+            display: inline-block;
+            border: 1px solid rgba(245, 190, 11, 0.2);
+            margin-bottom: 30px;
         }
 
-        /* Confetti canvas */
-        #confettiCanvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 999;
+        .modal-back-btn {
+            background: linear-gradient(135deg, var(--primary-gold), #b38b00);
+            color: #07090d;
+            border: none; border-radius: 16px;
+            padding: 16px 40px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(245, 190, 11, 0.3);
+            transition: all 0.3s;
         }
+        .modal-back-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(245, 190, 11, 0.4); }
+
+        /* Loading Skeleton */
+        .wh-loading {
+            padding: 100px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .wh-loading-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(245, 190, 11, 0.1);
+            border-top: 3px solid var(--primary-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+    <div class="wheel-page">
+        <!-- New Navigation -->
+        <div class="wh-nav">
+            <button class="wh-back-btn" onclick="history.back()">
+                <span>←</span> Назад
+            </button>
+            <div style="font-size:0.6rem; color:#5A6577; text-transform:uppercase; letter-spacing:1px">Колесо Элиминации</div>
+        </div>
+
+        <div class="wh-header">
+            <div class="wh-header__icon">🎡</div>
+            <h1 class="wh-header__title">Колесо Элиминации</h1>
+            <div class="wh-header__prize" id="whPrize">🏆 Загрузка приза...</div>
+        </div>
+
+        <div class="wh-loading" id="whLoading">
+            <div class="wh-loading-spinner"></div>
+            <div style="color:#5A6577; font-size:0.8rem">Собираем участников...</div>
+        </div>
+
+        <div id="whContent" style="display:none">
+            <div class="wh-frame">
+                <div class="wh-inner-ring"></div>
+                <div class="wh-pointer">
+                    <div class="wh-pointer-shape"></div>
+                </div>
+                <div class="wh-canvas-container">
+                    <canvas id="wheelCanvas" width="700" height="700"></canvas>
+                </div>
+            </div>
+
+            <div class="wh-counter">
+                <div class="wh-counter__num" id="whRemaining">0</div>
+                <div class="wh-counter__label">участников в игре</div>
+            </div>
+
+            <button class="wh-spin-btn" id="whSpinBtn" onclick="spinWheel()">
+                КРУТИТЬ КОЛЕСО
+            </button>
+
+            <div class="wh-elim-section">
+                <div class="wh-elim-title">📜 История выбывания</div>
+                <div class="wh-elim-grid" id="whElimList"></div>
+            </div>
+        </div>
+    </div>
 
         /* Loading */
         .wh-loading {
@@ -373,12 +539,10 @@
     const myTelegramId = localStorage.getItem('my_telegram_id') || '';
 
     const COLORS_TOP = [
-        '#f5be0b', '#FFD700', '#C8AA6E', '#f59e0b', '#eab308',
-        '#d4a017', '#b8860b', '#daa520', '#CD853F', '#D2B48C'
+        '#f5be0b', '#FFD700', '#C8AA6E', '#f59e0b', '#eab308'
     ];
     const COLORS_OTHER = [
-        '#4a6741', '#3d5a80', '#5e4b8a', '#8b4557', '#4a7c7e',
-        '#6b5b3e', '#6e5494', '#4e6e58', '#746d75', '#5a6577'
+        '#1e293b', '#334155', '#1e293b', '#334155', '#0f172a'
     ];
 
     let wheelData = null;
@@ -408,8 +572,8 @@
             }
 
             // Set prize
-            document.getElementById('whPrize').textContent = 
-                `🏆 ${wheelData.challenge.prize_description || 'ПРИЗ'}`;
+            document.getElementById('whPrize').innerHTML = 
+                `<span style="margin-right:8px">🏆</span> ${wheelData.challenge.prize_description || 'ПРИЗ'}`;
 
             // Filter to remaining participants
             participants = wheelData.participants.filter(p => !p.eliminated);
@@ -419,7 +583,7 @@
 
             document.getElementById('whRemaining').textContent = participants.length;
             document.getElementById('whLoading').style.display = 'none';
-            document.getElementById('whContent').style.display = '';
+            document.getElementById('whContent').style.display = 'block';
 
             renderEliminated();
             drawWheel();
@@ -434,7 +598,7 @@
     }
 
     // ==========================================
-    // DRAW WHEEL
+    // DRAW WHEEL (PREMIUM RENDERING)
     // ==========================================
     function drawWheel() {
         const canvas = document.getElementById('wheelCanvas');
@@ -443,48 +607,41 @@
         const H = canvas.height;
         const cx = W / 2;
         const cy = H / 2;
-        const radius = W / 2 - 20;
+        const radius = W / 2 - 10;
 
         ctx.clearRect(0, 0, W, H);
-
         if (!participants.length) return;
 
-        // Calculate total weight for proportional segments
         const totalWeight = participants.reduce((s, p) => s + (p.multiplier || 1), 0);
-
         let startAngle = currentRotation;
 
         participants.forEach((p, i) => {
             const weight = p.multiplier || 1;
             const sliceAngle = (weight / totalWeight) * Math.PI * 2;
 
-            // Draw segment
+            // --- Draw segment with radial gradient ---
+            const grad = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius);
+            const colorIdx = i % (p.is_top ? COLORS_TOP.length : COLORS_OTHER.length);
+            const baseColor = p.is_top ? COLORS_TOP[colorIdx] : COLORS_OTHER[colorIdx];
+            
+            grad.addColorStop(0, hexToRgba(baseColor, 0.9));
+            grad.addColorStop(1, hexToRgba(baseColor, 0.7));
+
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.arc(cx, cy, radius, startAngle, startAngle + sliceAngle);
             ctx.closePath();
-
-            const colorIdx = i % (p.is_top ? COLORS_TOP.length : COLORS_OTHER.length);
-            ctx.fillStyle = p.is_top ? COLORS_TOP[colorIdx] : COLORS_OTHER[colorIdx];
+            ctx.fillStyle = grad;
             ctx.fill();
 
-            // Border
-            ctx.strokeStyle = 'rgba(10, 14, 20, 0.8)';
+            // --- Border and Glow ---
+            ctx.strokeStyle = p.is_top ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Top glow border
-            if (p.is_top) {
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius - 1, startAngle, startAngle + sliceAngle);
-                ctx.strokeStyle = 'rgba(245, 190, 11, 0.3)';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-            }
-
-            // Text
+            // --- Text rendering ---
             const midAngle = startAngle + sliceAngle / 2;
-            const textRadius = radius * 0.65;
+            const textRadius = radius * 0.7;
             const tx = cx + Math.cos(midAngle) * textRadius;
             const ty = cy + Math.sin(midAngle) * textRadius;
 
@@ -492,43 +649,71 @@
             ctx.translate(tx, ty);
             ctx.rotate(midAngle);
 
-            // Nick
-            const nick = (p.nickname || 'Танкист').substring(0, 12);
-            const fontSize = Math.min(14, Math.max(9, sliceAngle * radius * 0.12));
+            const nick = (p.nickname || 'Танкист').substring(0, 15);
+            const fontSize = Math.min(24, Math.max(12, sliceAngle * radius * 0.15));
             ctx.font = `800 ${fontSize}px 'Inter', sans-serif`;
-            ctx.fillStyle = p.is_top ? '#0a0e14' : '#E8E6E3';
+            ctx.fillStyle = p.is_top ? '#000' : '#E8E6E3';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
+            
+            // Subtle shadow for text
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 4;
             ctx.fillText(nick, 0, 0);
+            ctx.shadowBlur = 0;
 
-            // Multiplier badge
-            if (p.is_top && p.multiplier > 1) {
-                const badgeText = `×${p.multiplier}`;
-                ctx.font = `700 ${fontSize * 0.7}px 'Inter', sans-serif`;
-                ctx.fillStyle = p.is_top ? 'rgba(10,14,20,0.6)' : 'rgba(200,170,110,0.8)';
-                ctx.fillText(badgeText, 0, fontSize * 0.9);
+            if (p.multiplier > 1) {
+                ctx.font = `700 ${fontSize * 0.65}px 'Inter', sans-serif`;
+                ctx.fillStyle = p.is_top ? 'rgba(0,0,0,0.5)' : '#f5be0b';
+                ctx.fillText(`x${p.multiplier}`, 0, fontSize * 0.85);
             }
 
             ctx.restore();
-
             startAngle += sliceAngle;
         });
 
-        // Center circle
+        // --- Outer reflective gloss ---
+        const gloss = ctx.createLinearGradient(0, 0, W, H);
+        gloss.addColorStop(0, 'rgba(255,255,255,0.1)');
+        gloss.addColorStop(0.5, 'transparent');
+        gloss.addColorStop(1, 'rgba(255,255,255,0.05)');
         ctx.beginPath();
-        ctx.arc(cx, cy, 40, 0, Math.PI * 2);
-        ctx.fillStyle = '#0a0e14';
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fillStyle = gloss;
+        ctx.fill();
+
+        // --- Center cap ---
+        ctx.beginPath();
+        ctx.arc(cx, cy, 50, 0, Math.PI * 2);
+        const centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 50);
+        centerGrad.addColorStop(0, '#222');
+        centerGrad.addColorStop(1, '#000');
+        ctx.fillStyle = centerGrad;
         ctx.fill();
         ctx.strokeStyle = 'rgba(245, 190, 11, 0.4)';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.stroke();
 
-        // Center text
-        ctx.font = "bold 20px 'Russo One', sans-serif";
-        ctx.fillStyle = '#C8AA6E';
+        // Center icon/count
+        ctx.font = "bold 26px 'Russo One', sans-serif";
+        ctx.fillStyle = '#f5be0b';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(participants.length.toString(), cx, cy);
+    }
+
+    function hexToRgba(hex, alpha) {
+        let r = 0, g = 0, b = 0;
+        if (hex.length === 4) {
+            r = "0x" + hex[1] + hex[1];
+            g = "0x" + hex[2] + hex[2];
+            b = "0x" + hex[3] + hex[3];
+        } else if (hex.length === 7) {
+            r = "0x" + hex[1] + hex[2];
+            g = "0x" + hex[3] + hex[4];
+            b = "0x" + hex[5] + hex[6];
+        }
+        return `rgba(${+r}, ${+g}, ${+b}, ${alpha})`;
     }
 
     // ==========================================
@@ -540,51 +725,40 @@
 
         const btn = document.getElementById('whSpinBtn');
         btn.disabled = true;
-        btn.textContent = '⏳ Крутится...';
+        btn.textContent = 'УДАЧА РЕШАЕТ...';
 
-        // Pick who to eliminate based on INVERSE weights
-        // (higher weight = harder to eliminate)
-        const totalInverseWeight = participants.reduce((s, p) => {
-            return s + (1 / (p.multiplier || 1));
-        }, 0);
-
+        const totalInverseWeight = participants.reduce((s, p) => s + (1 / (p.multiplier || 1)), 0);
         let random = Math.random() * totalInverseWeight;
         let eliminatedIdx = 0;
         for (let i = 0; i < participants.length; i++) {
             random -= 1 / (participants[i].multiplier || 1);
-            if (random <= 0) {
-                eliminatedIdx = i;
-                break;
-            }
+            if (random <= 0) { eliminatedIdx = i; break; }
         }
 
-        // Calculate target angle to land on eliminated participant
         const totalWeight = participants.reduce((s, p) => s + (p.multiplier || 1), 0);
         let angleSum = 0;
         for (let i = 0; i < eliminatedIdx; i++) {
             angleSum += (participants[i].multiplier || 1) / totalWeight * Math.PI * 2;
         }
-        const targetMid = angleSum + ((participants[eliminatedIdx].multiplier || 1) / totalWeight * Math.PI * 2) / 2;
+        const sliceAngle = (participants[eliminatedIdx].multiplier || 1) / totalWeight * Math.PI * 2;
+        const targetMid = angleSum + sliceAngle / 2;
 
-        // Pointer is at top (270° = -π/2), we need the target segment at the pointer
         const pointerAngle = -Math.PI / 2;
         const targetRotation = pointerAngle - targetMid;
 
-        // Add full rotations for drama
-        const fullRotations = 4 + Math.floor(Math.random() * 3); // 4-6 full spins
+        const fullRotations = 6 + Math.floor(Math.random() * 4);
         const finalRotation = targetRotation + fullRotations * Math.PI * 2;
 
-        // Animate
         const startRotation = currentRotation;
-        const duration = 3000 + Math.random() * 2000; // 3-5 seconds
+        const duration = 4000 + Math.random() * 2000;
         const startTime = Date.now();
 
         function animate() {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
-
-            // Easing: cubic-bezier for deceleration
-            const eased = 1 - Math.pow(1 - progress, 3);
+            
+            // Custom ease-out
+            const eased = 1 - Math.pow(1 - progress, 4);
 
             currentRotation = startRotation + (finalRotation - startRotation) * eased;
             drawWheel();
@@ -592,218 +766,119 @@
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                // Spin complete — eliminate!
-                const eliminated = participants[eliminatedIdx];
-                eliminateParticipant(eliminated);
+                eliminateParticipant(participants[eliminatedIdx]);
             }
         }
-
-        requestAnimationFrame(animate);
+        animate();
     }
 
-    async function eliminateParticipant(player) {
-        const params = new URLSearchParams(location.search);
-        const challengeId = params.get('challenge_id');
-
+    async function eliminateParticipant(p) {
         try {
+            const params = new URLSearchParams(location.search);
+            const challengeId = params.get('challenge_id');
             const resp = await fetch(`${BOT_API_URL}/api/global-challenge/wheel-eliminate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    admin_telegram_id: myTelegramId,
-                    challenge_id: parseInt(challengeId),
-                    telegram_id: player.telegram_id
-                })
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ challenge_id: challengeId, telegram_id: p.telegram_id })
             });
             const data = await resp.json();
-
+            
             if (data.success) {
-                // Remove from participants
-                participants = participants.filter(p => p.telegram_id !== player.telegram_id);
-                eliminatedList.push({
-                    ...player,
-                    eliminated_order: data.eliminated.order
+                loadWheelData().then(() => {
+                    spinning = false;
+                    const btn = document.getElementById('whSpinBtn');
+                    btn.disabled = false;
+                    btn.textContent = 'КРУТИТЬ КОЛЕСО';
                 });
-
-                // Update UI
-                document.getElementById('whRemaining').textContent = participants.length;
-                renderEliminated();
-
-                // Flash red on the eliminated
-                drawWheel();
-
+            } else {
+                alert('Ошибка сервера: ' + data.error);
                 spinning = false;
-                const btn = document.getElementById('whSpinBtn');
-
-                if (participants.length === 1) {
-                    // We have a WINNER!
-                    btn.textContent = '🏆 ОБЪЯВИТЬ ПОБЕДИТЕЛЯ';
-                    btn.disabled = false;
-                    btn.className = 'wh-spin-btn wh-spin-btn--winner';
-                    btn.onclick = () => declareWinner(participants[0]);
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = `🎡 КРУТИТЬ (осталось ${participants.length})`;
-                }
             }
         } catch (e) {
-            console.error('Eliminate error:', e);
+            alert('Ошибка сети: ' + e.message);
             spinning = false;
-            document.getElementById('whSpinBtn').disabled = false;
-            document.getElementById('whSpinBtn').textContent = '🎡 КРУТИТЬ КОЛЕСО';
         }
-    }
-
-    async function declareWinner(winner) {
-        const params = new URLSearchParams(location.search);
-        const challengeId = params.get('challenge_id');
-
-        try {
-            await fetch(`${BOT_API_URL}/api/global-challenge/wheel-winner`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    admin_telegram_id: myTelegramId,
-                    challenge_id: parseInt(challengeId),
-                    winner_telegram_id: winner.telegram_id
-                })
-            });
-        } catch (e) {
-            console.error('Winner error:', e);
-        }
-
-        showWinner(winner);
     }
 
     function showWinner(winner) {
-        // Confetti!
         launchConfetti();
 
         const nick = winner.nickname || 'Танкист';
         const prize = wheelData?.challenge?.prize_description || 'ПРИЗ';
 
-        // Hide spin button
         document.getElementById('whSpinBtn').style.display = 'none';
 
-        // Show modal
         const modal = document.createElement('div');
         modal.className = 'wh-winner-modal';
         modal.innerHTML = `
-            <div class="wh-winner-card" style="position:relative">
-                <button onclick="this.closest('.wh-winner-modal').remove()" 
-                    style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);
-                    border:1px solid rgba(255,255,255,0.2);border-radius:50%;width:32px;height:32px;
-                    color:#999;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;
-                    justify-content:center;transition:all 0.2s"
-                    onmouseover="this.style.background='rgba(255,255,255,0.2)'"
-                    onmouseout="this.style.background='rgba(255,255,255,0.1)'"
-                >✕</button>
-                <div class="wh-winner-card__crown">👑</div>
-                <div class="wh-winner-card__title">ПОБЕДИТЕЛЬ!</div>
-                <div class="wh-winner-card__name">${nick}</div>
-                <div class="wh-winner-card__prize">🏆 ${prize}</div>
-                <div style="margin-top:20px;font-size:0.65rem;color:#5A6577">
-                    Поздравляем! Колесо фортуны выбрало победителя!
+            <div class="wh-winner-card">
+                <button class="modal-close" onclick="this.closest('.wh-winner-modal').remove()">✕</button>
+                <div class="winner-crown">👑</div>
+                <div class="winner-name">${nick}</div>
+                <div class="winner-title">ПОБЕДИТЕЛЬ!</div>
+                <div class="winner-prize">🏆 ${prize}</div>
+                <div>
+                   <button class="modal-back-btn" onclick="history.back()">ВЕРНУТЬСЯ НА АРЕНУ</button>
                 </div>
-                <button onclick="history.back()" 
-                    style="margin-top:20px;padding:12px 32px;background:linear-gradient(135deg,#f5be0b,#C8AA6E);
-                    border:none;border-radius:12px;color:#0a0e14;font-family:'Russo One',sans-serif;
-                    font-size:0.8rem;cursor:pointer;letter-spacing:1px">
-                    ← Назад
-                </button>
             </div>
         `;
         document.body.appendChild(modal);
     }
 
-    // ==========================================
-    // RENDER ELIMINATED
-    // ==========================================
     function renderEliminated() {
         const container = document.getElementById('whElimList');
-        if (!eliminatedList.length) {
-            container.innerHTML = '';
+        if (!eliminatedList || !eliminatedList.length) {
+            container.innerHTML = '<div style="text-align:center;color:#334155;font-size:0.75rem;padding:20px">Никто еще не выбыл</div>';
             return;
         }
 
-        const items = eliminatedList.slice().reverse().map(p => `
-            <div class="wh-elim-item">
-                <div class="wh-elim-item__order">#${p.eliminated_order || '?'}</div>
-                <div class="wh-elim-item__name">${p.nickname || 'Танкист'}</div>
-                <div class="wh-elim-item__x">✕</div>
+        const itemsHtml = eliminatedList.map((p, i) => `
+            <div class="wh-elim-item" style="animation-delay: ${i * 0.1}s">
+                <span class="wh-elim-item__num">#${p.eliminated_order}</span>
+                <span class="wh-elim-item__name">${p.nickname}</span>
+                <span style="font-size:0.9rem">❌</span>
             </div>
         `).join('');
 
-        container.innerHTML = `
-            <div class="wh-elim-title">❌ Выбыли (${eliminatedList.length})</div>
-            ${items}
-        `;
+        container.innerHTML = itemsHtml;
     }
 
     // ==========================================
-    // CONFETTI
+    // CONFETTI (PREMIUM)
     // ==========================================
     function launchConfetti() {
-        const canvas = document.getElementById('confettiCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        const particles = [];
-        const colors = ['#f5be0b', '#C8AA6E', '#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ffd700'];
-
-        for (let i = 0; i < 200; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: -20 - Math.random() * 200,
-                w: 4 + Math.random() * 8,
-                h: 8 + Math.random() * 10,
-                vx: (Math.random() - 0.5) * 6,
-                vy: 3 + Math.random() * 5,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                rot: Math.random() * 360,
-                rotSpeed: (Math.random() - 0.5) * 10,
-                opacity: 1,
-            });
+        if (typeof confetti === 'function') {
+            runConfetti();
+        } else {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+            script.onload = runConfetti;
+            document.head.appendChild(script);
         }
-
-        let frame = 0;
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            let alive = 0;
-
-            particles.forEach(p => {
-                if (p.opacity <= 0) return;
-                alive++;
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.05;
-                p.rot += p.rotSpeed;
-                if (p.y > canvas.height + 30) { p.opacity = 0; return; }
-                if (frame > 100) p.opacity -= 0.01;
-
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, p.opacity);
-                ctx.translate(p.x, p.y);
-                ctx.rotate((p.rot * Math.PI) / 180);
-                ctx.fillStyle = p.color;
-                ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-                ctx.restore();
-            });
-
-            frame++;
-            if (alive > 0 && frame < 300) {
-                requestAnimationFrame(animate);
-            } else {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-        }
-
-        animate();
     }
 
-    // Init
-    loadWheelData();
+    function runConfetti() {
+        const duration = 5 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2000 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+    }
+
+    window.onload = loadWheelData;
     </script>
 </body>
 </html>
