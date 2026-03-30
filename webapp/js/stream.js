@@ -1151,6 +1151,7 @@ function setDonateAmount(val) {
 async function sendDonate() {
     const amount = parseInt(document.getElementById('donateAmount').value) || 0;
     const message = document.getElementById('donateMessage').value.trim();
+    const senderName = (document.getElementById('donateSenderName')?.value || '').trim();
     
     if (amount < 10) {
         showToast('❌', 'Минимум 10 🧀');
@@ -1168,7 +1169,8 @@ async function sendDonate() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 telegram_id: myTelegramId,
-                username: myUsername || 'Танкист',
+                username: senderName || myUsername || 'Танкист',
+                sender_name: senderName,
                 amount: amount,
                 message: message,
             }),
@@ -1561,6 +1563,11 @@ async function openAiDonateModal() {
                 </div>
                 <div id="aiDonateBalance" style="font-size:.72rem;color:#8B95A5;margin-bottom:16px;">Баланс: ... 🧀</div>
                 
+                <input type="text" id="aiDonateSenderName" placeholder="Ваше имя (отображается на стриме)" maxlength="30"
+                    style="width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(167,139,250,.15);border-radius:12px;padding:12px 14px;color:#E8E6E3;font-size:.85rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:14px;transition:border-color .2s,box-shadow .2s;"
+                    onfocus="this.style.borderColor='rgba(167,139,250,.4)';this.style.boxShadow='0 0 0 3px rgba(167,139,250,.06)'"
+                    onblur="this.style.borderColor='rgba(167,139,250,.15)';this.style.boxShadow='none'">
+
                 <div style="margin-bottom:14px;">
                     <div style="font-size:.72rem;color:#A78BFA;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:5px;">✨ Промт для генерации</div>
                     <textarea id="aiDonatePrompt" 
@@ -1635,6 +1642,7 @@ function setAiDonateAmount(val) {
 async function sendAiDonate() {
     const prompt = document.getElementById('aiDonatePrompt').value.trim();
     const amount = parseInt(document.getElementById('aiDonateAmount').value) || 0;
+    const senderName = (document.getElementById('aiDonateSenderName')?.value || '').trim();
 
     if (!prompt) { showToast('❌', 'Напишите промт для генерации'); return; }
     if (amount < 50) { showToast('❌', 'Минимум 50 🧀 для AI доната'); return; }
@@ -1652,7 +1660,8 @@ async function sendAiDonate() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 telegram_id: myTelegramId,
-                username: myUsername || 'Танкист',
+                username: senderName || myUsername || 'Танкист',
+                sender_name: senderName,
                 amount: amount,
                 prompt: prompt,
             }),

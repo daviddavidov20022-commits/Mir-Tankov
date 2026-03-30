@@ -4030,7 +4030,7 @@ async def fetch_player_stats(user, ch):
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
                    f"&fields=tank_id,all.battles,all.damage_dealt,all.spotted,all.frags,"
-                   f"all.xp,all.wins,all.damage_received,all.shots,all.hits,all.survived_battles")
+                   f"all.xp,all.wins,all.damage_received,all.damage_blocked,all.damage_assisted,all.shots,all.hits,all.survived_battles")
             async with session.get(url) as resp:
                 data = await resp.json()
 
@@ -4044,7 +4044,7 @@ async def fetch_player_stats(user, ch):
         # Filter tanks by challenge criteria
         totals = {
             "battles": 0, "damage_dealt": 0, "spotted": 0, "frags": 0,
-            "xp": 0, "wins": 0, "damage_received": 0, "shots": 0,
+            "xp": 0, "wins": 0, "damage_received": 0, "damage_blocked": 0, "damage_assisted": 0, "shots": 0,
             "hits": 0, "survived_battles": 0
         }
 
@@ -4072,6 +4072,8 @@ async def fetch_player_stats(user, ch):
             totals["xp"] += s.get("xp", 0)
             totals["wins"] += s.get("wins", 0)
             totals["damage_received"] += s.get("damage_received", 0)
+            totals["damage_blocked"] += s.get("damage_blocked", 0)
+            totals["damage_assisted"] += s.get("damage_assisted", 0)
             totals["shots"] += s.get("shots", 0)
             totals["hits"] += s.get("hits", 0)
             totals["survived_battles"] += s.get("survived_battles", 0)
@@ -4564,9 +4566,10 @@ GC_CONDITION_TO_STAT = {
     "frags": "frags",
     "xp": "xp",
     "spotting": "spotted",
-    "blocked": "damage_received",
+    "spotting_damage": "damage_assisted",
+    "blocked": "damage_blocked",
     "wins": "wins",
-    "combined": ["damage_dealt", "spotted"],  # Суммарка: урон + засвет
+    "combined": ["damage_dealt", "damage_assisted"],  # Суммарка: урон + урон по засвету
 }
 
 
@@ -4629,9 +4632,10 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str, tank_class=Non
         "frags": "frags",
         "xp": "xp",
         "spotting": "spotted",
-        "blocked": "damage_received",
+        "spotting_damage": "damage_assisted",
+        "blocked": "damage_blocked",
         "wins": "wins",
-        "combined": ["damage_dealt", "spotted"],  # Суммарка
+        "combined": ["damage_dealt", "damage_assisted"],  # Суммарка: урон + урон по засвету
     }
     
     # Собираем все нужные поля для tanks/stats
@@ -4737,9 +4741,10 @@ async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tan
         "frags": "frags",
         "xp": "xp",
         "spotting": "spotted",
-        "blocked": "damage_received",
+        "spotting_damage": "damage_assisted",
+        "blocked": "damage_blocked",
         "wins": "wins",
-        "combined": ["damage_dealt", "spotted"],  # Суммарка
+        "combined": ["damage_dealt", "damage_assisted"],  # Суммарка: урон + урон по засвету
     }
     
     # Собираем поля для запроса tanks/stats
@@ -4860,7 +4865,7 @@ async def gc_fetch_tank_stats(account_id):
         async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
-                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.xp,all.wins")
+                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.damage_blocked,all.damage_assisted,all.xp,all.wins")
             async with session.get(url) as resp:
                 data = await resp.json()
             if data.get("status") != "ok":
@@ -4891,8 +4896,8 @@ async def gc_save_tank_baselines(challenge_id, telegram_id, account_id):
                     INSERT OR REPLACE INTO gc_tank_baselines
                     (challenge_id, telegram_id, tank_id, tank_name, tank_tier, tank_type,
                      baseline_battles, baseline_damage, baseline_frags, baseline_xp, 
-                     baseline_spotting, baseline_blocked, baseline_wins)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     baseline_spotting, baseline_spotting_damage, baseline_blocked, baseline_wins)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (challenge_id, telegram_id, tid,
                       info.get("name", f"Tank {tid}"),
                       info.get("tier", 0),
@@ -4902,7 +4907,8 @@ async def gc_save_tank_baselines(challenge_id, telegram_id, account_id):
                       all_stats.get("frags", 0),
                       all_stats.get("xp", 0),
                       all_stats.get("spotted", 0),
-                      all_stats.get("damage_received", 0),
+                      all_stats.get("damage_assisted", 0),
+                      all_stats.get("damage_blocked", 0),
                       all_stats.get("wins", 0)))
             except Exception as e:
                 logger.warning(f"Failed to save tank baseline for tid={tid}: {e}")
@@ -5734,13 +5740,14 @@ async def _do_refresh_stats():
                                 "frags": "frags",
                                 "xp": "xp",
                                 "spotting": "spotting",
+                                "spotting_damage": "spotting_damage",
                                 "blocked": "blocked",
                                 "wins": "wins"
                             }
                             for r in rows:
                                 for c in ch_conditions:
                                     if c == "combined":
-                                        val = (r["damage"] or 0) + (r["spotting"] or 0)
+                                        val = (r["damage"] or 0) + (r.get("spotting_damage") or 0)
                                     else:
                                         col = LOG_COL_MAP.get(c, "damage")
                                         val = r[col] or 0
@@ -5834,7 +5841,8 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
             "frags": stats.get("frags", 0),
             "xp": stats.get("xp", 0),
             "spotting": stats.get("spotted", 0),
-            "blocked": stats.get("damage_received", 0),
+            "spotting_damage": stats.get("damage_assisted", 0),
+            "blocked": stats.get("damage_blocked", 0),
             "wins": stats.get("wins", 0),
         }
 
@@ -5861,6 +5869,7 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
                     "frags": curr["frags"] - base["baseline_frags"],
                     "xp": curr["xp"] - base["baseline_xp"],
                     "spotting": curr["spotting"] - base["baseline_spotting"],
+                    "spotting_damage": curr.get("spotting_damage", 0) - base.get("baseline_spotting_damage", 0),
                     "blocked": curr["blocked"] - base["baseline_blocked"],
                     "wins": curr["wins"] - base["baseline_wins"],
                 }
@@ -5913,12 +5922,13 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
                 conn.execute("""
                     INSERT INTO gc_battle_log 
                     (challenge_id, telegram_id, battle_num, tank_id, tank_name, tank_tier, tank_type, 
-                     damage, frags, xp, spotting, blocked, wins, detected_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     damage, frags, xp, spotting, spotting_damage, blocked, wins, detected_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (challenge_id, telegram_id, battle_num, b["tank_id"],
                       b.get("tank_name", ""), b.get("tank_tier", 0), b.get("tank_type", ""),
                       max(0, this_battle["damage"]), max(0, this_battle["frags"]), 
-                      max(0, this_battle["xp"]), max(0, this_battle["spotting"]), 
+                      max(0, this_battle["xp"]), max(0, this_battle["spotting"]),
+                      max(0, this_battle.get("spotting_damage", 0)),
                       max(0, this_battle["blocked"]), max(0, this_battle["wins"]), datetime.now()))
                 battle_num += 1
 
@@ -5955,6 +5965,7 @@ async def api_global_challenge_battle_log(request):
             "frags": r.get("frags", 0),
             "xp": r.get("xp", 0),
             "spotting": r.get("spotting", 0),
+            "spotting_damage": r.get("spotting_damage", 0),
             "blocked": r.get("blocked", 0),
             "wins": bool(r.get("wins", 0)),
             "detected_at": r["detected_at"],

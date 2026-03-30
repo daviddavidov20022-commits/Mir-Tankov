@@ -159,9 +159,11 @@
                     <button class="gc-cond-btn" data-cond="xp" onclick="gcToggleCond('xp', this)"><img src="img/military/cond_xp.png"> Опыт</button>
                     <button class="gc-cond-btn" data-cond="spotting" onclick="gcToggleCond('spotting', this)"><img src="img/military/cond_spotting.png">
                         Засвет</button>
+                    <button class="gc-cond-btn" data-cond="spotting_damage" onclick="gcToggleCond('spotting_damage', this)">🔭
+                        Урон по засвету</button>
                     <button class="gc-cond-btn" data-cond="blocked" onclick="gcToggleCond('blocked', this)"><img src="img/military/cond_blocked.png">
                         Блок</button>
-                    <button class="gc-cond-btn" data-cond="combined" onclick="gcToggleCond('combined', this)" title="Урон + Засвет"><img src="img/military/cond_combined.png?v=2"> Суммарка</button>
+                    <button class="gc-cond-btn" data-cond="combined" onclick="gcToggleCond('combined', this)" title="Урон + Урон по засвету"><img src="img/military/cond_combined.png?v=2"> Суммарка</button>
                 </div>
                 <div id="gcCondSelected" style="margin-top:6px;font-size:0.6rem;color:#C8AA6E;display:flex;flex-wrap:wrap;gap:4px"></div>
 
@@ -421,6 +423,10 @@
                                     <label class="wc-check">
                                         <input type="checkbox" checked id="wcShowLive" onchange="gcUpdatePreview()">
                                         <span>LIVE</span>
+                                    </label>
+                                    <label class="wc-check">
+                                        <input type="checkbox" checked id="wcShowBattles" onchange="gcUpdatePreview()">
+                                        <span>Бои</span>
                                     </label>
                                 </div>
                             </div>

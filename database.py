@@ -420,6 +420,7 @@ def init_db():
             ("baseline_spotting", "INTEGER DEFAULT 0"),
             ("baseline_blocked", "INTEGER DEFAULT 0"),
             ("baseline_wins", "INTEGER DEFAULT 0"),
+            ("baseline_spotting_damage", "INTEGER DEFAULT 0"),
         ]:
             try:
                 conn.execute(f"ALTER TABLE gc_tank_baselines ADD COLUMN {col} {default}")
@@ -431,6 +432,7 @@ def init_db():
             ("spotting", "INTEGER DEFAULT 0"),
             ("blocked", "INTEGER DEFAULT 0"),
             ("wins", "INTEGER DEFAULT 0"),
+            ("spotting_damage", "INTEGER DEFAULT 0"),
         ]:
             try:
                 conn.execute(f"ALTER TABLE gc_battle_log ADD COLUMN {col} {default}")

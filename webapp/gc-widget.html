@@ -876,14 +876,17 @@
         const showTop = P.get('top') !== '0';
         const topCount = parseInt(P.get('topcount')) || 3;
         const showLive = P.get('live') !== '0';
+        const showBattles = P.get('battles') !== '0';
 
         const COND = {
-            damage:   { icon: '<img src="img/military/cond_damage.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'урона',   short: 'ДМГ',  color: '#ff9800' },
-            frags:    { icon: '<img src="img/military/cond_frags.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'фрагов',  short: 'ФРАГ', color: '#f44336' },
-            xp:       { icon: '<img src="img/military/cond_xp.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'опыта',   short: 'ОПЫТ', color: '#ffd700' },
-            spotting: { icon: '<img src="img/military/cond_spotting.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'засвета', short: 'СВЕТ', color: '#2196f3' },
-            blocked:  { icon: '<img src="img/military/cond_blocked.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'блока',   short: 'БЛОК', color: '#607d8b' },
-            wins:     { icon: '<img src="img/military/cond_wins.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'побед',   short: 'ПОБ',  color: '#ffd700' },
+            damage:          { icon: '<img src="img/military/cond_damage.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'урона',   short: 'ДМГ',  color: '#ff9800' },
+            frags:           { icon: '<img src="img/military/cond_frags.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'фрагов',  short: 'ФРАГ', color: '#f44336' },
+            xp:              { icon: '<img src="img/military/cond_xp.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'опыта',   short: 'ОПЫТ', color: '#ffd700' },
+            spotting:        { icon: '<img src="img/military/cond_spotting.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'засвета', short: 'СВЕТ', color: '#2196f3' },
+            spotting_damage: { icon: '🔭', unit: 'урона по засвету', short: 'ЗАСВ', color: '#00bcd4' },
+            blocked:         { icon: '<img src="img/military/cond_blocked.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'блока',   short: 'БЛОК', color: '#607d8b' },
+            wins:            { icon: '<img src="img/military/cond_wins.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'побед',   short: 'ПОБ',  color: '#ffd700' },
+            combined:        { icon: '<img src="img/military/cond_combined.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'суммарки', short: 'СУМ',  color: '#ff9800' },
         };
         const THEMES = {
             gold: { bg: 'rgba(26,21,8,{o})', ac: '#f5d36e', acD: '#8B6914', tc: '#ffeeb0', ts: '0 0 15px rgba(245,211,110,.4),0 2px 0 #a07c2a,0 4px 8px rgba(0,0,0,.7)' },
@@ -923,12 +926,12 @@
                         <div class="w-ms"><div class="w-msv" style="color:${T.tc};text-shadow:0 0 10px ${AC}44">${formatCondValue(me, ch)}</div><div class="w-msu">${cond.unit}</div></div>
                     </div>`: ''}
                     ${!isEnroll && showTop ? `<div class="w-lbt">Top ${topCount} Leaderboard</div>${top3.map((p, i) => {
-                const n = p.nickname || 'Танкист'; const isMe = p.telegram_id === myId; return `<div class="w-li" style="background:${AC}${['14', '08', '06'][i] || '04'};border:1px solid ${AC}${['22', '11', '0a'][i] || '08'}">
+                const n = p.nickname || 'Танкист'; const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesInfo = showBattles && maxB > 0 ? ` <span style="font-size:.6em;opacity:.6">${p.battles_played || 0}/${maxB}</span>` : ''; return `<div class="w-li" style="background:${AC}${['14', '08', '06'][i] || '04'};border:1px solid ${AC}${['22', '11', '0a'][i] || '08'}">
                         <div class="w-lr" style="color:${T.tc}">${i + 1}</div>
                         <div class="w-la" style="background:linear-gradient(135deg,${AC},${T.acD})">${n.substring(0, 2).toUpperCase()}</div>
-                        <div class="w-ln">${isMe ? '⭐ ' : ''}${n}</div>
+                        <div class="w-ln">${isMe ? '⭐ ' : ''}${n}${battlesInfo}</div>
                         <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
-                    </div>`}).join('')}` : ''}
+                    </div>`}).join('')}` : ''}}
                 </div></div>`;
         }
 
@@ -977,9 +980,9 @@
             const isEnroll = currentPhase === 'enrollment';
             const ctaText = ch.prize_cta || '';
             const all = !isEnroll ? top3.map((p, i) => {
-                const isMe = p.telegram_id === myId; return `<div class="w-li${isMe ? ' w-li--me' : ''}" style="${isMe ? `background:${AC}12;border-left:3px solid ${AC}` : ''}">
+                const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesInfo = showBattles && maxB > 0 ? ` <span style="font-size:.65em;opacity:.5">${p.battles_played || 0}/${maxB}</span>` : ''; return `<div class="w-li${isMe ? ' w-li--me' : ''}" style="${isMe ? `background:${AC}12;border-left:3px solid ${AC}` : ''}">
                 <div class="w-lr" style="color:${['#ffd700', '#c0c0c0', '#cd7f32'][i] || T.tc}">${i + 1}</div>
-                <div class="w-ln">${isMe ? '⭐ ' : ''}${p.nickname || 'Танкист'}</div>
+                <div class="w-ln">${isMe ? '⭐ ' : ''}${p.nickname || 'Танкист'}${battlesInfo}</div>
                 <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
             </div>`}).join('') : '';
             return `<div class="L4" style="border:1px solid ${AC}33">

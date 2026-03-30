@@ -426,6 +426,7 @@
             <button class="modal-amt" onclick="setDonateAmount(1000)">1000 🧀</button>
         </div>
         <input type="number" id="donateAmount" class="modal-inp" placeholder="Сумма (мин. 200)" min="200" value="200">
+        <input type="text" id="donateSenderName" class="modal-inp" placeholder="Ваше имя (отображается на стриме)" maxlength="30" style="margin-bottom:6px">
         <textarea id="donateMessage" class="modal-inp" placeholder="Сообщение на стрим (необязательно)" maxlength="200" rows="2" style="resize:none;"></textarea>
         <button class="modal-btn-primary" onclick="sendDonate()">🧀 Отправить донат</button>
         <button class="modal-btn-sec" onclick="closeDonateModal()">Отмена</button>

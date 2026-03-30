@@ -10,6 +10,7 @@ const GC_CONDITION_MAP = {
     frags: { icon: '<img src="img/military/cond_frags.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Фраги', unit: 'фрагов' },
     xp: { icon: '<img src="img/military/cond_xp.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Опыт', unit: 'опыта' },
     spotting: { icon: '<img src="img/military/cond_spotting.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Засвет', unit: 'засвета' },
+    spotting_damage: { icon: '🔭', name: 'Урон по засвету', unit: 'урона по засвету' },
     blocked: { icon: '<img src="img/military/cond_blocked.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Блок', unit: 'блока' },
     wins: { icon: '<img src="img/military/cond_wins.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Победы', unit: 'побед' },
     combined: { icon: '<img src="img/military/cond_combined.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Суммарка', unit: 'суммарки' },
@@ -2275,6 +2276,7 @@ function gcGetWidgetConfig() {
         topCount: parseInt(document.getElementById('wcTopCount')?.value || '3'),
         showTop3: parseInt(document.getElementById('wcTopCount')?.value || '3') > 0,
         showLive: document.getElementById('wcShowLive')?.checked !== false,
+        showBattles: document.getElementById('wcShowBattles')?.checked !== false,
     };
 }
 
@@ -2296,6 +2298,7 @@ function gcCopyCustomWidgetLink() {
     params.set('topcount', config.topCount);
     if (!config.showTop3) params.set('top', '0');
     if (!config.showLive) params.set('live', '0');
+    if (!config.showBattles) params.set('battles', '0');
 
     const url = `${base}?${params.toString()}`;
     navigator.clipboard.writeText(url).then(() => {
