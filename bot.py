@@ -4968,6 +4968,10 @@ async def api_global_challenge_create(request):
 
         # Призовой режим
         prize_mode = int(data.get("prize_mode", 0))
+        # В призовом режиме сыр НЕ разыгрывается — принудительно обнуляем
+        if prize_mode:
+            reward_coins = 0
+            reward_description = data.get("prize_description", "") or data.get("reward_description", "🏆 Приз")
         prize_description = data.get("prize_description", "") or None
         prize_image_url = data.get("prize_image_url", "") or None
         prize_cta = data.get("prize_cta", "") or None
@@ -6492,12 +6496,14 @@ async def api_global_challenge_wheel_winner(request):
                 WHERE id = ?
             """, (winner_tg, winner_nick, challenge_id))
 
-            # Выдаём приз
-            ch = conn.execute("SELECT reward_coins FROM global_challenges WHERE id = ?", (challenge_id,)).fetchone()
-            if ch and ch["reward_coins"] > 0:
+            # Проверяем prize_mode: если призовой — сыр НЕ выдаём
+            ch = conn.execute("SELECT reward_coins, prize_mode FROM global_challenges WHERE id = ?", (challenge_id,)).fetchone()
+            if ch and ch["reward_coins"] > 0 and not ch.get("prize_mode", 0):
                 from database import buy_cheese
                 buy_cheese(winner_tg, ch["reward_coins"], method="prize_wheel_reward")
                 logger.info(f"🎡 Prize wheel reward {ch['reward_coins']} cheese to {winner_tg} ({winner_nick})")
+            elif ch and ch.get("prize_mode", 0):
+                logger.info(f"🏆 Prize mode wheel winner: {winner_nick} — no cheese awarded (physical prize)")
 
         return cors_response({
             "success": True,

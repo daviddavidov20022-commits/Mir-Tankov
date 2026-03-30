@@ -1692,7 +1692,7 @@ async function gcLaunchChallenge() {
                 condition: gcAdminConditions.join(','),
                 duration_minutes: duration,
                 max_battles: maxBattles,
-                reward_coins: reward,
+                reward_coins: gcPrizeModeEnabled ? 0 : reward,
                 reward_description: gcPrizeModeEnabled ? (prizeDesc || '🏆 Приз') : `${reward} 🧀`,
                 wot_nickname: localStorage.getItem('wot_nickname') || '',
                 wot_account_id: localStorage.getItem('wot_account_id') || '',
