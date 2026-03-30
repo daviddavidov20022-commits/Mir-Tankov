@@ -1123,13 +1123,19 @@ async function getMyCheeseBalance() {
 }
 
 async function openDonateModal() {
-    document.getElementById('donateModal').style.display = 'flex';
+    const modal = document.getElementById('donateModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
     const balance = await getMyCheeseBalance();
+    const balEl = document.getElementById('donateBalance');
     if (isAdmin) {
-        document.getElementById('donateBalance').textContent = `Баланс: ∞ 🧀 (ADMIN — бесплатно)`;
+        if (balEl) balEl.textContent = `Баланс: ∞ 🧀 (ADMIN — бесплатно)`;
     } else {
-        document.getElementById('donateBalance').textContent = `Баланс: ${balance} 🧀`;
+        if (balEl) balEl.textContent = `Баланс: ${balance} 🧀`;
     }
+    // Update header balance too
+    const hdrBal = document.getElementById('headerBalance');
+    if (hdrBal) hdrBal.textContent = isAdmin ? '∞ 🧀' : `${balance} 🧀`;
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
 }
 
@@ -1190,14 +1196,20 @@ async function sendDonate() {
 }
 
 async function openMusicModal() {
-    document.getElementById('musicModal').style.display = 'flex';
+    const modal = document.getElementById('musicModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
     const balance = await getMyCheeseBalance();
-    document.getElementById('musicBalance').textContent = `Баланс: ${balance} 🧀`;
+    const balEl = document.getElementById('musicBalance');
+    if (balEl) balEl.textContent = `Баланс: ${balance} 🧀`;
+    const hdrBal = document.getElementById('headerBalance');
+    if (hdrBal) hdrBal.textContent = isAdmin ? '∞ 🧀' : `${balance} 🧀`;
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
 }
 
 function closeMusicModal() {
-    document.getElementById('musicModal').style.display = 'none';
+    const modal = document.getElementById('musicModal');
+    if (modal) modal.style.display = 'none';
 }
 
 async function sendMusicRequest() {
@@ -1532,74 +1544,67 @@ async function sendTestDonate() {
 // AI ДОНАТ (Grok генерация)
 // ==========================================
 async function openAiDonateModal() {
-    // Создаём модалку если нет
     let modal = document.getElementById('aiDonateModal');
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'aiDonateModal';
-        modal.className = 'modal-overlay';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);display:flex;align-items:flex-end;justify-content:center;';
         modal.onclick = (e) => { if (e.target === modal) closeAiDonateModal(); };
         modal.innerHTML = `
-            <div class="modal-dialog" style="max-width:400px">
-                <div class="modal-dialog__title" style="display:flex; align-items:center; justify-content:space-between;">
-                    <span>🤖 AI Донат</span>
-                    <button onclick="closeAiDonateModal()" style="background:none; border:none; color:#5A6577; font-size:1.1rem; cursor:pointer; width:30px; height:30px; border-radius:50%; transition:all 0.15s;"
-                        onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.color='#e8e6e3'"
-                        onmouseout="this.style.background='none'; this.style.color='#5A6577'">✕</button>
-                </div>
-                <div class="modal-dialog__balance" id="aiDonateBalance">Баланс: ... 🧀</div>
+            <div style="width:100%;max-width:480px;background:linear-gradient(180deg,#1a2332,#131b28);border-radius:24px 24px 0 0;border-top:1px solid rgba(200,170,110,0.22);padding:20px 20px 34px;animation:slideUp .35s cubic-bezier(.34,1.56,.64,1) forwards;">
+                <style>@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+                <div style="width:40px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 auto 18px;"></div>
                 
-                <!-- Промт -->
-                <div style="margin-bottom:12px">
-                    <div style="font-size:0.7rem; color:#B388FF; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:4px">
-                        ✨ Промт для генерации
-                    </div>
-                    <textarea id="aiDonatePrompt" class="modal-input modal-textarea"
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div style="font-family:'Russo One',sans-serif;font-size:1.05rem;color:#A78BFA;">🤖 AI Донат</div>
+                    <button onclick="closeAiDonateModal()" style="background:rgba(255,255,255,.05);border:1px solid rgba(200,170,110,.1);border-radius:10px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#8B95A5;font-size:.85rem;transition:all .2s;">✕</button>
+                </div>
+                <div id="aiDonateBalance" style="font-size:.72rem;color:#8B95A5;margin-bottom:16px;">Баланс: ... 🧀</div>
+                
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:.72rem;color:#A78BFA;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:5px;">✨ Промт для генерации</div>
+                    <textarea id="aiDonatePrompt" 
                         placeholder="Опиши что нарисовать...&#10;Например: Танк Т-34 летит в космосе" 
                         rows="3" maxlength="300"
-                        style="min-height:70px; border-color:rgba(179,136,255,0.15); resize:vertical"
-                        onfocus="this.style.borderColor='rgba(179,136,255,0.4)'"
-                        onblur="this.style.borderColor='rgba(179,136,255,0.15)'"
+                        style="width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(167,139,250,.15);border-radius:12px;padding:12px 14px;color:#E8E6E3;font-size:.85rem;font-family:'Inter',sans-serif;outline:none;resize:vertical;min-height:75px;transition:border-color .2s,box-shadow .2s;"
+                        onfocus="this.style.borderColor='rgba(167,139,250,.4)';this.style.boxShadow='0 0 0 3px rgba(167,139,250,.06)'"
+                        onblur="this.style.borderColor='rgba(167,139,250,.15)';this.style.boxShadow='none'"
                     ></textarea>
-                    <div style="font-size:0.55rem; color:#5A6577; text-align:right; margin-top:2px">
-                        <span id="aiPromptCounter">0</span>/300
-                    </div>
+                    <div style="font-size:.55rem;color:#4A5568;text-align:right;margin-top:3px;"><span id="aiPromptCounter">0</span>/300</div>
                 </div>
                 
-                <!-- Стоимость -->
-                <div style="margin-bottom:14px">
-                    <div style="font-size:0.7rem; color:#FFC107; font-weight:600; margin-bottom:6px">🧀 Стоимость</div>
-                    <div class="donate-amounts" style="margin-bottom:8px">
-                        <button class="donate-amount-btn" onclick="setAiDonateAmount(50)" style="border-color:rgba(179,136,255,0.2); color:#B388FF; background:rgba(179,136,255,0.05)">50 🧀</button>
-                        <button class="donate-amount-btn" onclick="setAiDonateAmount(100)" style="border-color:rgba(179,136,255,0.2); color:#B388FF; background:rgba(179,136,255,0.05)">100 🧀</button>
-                        <button class="donate-amount-btn" onclick="setAiDonateAmount(200)" style="border-color:rgba(179,136,255,0.2); color:#B388FF; background:rgba(179,136,255,0.05)">200 🧀</button>
+                <div style="margin-bottom:16px;">
+                    <div style="font-size:.72rem;color:#FFC107;font-weight:600;margin-bottom:8px;">🧀 Стоимость</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+                        <button onclick="setAiDonateAmount(50)" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(167,139,250,.2);background:rgba(167,139,250,.06);color:#A78BFA;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;" onmouseover="this.style.background='rgba(167,139,250,.15)';this.style.borderColor='#A78BFA'" onmouseout="this.style.background='rgba(167,139,250,.06)';this.style.borderColor='rgba(167,139,250,.2)'">50 🧀</button>
+                        <button onclick="setAiDonateAmount(100)" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(167,139,250,.2);background:rgba(167,139,250,.06);color:#A78BFA;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;" onmouseover="this.style.background='rgba(167,139,250,.15)';this.style.borderColor='#A78BFA'" onmouseout="this.style.background='rgba(167,139,250,.06)';this.style.borderColor='rgba(167,139,250,.2)'">100 🧀</button>
+                        <button onclick="setAiDonateAmount(200)" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(167,139,250,.2);background:rgba(167,139,250,.06);color:#A78BFA;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;" onmouseover="this.style.background='rgba(167,139,250,.15)';this.style.borderColor='#A78BFA'" onmouseout="this.style.background='rgba(167,139,250,.06)';this.style.borderColor='rgba(167,139,250,.2)'">200 🧀</button>
                     </div>
-                    <input type="number" id="aiDonateAmount" class="modal-input" value="50" min="50"
-                        style="border-color:rgba(179,136,255,0.15); text-align:center; font-size:0.85rem; font-weight:600"
-                        onfocus="this.style.borderColor='rgba(179,136,255,0.4)'"
-                        onblur="this.style.borderColor='rgba(179,136,255,0.15)'">
+                    <input type="number" id="aiDonateAmount" value="50" min="50"
+                        style="width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(167,139,250,.15);border-radius:12px;padding:12px 14px;color:#E8E6E3;font-size:.88rem;font-weight:600;font-family:'Inter',sans-serif;outline:none;text-align:center;transition:border-color .2s,box-shadow .2s;"
+                        onfocus="this.style.borderColor='rgba(167,139,250,.4)';this.style.boxShadow='0 0 0 3px rgba(167,139,250,.06)'"
+                        onblur="this.style.borderColor='rgba(167,139,250,.15)';this.style.boxShadow='none'">
                 </div>
 
-                <!-- Кнопка -->
-                <button class="modal-btn" id="aiDonateSendBtn" onclick="sendAiDonate()"
-                    style="background:linear-gradient(135deg, #9C27B0, #7B1FA2); color:#fff; border:none; font-size:0.85rem; letter-spacing:0.5px">
-                    🤖 Сгенерировать и отправить
-                </button>
+                <button id="aiDonateSendBtn" onclick="sendAiDonate()"
+                    style="width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,#9C27B0,#7B1FA2);color:#fff;font-family:'Russo One',sans-serif;font-size:.88rem;letter-spacing:.5px;transition:all .2s;box-shadow:0 4px 20px rgba(156,39,176,.25);margin-bottom:8px;"
+                    onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='0 6px 28px rgba(156,39,176,.35)'"
+                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 20px rgba(156,39,176,.25)'"
+                >🤖 Сгенерировать и отправить</button>
+                
+                <button onclick="closeAiDonateModal()" style="width:100%;padding:11px;border-radius:12px;border:1px solid rgba(200,170,110,.1);background:transparent;color:#8B95A5;font-size:.78rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">Отмена</button>
 
-                <!-- Превью -->
-                <div id="aiDonatePreview" style="display:none; margin-top:14px; text-align:center; padding:12px; border-radius:10px; background:rgba(156,39,176,0.06); border:1px solid rgba(156,39,176,0.15)">
-                    <div style="color:#B388FF; font-size:0.7rem; margin-bottom:8px; font-weight:600">✨ Результат:</div>
-                    <img id="aiDonatePreviewImg" style="max-width:100%; max-height:250px; border-radius:10px; border:1px solid rgba(156,39,176,0.2)">
+                <div id="aiDonatePreview" style="display:none;margin-top:14px;text-align:center;padding:14px;border-radius:14px;background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.15);">
+                    <div style="color:#A78BFA;font-size:.72rem;margin-bottom:8px;font-weight:600;">✨ Результат:</div>
+                    <img id="aiDonatePreviewImg" style="max-width:100%;max-height:250px;border-radius:12px;border:1px solid rgba(167,139,250,.2);">
                 </div>
 
-                <!-- Инфо о провайдерах -->
-                <div style="margin-top:12px; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); font-size:0.55rem; color:#5A6577; line-height:1.6">
+                <div style="margin-top:12px;padding:10px;border-radius:10px;background:rgba(0,0,0,.25);font-size:.58rem;color:#4A5568;line-height:1.6;text-align:center;">
                     ⚡ AI провайдеры: HuggingFace → Gemini → Pollinations → Local
                 </div>
             </div>`;
         document.body.appendChild(modal);
 
-        // Счётчик символов
         document.getElementById('aiDonatePrompt').addEventListener('input', (e) => {
             document.getElementById('aiPromptCounter').textContent = e.target.value.length;
         });
@@ -1714,7 +1719,8 @@ setTimeout(() => {
 }, 2000);
 
 function openSettingsModal() {
-    document.getElementById('settingsModal').style.display = 'flex';
+    const m = document.getElementById('settingsModal');
+    if (m) m.style.display = 'flex';
     loadAdminSettings();
     refreshMusicQueue();
     refreshDonateHistory();
@@ -1722,18 +1728,19 @@ function openSettingsModal() {
 }
 
 function closeSettingsModal() {
-    document.getElementById('settingsModal').style.display = 'none';
+    const m = document.getElementById('settingsModal');
+    if (m) m.style.display = 'none';
 }
 
 function switchSettingsTab(tabName, btn) {
-    // Hide all panels
-    document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
-    // Deactivate all tabs
-    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('settings-tab--active'));
+    // Hide all panels (support both old .settings-panel and new .sp classes)
+    document.querySelectorAll('.settings-panel, .sp').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
+    // Deactivate all tabs (support both old and new)
+    document.querySelectorAll('.settings-tab, .ss-tab').forEach(t => { t.classList.remove('settings-tab--active'); t.classList.remove('active'); });
     // Show selected
     const panel = document.getElementById('settingsTab_' + tabName);
-    if (panel) panel.style.display = 'block';
-    if (btn) btn.classList.add('settings-tab--active');
+    if (panel) { panel.style.display = 'block'; panel.classList.add('active'); }
+    if (btn) { btn.classList.add('settings-tab--active'); btn.classList.add('active'); }
     try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch(e) {}
 }
 
