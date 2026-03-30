@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Партнёрство — Мир Танков Клуб</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="partnership.css">
+</head>
+<body>
+<canvas id="particles"></canvas>
+
+<nav class="nav" id="nav">
+    <div class="nav-logo">⚔️ ПАРТНЁРСТВО</div>
+    <div class="nav-dots">
+        <div class="nav-dot active" onclick="scrollToSection(0)"></div>
+        <div class="nav-dot" onclick="scrollToSection(1)"></div>
+        <div class="nav-dot" onclick="scrollToSection(2)"></div>
+        <div class="nav-dot" onclick="scrollToSection(3)"></div>
+        <div class="nav-dot" onclick="scrollToSection(4)"></div>
+        <div class="nav-dot" onclick="scrollToSection(5)"></div>
+        <div class="nav-dot" onclick="scrollToSection(6)"></div>
+        <div class="nav-dot" onclick="scrollToSection(7)"></div>
+        <div class="nav-dot" onclick="scrollToSection(8)"></div>
+    </div>
+</nav>
+
+<!-- 0: HERO -->
+<section class="section hero" id="sec-0">
+    <div class="hero-badge">🎮 Закрытое предложение · 2026</div>
+    <h1>ПАРТНЁРСТВО<br><span class="gold">МИР ТАНКОВ КЛУБ</span></h1>
+    <p class="hero-sub">Пассивный ежемесячный доход от закрытого Telegram-канала.<br>Ты стримишь — канал зарабатывает. Деньги приходят даже когда ты спишь.</p>
+    <button class="hero-cta" onclick="scrollToSection(1)">УЗНАТЬ УСЛОВИЯ →</button>
+    <div class="hero-scroll">СКРОЛЛ<span></span></div>
+</section>
+
+<!-- 1: DONATS vs SUBSCRIPTIONS -->
+<section class="section" id="sec-1" style="background:radial-gradient(ellipse at 70% 30%,rgba(239,68,68,0.04),transparent 50%)">
+    <div class="s-header reveal">
+        <div class="s-badge">Проблема</div>
+        <h2>Донаты vs <span style="color:var(--green)">Подписки</span></h2>
+        <p>Почему подписная модель выгоднее классических стрим-донатов</p>
+    </div>
+
+    <div class="compare-grid reveal">
+        <div class="compare-card bad">
+            <h4>❌ ДОНАТЫ НА СТРИМЕ</h4>
+            <p>
+                • Нет стрима — <strong style="color:var(--red)">нет дохода</strong><br>
+                • Зритель не зашёл сегодня — донат не прилетит<br>
+                • Нужно <strong style="color:var(--red)">сидеть 6-8 часов</strong> на стриме каждый день<br>
+                • Доход непредсказуем: 5K сегодня, 500₽ завтра<br>
+                • Выгорание стримера = падение дохода<br>
+                • Один человек отправил донат один раз и ушёл
+            </p>
+        </div>
+        <div class="compare-card good">
+            <h4>✅ ПЛАТНАЯ ПОДПИСКА В TG</h4>
+            <p>
+                • <strong style="color:var(--green)">490₽/мес автоматически</strong> от каждого подписчика<br>
+                • Деньги идут <strong style="color:var(--green)">24/7, даже когда спишь</strong><br>
+                • Подписчик платит каждый месяц, а не разово<br>
+                • Канал развивается пока стример отдыхает<br>
+                • Стабильный прогнозируемый доход<br>
+                • 1000 подписчиков = 490 000₽ в месяц гарантированно
+            </p>
+        </div>
+    </div>
+
+    <div style="width:100%;max-width:900px;margin-top:40px" class="reveal">
+        <div class="s-header" style="margin-bottom:28px">
+            <h2 style="font-size:1.3rem">Реальные <span style="color:var(--purple)">примеры</span> заработка на подписках</h2>
+        </div>
+        <div class="example-card">
+            <div class="example-name">📱 Святослав Коваленко — K-VPN в Telegram</div>
+            <div class="example-sub">Блогер · @K_VPN_bot · 368 252 пользователей в месяц</div>
+            <div class="example-income">~9 170 000₽/мес</div>
+            <div class="example-desc">Бот K-VPN — <strong style="color:var(--text)">368 252 пользователей</strong> в месяц. Подписка от 249₽/мес. Даже если всего ~10% аудитории имеют активную подписку (~36 800 чел.) — это <strong style="color:var(--gold)">~9,2 млн ₽/мес</strong>. Главный урок: <strong style="color:var(--text)">агрессивное продвижение захватывает рынок</strong>. Коваленко рекламирует — деньги капают 24/7. Человек подписался один раз и платит автоматически каждый месяц.</div>
+        </div>
+        <div class="example-card">
+            <div class="example-name">💼 Михаил Гребенюк — «Клуб Аномалия»</div>
+            <div class="example-sub">Предприниматель · Платный TG-канал · 27 000 подписчиков</div>
+            <div class="example-income">~135 000 000₽/мес</div>
+            <div class="example-desc"><strong style="color:var(--text)">27 000 подписчиков × 5 000₽/мес</strong> = более <strong style="color:var(--gold)">135 млн ₽ в месяц</strong>. Закрытый бизнес-клуб с эксклюзивным контентом. Начинал с нуля — рос постепенно. Ключ: высокая ценность для подписчика → люди остаются и продлевают подписку месяц за месяцем.</div>
+        </div>
+        <div class="example-card">
+            <div class="example-name">🎮 Левша — Мир Танков стример</div>
+            <div class="example-sub">Стример · Мир Танков · Платный TG-канал · 4 100 подписчиков</div>
+            <div class="example-income">~1 225 900₽/мес только с TG-подписок</div>
+            <div class="example-desc"><strong style="color:var(--text)">4 100 подписчиков × 299₽/мес</strong> = <strong style="color:var(--gold)">~1,23 млн ₽/мес</strong>. Важный факт — <strong style="color:var(--text)">аудитория Мир Танков готова платить за подписку</strong>. Левша монетизирует канал модами, а мы пойдём дальше: контент, азарт челленджей, розыгрыши с реальными призами и агрессивное продвижение. Коваленко уже доказал, что агрессивный маркетинг захватывает рынок. Мы добавим столько интересных механик в TG-канал, что уровень удержания подписчиков будет максимальным!</div>
+        </div>
+    </div>
+</section>
+
+<!-- 2: ROLES -->
+<section class="section" id="sec-2" style="background:radial-gradient(ellipse at 50% 40%,rgba(245,190,11,0.04),transparent 50%)">
+    <div class="s-header reveal">
+        <div class="s-badge">Модель</div>
+        <h2>Кто что <span style="color:var(--gold)">делает?</span></h2>
+        <p>Чёткое разделение ролей. Каждый делает то, что умеет лучше всего</p>
+    </div>
+
+    <div class="grid2 reveal">
+        <div class="card">
+            <span class="card-icon">🎮</span>
+            <h3>СТРИМЕР</h3>
+            <ul>
+                <li>Рекламирует закрытый канал на стримах и в соцсетях</li>
+                <li>Является лицом проекта (аудитория идёт за ним)</li>
+                <li>Согласовывает все нововведения и контент</li>
+                <li>Участвует в турнирах и розыгрышах</li>
+                <li>Получает <strong style="color:var(--gold)">50% дохода</strong> каждый месяц</li>
+            </ul>
+            <p style="margin-top:12px;color:var(--gold);font-weight:600;font-size:.75rem">👉 Минимум действий — максимум прибыли. Только рекламируй!</p>
+        </div>
+        <div class="card green-border">
+            <span class="card-icon">⚙️</span>
+            <h3>ПАРТНЁР</h3>
+            <ul>
+                <li>Создаёт всю инфраструктуру: бот, сайт, подписки</li>
+                <li>Привлечение и удержание подписчиков</li>
+                <li>Контент, челленджи, розыгрыши, турниры</li>
+                <li>Юридическая сторона: ИП, платежи, налоги — всё на партнёре</li>
+                <li>Развивает медийку стримера (охваты, зрители)</li>
+                <li>Канал на партнёре — стримеру только кэш</li>
+            </ul>
+            <p style="margin-top:12px;color:var(--green);font-weight:600;font-size:.75rem">👉 Получает 30% + 20% инвестирует в рост канала</p>
+        </div>
+    </div>
+
+    <!-- PIE -->
+    <div class="pie-wrap reveal" style="margin-top:48px">
+        <svg class="pie-svg" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(245,190,11,0.08)" stroke-width="32"/>
+            <circle cx="100" cy="100" r="80" fill="none" stroke="var(--gold)" stroke-width="32" stroke-dasharray="251.3 251.3" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="80" fill="none" stroke="var(--green)" stroke-width="32" stroke-dasharray="150.8 351.9" stroke-dashoffset="-251.3" transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="80" fill="none" stroke="var(--blue)" stroke-width="32" stroke-dasharray="100.5 402.1" stroke-dashoffset="-402.1" transform="rotate(-90 100 100)"/>
+            <text x="100" y="96" text-anchor="middle" fill="var(--text)" font-family="Orbitron" font-size="14" font-weight="700">490₽</text>
+            <text x="100" y="114" text-anchor="middle" fill="var(--muted)" font-size="9" font-family="Montserrat">/мес за подписку</text>
+        </svg>
+        <div class="pie-labels">
+            <div class="pie-label"><div class="pie-label-dot" style="background:var(--gold)"></div><strong style="color:var(--gold)">50%</strong> — Стример</div>
+            <div class="pie-label"><div class="pie-label-dot" style="background:var(--green)"></div><strong style="color:var(--green)">30%</strong> — Партнёр</div>
+            <div class="pie-label"><div class="pie-label-dot" style="background:var(--blue)"></div><strong style="color:var(--blue)">20%</strong> — Инвестиции в рост</div>
+        </div>
+    </div>
+</section>
+
+<!-- 3: REVENUE TABLE -->
+<section class="section" id="sec-3" style="background:radial-gradient(ellipse at 50% 50%,rgba(34,197,94,0.04),transparent 60%)">
+    <div class="s-header reveal">
+        <div class="s-badge">Финансы</div>
+        <h2>План <span style="color:var(--green)">доходов</span></h2>
+        <p>Грязный доход при подписке 490₽/мес (до вычета комиссий и налогов)</p>
+    </div>
+
+    <table class="rev-table reveal">
+        <thead><tr>
+            <th>👥 Подписчики</th><th>💰 Общий/мес</th>
+            <th style="color:var(--gold)">🎮 Стример 50%</th>
+            <th style="color:var(--green)">⚙️ Партнёр 30%</th>
+            <th style="color:var(--blue)">🔄 Рост 20%</th>
+        </tr></thead>
+        <tbody>
+            <tr><td><strong>500</strong></td><td class="rev-total">245 000₽</td><td class="rev-gold">122 500₽</td><td class="rev-green">73 500₽</td><td class="rev-blue">49 000₽</td></tr>
+            <tr><td><strong>1 000</strong></td><td class="rev-total">490 000₽</td><td class="rev-gold">245 000₽</td><td class="rev-green">147 000₽</td><td class="rev-blue">98 000₽</td></tr>
+            <tr class="rev-highlight"><td><strong>2 000</strong></td><td class="rev-total">980 000₽</td><td class="rev-gold">490 000₽</td><td class="rev-green">294 000₽</td><td class="rev-blue">196 000₽</td></tr>
+            <tr><td><strong>3 000</strong></td><td class="rev-total">1 470 000₽</td><td class="rev-gold">735 000₽</td><td class="rev-green">441 000₽</td><td class="rev-blue">294 000₽</td></tr>
+            <tr><td><strong>4 000</strong></td><td class="rev-total">1 960 000₽</td><td class="rev-gold">980 000₽</td><td class="rev-green">588 000₽</td><td class="rev-blue">392 000₽</td></tr>
+            <tr class="rev-highlight"><td><strong>5 000</strong></td><td class="rev-total">2 450 000₽</td><td class="rev-gold">1 225 000₽</td><td class="rev-green">735 000₽</td><td class="rev-blue">490 000₽</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- 4: CALCULATOR -->
+<section class="section" id="sec-4" style="background:radial-gradient(ellipse at 30% 60%,rgba(168,85,247,0.04),transparent 50%)">
+    <div class="s-header reveal">
+        <div class="s-badge">Интерактив</div>
+        <h2>Калькулятор <span style="color:var(--purple)">дохода</span></h2>
+        <p>Двигай ползунок — смотри сколько заработаешь</p>
+    </div>
+
+    <div class="calc-wrap reveal">
+        <div class="calc-slider-label">КОЛИЧЕСТВО ПОДПИСЧИКОВ</div>
+        <div class="calc-value" id="calcSubs">1 000</div>
+        <input type="range" class="calc-slider" id="calcSlider" min="100" max="10000" step="100" value="1000">
+        <div class="calc-total">
+            <div class="calc-total-label">ОБЩИЙ ДОХОД В МЕСЯЦ</div>
+            <div class="calc-total-val" id="calcTotal">490 000₽</div>
+            <div class="calc-annual" id="calcAnnual">📅 в год: 5 880 000₽</div>
+        </div>
+        <div class="calc-results">
+            <div class="calc-result str"><div class="calc-result-label">🎮 СТРИМЕР 50%</div><div class="calc-result-val" id="calcStreamer">245 000₽</div></div>
+            <div class="calc-result ptr"><div class="calc-result-label">⚙️ ПАРТНЁР 30%</div><div class="calc-result-val" id="calcPartner">147 000₽</div></div>
+            <div class="calc-result inv"><div class="calc-result-label">🔄 РОСТ 20%</div><div class="calc-result-val" id="calcInvest">98 000₽</div></div>
+        </div>
+    </div>
+</section>
+
+<!-- 5: WHAT WE ALREADY HAVE -->
+<section class="section" id="sec-5" style="background:radial-gradient(ellipse at 60% 40%,rgba(245,190,11,0.05),transparent 50%)">
+    <div class="s-header reveal">
+        <div class="s-badge">Уже готово</div>
+        <h2>Что уже <span style="color:var(--gold)">создано</span></h2>
+        <p>Вся инфраструктура уже работает — не надо ничего ждать</p>
+    </div>
+
+    <div class="grid3 reveal">
+        <div class="card"><span class="card-icon">🤖</span><h3>Telegram-бот</h3><p>Полноценный бот с системой подписок, профилями, привязкой аккаунтов Мир Танков, статистикой.</p></div>
+        <div class="card"><span class="card-icon">🏆</span><h3>Система челленджей</h3><p>Стример создаёт условия турнира, подписчики вступают. Колесо Фортуны определяет победителя — вовлечение 100%.</p></div>
+        <div class="card"><span class="card-icon">📊</span><h3>Лидерборды и статистика</h3><p>Рейтинги игроков, отслеживание прогресса в реальном времени через Lesta API.</p></div>
+        <div class="card"><span class="card-icon">🎡</span><h3>Колесо Фортуны</h3><p>Визуальная рулетка для розыгрышей на стриме. Топ-игроки получают больше шансов, но рандом решает!</p></div>
+        <div class="card"><span class="card-icon">🎬</span><h3>Стрим-виджеты</h3><p>OBS-виджеты для отображения челленджа и лидерборда прямо на стриме</p></div>
+        <div class="card"><span class="card-icon">⚔️</span><h3>Арена дуэлей</h3><p>Дуэли 1v1 между подписчиками на внутреннюю валюту. Дополнительная вовлечённость.</p></div>
+    </div>
+
+    <!-- CHALLENGE DEMO -->
+    <div class="challenge-demo reveal">
+        <h4>🏆 Как работает челлендж (пример)</h4>
+        <div class="ch-steps">
+            <div class="ch-step"><div class="ch-step-num">1️⃣</div><div class="ch-step-title">Стример создаёт</div><div class="ch-step-desc">«Кто нанесёт больше урона?» — 1 бой, любой танк X уровня</div></div>
+            <div class="ch-step"><div class="ch-step-num">2️⃣</div><div class="ch-step-title">Подписчики вступают</div><div class="ch-step-desc">Платные подписчики TG-канала нажимают «Вступить» в боте</div></div>
+            <div class="ch-step"><div class="ch-step-num">3️⃣</div><div class="ch-step-title">Играют бои</div><div class="ch-step-desc">Бот автоматически считает урон через API — никакого ручного ввода</div></div>
+            <div class="ch-step"><div class="ch-step-num">4️⃣</div><div class="ch-step-title">Колесо Фортуны</div><div class="ch-step-desc">Топ-игроки получают больше секторов на колесе, но рандом решает. Даже новичок может выиграть!</div></div>
+        </div>
+        <div style="margin-top:20px;padding:16px;border-radius:14px;background:rgba(245,190,11,0.04);border:1px solid rgba(245,190,11,0.1);text-align:center">
+            <p style="color:var(--muted);font-size:.78rem;line-height:1.7">
+                <strong style="color:var(--gold)">Почему это работает:</strong> Топы мотивированы играть лучше (больше шансов), 
+                но и новички не теряют интерес — колесо фортуны это рандом, любой может выиграть! 
+                Призы: внутренняя валюта 🧀 или <strong style="color:var(--gold)">реальные призы</strong> (режим «Призовой челлендж»).
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- 6: SECURITY -->
+<section class="section" id="sec-6" style="background:radial-gradient(ellipse at 30% 40%,rgba(34,197,94,0.04),transparent 50%)">
+    <div class="s-header reveal">
+        <div class="s-badge">Безопасность</div>
+        <h2>Прозрачные <span style="color:var(--green)">условия</span></h2>
+        <p>Win-Win структура: каждый защищён и мотивирован</p>
+    </div>
+    <div class="sec-cards reveal">
+        <div class="sec-card"><div class="sec-icon">💸</div><div class="sec-title">СТРИМЕРУ — ТОЛЬКО КЭШ</div><div class="sec-desc">Никаких забот: канал, ИП, платежи, налоги — всё на партнёре. Стример получает чистые 50%.</div></div>
+        <div class="sec-card"><div class="sec-icon">🛡️</div><div class="sec-title">КАНАЛ НА ПАРТНЁРЕ</div><div class="sec-desc">TG-канал и ИП принадлежат партнёру. Это гарантия что партнёра не «кинут» — его инвестиции защищены.</div></div>
+        <div class="sec-card"><div class="sec-icon">🤝</div><div class="sec-title">СТРИМЕР = ЛИЦО</div><div class="sec-desc">Без стримера канал не живёт. Это гарантия стримеру: партнёр заинтересован в долгосрочном сотрудничестве.</div></div>
+        <div class="sec-card"><div class="sec-icon">📋</div><div class="sec-title">ВСЁ СОГЛАСОВЫВАЕМ</div><div class="sec-desc">Любые нововведения, контент, призы — строго с одобрения стримера. Полный контроль.</div></div>
+        <div class="sec-card"><div class="sec-icon">📊</div><div class="sec-title">ПРОЗРАЧНАЯ АНАЛИТИКА</div><div class="sec-desc">Полный доступ к статистике: подписчики, доходы, расходы в реальном времени.</div></div>
+        <div class="sec-card"><div class="sec-icon">🔄</div><div class="sec-title">ВЗАИМОЗАВИСИМОСТЬ</div><div class="sec-desc">Обе стороны нужны друг другу. Партнёр вложил время и деньги. Стример — лицо. Никто не уйдёт.</div></div>
+    </div>
+</section>
+
+<!-- 7: ABOUT + ROADMAP -->
+<section class="section" id="sec-7" style="background:radial-gradient(ellipse at 60% 50%,rgba(59,130,246,0.04),transparent 50%)">
+    <div class="s-header reveal">
+        <div class="s-badge">О партнёре</div>
+        <h2>Кто я как <span style="color:var(--gold)">партнёр?</span></h2>
+    </div>
+
+    <div class="about-card reveal">
+        <div class="about-avatar">🏭</div>
+        <div class="about-info">
+            <h3>Предприниматель · Партнёр проекта</h3>
+            <p>Занимаюсь бизнесом с <strong style="color:var(--gold)">2019 года</strong>. Своё производство мебели, продажи на маркетплейсах (Wildberries, Ozon). Опыт в аналитике, статистике, финансах — как в любом реальном бизнесе.</p>
+            <p>Разрабатываю IT-продукты: Telegram-боты, веб-приложения, системы автоматизации. Всю техническую часть проекта «Мир Танков Клуб» создал с нуля.</p>
+            <p><strong style="color:var(--text)">Мотивация:</strong> я заинтересован в росте канала, потому что это мой доход. Буду вкладывать 20% в развитие, помогать с медийкой и привлечением аудитории.</p>
+            <div class="about-tags">
+                <span class="about-tag">Предприниматель с 2019</span>
+                <span class="about-tag">Маркетплейсы</span>
+                <span class="about-tag">Аналитика</span>
+                <span class="about-tag">IT-разработка</span>
+                <span class="about-tag">Telegram-боты</span>
+                <span class="about-tag">Своё ИП</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="s-header reveal" style="margin-top:60px">
+        <div class="s-badge">Дорожная карта</div>
+        <h2>План <span style="color:var(--blue)">развития</span></h2>
+    </div>
+    <div class="roadmap">
+        <div class="rm-item"><div class="rm-dot"></div><div class="rm-phase" style="color:var(--gold)">ФАЗА 1 · 1-3 МЕС</div><div class="rm-title">0 → 500 подписчиков</div><div class="rm-desc">Первые интеграции на стримах. Настройка всего фана: челленджи, розыгрыши, турниры для подписчиков. Доказать модель — начать зарабатывать.</div></div>
+        <div class="rm-item"><div class="rm-dot"></div><div class="rm-phase" style="color:var(--green)">ФАЗА 2 · 3-6 МЕС</div><div class="rm-title">500 → 2 000 подписчиков</div><div class="rm-desc">Регулярные турниры с реальными призами. Помощь с развитием медийки. Удержание через уникальный контент.\nСтример: ~245К — 490К₽/мес.</div></div>
+        <div class="rm-item"><div class="rm-dot"></div><div class="rm-phase" style="color:var(--blue)">ФАЗА 3 · 6-12 МЕС</div><div class="rm-title">2 000 → 5 000 подписчиков</div><div class="rm-desc">Крупные турниры по Мир Танков. Коллаборации. Канал = полноценное комьюнити.\nСтример: ~490К — 1.2М₽/мес.</div></div>
+        <div class="rm-item"><div class="rm-dot"></div><div class="rm-phase" style="color:var(--purple)">ФАЗА 4 · 12+ МЕС</div><div class="rm-title">5 000+ · Экосистема</div><div class="rm-desc">Мерч, спонсоры, крупные турниры с призовыми фондами. Команда модераторов. Полноценный бренд вокруг стримера.</div></div>
+    </div>
+</section>
+
+<!-- 8: CTA -->
+<section class="section cta-section" id="sec-8">
+    <div class="cta-big reveal">ГОТОВ СОЗДАТЬ<br><span style="color:var(--gold)">БОЛЬШОЙ ПРОЕКТ?</span></div>
+    <p class="cta-sub reveal">Любой проект растёт с командой. Чем больше команда — тем больше проект и доход. Давай начнём вместе и построим нечто масштабное в мире танков.</p>
+    <button class="cta-btn reveal" onclick="alert('🤝 Свяжись со мной для обсуждения деталей!')">🚀 НАЧНЁМ СОТРУДНИЧЕСТВО</button>
+    <div style="margin-top:48px;color:var(--muted);font-size:.75rem;max-width:500px;text-align:center" class="reveal">
+        <p>💬 Все условия обсуждаемы. Главное — долгосрочное партнёрство. Пиши — обсудим лично.</p>
+    </div>
+</section>
+
+<footer class="footer"><p>⚔️ Мир Танков Клуб · Закрытое партнёрское предложение · 2026</p></footer>
+<script src="partnership.js"></script>
+</body>
+</html>

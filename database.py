@@ -507,6 +507,20 @@ def init_db():
             );
         """)
 
+        # ===== ЕЖЕДНЕВНЫЕ НАГРАДЫ (СТРИК) =====
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS daily_rewards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                telegram_id INTEGER UNIQUE NOT NULL,
+                current_streak INTEGER DEFAULT 0,
+                last_claim_date TEXT,
+                total_claimed INTEGER DEFAULT 0,
+                max_streak INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_daily_tg ON daily_rewards(telegram_id);
+        """)
+
         logger.info("База данных инициализирована")
 
 
@@ -1293,6 +1307,148 @@ def search_users(query: str, exclude_telegram_id: int = None, limit: int = 20) -
         """, (search_pattern, search_pattern, search_pattern,
               exclude_telegram_id or 0, search_pattern, limit)).fetchall()
         return [dict(r) for r in rows]
+
+
+# ============================================================
+# ЕЖЕДНЕВНЫЕ НАГРАДЫ (СТРИК СИСТЕМЫ)
+# ============================================================
+
+DAILY_REWARD_TIERS = [
+    (7, 15),    # Дни 1-7:   15 🧀
+    (14, 25),   # Дни 8-14:  25 🧀
+    (21, 35),   # Дни 15-21: 35 🧀
+    (30, 50),   # Дни 22-30: 50 🧀
+]
+
+def _get_daily_amount(streak: int) -> int:
+    """Сколько сыра за текущий день стрика"""
+    for max_day, amount in DAILY_REWARD_TIERS:
+        if streak <= max_day:
+            return amount
+    return 50  # 30+ дней — всё равно 50
+
+
+def get_daily_status(telegram_id: int) -> dict:
+    """Получить статус ежедневной награды"""
+    today = datetime.now().strftime("%Y-%m-%d")
+    with get_db_read() as conn:
+        row = conn.execute(
+            "SELECT * FROM daily_rewards WHERE telegram_id = ?", (telegram_id,)
+        ).fetchone()
+
+    if not row:
+        return {
+            "can_claim": True,
+            "current_streak": 0,
+            "next_reward": 15,
+            "last_claim": None,
+            "total_claimed": 0,
+            "max_streak": 0,
+        }
+
+    last_claim = row["last_claim_date"]
+    streak = row["current_streak"]
+    can_claim = last_claim != today
+
+    # Проверяем: если пропустил день — стрик сбросится при клейме
+    if last_claim:
+        last_date = datetime.strptime(last_claim, "%Y-%m-%d").date()
+        today_date = datetime.now().date()
+        diff = (today_date - last_date).days
+        if diff > 1:
+            streak = 0  # Пропустил — показываем что стрик сброшен
+
+    next_reward = _get_daily_amount(streak + 1)
+
+    return {
+        "can_claim": can_claim,
+        "current_streak": streak,
+        "next_reward": next_reward,
+        "last_claim": last_claim,
+        "total_claimed": row["total_claimed"],
+        "max_streak": row["max_streak"],
+    }
+
+
+def claim_daily_reward(telegram_id: int) -> dict:
+    """Забрать ежедневную награду. Возвращает результат."""
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM daily_rewards WHERE telegram_id = ?", (telegram_id,)
+        ).fetchone()
+
+        if row and row["last_claim_date"] == today:
+            return {"success": False, "error": "already_claimed", "message": "Награда уже получена сегодня!"}
+
+        # Считаем стрик
+        if row:
+            last_claim = row["last_claim_date"]
+            streak = row["current_streak"]
+            total = row["total_claimed"]
+            max_streak = row["max_streak"]
+
+            if last_claim:
+                last_date = datetime.strptime(last_claim, "%Y-%m-%d").date()
+                today_date = datetime.now().date()
+                diff = (today_date - last_date).days
+                if diff == 1:
+                    streak += 1  # Продолжаем стрик
+                elif diff > 1:
+                    streak = 1   # Пропустил — сброс
+                else:
+                    streak += 1  # Первый заход (diff == 0 не должен быть, но на всякий)
+            else:
+                streak = 1
+        else:
+            streak = 1
+            total = 0
+            max_streak = 0
+
+        amount = _get_daily_amount(streak)
+        total += amount
+        if streak > max_streak:
+            max_streak = streak
+
+        # Сохраняем
+        conn.execute("""
+            INSERT INTO daily_rewards (telegram_id, current_streak, last_claim_date, total_claimed, max_streak)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(telegram_id) DO UPDATE SET
+                current_streak = ?,
+                last_claim_date = ?,
+                total_claimed = ?,
+                max_streak = ?
+        """, (telegram_id, streak, today, total, max_streak,
+              streak, today, total, max_streak))
+
+        # Начисляем сыр
+        conn.execute(
+            "UPDATE users SET coins = coins + ? WHERE telegram_id = ?",
+            (amount, telegram_id)
+        )
+        user = conn.execute("SELECT id, coins FROM users WHERE telegram_id = ?", (telegram_id,)).fetchone()
+        if user:
+            conn.execute(
+                "INSERT INTO transactions (user_id, amount, type, description) VALUES (?, ?, 'daily_reward', ?)",
+                (user["id"], amount, f"Ежедневная награда (день {streak})")
+            )
+            new_balance = user["coins"]
+        else:
+            new_balance = 0
+
+    next_reward = _get_daily_amount(streak + 1)
+
+    return {
+        "success": True,
+        "amount": amount,
+        "streak": streak,
+        "total_claimed": total,
+        "max_streak": max_streak,
+        "new_balance": new_balance,
+        "next_reward": next_reward,
+    }
 
 
 # ============================================================

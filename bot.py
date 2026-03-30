@@ -6907,6 +6907,37 @@ async def api_profile_get(request):
         return cors_response({"error": str(e)}, 500)
 
 
+# --- DAILY REWARD API ---
+
+async def api_daily_status(request):
+    """GET /api/daily/status?telegram_id=123"""
+    try:
+        telegram_id = request.query.get("telegram_id")
+        if not telegram_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+        from database import get_daily_status
+        status = get_daily_status(int(telegram_id))
+        return cors_response(status)
+    except Exception as e:
+        logger.error(f"API daily_status error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_daily_claim(request):
+    """POST /api/daily/claim {telegram_id}"""
+    try:
+        data = await request.json()
+        telegram_id = data.get("telegram_id")
+        if not telegram_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+        from database import claim_daily_reward
+        result = claim_daily_reward(int(telegram_id))
+        return cors_response(result)
+    except Exception as e:
+        logger.error(f"API daily_claim error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 # --- TOP PLAYERS API ---
 
 async def api_top_players(request):
@@ -8627,6 +8658,10 @@ def create_api_app():
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)
+
+    # Daily Reward (Streak)
+    app.router.add_get("/api/daily/status", api_daily_status)
+    app.router.add_post("/api/daily/claim", api_daily_claim)
 
     # Раздача OBS виджетов через HTTP (file:// не работает с YouTube API)
     obs_dir = os.path.join(os.path.dirname(__file__), 'webapp', 'obs')

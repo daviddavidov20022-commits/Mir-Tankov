@@ -17,6 +17,39 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/landing.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <style>
+        .daily-reward-section{max-width:900px;margin:0 auto;padding:0 20px;display:none;}
+        .daily-card{background:linear-gradient(135deg,#1a1510 0%,#0f1520 50%,#1a1015 100%);border:1px solid rgba(255,193,7,0.2);border-radius:20px;padding:24px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden;cursor:pointer;transition:all .3s;}
+        .daily-card:hover{border-color:rgba(255,193,7,0.4);transform:translateY(-2px);box-shadow:0 8px 40px rgba(255,193,7,0.1);}
+        .daily-card::before{content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(255,193,7,0.06),transparent 70%);}
+        .daily-card.claimed{opacity:0.7;cursor:default;border-color:rgba(34,197,94,0.3);}
+        .daily-card.claimed:hover{transform:none;box-shadow:none;}
+        .daily-icon{font-size:2.8rem;flex-shrink:0;position:relative;z-index:1;animation:dailyBounce 2s ease-in-out infinite;}
+        @keyframes dailyBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+        .daily-card.claimed .daily-icon{animation:none;}
+        .daily-info{flex:1;position:relative;z-index:1;}
+        .daily-title{font-family:'Russo One',sans-serif;font-size:1rem;color:#FFC107;margin-bottom:4px;}
+        .daily-streak{font-size:0.75rem;color:#9AA4B5;margin-bottom:6px;}
+        .daily-streak strong{color:#E8E6E3;}
+        .daily-progress{display:flex;gap:3px;margin-bottom:4px;}
+        .daily-dot{width:20px;height:4px;border-radius:2px;background:rgba(255,255,255,0.08);}
+        .daily-dot.filled{background:linear-gradient(90deg,#FFC107,#FF9800);}
+        .daily-dot.current{background:rgba(255,193,7,0.4);animation:dotPulse 1.5s infinite;}
+        @keyframes dotPulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
+        .daily-tiers{font-size:0.6rem;color:#5A6577;}
+        .daily-reward-amount{text-align:center;flex-shrink:0;position:relative;z-index:1;}
+        .daily-reward-val{font-family:'Russo One',sans-serif;font-size:1.6rem;color:#FFC107;}
+        .daily-reward-label{font-size:0.6rem;color:#9AA4B5;text-transform:uppercase;letter-spacing:1px;}
+        .quick-actions{max-width:900px;margin:16px auto 0;padding:0 20px;display:none;}
+        .quick-actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+        .qa-card{background:linear-gradient(145deg,#1a2332,#161d28);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:18px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .25s;}
+        .qa-card:hover{border-color:rgba(200,170,110,0.25);transform:translateY(-2px);}
+        .qa-card__icon{font-size:1.8rem;flex-shrink:0;}
+        .qa-card__info{flex:1;}
+        .qa-card__title{font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3;margin-bottom:2px;}
+        .qa-card__cost{font-size:0.65rem;color:#FFC107;}
+        .qa-card__desc{font-size:0.6rem;color:#5A6577;margin-top:2px;}
+    </style>
 </head>
 
 <body class="landing-page">
@@ -177,6 +210,45 @@
         </div>
     </div>
 
+    <!-- DAILY REWARD BANNER (shown when logged in) -->
+    <div class="daily-reward-section" id="dailyRewardSection" style="margin-top:30px;margin-bottom:20px;">
+        <div class="daily-card" id="dailyCard" onclick="claimDailyReward()">
+            <div class="daily-icon" id="dailyIcon">🧀</div>
+            <div class="daily-info">
+                <div class="daily-title" id="dailyTitle">Ежедневная награда</div>
+                <div class="daily-streak" id="dailyStreak">Стрик: <strong>0 дней</strong></div>
+                <div class="daily-progress" id="dailyProgress"></div>
+                <div class="daily-tiers">Дни 1-7: 15🧀 · 8-14: 25🧀 · 15-21: 35🧀 · 22-30: 50🧀</div>
+            </div>
+            <div class="daily-reward-amount">
+                <div class="daily-reward-val" id="dailyAmount">15 🧀</div>
+                <div class="daily-reward-label" id="dailyLabel">Забрать</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK ACTIONS: Donate + Music -->
+    <div class="quick-actions" id="quickActionsSection">
+        <div class="quick-actions-grid">
+            <div class="qa-card" onclick="openDonateModal()">
+                <div class="qa-card__icon">🧀</div>
+                <div class="qa-card__info">
+                    <div class="qa-card__title">Донат на стрим</div>
+                    <div class="qa-card__cost">от 200 🧀</div>
+                    <div class="qa-card__desc">Отправь сообщение стримеру</div>
+                </div>
+            </div>
+            <div class="qa-card" onclick="openMusicModal()">
+                <div class="qa-card__icon">🎵</div>
+                <div class="qa-card__info">
+                    <div class="qa-card__title">Заказ музыки</div>
+                    <div class="qa-card__cost">250 🧀</div>
+                    <div class="qa-card__desc">Закажи трек на стрим</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ==========================================
          FEATURES SECTION
          ========================================== -->
@@ -280,16 +352,15 @@
                 </div>
             </div>
 
-            <!-- Coming soon -->
-            <div class="feature-card feature-card--locked">
-                <span class="feature-card__badge feature-card__badge--soon">Скоро</span>
-                <div class="feature-card__icon" style="background:rgba(100,100,120,0.08);">
-                    <img src="img/icons/daily.png" alt="Задания">
+            <!-- Daily Reward -->
+            <div class="feature-card" onclick="document.getElementById('dailyRewardSection').scrollIntoView({behavior:'smooth'})">
+                <span class="feature-card__badge feature-card__badge--free">Free</span>
+                <div class="feature-card__icon" style="background:rgba(255,193,7,0.12);">
+                    <img src="img/icons/daily.png" alt="Ежедневная награда">
                 </div>
                 <div>
-                    <div class="feature-card__title">Ежедневные Задания</div>
-                    <div class="feature-card__desc">Бонусы и награды каждый день</div>
-                    <div class="feature-card__lock">🔒</div>
+                    <div class="feature-card__title">Ежедневная Награда</div>
+                    <div class="feature-card__desc">Заходи каждый день — получай до 50🧀. 30 дней = 2 подписки!</div>
                 </div>
             </div>
         </div>
@@ -799,7 +870,134 @@
             
             setTimeout(checkLandingStreams, 1000);
             setInterval(checkLandingStreams, 120000);
+
+            // Load daily reward if logged in
+            if (siteAuth.isLoggedIn) {
+                loadDailyReward();
+            }
         });
+
+        // ==========================================
+        // DAILY REWARD SYSTEM
+        // ==========================================
+        async function loadDailyReward() {
+            const section = document.getElementById('dailyRewardSection');
+            const qaSection = document.getElementById('quickActionsSection');
+            if (!siteAuth.isLoggedIn || !siteAuth.telegramId) return;
+
+            section.style.display = 'block';
+            qaSection.style.display = 'block';
+
+            try {
+                const resp = await fetch(`${API_BASE_LANDING}/api/daily/status?telegram_id=${siteAuth.telegramId}`);
+                const data = await resp.json();
+                updateDailyUI(data);
+            } catch(e) {
+                console.warn('Daily reward load error:', e);
+            }
+        }
+
+        function updateDailyUI(data) {
+            const card = document.getElementById('dailyCard');
+            const icon = document.getElementById('dailyIcon');
+            const title = document.getElementById('dailyTitle');
+            const streak = document.getElementById('dailyStreak');
+            const amount = document.getElementById('dailyAmount');
+            const label = document.getElementById('dailyLabel');
+            const progress = document.getElementById('dailyProgress');
+
+            const s = data.current_streak || 0;
+            const canClaim = data.can_claim;
+            const nextReward = data.next_reward || 15;
+
+            streak.innerHTML = `Стрик: <strong>${s} ${s === 1 ? 'день' : s < 5 ? 'дня' : 'дней'}</strong>${data.max_streak > s ? ` · Рекорд: ${data.max_streak}` : ''}`;
+            amount.textContent = `${nextReward} 🧀`;
+
+            let dots = '';
+            for (let i = 1; i <= 30; i++) {
+                if (i <= s) {
+                    dots += '<div class="daily-dot filled"></div>';
+                } else if (i === s + 1 && canClaim) {
+                    dots += '<div class="daily-dot current"></div>';
+                } else {
+                    dots += '<div class="daily-dot"></div>';
+                }
+            }
+            progress.innerHTML = dots;
+
+            if (canClaim) {
+                card.classList.remove('claimed');
+                icon.textContent = '🧀';
+                title.textContent = 'Забрать ежедневную награду!';
+                label.textContent = 'Забрать';
+            } else {
+                card.classList.add('claimed');
+                icon.textContent = '✅';
+                title.textContent = 'Награда получена!';
+                label.textContent = 'Завтра';
+                amount.textContent = `+${data.next_reward || 15} 🧀`;
+            }
+        }
+
+        async function claimDailyReward() {
+            if (!siteAuth.isLoggedIn || !siteAuth.telegramId) return;
+            const card = document.getElementById('dailyCard');
+            if (card.classList.contains('claimed')) return;
+
+            try {
+                const resp = await fetch(`${API_BASE_LANDING}/api/daily/claim`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({telegram_id: siteAuth.telegramId})
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    card.style.transition = 'all 0.3s';
+                    card.style.transform = 'scale(1.03)';
+                    card.style.borderColor = 'rgba(34,197,94,0.5)';
+                    setTimeout(() => {
+                        card.style.transform = '';
+                        updateDailyUI({
+                            can_claim: false,
+                            current_streak: data.streak,
+                            next_reward: data.next_reward,
+                            max_streak: data.max_streak,
+                        });
+                    }, 300);
+                    showDailyNotification(data.amount, data.streak, data.new_balance);
+                } else if (data.error === 'already_claimed') {
+                    loadDailyReward();
+                }
+            } catch(e) {
+                console.error('Daily claim error:', e);
+            }
+        }
+
+        function showDailyNotification(amount, streak, balance) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;`;
+            overlay.innerHTML = `
+                <div style="background:linear-gradient(145deg,#1a2332,#161d28);border:2px solid rgba(255,193,7,0.3);border-radius:24px;padding:36px 28px;text-align:center;max-width:340px;width:100%;">
+                    <div style="font-size:4rem;margin-bottom:12px;">🧀</div>
+                    <div style="font-family:'Russo One',sans-serif;font-size:2rem;color:#FFC107;margin-bottom:8px;">+${amount} СЫР</div>
+                    <div style="font-size:0.85rem;color:#E8E6E3;margin-bottom:4px;">День ${streak} стрика!</div>
+                    <div style="font-size:0.7rem;color:#5A6577;margin-bottom:20px;">Баланс: ${balance} 🧀</div>
+                    <button onclick="this.closest('div').parentElement.remove()" style="width:100%;padding:12px;border:none;border-radius:14px;background:linear-gradient(135deg,#FFC107,#FF9800);color:#1a1a1a;font-family:'Russo One',sans-serif;font-size:0.9rem;cursor:pointer;">Отлично! 🔥</button>
+                </div>
+            `;
+            overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
+            document.body.appendChild(overlay);
+        }
+
+        function openDonateModal() {
+            if (!siteAuth.isLoggedIn) { scrollToJoin(); return; }
+            openGame('player.html');
+        }
+        function openMusicModal() {
+            if (!siteAuth.isLoggedIn) { scrollToJoin(); return; }
+            openGame('player.html');
+        }
     </script>
 </body>
 
