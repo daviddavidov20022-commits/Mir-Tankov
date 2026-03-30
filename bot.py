@@ -4044,7 +4044,7 @@ async def fetch_player_stats(user, ch):
         # Filter tanks by challenge criteria
         totals = {
             "battles": 0, "damage_dealt": 0, "spotted": 0, "frags": 0,
-            "xp": 0, "wins": 0, "damage_received": 0, "damage_blocked": 0, "damage_assisted": 0, "shots": 0,
+            "xp": 0, "wins": 0, "damage_received": 0, "damage_blocked": 0, "shots": 0,
             "hits": 0, "survived_battles": 0
         }
 
@@ -4073,7 +4073,6 @@ async def fetch_player_stats(user, ch):
             totals["wins"] += s.get("wins", 0)
             totals["damage_received"] += s.get("damage_received", 0)
             totals["damage_blocked"] += s.get("damage_blocked", 0)
-            totals["damage_assisted"] += s.get("damage_assisted", 0)
             totals["shots"] += s.get("shots", 0)
             totals["hits"] += s.get("hits", 0)
             totals["survived_battles"] += s.get("survived_battles", 0)
@@ -4561,31 +4560,102 @@ async def api_decline_challenge(request):
 # ==========================================
 
 # Маппинг условий к полям статистики
+# Поля доступные в tanks/stats (по-танково):
 GC_CONDITION_TO_STAT = {
     "damage": "damage_dealt",
     "frags": "frags",
     "xp": "xp",
     "spotting": "spotted",
-    "spotting_damage": "damage_assisted",
     "blocked": "damage_blocked",
     "wins": "wins",
-    "combined": ["damage_dealt", "damage_assisted"],  # Суммарка: урон + урон по засвету
 }
+# spotting_damage и combined требуют account/info (damage_assisted_radio + damage_assisted_track)
+# Эти поля НЕ доступны в tanks/stats!
+GC_ACCOUNT_LEVEL_CONDITIONS = {"spotting_damage", "combined"}
 
 
-async def gc_fetch_player_stat(account_id, condition):
-    """Получить текущий суммарный стат игрока из Lesta API (через tanks/stats — актуальные данные)"""
+async def gc_fetch_account_assisted(account_ids):
+    """Получить урон по засвету (damage_assisted_radio + damage_assisted_track) из account/info.
+    
+    Эти поля НЕ доступны в tanks/stats, только в account/info.
+    Принимает список account_id, возвращает dict: {account_id: {"assisted": N, "battles": N, "damage_dealt": N}}
+    """
     import aiohttp
-    stat_field = GC_CONDITION_TO_STAT.get(condition, "damage_dealt")
-    is_multi_field = isinstance(stat_field, list)
-
+    if not account_ids:
+        return {}
+    
+    results = {}
+    # account/info поддерживает до 100 ID за раз
+    BATCH_SIZE = 100
     try:
         timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            if is_multi_field:
-                fields_str = ",".join(f"all.{f}" for f in stat_field) + ",all.battles,tank_id"
+            for i in range(0, len(account_ids), BATCH_SIZE):
+                batch = account_ids[i:i + BATCH_SIZE]
+                ids_str = ",".join(str(aid) for aid in batch)
+                url = (f"https://api.tanki.su/wot/account/info/"
+                       f"?application_id={get_lesta_app_id()}&account_id={ids_str}"
+                       f"&fields=statistics.all.damage_assisted_radio,statistics.all.damage_assisted_track,"
+                       f"statistics.all.battles,statistics.all.damage_dealt")
+                async with session.get(url) as resp:
+                    data = await resp.json()
+                
+                if data.get("status") != "ok":
+                    logger.warning(f"GC account/info error: {data.get('error')}")
+                    continue
+                
+                for aid_str, pdata in (data.get("data") or {}).items():
+                    if not pdata:
+                        continue
+                    stats_all = pdata.get("statistics", {}).get("all", {})
+                    radio = stats_all.get("damage_assisted_radio", 0) or 0
+                    track = stats_all.get("damage_assisted_track", 0) or 0
+                    results[int(aid_str)] = {
+                        "assisted": radio + track,
+                        "battles": stats_all.get("battles", 0) or 0,
+                        "damage_dealt": stats_all.get("damage_dealt", 0) or 0,
+                    }
+    except Exception as e:
+        logger.error(f"GC fetch account assisted error: {e}")
+    
+    return results
+
+
+async def gc_fetch_player_stat(account_id, condition):
+    """Получить текущий суммарный стат игрока из Lesta API.
+    
+    Для spotting_damage и combined — использует account/info (единственный источник assisted damage).
+    Для остальных — использует tanks/stats (актуальные данные сразу после боя).
+    """
+    import aiohttp
+    
+    # spotting_damage и combined — из account/info
+    if condition in GC_ACCOUNT_LEVEL_CONDITIONS:
+        try:
+            acc_data = await gc_fetch_account_assisted([account_id])
+            info = acc_data.get(account_id)
+            if not info:
+                return None
+            
+            if condition == "spotting_damage":
+                value = info["assisted"]
+            elif condition == "combined":
+                value = info["damage_dealt"] + info["assisted"]
             else:
-                fields_str = f"all.{stat_field},all.battles,tank_id"
+                value = 0
+            
+            return {"value": value, "battles": info["battles"]}
+        except Exception as e:
+            logger.error(f"GC fetch stat (account/info) error for {account_id}: {e}")
+            return None
+    
+    # Остальные условия — из tanks/stats
+    stat_field = GC_CONDITION_TO_STAT.get(condition, "damage_dealt")
+    
+    try:
+        timeout = aiohttp.ClientTimeout(total=15)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            fields_str = f"all.{stat_field},all.battles,tank_id"
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
                    f"&fields={fields_str}")
@@ -4599,13 +4669,7 @@ async def gc_fetch_player_stat(account_id, condition):
             if not tanks:
                 return None
 
-            if is_multi_field:
-                total_value = sum(
-                    sum(t.get("all", {}).get(f, 0) for f in stat_field)
-                    for t in tanks
-                )
-            else:
-                total_value = sum(t.get("all", {}).get(stat_field, 0) for t in tanks)
+            total_value = sum(t.get("all", {}).get(stat_field, 0) for t in tanks)
             total_battles = sum(t.get("all", {}).get("battles", 0) for t in tanks)
             return {
                 "value": total_value,
@@ -4617,114 +4681,114 @@ async def gc_fetch_player_stat(account_id, condition):
 
 
 async def gc_fetch_player_multi_stats(account_id, conditions_str, tank_class=None, tank_tier=None, tank_id_filter=None):
-    """Получить стату по нескольким условиям сразу (через tanks/stats — актуальные данные)
+    """Получить стату по нескольким условиям сразу.
     
     Поддерживает фильтрацию по классу техники, уровню и конкретному танку.
-    Поддерживает условие 'combined' = damage + spotting.
+    Поддерживает условие 'combined' = damage + spotting_damage (через account/info).
+    spotting_damage и combined берутся из account/info (damage_assisted_radio + damage_assisted_track).
     """
     import aiohttp
     conditions = [c.strip() for c in conditions_str.split(",") if c.strip()]
     if not conditions:
         conditions = ["damage"]
     
-    COND_TO_FIELD = {
-        "damage": "damage_dealt",
-        "frags": "frags",
-        "xp": "xp",
-        "spotting": "spotted",
-        "spotting_damage": "damage_assisted",
-        "blocked": "damage_blocked",
-        "wins": "wins",
-        "combined": ["damage_dealt", "damage_assisted"],  # Суммарка: урон + урон по засвету
-    }
+    # Разделяем: какие условия из tanks/stats, какие из account/info
+    tank_conditions = [c for c in conditions if c not in GC_ACCOUNT_LEVEL_CONDITIONS]
+    account_conditions = [c for c in conditions if c in GC_ACCOUNT_LEVEL_CONDITIONS]
     
-    # Собираем все нужные поля для tanks/stats
-    tank_fields = set(["battles"])
-    for cond in conditions:
-        field = COND_TO_FIELD.get(cond, "damage_dealt")
-        if isinstance(field, list):
-            for f in field:
-                tank_fields.add(f)
-        else:
-            tank_fields.add(field)
-    fields_str = ",".join(f"all.{f}" for f in tank_fields) + ",tank_id"
+    per_condition = {c: 0 for c in conditions}
+    total_battles = 0
     
-    try:
-        timeout = aiohttp.ClientTimeout(total=15)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            url = (f"https://api.tanki.su/wot/tanks/stats/"
-                   f"?application_id={get_lesta_app_id()}&account_id={account_id}"
-                   f"&fields={fields_str}")
-            async with session.get(url) as resp:
-                data = await resp.json()
-        
-        if data.get("status") != "ok":
-            return None
-        
-        tanks = data["data"].get(str(account_id))
-        if not tanks:
-            return None
-        
-        # Если есть фильтр по классу/уровню/танку — получаем encyclop данные
-        tank_info_map = {}
-        if tank_class or tank_tier or tank_id_filter:
-            all_tank_ids = [t["tank_id"] for t in tanks]
-            tank_info_map = await gc_get_tank_names(all_tank_ids)
-        
-        # Суммируем стату по танкам (с фильтрацией)
-        total_battles = 0
-        per_condition = {c: 0 for c in conditions}
-        
-        for t in tanks:
-            tid = t["tank_id"]
-            all_stats = t.get("all", {})
-            
-            # Фильтрация по конкретному танку
-            if tank_id_filter and tid != tank_id_filter:
-                continue
-            
-            # Фильтрация по классу и уровню
-            if tank_class or tank_tier:
-                info = tank_info_map.get(tid, {})
-                if tank_class and info.get("type") != tank_class:
-                    continue
-                if tank_tier and info.get("tier") != tank_tier:
-                    continue
-            
-            total_battles += all_stats.get("battles", 0)
-            for cond in conditions:
-                field = COND_TO_FIELD.get(cond, "damage_dealt")
-                if isinstance(field, list):
-                    # combined: сумма нескольких полей
-                    val = sum(all_stats.get(f, 0) for f in field)
-                else:
-                    val = all_stats.get(field, 0)
-                per_condition[cond] += val
-        
-        first_cond = conditions[0]
-        result = {
-            "battles": total_battles,
-            "per_condition": per_condition,
-            "value": per_condition.get(first_cond, 0),
+    # 1) Получаем tank-level стату (если есть такие условия или нужны battles)
+    if tank_conditions or not account_conditions:
+        COND_TO_FIELD = {
+            "damage": "damage_dealt", "frags": "frags", "xp": "xp",
+            "spotting": "spotted", "blocked": "damage_blocked", "wins": "wins",
         }
         
-        return result
-    except Exception as e:
-        logger.error(f"GC fetch multi stats error for {account_id}: {e}")
-        return None
+        tank_fields = set(["battles"])
+        for cond in tank_conditions:
+            field = COND_TO_FIELD.get(cond, "damage_dealt")
+            tank_fields.add(field)
+        fields_str = ",".join(f"all.{f}" for f in tank_fields) + ",tank_id"
+        
+        try:
+            timeout = aiohttp.ClientTimeout(total=15)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                url = (f"https://api.tanki.su/wot/tanks/stats/"
+                       f"?application_id={get_lesta_app_id()}&account_id={account_id}"
+                       f"&fields={fields_str}")
+                async with session.get(url) as resp:
+                    data = await resp.json()
+            
+            if data.get("status") != "ok":
+                return None
+            
+            tanks = data["data"].get(str(account_id))
+            if not tanks:
+                return None
+            
+            tank_info_map = {}
+            if tank_class or tank_tier or tank_id_filter:
+                all_tank_ids = [t["tank_id"] for t in tanks]
+                tank_info_map = await gc_get_tank_names(all_tank_ids)
+            
+            for t in tanks:
+                tid = t["tank_id"]
+                all_stats = t.get("all", {})
+                
+                if tank_id_filter and tid != tank_id_filter:
+                    continue
+                if tank_class or tank_tier:
+                    info = tank_info_map.get(tid, {})
+                    if tank_class and info.get("type") != tank_class:
+                        continue
+                    if tank_tier and info.get("tier") != tank_tier:
+                        continue
+                
+                total_battles += all_stats.get("battles", 0)
+                for cond in tank_conditions:
+                    field = COND_TO_FIELD.get(cond, "damage_dealt")
+                    per_condition[cond] += all_stats.get(field, 0)
+        except Exception as e:
+            logger.error(f"GC fetch multi stats (tanks/stats) error for {account_id}: {e}")
+            return None
+    
+    # 2) Получаем account-level стату (spotting_damage, combined)
+    if account_conditions:
+        try:
+            acc_data = await gc_fetch_account_assisted([account_id])
+            info = acc_data.get(account_id)
+            if not info:
+                return None
+            
+            if not total_battles:
+                total_battles = info["battles"]
+            
+            for cond in account_conditions:
+                if cond == "spotting_damage":
+                    per_condition[cond] = info["assisted"]
+                elif cond == "combined":
+                    per_condition[cond] = info["damage_dealt"] + info["assisted"]
+        except Exception as e:
+            logger.error(f"GC fetch multi stats (account/info) error for {account_id}: {e}")
+            return None
+    
+    result = {
+        "battles": total_battles,
+        "per_condition": per_condition,
+        "value": per_condition.get(first_cond, 0),
+    }
+    
+    return result
 
 
 async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tank_tier=None, tank_id_filter=None):
     """Получить стату ПАКЕТНО для игроков.
     
-    ВАЖНО: Используем tanks/stats вместо account/info, т.к. account/info 
-    кэшируется на стороне Lesta на часы/дни и показывает устаревшие данные.
-    tanks/stats обновляется СРАЗУ после боя.
+    tanks/stats — для per-tank условий (damage, frags, xp, spotted, blocked, wins).
+    account/info — для account-level условий (spotting_damage, combined).
     
-    Поддерживает фильтрацию по классу техники, уровню и конкретному танку.
-    Поддерживает условие 'combined' = damage + spotting.
-    
-    Для каждого игрока суммируем стату по танкам (с учётом фильтров).
     Возвращает dict: {account_id: {"battles": N, "per_condition": {cond: val}, "value": V}}
     """
     import aiohttp
@@ -4735,36 +4799,28 @@ async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tan
     if not conditions:
         conditions = ["damage"]
     
-    # Маппинг условий → поля в tanks/stats (поле внутри all.{field})
+    # Разделяем условия
+    tank_conditions = [c for c in conditions if c not in GC_ACCOUNT_LEVEL_CONDITIONS]
+    account_conditions = [c for c in conditions if c in GC_ACCOUNT_LEVEL_CONDITIONS]
+    
+    # Маппинг условий → поля в tanks/stats
     COND_TO_TANK_FIELD = {
-        "damage": "damage_dealt",
-        "frags": "frags",
-        "xp": "xp",
-        "spotting": "spotted",
-        "spotting_damage": "damage_assisted",
-        "blocked": "damage_blocked",
-        "wins": "wins",
-        "combined": ["damage_dealt", "damage_assisted"],  # Суммарка: урон + урон по засвету
+        "damage": "damage_dealt", "frags": "frags", "xp": "xp",
+        "spotting": "spotted", "blocked": "damage_blocked", "wins": "wins",
     }
     
-    # Собираем поля для запроса tanks/stats
+    # Собираем поля для запроса tanks/stats (только tank-level условия)
     tank_fields = set(["battles"])
-    for cond in conditions:
+    for cond in tank_conditions:
         field = COND_TO_TANK_FIELD.get(cond, "damage_dealt")
-        if isinstance(field, list):
-            for f in field:
-                tank_fields.add(f)
-        else:
-            tank_fields.add(field)
+        tank_fields.add(field)
     fields_str = ",".join(f"all.{f}" for f in tank_fields) + ",tank_id"
     
-    # Предзагрузка информации о танках для фильтрации (один раз для всех)
     need_tank_filter = bool(tank_class or tank_tier or tank_id_filter)
     
     results = {}
     
-    # tanks/stats НЕ поддерживает батч-запросы (только 1 account_id за раз)
-    # Но мы делаем их параллельно через asyncio.gather для скорости
+    # 1) tanks/stats — параллельно для каждого игрока
     async def fetch_one(session, aid):
         try:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
@@ -4780,33 +4836,28 @@ async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tan
                 return None
             
             tanks = data["data"].get(str(aid))
-            if tanks is None: # Account not found or invalid
+            if tanks is None:
                 logger.warning(f"Lesta API: Account {aid} not found in data")
                 return None
             
-            if not tanks: # Public profile has tanks, private or empty has [] or None
+            if not tanks:
                 logger.info(f"Lesta API: Account {aid} has NO public tanks (Profile might be PRIVATE)")
                 return None
             
-            # Получаем информацию о танках если нужна фильтрация
             tank_info_map = {}
             if need_tank_filter:
                 all_tank_ids = [t["tank_id"] for t in tanks]
                 tank_info_map = await gc_get_tank_names(all_tank_ids)
             
-            # Суммируем стату по танкам (с учётом фильтров)
             total_battles = 0
-            per_condition = {c: 0 for c in conditions}
+            per_condition = {c: 0 for c in tank_conditions}
             
             for t in tanks:
                 tid = t["tank_id"]
                 all_stats = t.get("all", {})
                 
-                # Фильтрация по конкретному танку
                 if tank_id_filter and tid != tank_id_filter:
                     continue
-                
-                # Фильтрация по классу и уровню
                 if tank_class or tank_tier:
                     info = tank_info_map.get(tid, {})
                     if tank_class and info.get("type") != tank_class:
@@ -4815,26 +4866,15 @@ async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tan
                         continue
                 
                 total_battles += all_stats.get("battles", 0)
-                for cond in conditions:
+                for cond in tank_conditions:
                     field = COND_TO_TANK_FIELD.get(cond, "damage_dealt")
-                    if isinstance(field, list):
-                        val = sum(all_stats.get(f, 0) for f in field)
-                    else:
-                        val = all_stats.get(field, 0)
-                    per_condition[cond] += val
+                    per_condition[cond] += all_stats.get(field, 0)
             
-            first_cond = conditions[0]
-            result = {
-                "battles": total_battles,
-                "per_condition": per_condition,
-                "value": per_condition.get(first_cond, 0),
-            }
-            return (aid, result)
+            return (aid, {"battles": total_battles, "per_condition": per_condition})
         except Exception as e:
             logger.warning(f"GC tanks/stats fetch error for {aid}: {e}")
             return None
     
-    # Параллельные запросы (по 10 одновременно чтобы не перегрузить API)
     import asyncio
     CONCURRENT = 10
     timeout = aiohttp.ClientTimeout(total=20)
@@ -4853,7 +4893,34 @@ async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tan
                     aid, data = res
                     results[aid] = data
     
-    logger.info(f"GC batch fetch (tanks/stats): got stats for {len(results)}/{len(account_ids)} players")
+    # 2) account/info — для spotting_damage и combined (батчем)
+    if account_conditions:
+        try:
+            valid_aids = list(results.keys()) if results else account_ids
+            acc_data = await gc_fetch_account_assisted(valid_aids)
+            
+            for aid in valid_aids:
+                acc_info = acc_data.get(aid)
+                if not acc_info:
+                    continue
+                
+                if aid not in results:
+                    results[aid] = {"battles": acc_info["battles"], "per_condition": {}}
+                
+                for cond in account_conditions:
+                    if cond == "spotting_damage":
+                        results[aid]["per_condition"][cond] = acc_info["assisted"]
+                    elif cond == "combined":
+                        results[aid]["per_condition"][cond] = acc_info["damage_dealt"] + acc_info["assisted"]
+        except Exception as e:
+            logger.error(f"GC batch account/info error: {e}")
+    
+    # 3) Добавляем value = первое условие
+    first_cond = conditions[0]
+    for aid in results:
+        results[aid]["value"] = results[aid]["per_condition"].get(first_cond, 0)
+    
+    logger.info(f"GC batch fetch: got stats for {len(results)}/{len(account_ids)} players")
     return results
 
 
@@ -4865,7 +4932,7 @@ async def gc_fetch_tank_stats(account_id):
         async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
-                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.damage_blocked,all.damage_assisted,all.xp,all.wins")
+                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.damage_blocked,all.xp,all.wins")
             async with session.get(url) as resp:
                 data = await resp.json()
             if data.get("status") != "ok":
@@ -5841,7 +5908,7 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
             "frags": stats.get("frags", 0),
             "xp": stats.get("xp", 0),
             "spotting": stats.get("spotted", 0),
-            "spotting_damage": stats.get("damage_assisted", 0),
+            "spotting_damage": 0,  # НЕ доступно в tanks/stats, только в account/info на уровне аккаунта
             "blocked": stats.get("damage_blocked", 0),
             "wins": stats.get("wins", 0),
         }
