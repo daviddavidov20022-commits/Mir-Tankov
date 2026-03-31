@@ -159,9 +159,23 @@ async function gcLoadChallenge(forceRefresh) {
 // SHOW STATES
 // ============================================================
 function gcShowEmpty() {
+    gcCurrentChallenge = null;
     document.getElementById('gcEmpty').style.display = '';
     document.getElementById('gcActive').style.display = 'none';
     document.getElementById('gcFinished').style.display = 'none';
+
+    const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
+    if (isAdminNow) {
+        const launchBtn = document.getElementById('adminGcLaunchBtn');
+        const stopBtn = document.getElementById('adminGcStopBtn');
+        const deleteBtn = document.getElementById('adminGcDeleteBtn');
+        const obsSection = document.getElementById('gcObsSection');
+        
+        if (launchBtn) launchBtn.style.display = '';
+        if (stopBtn) stopBtn.style.display = 'none';
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        if (obsSection) obsSection.style.display = 'none';
+    }
 }
 
 function gcShowActive(ch) {
