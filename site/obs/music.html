@@ -76,9 +76,10 @@
         const API_BASE = new URLSearchParams(window.location.search).get('api') || 'https://mir-tankov-production.up.railway.app';
         let player;
         let isPlayerReady = false;
+        let isPlaying = false;  // LOCK: prevents checkQueue while a track plays
         let pollTimer = null;
 
-        // Загружаем YouTube IFrame API
+        // Load YouTube IFrame API
         const tag = document.createElement('script');
         tag.src = 'https://www.youtube.com/iframe_api';
         document.head.appendChild(tag);
@@ -95,13 +96,22 @@
                         checkQueue();
                     },
                     onStateChange: function(e) {
+                        // ONLY move to next track when current one ENDS
                         if (e.data === YT.PlayerState.ENDED) {
+                            console.log("Track ended naturally");
+                            isPlaying = false;
                             hideWidget();
                             setTimeout(checkQueue, 2000);
+                        }
+                        // Handle errors mid-play
+                        if (e.data === YT.PlayerState.CUED) {
+                            // Sometimes YT cues instead of playing — force play
+                            try { player.playVideo(); } catch(err) {}
                         }
                     },
                     onError: function(e) {
                         console.error("YT error:", e.data);
+                        isPlaying = false;
                         hideWidget();
                         setTimeout(checkQueue, 3000);
                     }
@@ -110,12 +120,17 @@
         }
 
         async function checkQueue() {
+            // Never interrupt a playing track
+            if (isPlaying) {
+                console.log("Track is playing, skip poll");
+                return;
+            }
+
             console.log("Checking queue...");
             try {
                 const resp = await fetch(`${API_BASE}/api/stream/music/next`);
                 const json = await resp.json();
                 
-                // API может вернуть {track: {...}} или {url: ...}
                 const track = json.track || json;
                 console.log("Got track:", track);
                 
@@ -141,25 +156,34 @@
                 return;
             }
 
-            // Показать плашку
+            // Set the playing lock BEFORE loading
+            isPlaying = true;
+
+            // Show widget
             document.getElementById('track-name').textContent = track.title || track.url;
             document.getElementById('requested-by').textContent = `Заказал: ${track.username || 'Аноним'}`;
             showWidget();
 
-            // Играть
+            // Play
             if (isPlayerReady && player && player.loadVideoById) {
                 try {
                     player.loadVideoById(videoId);
                 } catch(e) {
                     console.error("Play error:", e);
+                    isPlaying = false;
+                    setTimeout(checkQueue, 3000);
                 }
             }
 
-            // Авто-скрыть через 3 минуты (на случай если YT не отработает)
+            // Safety timeout: if YT doesn't fire ENDED after 10 minutes, force next
             setTimeout(() => {
-                hideWidget();
-                setTimeout(checkQueue, 2000);
-            }, 180000);
+                if (isPlaying) {
+                    console.warn("Safety timeout — forcing next track");
+                    isPlaying = false;
+                    hideWidget();
+                    setTimeout(checkQueue, 2000);
+                }
+            }, 600000); // 10 min max
         }
 
         function showWidget() {
@@ -171,15 +195,15 @@
         }
 
         function extractVideoId(url) {
-            const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/v\/)([a-zA-Z0-9_-]{11})/);
+            const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/v\/|\/shorts\/)([a-zA-Z0-9_-]{11})/);
             return m ? m[1] : null;
         }
 
-        // Fallback: если YT API не загрузился за 5 сек — всё равно запускаем polling
+        // Fallback: if YT API doesn't load in 5 sec — start polling anyway
         setTimeout(() => {
             if (!isPlayerReady) {
                 console.warn("YT API timeout, starting polling anyway");
-                isPlayerReady = true; // Плашка будет показываться, просто без звука
+                isPlayerReady = true;
                 checkQueue();
             }
         }, 5000);

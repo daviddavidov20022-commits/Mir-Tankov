@@ -1448,6 +1448,15 @@ function loadAdminSettings() {
     });
 }
 
+function _ytTitle(url) {
+    // Extract readable title from YouTube URL
+    try {
+        const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([a-zA-Z0-9_-]{11})/);
+        if (m) return { id: m[1], short: url.replace(/https?:\/\/(www\.)?/, '').substring(0, 45) + '…' };
+    } catch(e) {}
+    return { id: null, short: (url || '').substring(0, 45) + '…' };
+}
+
 async function refreshMusicQueue() {
     const container = document.getElementById('musicQueueList');
     if (!container) return;
@@ -1457,23 +1466,35 @@ async function refreshMusicQueue() {
         const queue = data.queue || [];
         
         if (queue.length === 0) {
-            container.innerHTML = '<div class="admin-queue-empty">Очередь пуста 🎵</div>';
+            container.innerHTML = '<div style="text-align:center;padding:16px;color:#4A5568;font-size:.72rem">🎵 Очередь пуста</div>';
             return;
         }
         
-        container.innerHTML = queue.map((t, i) => `
-            <div class="admin-queue-item">
-                <span class="admin-queue-item__num">${i + 1}</span>
-                <div class="admin-queue-item__info">
-                    <div class="admin-queue-item__title">${t.url || 'Неизвестный трек'}</div>
-                    <div class="admin-queue-item__user">👤 ${t.username} • ${t.played ? '✅ Сыгран' : '⏳ В очереди'}</div>
+        container.innerHTML = queue.map((t, i) => {
+            const yt = _ytTitle(t.url);
+            const title = t.title || yt.short;
+            const thumb = yt.id ? `https://img.youtube.com/vi/${yt.id}/default.jpg` : '';
+            const statusColor = t.played ? '#22c55e' : '#60A5FA';
+            const statusText = t.played ? 'Сыгран' : 'В очереди';
+            return `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(0,0,0,.25);border-radius:12px;border:1px solid rgba(96,165,250,.08);margin-bottom:6px">
+                <div style="width:24px;height:24px;border-radius:8px;background:rgba(96,165,250,.1);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#60A5FA;flex-shrink:0">${i + 1}</div>
+                ${thumb ? `<img src="${thumb}" style="width:40px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : ''}
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:.72rem;font-weight:600;color:#E8E6E3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+                        <span style="font-size:.58rem;color:#8B95A5">👤 ${t.username}</span>
+                        <span style="font-size:.5rem;padding:2px 6px;border-radius:6px;background:${statusColor}18;color:${statusColor};font-weight:700">${statusText}</span>
+                    </div>
                 </div>
-                <button class="admin-queue-item__btn" onclick="skipTrack('${t.id}')" title="Пропустить">⏭</button>
-                <button class="admin-queue-item__btn" onclick="removeTrack('${t.id}')" title="Удалить">🗑</button>
-            </div>
-        `).join('');
+                <div style="display:flex;gap:4px;flex-shrink:0">
+                    <button onclick="skipTrack('${t.id}')" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(96,165,250,.15);background:rgba(96,165,250,.06);color:#60A5FA;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Пропустить">⏭</button>
+                    <button onclick="removeTrack('${t.id}')" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(239,68,68,.15);background:rgba(239,68,68,.06);color:#ef4444;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Удалить">🗑</button>
+                </div>
+            </div>`;
+        }).join('');
     } catch(e) {
-        container.innerHTML = '<div class="admin-queue-empty">❌ Ошибка загрузки</div>';
+        container.innerHTML = '<div style="text-align:center;padding:16px;color:#ef4444;font-size:.72rem">❌ Ошибка загрузки</div>';
     }
 }
 
@@ -1486,19 +1507,28 @@ async function refreshDonateHistory() {
         const events = data.events || [];
         
         if (events.length === 0) {
-            container.innerHTML = '<div class="admin-queue-empty">Донатов пока нет 🧀</div>';
+            container.innerHTML = '<div style="text-align:center;padding:16px;color:#4A5568;font-size:.72rem">🧀 Донатов пока нет</div>';
             return;
         }
         
-        container.innerHTML = events.slice(0, 15).map(e => `
-            <div class="admin-donate-item">
-                <span class="admin-donate-item__amount">${e.amount} 🧀</span>
-                <span class="admin-donate-item__msg">${e.message || '—'}</span>
-                <span class="admin-donate-item__user">👤 ${e.username}</span>
-            </div>
-        `).join('');
+        container.innerHTML = events.slice(0, 15).map(e => {
+            const ts = e.timestamp ? new Date(e.timestamp * 1000).toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'}) : '';
+            const amtColor = e.amount >= 1000 ? '#FFC107' : e.amount >= 500 ? '#E040FB' : '#60A5FA';
+            return `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(0,0,0,.25);border-radius:12px;border:1px solid rgba(255,193,7,.06);margin-bottom:6px">
+                <div style="min-width:52px;padding:4px 8px;border-radius:8px;background:${amtColor}15;border:1px solid ${amtColor}25;text-align:center">
+                    <div style="font-size:.75rem;font-weight:800;color:${amtColor}">${e.amount}</div>
+                    <div style="font-size:.45rem;color:${amtColor};opacity:.7">🧀</div>
+                </div>
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:.72rem;font-weight:600;color:#E8E6E3">👤 ${e.username || 'Аноним'}</div>
+                    <div style="font-size:.65rem;color:#8B95A5;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.message || '—'}</div>
+                </div>
+                ${ts ? `<div style="font-size:.55rem;color:#4A5568;flex-shrink:0">${ts}</div>` : ''}
+            </div>`;
+        }).join('');
     } catch(e) {
-        container.innerHTML = '<div class="admin-queue-empty">❌ Ошибка загрузки</div>';
+        container.innerHTML = '<div style="text-align:center;padding:16px;color:#ef4444;font-size:.72rem">❌ Ошибка загрузки</div>';
     }
 }
 
