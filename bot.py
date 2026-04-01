@@ -7608,6 +7608,7 @@ async def api_stream_channels_save(request):
 # ==========================================
 donate_events = collections.deque(maxlen=50)
 music_queue = []
+music_control = {"action": "none"}  # "none", "skip", "stop"
 DONATE_MIN = 10  # минимальный донат
 AI_DONATE_MIN = 50  # минимальный AI донат
 
@@ -8120,22 +8121,26 @@ async def api_stream_music_request(request):
             "telegram_id": tg_id,
             "username": username,
             "url": url,
+            "title": "",
             "amount": amount,
             "timestamp": _time.time(),
             "played": False,
         }
-        music_queue.append(track)
         
-        # Уведомление в чат
-        stream_chat_messages.append({
-            "id": track["id"],
-            "platform": "music",
-            "username": f"🎵 {username}",
-            "text": f"[МУЗЫКА за {amount} 🧀] {url}",
-            "color": "#E040FB",
-            "timestamp": _time.time(),
-            "telegram_id": tg_id,
-        })
+        # Fetch YouTube title via oEmbed
+        try:
+            oembed_url = f"https://www.youtube.com/oembed?url={url}&format=json"
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with aiohttp.ClientSession(timeout=timeout) as sess:
+                async with sess.get(oembed_url) as resp:
+                    if resp.status == 200:
+                        oembed = await resp.json()
+                        track["title"] = oembed.get("title", "")[:100]
+                        logger.info(f"[Music] YouTube title: {track['title']}")
+        except Exception as e:
+            logger.warning(f"[Music] oEmbed failed: {e}")
+        
+        music_queue.append(track)
         
         logger.info(f"[Music] {username} заказал: {url}")
         return cors_response({"success": True, "track": track, "new_balance": profile['cheese']})
@@ -8172,11 +8177,45 @@ async def api_stream_music_skip(request):
         if not is_admin_user(tg_id):
             return cors_response({"error": "Admin only"}, 403)
         
+        # Set skip command for OBS widget
+        music_control["action"] = "skip"
+        
         for track in music_queue:
             if not track.get("played"):
                 track["played"] = True
                 return cors_response({"success": True, "skipped": track})
         return cors_response({"success": True, "skipped": None})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_music_control_get(request):
+    """GET /api/stream/music/control — OBS виджет поллит команды"""
+    try:
+        action = music_control.get("action", "none")
+        # Reset after reading (one-shot command)
+        if action != "none":
+            music_control["action"] = "none"
+        return cors_response({"action": action})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_music_control_post(request):
+    """POST /api/stream/music/control  {telegram_id, action: 'stop'|'skip'}"""
+    try:
+        data = await request.json()
+        tg_id = int(data.get("telegram_id", 0))
+        if not is_admin_user(tg_id):
+            return cors_response({"error": "Admin only"}, 403)
+        action = data.get("action", "none")
+        if action in ("stop", "skip"):
+            music_control["action"] = action
+            # If stop, mark all tracks as played
+            if action == "stop":
+                for track in music_queue:
+                    track["played"] = True
+        return cors_response({"success": True, "action": action})
     except Exception as e:
         return cors_response({"error": str(e)}, 500)
 
@@ -8712,6 +8751,8 @@ def create_api_app():
     app.router.add_get("/api/stream/music/queue", api_stream_music_queue)
     app.router.add_get("/api/stream/music/next", api_stream_music_next)
     app.router.add_post("/api/stream/music/skip", api_stream_music_skip)
+    app.router.add_get("/api/stream/music/control", api_stream_music_control_get)
+    app.router.add_post("/api/stream/music/control", api_stream_music_control_post)
 
     # Global Challenges API
     app.router.add_post("/api/global-challenge/create", api_global_challenge_create)

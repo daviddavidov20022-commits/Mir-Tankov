@@ -76,8 +76,9 @@
         const API_BASE = new URLSearchParams(window.location.search).get('api') || 'https://mir-tankov-production.up.railway.app';
         let player;
         let isPlayerReady = false;
-        let isPlaying = false;  // LOCK: prevents checkQueue while a track plays
-        let pollTimer = null;
+        let isPlaying = false;
+        let controlTimer = null;
+        let queueTimer = null;
 
         // Load YouTube IFrame API
         const tag = document.createElement('script');
@@ -93,74 +94,109 @@
                     onReady: function() {
                         isPlayerReady = true;
                         console.log("YT Player ready!");
-                        checkQueue();
+                        startQueuePolling();
+                        startControlPolling();
                     },
                     onStateChange: function(e) {
-                        // ONLY move to next track when current one ENDS
+                        console.log("YT state:", e.data);
                         if (e.data === YT.PlayerState.ENDED) {
                             console.log("Track ended naturally");
-                            isPlaying = false;
-                            hideWidget();
-                            setTimeout(checkQueue, 2000);
+                            onTrackFinished();
                         }
-                        // Handle errors mid-play
-                        if (e.data === YT.PlayerState.CUED) {
-                            // Sometimes YT cues instead of playing — force play
+                        // Force play if cued
+                        if (e.data === YT.PlayerState.CUED && isPlaying) {
                             try { player.playVideo(); } catch(err) {}
                         }
                     },
                     onError: function(e) {
                         console.error("YT error:", e.data);
-                        isPlaying = false;
-                        hideWidget();
-                        setTimeout(checkQueue, 3000);
+                        onTrackFinished();
                     }
                 }
             });
         }
 
-        async function checkQueue() {
-            // Never interrupt a playing track
-            if (isPlaying) {
-                console.log("Track is playing, skip poll");
-                return;
-            }
+        // ========= CONTROL POLLING =========
+        // Polls every 2s even while playing — listens for admin commands
+        function startControlPolling() {
+            if (controlTimer) clearInterval(controlTimer);
+            controlTimer = setInterval(checkControl, 2000);
+        }
 
-            console.log("Checking queue...");
+        async function checkControl() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/stream/music/control`);
+                const data = await resp.json();
+                
+                if (data.action === 'stop') {
+                    console.log("CONTROL: STOP received");
+                    stopPlayback();
+                } else if (data.action === 'skip') {
+                    console.log("CONTROL: SKIP received");
+                    stopPlayback();
+                    // After stop, queue polling will pick next track
+                }
+            } catch(e) {
+                // Silently ignore control poll errors
+            }
+        }
+
+        function stopPlayback() {
+            isPlaying = false;
+            if (player && player.stopVideo) {
+                try { player.stopVideo(); } catch(e) {}
+            }
+            hideWidget();
+        }
+
+        function onTrackFinished() {
+            isPlaying = false;
+            hideWidget();
+            // Don't immediately poll — let the next interval handle it
+        }
+
+        // ========= QUEUE POLLING =========
+        // Polls every 3s — only fetches next track if NOT playing
+        function startQueuePolling() {
+            if (queueTimer) clearInterval(queueTimer);
+            queueTimer = setInterval(checkQueue, 3000);
+            checkQueue(); // Immediate first check
+        }
+
+        async function checkQueue() {
+            // NEVER interrupt a playing track
+            if (isPlaying) return;
+
             try {
                 const resp = await fetch(`${API_BASE}/api/stream/music/next`);
                 const json = await resp.json();
                 
                 const track = json.track || json;
-                console.log("Got track:", track);
                 
                 if (track && track.url) {
+                    console.log("Got track:", track.title || track.url);
                     playTrack(track);
-                } else {
-                    console.log("Queue empty, checking in 5s...");
-                    pollTimer = setTimeout(checkQueue, 5000);
                 }
             } catch (e) {
                 console.error("Queue fetch error:", e);
-                pollTimer = setTimeout(checkQueue, 5000);
             }
         }
 
         function playTrack(track) {
             const videoId = extractVideoId(track.url);
-            console.log("Playing video:", videoId, "from", track.url);
+            console.log("Playing video:", videoId);
             
             if (!videoId) {
                 console.error("Bad URL:", track.url);
-                setTimeout(checkQueue, 2000);
                 return;
             }
 
-            // Set the playing lock BEFORE loading
+            // LOCK immediately
             isPlaying = true;
 
             // Show widget
-            document.getElementById('track-name').textContent = track.title || track.url;
+            const title = track.title || track.url;
+            document.getElementById('track-name').textContent = title;
             document.getElementById('requested-by').textContent = `Заказал: ${track.username || 'Аноним'}`;
             showWidget();
 
@@ -171,19 +207,16 @@
                 } catch(e) {
                     console.error("Play error:", e);
                     isPlaying = false;
-                    setTimeout(checkQueue, 3000);
                 }
             }
 
-            // Safety timeout: if YT doesn't fire ENDED after 10 minutes, force next
+            // Safety timeout: 10 min max per track
             setTimeout(() => {
                 if (isPlaying) {
-                    console.warn("Safety timeout — forcing next track");
-                    isPlaying = false;
-                    hideWidget();
-                    setTimeout(checkQueue, 2000);
+                    console.warn("Safety timeout — force finish");
+                    onTrackFinished();
                 }
-            }, 600000); // 10 min max
+            }, 600000);
         }
 
         function showWidget() {
@@ -199,12 +232,13 @@
             return m ? m[1] : null;
         }
 
-        // Fallback: if YT API doesn't load in 5 sec — start polling anyway
+        // Fallback: if YT API doesn't load in 5 sec
         setTimeout(() => {
             if (!isPlayerReady) {
                 console.warn("YT API timeout, starting polling anyway");
                 isPlayerReady = true;
-                checkQueue();
+                startQueuePolling();
+                startControlPolling();
             }
         }, 5000);
     </script>

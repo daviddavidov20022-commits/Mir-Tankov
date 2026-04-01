@@ -595,7 +595,7 @@ async function adminMusicSkip() {
     const BOT = window.BOT_API_URL || window.location.origin;
     const tgId = localStorage.getItem('my_telegram_id');
     try {
-        await fetch(`${BOT}/api/stream/music/skip`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telegram_id:Number(tgId)}) });
+        await fetch(`${BOT}/api/stream/music/control`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telegram_id:Number(tgId), action:'skip'}) });
         showToast('⏭','Трек пропущен'); refreshMusicQueue();
     } catch(e) { showToast('❌','Ошибка'); }
 }
@@ -603,12 +603,8 @@ async function adminMusicStop() {
     const BOT = window.BOT_API_URL || window.location.origin;
     const tgId = localStorage.getItem('my_telegram_id');
     try {
-        // Skip all remaining tracks
-        for (let i = 0; i < 50; i++) {
-            const r = await fetch(`${BOT}/api/stream/music/skip`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telegram_id:Number(tgId)}) });
-            const d = await r.json(); if (!d.skipped) break;
-        }
-        showToast('⏹','Очередь очищена'); refreshMusicQueue();
+        await fetch(`${BOT}/api/stream/music/control`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telegram_id:Number(tgId), action:'stop'}) });
+        showToast('⏹','Музыка остановлена'); refreshMusicQueue();
     } catch(e) { showToast('❌','Ошибка'); }
 }
 function openSettingsModal() { const m = document.getElementById('settingsModal'); if (m) m.style.display = 'flex'; }
