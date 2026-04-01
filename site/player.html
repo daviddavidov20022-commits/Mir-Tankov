@@ -591,21 +591,36 @@ function copyMusicObs() {
     const url = (document.getElementById('obsMusicUrl')?.textContent || '').trim();
     if (url) { navigator.clipboard.writeText(url).then(() => showToast('📋','OBS URL скопирован!')).catch(() => {}); }
 }
+function _getAdminTgId() {
+    // Try multiple sources for the admin's telegram_id
+    if (window.myTelegramId) return window.myTelegramId;
+    const saved = localStorage.getItem('my_telegram_id');
+    if (saved) return Number(saved);
+    return 6507474079; // Hardcoded admin fallback
+}
 async function adminMusicSkip() {
-    const BOT = window.BOT_API_URL || window.location.origin;
-    const tgId = localStorage.getItem('my_telegram_id');
+    const BOT = window.BOT_API_URL || 'https://mir-tankov-production.up.railway.app';
+    const tgId = _getAdminTgId();
+    console.log('[Admin] Skip music, tgId:', tgId, 'API:', BOT);
     try {
-        await fetch(`${BOT}/api/stream/music/control`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telegram_id:Number(tgId), action:'skip'}) });
+        const r = await fetch(`${BOT}/api/stream/music/control`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telegram_id:tgId, action:'skip'}) });
+        const d = await r.json();
+        console.log('[Admin] Skip response:', d);
+        if (d.error) { showToast('❌', d.error); return; }
         showToast('⏭','Трек пропущен'); refreshMusicQueue();
-    } catch(e) { showToast('❌','Ошибка'); }
+    } catch(e) { console.error('[Admin] Skip error:', e); showToast('❌','Ошибка сети'); }
 }
 async function adminMusicStop() {
-    const BOT = window.BOT_API_URL || window.location.origin;
-    const tgId = localStorage.getItem('my_telegram_id');
+    const BOT = window.BOT_API_URL || 'https://mir-tankov-production.up.railway.app';
+    const tgId = _getAdminTgId();
+    console.log('[Admin] Stop music, tgId:', tgId, 'API:', BOT);
     try {
-        await fetch(`${BOT}/api/stream/music/control`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telegram_id:Number(tgId), action:'stop'}) });
+        const r = await fetch(`${BOT}/api/stream/music/control`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telegram_id:tgId, action:'stop'}) });
+        const d = await r.json();
+        console.log('[Admin] Stop response:', d);
+        if (d.error) { showToast('❌', d.error); return; }
         showToast('⏹','Музыка остановлена'); refreshMusicQueue();
-    } catch(e) { showToast('❌','Ошибка'); }
+    } catch(e) { console.error('[Admin] Stop error:', e); showToast('❌','Ошибка сети'); }
 }
 function openSettingsModal() { const m = document.getElementById('settingsModal'); if (m) m.style.display = 'flex'; }
 function closeSettingsModal() { const m = document.getElementById('settingsModal'); if (m) m.style.display = 'none'; }
