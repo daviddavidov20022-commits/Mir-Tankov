@@ -578,12 +578,12 @@ function switchSettingsTab(tab, btn) {
     if (btn) btn.classList.add('active');
     if (tab === 'donates') {
         const obsEl = document.getElementById('obsAlertUrl');
-        if (obsEl) obsEl.textContent = window.location.origin + '/obs/alerts.html';
+        if (obsEl) obsEl.textContent = 'https://mir-tankov-production.up.railway.app/obs/alerts.html';
         refreshDonateHistory();
     }
     if (tab === 'music') {
         const mu = document.getElementById('obsMusicUrl');
-        if (mu) mu.textContent = window.location.origin + '/obs/music.html';
+        if (mu) mu.textContent = 'https://mir-tankov-production.up.railway.app/obs/music.html?v=3';
         refreshMusicQueue();
     }
 }
