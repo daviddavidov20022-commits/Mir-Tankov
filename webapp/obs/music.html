@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Music Player</title>
+    <title>Stream Music Player v3</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -55,9 +58,25 @@
             width: 1px; height: 1px;
             overflow: hidden;
         }
+
+        /* Debug version indicator — remove after confirming it works */
+        #version-badge {
+            position: fixed;
+            top: 4px;
+            right: 4px;
+            background: rgba(224, 64, 251, 0.8);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
+
+    <div id="version-badge">v3</div>
 
     <div id="music-widget">
         <div class="icon">🎵</div>
@@ -73,19 +92,24 @@
     </div>
 
     <script>
+        const VERSION = 'v3';
         const API_BASE = new URLSearchParams(window.location.search).get('api') || 'https://mir-tankov-production.up.railway.app';
-        let player;
+        
+        console.log(`🎵 Music Widget ${VERSION} loaded. API: ${API_BASE}`);
+        
+        let player = null;
         let isPlayerReady = false;
-        let isPlaying = false;
+        let isPlaying = false;     // TRUE = track is actively playing, NOTHING can interrupt
         let controlTimer = null;
         let queueTimer = null;
 
-        // Load YouTube IFrame API
+        // ========= YOUTUBE PLAYER =========
         const tag = document.createElement('script');
         tag.src = 'https://www.youtube.com/iframe_api';
         document.head.appendChild(tag);
 
         function onYouTubeIframeAPIReady() {
+            console.log('YT IFrame API loaded');
             player = new YT.Player('yt-player', {
                 height: '1',
                 width: '1',
@@ -93,132 +117,142 @@
                 events: {
                     onReady: function() {
                         isPlayerReady = true;
-                        console.log("YT Player ready!");
-                        startQueuePolling();
-                        startControlPolling();
+                        console.log('✅ YT Player ready');
+                        startPolling();
                     },
                     onStateChange: function(e) {
-                        console.log("YT state:", e.data);
+                        const states = {'-1':'UNSTARTED','0':'ENDED','1':'PLAYING','2':'PAUSED','3':'BUFFERING','5':'CUED'};
+                        console.log(`YT state: ${states[e.data] || e.data} | isPlaying: ${isPlaying}`);
+                        
+                        // Track finished naturally — move to next
                         if (e.data === YT.PlayerState.ENDED) {
-                            console.log("Track ended naturally");
+                            console.log('🏁 Track ended');
                             onTrackFinished();
                         }
-                        // Force play if cued
+                        // Sometimes YT cues instead of playing — force it
                         if (e.data === YT.PlayerState.CUED && isPlaying) {
                             try { player.playVideo(); } catch(err) {}
                         }
                     },
                     onError: function(e) {
-                        console.error("YT error:", e.data);
+                        console.error('❌ YT error:', e.data);
                         onTrackFinished();
                     }
                 }
             });
         }
 
-        // ========= CONTROL POLLING =========
-        // Polls every 2s even while playing — listens for admin commands
-        function startControlPolling() {
+        // ========= POLLING SYSTEM =========
+        function startPolling() {
+            console.log('🔄 Starting polling...');
+            // Control: every 2s, ALWAYS runs (even during playback)
             if (controlTimer) clearInterval(controlTimer);
             controlTimer = setInterval(checkControl, 2000);
+            
+            // Queue: every 4s, only picks up tracks when idle
+            if (queueTimer) clearInterval(queueTimer);
+            queueTimer = setInterval(checkQueue, 4000);
+            
+            // First check immediately
+            checkQueue();
         }
 
+        // ========= CONTROL ENDPOINT =========
         async function checkControl() {
             try {
                 const resp = await fetch(`${API_BASE}/api/stream/music/control`);
                 const data = await resp.json();
                 
                 if (data.action === 'stop') {
-                    console.log("CONTROL: STOP received");
-                    stopPlayback();
+                    console.log('🛑 STOP command received');
+                    forceStop();
                 } else if (data.action === 'skip') {
-                    console.log("CONTROL: SKIP received");
-                    stopPlayback();
-                    // After stop, queue polling will pick next track
+                    console.log('⏭ SKIP command received');
+                    forceStop();
+                    // Queue poll will pick up next track on next interval
                 }
             } catch(e) {
-                // Silently ignore control poll errors
+                // Silent — don't spam console on network errors
             }
         }
 
-        function stopPlayback() {
-            isPlaying = false;
-            if (player && player.stopVideo) {
-                try { player.stopVideo(); } catch(e) {}
-            }
-            hideWidget();
-        }
-
-        function onTrackFinished() {
-            isPlaying = false;
-            hideWidget();
-            // Don't immediately poll — let the next interval handle it
-        }
-
-        // ========= QUEUE POLLING =========
-        // Polls every 3s — only fetches next track if NOT playing
-        function startQueuePolling() {
-            if (queueTimer) clearInterval(queueTimer);
-            queueTimer = setInterval(checkQueue, 3000);
-            checkQueue(); // Immediate first check
-        }
-
+        // ========= QUEUE ENDPOINT =========
         async function checkQueue() {
             // NEVER interrupt a playing track
-            if (isPlaying) return;
+            if (isPlaying) {
+                return;
+            }
 
             try {
                 const resp = await fetch(`${API_BASE}/api/stream/music/next`);
                 const json = await resp.json();
-                
-                const track = json.track || json;
+                const track = json.track;
                 
                 if (track && track.url) {
-                    console.log("Got track:", track.title || track.url);
+                    console.log('📥 Got track:', track.title || track.url);
                     playTrack(track);
                 }
             } catch (e) {
-                console.error("Queue fetch error:", e);
+                console.error('Queue error:', e);
             }
         }
 
+        // ========= PLAYBACK =========
         function playTrack(track) {
             const videoId = extractVideoId(track.url);
-            console.log("Playing video:", videoId);
-            
             if (!videoId) {
-                console.error("Bad URL:", track.url);
+                console.error('Bad video URL:', track.url);
                 return;
             }
 
-            // LOCK immediately
+            // LOCK — no other track can start until this finishes or is stopped
             isPlaying = true;
+            console.log(`▶ Playing: ${videoId} | isPlaying = true`);
 
-            // Show widget
-            const title = track.title || track.url;
-            document.getElementById('track-name').textContent = title;
+            // Update widget UI
+            document.getElementById('track-name').textContent = track.title || track.url;
             document.getElementById('requested-by').textContent = `Заказал: ${track.username || 'Аноним'}`;
             showWidget();
 
-            // Play
+            // Start playback
             if (isPlayerReady && player && player.loadVideoById) {
                 try {
                     player.loadVideoById(videoId);
                 } catch(e) {
-                    console.error("Play error:", e);
+                    console.error('loadVideoById failed:', e);
                     isPlaying = false;
                 }
+            } else {
+                console.error('Player not ready');
+                isPlaying = false;
             }
 
-            // Safety timeout: 10 min max per track
+            // Safety: max 10 min per track
             setTimeout(() => {
                 if (isPlaying) {
-                    console.warn("Safety timeout — force finish");
+                    console.warn('⏰ 10min safety timeout');
                     onTrackFinished();
                 }
             }, 600000);
         }
 
+        function onTrackFinished() {
+            console.log('✅ Track finished, unlocking queue');
+            isPlaying = false;
+            hideWidget();
+        }
+
+        function forceStop() {
+            console.log('🛑 Force stopping playback');
+            isPlaying = false;
+            if (player) {
+                try { player.stopVideo(); } catch(e) {}
+                try { player.clearVideo(); } catch(e) {}
+            }
+            hideWidget();
+        }
+
+        // ========= UI =========
         function showWidget() {
             document.getElementById('music-widget').classList.add('visible');
         }
@@ -227,18 +261,19 @@
             document.getElementById('music-widget').classList.remove('visible');
         }
 
+        // ========= UTILS =========
         function extractVideoId(url) {
+            if (!url) return null;
             const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/v\/|\/shorts\/)([a-zA-Z0-9_-]{11})/);
             return m ? m[1] : null;
         }
 
-        // Fallback: if YT API doesn't load in 5 sec
+        // ========= FALLBACK =========
         setTimeout(() => {
             if (!isPlayerReady) {
-                console.warn("YT API timeout, starting polling anyway");
+                console.warn('⚠ YT API timeout, starting anyway');
                 isPlayerReady = true;
-                startQueuePolling();
-                startControlPolling();
+                startPolling();
             }
         }, 5000);
     </script>
