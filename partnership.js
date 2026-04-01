@@ -28,7 +28,7 @@ slider.addEventListener('input',updateCalc);
 function fmt(n){return n.toLocaleString('ru-RU')}
 function updateCalc(){
     const subs=parseInt(slider.value),total=subs*490;
-    const str=Math.round(total*.5),ptr=Math.round(total*.3),inv=Math.round(total*.2);
+const str=Math.round(total*.6),ptr=Math.round(total*.25),inv=Math.round(total*.15);
     document.getElementById('calcSubs').textContent=fmt(subs);
     document.getElementById('calcTotal').textContent=fmt(total)+'₽';
     document.getElementById('calcStreamer').textContent=fmt(str)+'₽';
