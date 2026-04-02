@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎤 Арена Донатов — Мир Танков</title>
-    <meta name="description" content="Креативные конкурсы с голосованием — отправь свой донат и выиграй приз!">
+    <title>🗳️ Голосование — Мир Танков</title>
+    <meta name="description" content="Конкурсы с голосованием — зрители выберут лучшего!">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="css/donate-contest.css?v=1">
     <style>
         body { background: #0a0e14; color: #E8E6E3; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        .dc-page { padding-bottom: 100px; }
         .dc-back { display: inline-flex; align-items: center; gap: 6px; color: #5A6577; font-size: 0.75rem; cursor: pointer; padding: 8px 0; margin-bottom: 8px; transition: color 0.2s; }
         .dc-back:hover { color: #C8AA6E; }
     </style>
@@ -25,9 +26,9 @@
 
         <!-- Hero -->
         <div class="dc-hero">
-            <div class="dc-hero__icon">🎤</div>
-            <div class="dc-hero__title">АРЕНА ДОНАТОВ</div>
-            <div class="dc-hero__desc">Напиши креативный донат — зрители выберут лучшего!</div>
+            <div class="dc-hero__icon">🗳️</div>
+            <div class="dc-hero__title">ГОЛОСОВАНИЕ</div>
+            <div class="dc-hero__desc">Зрители выберут лучшего! Участвуй сколько угодно раз 🏆</div>
         </div>
 
         <!-- Admin: Create contest (hidden by default) -->
@@ -66,6 +67,13 @@
             <div class="dc-back" onclick="dcBackToList()">← К списку конкурсов</div>
             <div id="dc-detail-content"></div>
         </div>
+    </div>
+
+    <!-- Admin: Widget editor link (shown by JS for admin only) -->
+    <div id="dc-widget-editor-link" style="display:none;text-align:center;padding:12px 20px;">
+        <a href="dc-widget-editor.html" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:14px;color:#c084fc;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.2s;">
+            🎨 Конструктор виджета OBS
+        </a>
     </div>
 
     <!-- Bottom Nav -->

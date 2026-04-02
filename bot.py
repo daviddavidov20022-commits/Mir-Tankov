@@ -9708,13 +9708,7 @@ async def api_donate_contest_submit(request):
             if contest["status"] != "active":
                 return cors_response({"error": "Конкурс завершён"}, 400)
 
-            # Check if already submitted
-            existing = conn.execute(
-                "SELECT id FROM donate_contest_entries WHERE contest_id = ? AND telegram_id = ?",
-                (contest_id, telegram_id)
-            ).fetchone()
-            if existing:
-                return cors_response({"error": "Вы уже участвуете в этом конкурсе"}, 400)
+            # Multiple entries allowed — each costs entry_cost cheese
 
         entry_cost = contest["entry_cost"]
 

@@ -1,5 +1,5 @@
 /**
- * 🎤 Арена Донатов — Конкурсы с голосованием
+ * 🗳️ Голосование — Конкурсы с голосованием
  * JS для управления конкурсами, записями и голосованием
  */
 
@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isAdmin) {
         const adminBlock = document.getElementById('dc-admin-create');
         if (adminBlock) adminBlock.style.display = 'block';
+        const editorLink = document.getElementById('dc-widget-editor-link');
+        if (editorLink) editorLink.style.display = 'block';
     }
     dcLoadContests();
 });
@@ -141,7 +143,7 @@ async function dcLoadEntries() {
         dcMyVote = data.my_vote;
         const entries = data.entries || [];
         const isActive = c.status === 'active';
-        const iAlreadySubmitted = entries.some(e => String(e.telegram_id) === myTgId);
+        const myEntryCount = entries.filter(e => String(e.telegram_id) === myTgId).length;
 
         let html = '';
 
@@ -196,21 +198,17 @@ async function dcLoadEntries() {
                 </div>
             </div>`;
 
-        // Submit form (if active and not submitted)
-        if (isActive && !iAlreadySubmitted) {
+        // Submit form (always show if active - multiple entries allowed)
+        if (isActive) {
             html += `
+                ${myEntryCount > 0 ? `<div style="text-align:center;padding:8px;background:rgba(168,85,247,0.08);border-radius:10px;margin-bottom:10px;font-size:0.65rem;color:#c084fc">✅ У вас ${myEntryCount} ${myEntryCount === 1 ? 'заявка' : 'заявок'}. Отправьте ещё — увеличьте шансы!</div>` : ''}
                 <div class="dc-submit-form">
                     <div class="dc-submit-form__title">✍️ Ваш креативный донат</div>
                     <textarea class="dc-textarea" id="dc-message-input" maxlength="500" placeholder="Напишите шутку, стих, историю или любой креативный текст..."></textarea>
                     <div class="dc-char-count"><span id="dc-char-counter">0</span> / 500</div>
                     <button class="dc-submit-btn" onclick="dcSubmitEntry()">
-                        🎤 ОТПРАВИТЬ${c.entry_cost > 0 ? ` (${c.entry_cost} 🧀)` : ' (БЕСПЛАТНО)'}
+                        🗳️ ОТПРАВИТЬ${c.entry_cost > 0 ? ` (${c.entry_cost} 🧀)` : ' (БЕСПЛАТНО)'}
                     </button>
-                </div>`;
-        } else if (isActive && iAlreadySubmitted) {
-            html += `
-                <div style="text-align:center;padding:12px;background:rgba(34,197,94,0.08);border-radius:12px;margin-bottom:14px;font-size:0.7rem;color:#4ade80;font-weight:600">
-                    ✅ Вы уже участвуете! Ждите голосования
                 </div>`;
         }
 

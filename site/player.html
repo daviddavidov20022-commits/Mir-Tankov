@@ -104,6 +104,7 @@
         }
         .dh-card--ai .dh-card__border{background:linear-gradient(135deg,rgba(167,139,250,0.35),rgba(167,139,250,0.05),rgba(167,139,250,0.2));}
         .dh-card--music .dh-card__border{background:linear-gradient(135deg,rgba(96,165,250,0.35),rgba(96,165,250,0.05),rgba(96,165,250,0.2));}
+        .dh-card--contest .dh-card__border{background:linear-gradient(135deg,rgba(168,85,247,0.35),rgba(168,85,247,0.05),rgba(168,85,247,0.2));}
         .dh-card:hover .dh-card__border{opacity:1.5;}
 
         .dh-card__inner{
@@ -121,6 +122,7 @@
         .dh-card--donate .dh-card__glow{background:var(--cheese);}
         .dh-card--ai .dh-card__glow{background:var(--purple);}
         .dh-card--music .dh-card__glow{background:var(--blue);}
+        .dh-card--contest .dh-card__glow{background:#a855f7;}
         .dh-card:hover .dh-card__glow{opacity:.14;}
 
         .dh-card__head{display:flex;align-items:center;gap:16px;margin-bottom:12px;}
@@ -134,6 +136,7 @@
         .dh-card--donate .dh-card__icon-wrap{background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.15);}
         .dh-card--ai .dh-card__icon-wrap{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.15);}
         .dh-card--music .dh-card__icon-wrap{background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.15);}
+        .dh-card--contest .dh-card__icon-wrap{background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.15);}
 
         .dh-card__title{font-family:'Russo One';font-size:1rem;color:var(--text);margin-bottom:3px;letter-spacing:.5px;}
         .dh-card__desc{font-size:0.72rem;color:var(--text2);line-height:1.5;}
@@ -147,6 +150,7 @@
         .dh-card--donate .dh-card__price{background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.15);color:var(--cheese);}
         .dh-card--ai .dh-card__price{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.15);color:var(--purple);}
         .dh-card--music .dh-card__price{background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.15);color:var(--blue);}
+        .dh-card--contest .dh-card__price{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15);color:#a855f7;}
 
         .dh-card__arrow{
             width:32px;height:32px;border-radius:10px;
@@ -393,6 +397,25 @@
             </div>
             <div class="dh-card__footer">
                 <span class="dh-card__price">250 🧀</span>
+                <span class="dh-card__arrow">→</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VOTING CONTEST -->
+    <div class="dh-card dh-card--contest" onclick="openGame('contest.html')">
+        <div class="dh-card__border"></div>
+        <div class="dh-card__inner">
+            <div class="dh-card__glow"></div>
+            <div class="dh-card__head">
+                <div class="dh-card__icon-wrap">🗳️</div>
+                <div>
+                    <div class="dh-card__title">Голосование!</div>
+                    <div class="dh-card__desc">Зрители выберут лучшего! Участвуй сколько угодно раз — увеличь шансы на победу 🏆</div>
+                </div>
+            </div>
+            <div class="dh-card__footer">
+                <span class="dh-card__price">от 100 🧀</span>
                 <span class="dh-card__arrow">→</span>
             </div>
         </div>
