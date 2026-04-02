@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎤 Арена Донатов — Мир Танков</title>
+    <meta name="description" content="Креативные конкурсы с голосованием — отправь свой донат и выиграй приз!">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=50">
+    <link rel="stylesheet" href="css/donate-contest.css?v=1">
+    <style>
+        body { background: #0a0e14; color: #E8E6E3; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        .dc-back { display: inline-flex; align-items: center; gap: 6px; color: #5A6577; font-size: 0.75rem; cursor: pointer; padding: 8px 0; margin-bottom: 8px; transition: color 0.2s; }
+        .dc-back:hover { color: #C8AA6E; }
+    </style>
+</head>
+
+<body>
+    <div class="dc-page">
+        <!-- Back -->
+        <div class="dc-back" onclick="history.back()">← Назад</div>
+
+        <!-- Hero -->
+        <div class="dc-hero">
+            <div class="dc-hero__icon">🎤</div>
+            <div class="dc-hero__title">АРЕНА ДОНАТОВ</div>
+            <div class="dc-hero__desc">Напиши креативный донат — зрители выберут лучшего!</div>
+        </div>
+
+        <!-- Admin: Create contest (hidden by default) -->
+        <div id="dc-admin-create" style="display:none">
+            <div class="dc-admin-form">
+                <div style="font-family:'Russo One',sans-serif;font-size:0.85rem;color:#C8AA6E;margin-bottom:10px">👑 Создать конкурс</div>
+                
+                <label>Название *</label>
+                <input type="text" id="dc-create-title" placeholder="Битва за iPhone!">
+                
+                <label>Описание</label>
+                <textarea id="dc-create-desc" rows="2" placeholder="Опишите правила конкурса..."></textarea>
+                
+                <label>🎁 Приз</label>
+                <input type="text" id="dc-create-prize" placeholder="iPhone 16 Pro">
+                
+                <label>🧀 Стоимость участия</label>
+                <input type="number" id="dc-create-cost" value="100" min="0">
+
+                <label>⏱️ Длительность (минут)</label>
+                <input type="number" id="dc-create-duration" value="120" min="5">
+
+                <button class="dc-submit-btn" style="background:linear-gradient(135deg,#C8AA6E,#8B7340);margin-top:14px" onclick="dcCreateContest()">
+                    ➕ СОЗДАТЬ КОНКУРС
+                </button>
+            </div>
+        </div>
+
+        <!-- Contest list -->
+        <div id="dc-contest-list">
+            <div style="text-align:center;padding:20px;color:#5A6577">⏳ Загрузка конкурсов...</div>
+        </div>
+
+        <!-- Contest detail (hidden) -->
+        <div id="dc-contest-detail" style="display:none">
+            <div class="dc-back" onclick="dcBackToList()">← К списку конкурсов</div>
+            <div id="dc-detail-content"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">ГЛАВНАЯ</span>
+        </a>
+        <a href="challenges.html" class="nav-item">
+            <span class="nav-icon">⚔️</span>
+            <span class="nav-label">АРЕНА</span>
+        </a>
+        <a href="friends.html" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">ДРУЗЬЯ</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">ПРОФИЛЬ</span>
+        </a>
+    </nav>
+
+    <script src="js/donate-contest.js?v=1"></script>
+</body>
+
+</html>

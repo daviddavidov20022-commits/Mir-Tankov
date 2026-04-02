@@ -1,0 +1,491 @@
+/* ============================================================
+   🎤 АРЕНА ДОНАТОВ — Конкурсы с голосованием
+   ============================================================ */
+
+/* Page layout */
+.dc-page {
+    padding: 16px 12px;
+    min-height: 100vh;
+}
+
+/* Header hero */
+.dc-hero {
+    text-align: center;
+    padding: 24px 16px;
+    margin-bottom: 20px;
+    background: linear-gradient(145deg, rgba(168,85,247,0.08), rgba(200,170,110,0.04));
+    border: 1px solid rgba(168,85,247,0.15);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.dc-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 60%);
+    animation: dcPulse 6s ease-in-out infinite;
+}
+
+@keyframes dcPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+.dc-hero__icon {
+    font-size: 3rem;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 16px rgba(168,85,247,0.4));
+    position: relative;
+}
+
+.dc-hero__title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.2rem;
+    color: #E8E6E3;
+    margin-bottom: 4px;
+    position: relative;
+}
+
+.dc-hero__desc {
+    font-size: 0.7rem;
+    color: #5A6577;
+    position: relative;
+}
+
+/* Contest card */
+.dc-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(168,85,247,0.02));
+    border: 1px solid rgba(168,85,247,0.12);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dc-card--active {
+    border-color: rgba(168,85,247,0.3);
+}
+
+.dc-card--finished {
+    border-color: rgba(200,170,110,0.15);
+    opacity: 0.85;
+}
+
+.dc-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.dc-card__title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.9rem;
+    color: #E8E6E3;
+    margin-bottom: 2px;
+}
+
+.dc-card__prize {
+    font-size: 0.7rem;
+    color: #c084fc;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dc-card__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.55rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.dc-card__status--active {
+    background: rgba(34,197,94,0.12);
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,0.2);
+}
+
+.dc-card__status--finished {
+    background: rgba(200,170,110,0.12);
+    color: #C8AA6E;
+    border: 1px solid rgba(200,170,110,0.2);
+}
+
+/* Stats bar */
+.dc-stats {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.dc-stat {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+}
+
+.dc-stat__value {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1rem;
+    color: #E8E6E3;
+}
+
+.dc-stat__label {
+    font-size: 0.5rem;
+    color: #5A6577;
+    margin-top: 2px;
+}
+
+/* Timer */
+.dc-timer {
+    text-align: center;
+    padding: 10px;
+    background: linear-gradient(90deg, rgba(168,85,247,0.06), rgba(200,170,110,0.06));
+    border-radius: 12px;
+    margin-bottom: 14px;
+}
+
+.dc-timer__label {
+    font-size: 0.55rem;
+    color: #5A6577;
+    margin-bottom: 2px;
+}
+
+.dc-timer__value {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.2rem;
+    color: #c084fc;
+    letter-spacing: 2px;
+}
+
+/* Entry list */
+.dc-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.dc-entry {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s;
+}
+
+.dc-entry:hover {
+    border-color: rgba(168,85,247,0.15);
+}
+
+.dc-entry--voted {
+    border-color: rgba(168,85,247,0.3) !important;
+    background: rgba(168,85,247,0.06);
+}
+
+.dc-entry--winner {
+    border-color: rgba(200,170,110,0.4);
+    background: rgba(200,170,110,0.06);
+}
+
+.dc-entry__bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, rgba(168,85,247,0.1), rgba(168,85,247,0.02));
+    border-radius: 14px;
+    transition: width 0.5s ease;
+}
+
+.dc-entry__content {
+    position: relative;
+}
+
+.dc-entry__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.dc-entry__rank {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(168,85,247,0.15);
+    color: #c084fc;
+    font-size: 0.6rem;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+}
+
+.dc-entry__rank--1 {
+    background: linear-gradient(135deg, #f5d36e, #C8AA6E);
+    color: #0a0e14;
+}
+.dc-entry__rank--2 {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+    color: #0a0e14;
+}
+.dc-entry__rank--3 {
+    background: linear-gradient(135deg, #cd7f32, #a0522d);
+    color: #fff;
+}
+
+.dc-entry__author {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #E8E6E3;
+}
+
+.dc-entry__cheese {
+    font-size: 0.55rem;
+    color: #f5d36e;
+    font-weight: 600;
+}
+
+.dc-entry__message {
+    font-size: 0.75rem;
+    color: #b8c0cc;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.dc-entry__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dc-entry__votes {
+    font-size: 0.65rem;
+    color: #c084fc;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dc-vote-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(168,85,247,0.3);
+    background: rgba(168,85,247,0.08);
+    color: #c084fc;
+    font-size: 0.6rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+
+.dc-vote-btn:hover {
+    background: rgba(168,85,247,0.2);
+    box-shadow: 0 2px 12px rgba(168,85,247,0.2);
+}
+
+.dc-vote-btn--voted {
+    background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(168,85,247,0.15));
+    border-color: #a855f7;
+    color: #fff;
+}
+
+.dc-vote-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Submit form */
+.dc-submit-form {
+    background: linear-gradient(145deg, rgba(168,85,247,0.04), rgba(0,0,0,0.1));
+    border: 1px solid rgba(168,85,247,0.12);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.dc-submit-form__title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.8rem;
+    color: #c084fc;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dc-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(168,85,247,0.15);
+    background: rgba(0,0,0,0.3);
+    color: #E8E6E3;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.dc-textarea:focus {
+    border-color: #a855f7;
+    box-shadow: 0 0 12px rgba(168,85,247,0.15);
+}
+
+.dc-textarea::placeholder {
+    color: #3E4A5C;
+}
+
+.dc-submit-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #fff;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(168,85,247,0.25);
+    margin-top: 10px;
+}
+
+.dc-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 28px rgba(168,85,247,0.35);
+}
+
+.dc-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.dc-char-count {
+    text-align: right;
+    font-size: 0.55rem;
+    color: #5A6577;
+    margin-top: 4px;
+}
+
+/* Admin create form */
+.dc-admin-form {
+    background: linear-gradient(145deg, rgba(200,170,110,0.04), rgba(0,0,0,0.1));
+    border: 1px solid rgba(200,170,110,0.15);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.dc-admin-form label {
+    display: block;
+    font-size: 0.65rem;
+    color: #5A6577;
+    margin-bottom: 4px;
+    margin-top: 10px;
+}
+
+.dc-admin-form label:first-child {
+    margin-top: 0;
+}
+
+.dc-admin-form input,
+.dc-admin-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(200,170,110,0.15);
+    background: rgba(0,0,0,0.3);
+    color: #E8E6E3;
+    font-size: 0.8rem;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+}
+
+.dc-admin-form input:focus,
+.dc-admin-form textarea:focus {
+    border-color: #C8AA6E;
+}
+
+/* Empty state */
+.dc-empty {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.dc-empty__icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.dc-empty__title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.9rem;
+    color: #E8E6E3;
+    margin-bottom: 6px;
+}
+
+.dc-empty__desc {
+    font-size: 0.65rem;
+    color: #5A6577;
+}
+
+/* Winner banner */
+.dc-winner-banner {
+    text-align: center;
+    padding: 16px;
+    background: linear-gradient(145deg, rgba(200,170,110,0.08), rgba(168,85,247,0.04));
+    border: 1px solid rgba(200,170,110,0.2);
+    border-radius: 16px;
+    margin-bottom: 14px;
+}
+
+.dc-winner-banner__crown {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 0 12px rgba(245,190,11,0.4));
+}
+
+.dc-winner-banner__label {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.7rem;
+    color: #C8AA6E;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 4px 0;
+}
+
+.dc-winner-banner__name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.1rem;
+    color: #E8E6E3;
+}

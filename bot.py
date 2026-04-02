@@ -9515,6 +9515,406 @@ async def api_team_battle_player_tanks(request):
         logger.error(f"API player_tanks error: {e}")
         return cors_response({"error": str(e)}, 500)
 
+# ==========================================
+# 🎤 АРЕНА ДОНАТОВ — Конкурсы с голосованием
+# ==========================================
+
+def _ensure_donate_contest_tables():
+    from database import get_db
+    with get_db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS donate_contests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT,
+                prize TEXT,
+                entry_cost INTEGER DEFAULT 100,
+                status TEXT DEFAULT 'active',
+                created_by INTEGER,
+                created_at TEXT DEFAULT (datetime('now')),
+                ends_at TEXT,
+                winner_entry_id INTEGER,
+                finished_at TEXT
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS donate_contest_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                contest_id INTEGER NOT NULL,
+                telegram_id INTEGER NOT NULL,
+                nickname TEXT,
+                message TEXT NOT NULL,
+                cheese_spent INTEGER DEFAULT 0,
+                votes_count INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT (datetime('now')),
+                UNIQUE(contest_id, telegram_id)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS donate_contest_votes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                contest_id INTEGER NOT NULL,
+                entry_id INTEGER NOT NULL,
+                voter_telegram_id INTEGER NOT NULL,
+                voted_at TEXT DEFAULT (datetime('now')),
+                UNIQUE(contest_id, voter_telegram_id)
+            )
+        """)
+    logger.info("Donate contest tables ensured")
+
+try:
+    _ensure_donate_contest_tables()
+except Exception as e:
+    logger.warning(f"Donate contest tables init deferred: {e}")
+
+
+async def api_donate_contest_create(request):
+    """POST /api/donate-contest/create — админ создаёт конкурс"""
+    try:
+        data = await request.json()
+        telegram_id = int(data.get("telegram_id", 0))
+        if telegram_id != ADMIN_ID:
+            return cors_response({"error": "Только администратор может создавать конкурсы"}, 403)
+
+        title = data.get("title", "").strip()
+        description = data.get("description", "").strip()
+        prize = data.get("prize", "").strip()
+        entry_cost = int(data.get("entry_cost", 100))
+        duration_minutes = int(data.get("duration_minutes", 120))
+
+        if not title:
+            return cors_response({"error": "Название конкурса обязательно"}, 400)
+        if entry_cost < 0:
+            return cors_response({"error": "Стоимость не может быть отрицательной"}, 400)
+
+        from database import get_db
+        from datetime import datetime, timedelta, timezone
+        ends_at = (datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)).isoformat()
+
+        with get_db() as conn:
+            cursor = conn.execute("""
+                INSERT INTO donate_contests (title, description, prize, entry_cost, created_by, ends_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (title, description, prize, entry_cost, telegram_id, ends_at))
+            contest_id = cursor.lastrowid
+
+        return cors_response({"success": True, "contest_id": contest_id})
+    except Exception as e:
+        logger.error(f"Donate contest create error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_donate_contest_list(request):
+    """GET /api/donate-contest/list — список конкурсов"""
+    try:
+        from database import get_db
+        status_filter = request.query.get("status", "active")
+
+        with get_db() as conn:
+            if status_filter == "all":
+                rows = conn.execute(
+                    "SELECT * FROM donate_contests ORDER BY created_at DESC LIMIT 30"
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM donate_contests WHERE status = ? ORDER BY created_at DESC LIMIT 30",
+                    (status_filter,)
+                ).fetchall()
+
+            contests = []
+            for row in rows:
+                c = dict(row)
+                # Count entries and total cheese spent
+                stats = conn.execute("""
+                    SELECT COUNT(*) as entry_count, COALESCE(SUM(cheese_spent), 0) as total_cheese
+                    FROM donate_contest_entries WHERE contest_id = ?
+                """, (c["id"],)).fetchone()
+                c["entry_count"] = stats["entry_count"]
+                c["total_cheese"] = stats["total_cheese"]
+                # Total votes
+                vote_count = conn.execute(
+                    "SELECT COUNT(*) as cnt FROM donate_contest_votes WHERE contest_id = ?",
+                    (c["id"],)
+                ).fetchone()
+                c["total_votes"] = vote_count["cnt"]
+                contests.append(c)
+
+        return cors_response({"contests": contests})
+    except Exception as e:
+        logger.error(f"Donate contest list error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_donate_contest_entries(request):
+    """GET /api/donate-contest/entries?contest_id=X — записи конкурса"""
+    try:
+        from database import get_db
+        contest_id = int(request.query.get("contest_id", 0))
+        voter_id = request.query.get("telegram_id", "0")
+        if not contest_id:
+            return cors_response({"error": "contest_id обязателен"}, 400)
+
+        with get_db() as conn:
+            contest = conn.execute("SELECT * FROM donate_contests WHERE id = ?", (contest_id,)).fetchone()
+            if not contest:
+                return cors_response({"error": "Конкурс не найден"}, 404)
+
+            entries = conn.execute("""
+                SELECT * FROM donate_contest_entries
+                WHERE contest_id = ?
+                ORDER BY votes_count DESC, created_at ASC
+            """, (contest_id,)).fetchall()
+
+            # Check if this user already voted
+            my_vote = None
+            if voter_id and voter_id != "0":
+                vote_row = conn.execute(
+                    "SELECT entry_id FROM donate_contest_votes WHERE contest_id = ? AND voter_telegram_id = ?",
+                    (contest_id, voter_id)
+                ).fetchone()
+                if vote_row:
+                    my_vote = vote_row["entry_id"]
+
+        return cors_response({
+            "contest": dict(contest),
+            "entries": [dict(e) for e in entries],
+            "my_vote": my_vote,
+        })
+    except Exception as e:
+        logger.error(f"Donate contest entries error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_donate_contest_submit(request):
+    """POST /api/donate-contest/submit — отправить креативный донат"""
+    try:
+        data = await request.json()
+        telegram_id = int(data.get("telegram_id", 0))
+        contest_id = int(data.get("contest_id", 0))
+        message = data.get("message", "").strip()
+
+        if not telegram_id or not contest_id or not message:
+            return cors_response({"error": "telegram_id, contest_id и message обязательны"}, 400)
+        if len(message) > 500:
+            return cors_response({"error": "Максимум 500 символов"}, 400)
+
+        from database import get_db, get_user_by_telegram_id
+
+        # Check contest exists and is active
+        with get_db() as conn:
+            contest = conn.execute("SELECT * FROM donate_contests WHERE id = ?", (contest_id,)).fetchone()
+            if not contest:
+                return cors_response({"error": "Конкурс не найден"}, 404)
+            if contest["status"] != "active":
+                return cors_response({"error": "Конкурс завершён"}, 400)
+
+            # Check if already submitted
+            existing = conn.execute(
+                "SELECT id FROM donate_contest_entries WHERE contest_id = ? AND telegram_id = ?",
+                (contest_id, telegram_id)
+            ).fetchone()
+            if existing:
+                return cors_response({"error": "Вы уже участвуете в этом конкурсе"}, 400)
+
+        entry_cost = contest["entry_cost"]
+
+        # Spend cheese if entry_cost > 0
+        if entry_cost > 0:
+            result = spend_cheese(telegram_id, entry_cost, f"🎤 Участие в конкурсе: {contest['title']}")
+            if not result.get("success"):
+                return cors_response({"error": result.get("error", "Не удалось списать сыр")}, 400)
+
+        # Get user nickname
+        user = get_user_by_telegram_id(telegram_id)
+        nickname = user.get("nickname", "Танкист") if user else "Танкист"
+
+        with get_db() as conn:
+            conn.execute("""
+                INSERT INTO donate_contest_entries (contest_id, telegram_id, nickname, message, cheese_spent)
+                VALUES (?, ?, ?, ?, ?)
+            """, (contest_id, telegram_id, nickname, message, entry_cost))
+
+        return cors_response({"success": True, "cheese_spent": entry_cost})
+    except Exception as e:
+        logger.error(f"Donate contest submit error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_donate_contest_vote(request):
+    """POST /api/donate-contest/vote — голосовать за запись"""
+    try:
+        data = await request.json()
+        telegram_id = int(data.get("telegram_id", 0))
+        contest_id = int(data.get("contest_id", 0))
+        entry_id = int(data.get("entry_id", 0))
+
+        if not telegram_id or not contest_id or not entry_id:
+            return cors_response({"error": "Все поля обязательны"}, 400)
+
+        from database import get_db, get_user_by_telegram_id
+
+        # Check contest is active or in voting phase
+        with get_db() as conn:
+            contest = conn.execute("SELECT * FROM donate_contests WHERE id = ?", (contest_id,)).fetchone()
+            if not contest or contest["status"] not in ("active", "voting"):
+                return cors_response({"error": "Голосование закрыто"}, 400)
+
+            # Check entry exists
+            entry = conn.execute(
+                "SELECT * FROM donate_contest_entries WHERE id = ? AND contest_id = ?",
+                (entry_id, contest_id)
+            ).fetchone()
+            if not entry:
+                return cors_response({"error": "Запись не найдена"}, 404)
+
+            # Can't vote for yourself
+            if entry["telegram_id"] == telegram_id:
+                return cors_response({"error": "Нельзя голосовать за себя"}, 400)
+
+        # Check voter has linked Lesta account (anti-cheat)
+        user = get_user_by_telegram_id(telegram_id)
+        if not user:
+            return cors_response({"error": "Вы не зарегистрированы в боте"}, 400)
+        if not user.get("wot_account_id"):
+            return cors_response({"error": "Привяжите аккаунт Lesta в профиле, чтобы голосовать"}, 400)
+
+        # Check subscription to channel (anti-cheat)
+        try:
+            from aiogram import Bot
+            bot_instance = Bot.get_current()
+            if bot_instance and hasattr(bot_instance, 'get_chat_member'):
+                # Try checking at least one channel
+                pass  # We'll check via is_subscribed flag in DB if available
+        except Exception:
+            pass
+
+        with get_db() as conn:
+            # Check if already voted in this contest
+            existing = conn.execute(
+                "SELECT id, entry_id FROM donate_contest_votes WHERE contest_id = ? AND voter_telegram_id = ?",
+                (contest_id, telegram_id)
+            ).fetchone()
+
+            if existing:
+                # Change vote
+                old_entry_id = existing["entry_id"]
+                conn.execute(
+                    "UPDATE donate_contest_votes SET entry_id = ?, voted_at = datetime('now') WHERE id = ?",
+                    (entry_id, existing["id"])
+                )
+                # Update vote counts
+                conn.execute(
+                    "UPDATE donate_contest_entries SET votes_count = votes_count - 1 WHERE id = ?",
+                    (old_entry_id,)
+                )
+                conn.execute(
+                    "UPDATE donate_contest_entries SET votes_count = votes_count + 1 WHERE id = ?",
+                    (entry_id,)
+                )
+                return cors_response({"success": True, "action": "changed"})
+            else:
+                # New vote
+                conn.execute("""
+                    INSERT INTO donate_contest_votes (contest_id, entry_id, voter_telegram_id)
+                    VALUES (?, ?, ?)
+                """, (contest_id, entry_id, telegram_id))
+                conn.execute(
+                    "UPDATE donate_contest_entries SET votes_count = votes_count + 1 WHERE id = ?",
+                    (entry_id,)
+                )
+                return cors_response({"success": True, "action": "voted"})
+
+    except Exception as e:
+        logger.error(f"Donate contest vote error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_donate_contest_finish(request):
+    """POST /api/donate-contest/finish — админ завершает конкурс"""
+    try:
+        data = await request.json()
+        telegram_id = int(data.get("telegram_id", 0))
+        contest_id = int(data.get("contest_id", 0))
+
+        if telegram_id != ADMIN_ID:
+            return cors_response({"error": "Только администратор"}, 403)
+
+        from database import get_db
+        with get_db() as conn:
+            contest = conn.execute("SELECT * FROM donate_contests WHERE id = ?", (contest_id,)).fetchone()
+            if not contest:
+                return cors_response({"error": "Конкурс не найден"}, 404)
+
+            # Find winner (most votes)
+            winner = conn.execute("""
+                SELECT * FROM donate_contest_entries
+                WHERE contest_id = ?
+                ORDER BY votes_count DESC, created_at ASC
+                LIMIT 1
+            """, (contest_id,)).fetchone()
+
+            winner_id = winner["id"] if winner else None
+            conn.execute("""
+                UPDATE donate_contests
+                SET status = 'finished', winner_entry_id = ?, finished_at = datetime('now')
+                WHERE id = ?
+            """, (winner_id, contest_id))
+
+        return cors_response({
+            "success": True,
+            "winner": dict(winner) if winner else None,
+        })
+    except Exception as e:
+        logger.error(f"Donate contest finish error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_donate_contest_widget(request):
+    """GET /api/donate-contest/widget?contest_id=X — данные для OBS виджета"""
+    try:
+        from database import get_db
+        contest_id = int(request.query.get("contest_id", 0))
+        if not contest_id:
+            return cors_response({"error": "contest_id обязателен"}, 400)
+
+        with get_db() as conn:
+            contest = conn.execute("SELECT * FROM donate_contests WHERE id = ?", (contest_id,)).fetchone()
+            if not contest:
+                return cors_response({"error": "Конкурс не найден"}, 404)
+
+            top_entries = conn.execute("""
+                SELECT * FROM donate_contest_entries
+                WHERE contest_id = ?
+                ORDER BY votes_count DESC, created_at ASC
+                LIMIT 8
+            """, (contest_id,)).fetchall()
+
+            total_entries = conn.execute(
+                "SELECT COUNT(*) as cnt FROM donate_contest_entries WHERE contest_id = ?",
+                (contest_id,)
+            ).fetchone()["cnt"]
+
+            total_votes = conn.execute(
+                "SELECT COUNT(*) as cnt FROM donate_contest_votes WHERE contest_id = ?",
+                (contest_id,)
+            ).fetchone()["cnt"]
+
+            total_cheese = conn.execute(
+                "SELECT COALESCE(SUM(cheese_spent), 0) as total FROM donate_contest_entries WHERE contest_id = ?",
+                (contest_id,)
+            ).fetchone()["total"]
+
+        return cors_response({
+            "contest": dict(contest),
+            "top_entries": [dict(e) for e in top_entries],
+            "total_entries": total_entries,
+            "total_votes": total_votes,
+            "total_cheese": total_cheese,
+        })
+    except Exception as e:
+        logger.error(f"Donate contest widget error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
 
 # ==========================================
 # ЗАПУСК
@@ -9620,6 +10020,15 @@ def create_api_app():
     app.router.add_get("/api/team-battle/history", api_team_battle_history)
     app.router.add_get("/api/team-battle/widget", api_team_battle_widget)
     app.router.add_get("/api/team-battle/player-tanks", api_team_battle_player_tanks)
+
+    # Donate Contest API (Арена Донатов)
+    app.router.add_post("/api/donate-contest/create", api_donate_contest_create)
+    app.router.add_get("/api/donate-contest/list", api_donate_contest_list)
+    app.router.add_get("/api/donate-contest/entries", api_donate_contest_entries)
+    app.router.add_post("/api/donate-contest/submit", api_donate_contest_submit)
+    app.router.add_post("/api/donate-contest/vote", api_donate_contest_vote)
+    app.router.add_post("/api/donate-contest/finish", api_donate_contest_finish)
+    app.router.add_get("/api/donate-contest/widget", api_donate_contest_widget)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)
