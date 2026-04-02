@@ -8703,9 +8703,22 @@ def _ensure_team_battle_tables():
                 started_at TEXT,
                 finished_at TEXT,
                 winner_team TEXT,
+                tank_class TEXT,
+                tank_tier_filter INTEGER,
+                tank_id_filter INTEGER,
+                tank_name_filter TEXT,
                 created_at TEXT DEFAULT (datetime('now'))
             )
         """)
+        # Добавляем колонки если таблица уже есть
+        for col, default in [
+            ("tank_class", "TEXT"), ("tank_tier_filter", "INTEGER"),
+            ("tank_id_filter", "INTEGER"), ("tank_name_filter", "TEXT"),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE team_battles ADD COLUMN {col} {default}")
+            except Exception:
+                pass
         conn.execute("""
             CREATE TABLE IF NOT EXISTS team_battle_participants (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -8748,6 +8761,12 @@ async def api_team_battle_create(request):
         wot_nickname = data.get("wot_nickname", "").strip()
         wot_account_id = data.get("wot_account_id", "")
 
+        # Фильтры техники
+        tank_class = data.get("tank_class") or None
+        tank_tier_filter = int(data.get("tank_tier_filter") or 0) or None
+        tank_id_filter = int(data.get("tank_id_filter") or 0) or None
+        tank_name_filter = data.get("tank_name_filter") or None
+
         # Validation
         if team_size < 2 or team_size > 50:
             return cors_response({"error": "Размер команды: от 2 до 50"}, 400)
@@ -8785,10 +8804,12 @@ async def api_team_battle_create(request):
 
             cursor = conn.execute("""
                 INSERT INTO team_battles 
-                (creator_telegram_id, creator_nickname, condition, team_size, battles_count, wager, status, join_deadline)
-                VALUES (?, ?, ?, ?, ?, ?, 'waiting', ?)
+                (creator_telegram_id, creator_nickname, condition, team_size, battles_count, wager, status, join_deadline,
+                 tank_class, tank_tier_filter, tank_id_filter, tank_name_filter)
+                VALUES (?, ?, ?, ?, ?, ?, 'waiting', ?, ?, ?, ?, ?)
             """, (telegram_id, wot_nickname, condition, team_size, battles_count, wager,
-                  join_deadline.strftime('%Y-%m-%d %H:%M:%S')))
+                  join_deadline.strftime('%Y-%m-%d %H:%M:%S'),
+                  tank_class, tank_tier_filter, tank_id_filter, tank_name_filter))
             battle_id = cursor.lastrowid
 
             # Creator auto-joins team alpha and pays wager
@@ -8805,7 +8826,7 @@ async def api_team_battle_create(request):
             """, (battle_id, telegram_id, wot_nickname, account_id_int))
 
         # Freeze creator's wager
-        spend_cheese(telegram_id, wager, reason=f"team_battle_{battle_id}_wager")
+        spend_cheese(telegram_id, wager, f"⚔️ Ставка командный бой #{battle_id}")
 
         return cors_response({
             "success": True,
@@ -8950,7 +8971,7 @@ async def api_team_battle_join(request):
             """, (battle_id, telegram_id, wot_nickname, account_id_int, team))
 
         # Freeze wager
-        spend_cheese(telegram_id, wager, reason=f"team_battle_{battle_id}_wager")
+        spend_cheese(telegram_id, wager, f"⚔️ Ставка командный бой #{battle_id}")
 
         # Check if both teams are now full → auto-start
         with get_db() as conn:
@@ -9166,6 +9187,76 @@ def _tb_cancel_battle(conn, battle_id):
         logger.error(f"TB cancel error: {e}")
 
 
+async def api_team_battle_history(request):
+    """GET /api/team-battle/history?telegram_id=X — история командных боёв"""
+    try:
+        from database import get_db
+        telegram_id = request.query.get("telegram_id", "0")
+        
+        with get_db() as conn:
+            # Все завершённые бои (общая история)
+            rows = conn.execute("""
+                SELECT * FROM team_battles 
+                WHERE status IN ('finished', 'cancelled')
+                ORDER BY finished_at DESC
+                LIMIT 50
+            """).fetchall()
+
+            battles = []
+            for row in rows:
+                b = dict(row)
+                participants = conn.execute(
+                    "SELECT * FROM team_battle_participants WHERE battle_id = ? ORDER BY team, current_value DESC",
+                    (b["id"],)
+                ).fetchall()
+                b["team_alpha"] = [dict(p) for p in participants if p["team"] == "alpha"]
+                b["team_bravo"] = [dict(p) for p in participants if p["team"] == "bravo"]
+                b["total_participants"] = len(participants)
+                
+                # Проверяем участие конкретного игрока
+                if telegram_id and telegram_id != "0":
+                    b["my_participation"] = any(
+                        str(p["telegram_id"]) == str(telegram_id) for p in participants
+                    )
+                else:
+                    b["my_participation"] = False
+                battles.append(b)
+
+        return cors_response({"battles": battles})
+    except Exception as e:
+        logger.error(f"API team_battle_history error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_team_battle_widget(request):
+    """GET /api/team-battle/widget?battle_id=X — данные для OBS виджета"""
+    try:
+        from database import get_db
+        battle_id = int(request.query.get("battle_id", 0))
+        if not battle_id:
+            return cors_response({"error": "battle_id required"}, 400)
+
+        with get_db() as conn:
+            battle = conn.execute("SELECT * FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
+            if not battle:
+                return cors_response({"error": "Battle not found"}, 404)
+            
+            b = dict(battle)
+            participants = conn.execute(
+                "SELECT * FROM team_battle_participants WHERE battle_id = ? ORDER BY team, current_value DESC",
+                (battle_id,)
+            ).fetchall()
+            b["team_alpha"] = [dict(p) for p in participants if p["team"] == "alpha"]
+            b["team_bravo"] = [dict(p) for p in participants if p["team"] == "bravo"]
+            b["alpha_total"] = sum(p["current_value"] for p in participants if p["team"] == "alpha")
+            b["bravo_total"] = sum(p["current_value"] for p in participants if p["team"] == "bravo")
+
+        return cors_response({"battle": b})
+    except Exception as e:
+        logger.error(f"API team_battle_widget error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 # ==========================================
 # ЗАПУСК
 # ==========================================
@@ -9265,6 +9356,8 @@ def create_api_app():
     app.router.add_get("/api/team-battle/list", api_team_battle_list)
     app.router.add_post("/api/team-battle/join", api_team_battle_join)
     app.router.add_post("/api/team-battle/refresh", api_team_battle_refresh)
+    app.router.add_get("/api/team-battle/history", api_team_battle_history)
+    app.router.add_get("/api/team-battle/widget", api_team_battle_widget)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)

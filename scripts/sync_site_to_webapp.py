@@ -52,6 +52,7 @@ HTML_FILES = [
     'stats.html',
     'index.html',
     'profile.html',
+    'tb-widget.html',
 ]
 
 # ==========================================

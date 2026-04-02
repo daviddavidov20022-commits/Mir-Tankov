@@ -14,7 +14,7 @@ const TB_COND_MAP = {
 };
 
 // ── State ──
-let tbSubTab = 'browse'; // 'browse' | 'create' | 'my'
+let tbSubTab = 'browse'; // 'browse' | 'create' | 'my' | 'history'
 let tbBattles = [];
 let tbCreateState = {
     condition: 'damage',
@@ -23,6 +23,12 @@ let tbCreateState = {
     joinTime: 5,
     wager: 100,
     battles: 5,
+    // Tank filters
+    tankClass: null,
+    tankTier: null,
+    tankId: null,
+    tankName: null,
+    tankSearchResults: [],
 };
 let _tbRefreshInterval = null;
 
@@ -44,21 +50,19 @@ function tbInit() {
 // ============================================================
 // SUB-TABS
 // ============================================================
-function tbRenderSubTabs() {
-    // Sub-tabs are already in HTML, just wire them up
-}
-
 function tbSwitchSubTab(tab) {
     tbSubTab = tab;
     document.querySelectorAll('.tb-subtab').forEach(b => {
         b.classList.toggle('active', b.dataset.tab === tab);
     });
-    document.getElementById('tb-panel-browse').style.display = tab === 'browse' ? '' : 'none';
-    document.getElementById('tb-panel-create').style.display = tab === 'create' ? '' : 'none';
-    document.getElementById('tb-panel-my').style.display = tab === 'my' ? '' : 'none';
+    ['browse', 'create', 'my', 'history'].forEach(t => {
+        const el = document.getElementById('tb-panel-' + t);
+        if (el) el.style.display = tab === t ? '' : 'none';
+    });
 
     if (tab === 'browse' || tab === 'my') tbLoadBattles();
     if (tab === 'create') tbRenderCreateForm();
+    if (tab === 'history') tbLoadHistory();
 }
 
 // ============================================================
@@ -84,7 +88,6 @@ async function tbLoadBattles() {
                 </div>`;
         } else {
             browseEl.innerHTML = active.map(b => tbRenderBattleCard(b)).join('');
-            // Start timers
             active.forEach(b => tbStartCardTimer(b));
         }
 
@@ -112,9 +115,37 @@ async function tbLoadBattles() {
 }
 
 // ============================================================
+// HISTORY — Load finished battles
+// ============================================================
+async function tbLoadHistory() {
+    const el = document.getElementById('tb-history-list');
+    if (!el) return;
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/team-battle/history?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        const battles = data.battles || [];
+
+        if (battles.length === 0) {
+            el.innerHTML = `
+                <div class="tb-empty">
+                    <div class="tb-empty__icon">📜</div>
+                    <div class="tb-empty__title">Нет истории</div>
+                    <div class="tb-empty__desc">Здесь будут завершённые командные бои</div>
+                </div>`;
+            return;
+        }
+
+        el.innerHTML = battles.map(b => tbRenderBattleCard(b, false, true)).join('');
+    } catch (e) {
+        el.innerHTML = `<div class="tb-empty"><div class="tb-empty__icon">⚠️</div><div class="tb-empty__desc">Ошибка загрузки истории</div></div>`;
+    }
+}
+
+// ============================================================
 // RENDER BATTLE CARD
 // ============================================================
-function tbRenderBattleCard(b, isMy = false) {
+function tbRenderBattleCard(b, isMy = false, isHistory = false) {
     const cond = TB_COND_MAP[b.condition] || TB_COND_MAP.damage;
     const ts = b.team_size || 5;
     const alphaPlayers = b.team_alpha || [];
@@ -136,8 +167,16 @@ function tbRenderBattleCard(b, isMy = false) {
     const isActive = b.status === 'active';
     const isFinished = b.status === 'finished';
 
-    // Timer stuff
     const timerId = `tb-timer-${b.id}`;
+
+    // Tank filter info
+    let tankFilterHtml = '';
+    if (b.tank_name_filter) {
+        tankFilterHtml = `<span style="color:#a855f7">🎯 ${b.tank_name_filter}</span>`;
+    } else if (b.tank_tier_filter) {
+        const tierNames = {1:'I',2:'II',3:'III',4:'IV',5:'V',6:'VI',7:'VII',8:'VIII',9:'IX',10:'X'};
+        tankFilterHtml = `<span style="color:#a855f7">Уровень ${tierNames[b.tank_tier_filter] || b.tank_tier_filter}</span>`;
+    }
 
     // Build player rows
     const renderPlayers = (players, maxSlots, teamClass) => {
@@ -150,7 +189,6 @@ function tbRenderBattleCard(b, isMy = false) {
                 <span class="tb-player__value">${isActive || isFinished ? (p.current_value || 0).toLocaleString('ru') : '—'}</span>
             </div>`;
         }
-        // Empty slots
         for (let i = players.length; i < maxSlots; i++) {
             html += `<div class="tb-slot-empty">Свободно</div>`;
         }
@@ -199,6 +237,18 @@ function tbRenderBattleCard(b, isMy = false) {
             </div>`;
     }
 
+    // Widget link
+    let widgetHtml = '';
+    if ((isActive || isWaiting) && iAmIn) {
+        const widgetUrl = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}tb-widget.html?battle_id=${b.id}`;
+        widgetHtml = `
+            <div style="padding:0 10px 10px">
+                <button onclick="tbCopyWidgetLink(${b.id})" style="width:100%;padding:8px;border-radius:8px;border:1px dashed rgba(200,170,110,0.2);background:rgba(200,170,110,0.04);color:#C8AA6E;font-size:0.6rem;font-weight:700;cursor:pointer">
+                    📺 Скопировать виджет OBS
+                </button>
+            </div>`;
+    }
+
     return `
         <div class="tb-card" id="tb-card-${b.id}">
             <div class="tb-card__header">
@@ -209,6 +259,7 @@ function tbRenderBattleCard(b, isMy = false) {
                         <span class="tb-status tb-status--${b.status}">${
                             isWaiting ? '⏳ Набор' : (isActive ? '🔥 Бой' : '🏆 Итоги')
                         }</span>
+                        ${tankFilterHtml}
                         ${b.creator_nickname ? `<span class="tb-creator-badge">👤 ${b.creator_nickname}</span>` : ''}
                     </div>
                 </div>
@@ -271,6 +322,7 @@ function tbRenderBattleCard(b, isMy = false) {
             </div>
 
             ${actionsHtml}
+            ${widgetHtml}
             ${resultHtml}
         </div>`;
 }
@@ -334,7 +386,28 @@ async function tbJoinBattle(battleId, team) {
 }
 
 // ============================================================
-// CREATE FORM
+// COPY WIDGET LINK
+// ============================================================
+function tbCopyWidgetLink(battleId) {
+    // Use GitHub Pages URL for the widget
+    const base = 'https://daviddavidov20022-commits.github.io/Mir-Tankov/site';
+    const url = `${base}/tb-widget.html?battle_id=${battleId}`;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('📋 Ссылка скопирована! Добавьте в OBS → Браузер');
+    }).catch(() => {
+        // Fallback
+        const input = document.createElement('input');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast('📋 Ссылка скопирована!');
+    });
+}
+
+// ============================================================
+// CREATE FORM  (with tank filter)
 // ============================================================
 function tbRenderCreateForm() {
     const st = tbCreateState;
@@ -356,44 +429,72 @@ function tbRenderCreateForm() {
             </div>
         </div>
 
-        <!-- Step 2: Team size -->
+        <!-- Step 2: Tank filter -->
         <div class="tb-create-step">
             <div class="tb-step-header">
                 <div class="tb-step-num">2</div>
+                <div class="tb-step-title">Техника <span style="color:#5A6577;font-size:0.6rem;font-family:Inter,sans-serif">(необязательно)</span></div>
+            </div>
+            <div style="margin-bottom:8px">
+                <input type="text" id="tbTankSearch" placeholder="🔍 Поиск танка (например ИС-7, Maus)..."
+                    style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(200,170,110,0.15);background:rgba(0,0,0,0.3);color:#E8E6E3;font-size:0.75rem;outline:none;box-sizing:border-box;font-family:Inter,sans-serif"
+                    oninput="tbSearchTank(this.value)">
+                <div id="tbTankResults" style="margin-top:6px;max-height:140px;overflow-y:auto"></div>
+            </div>
+            ${st.tankName ? `
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.2);border-radius:10px">
+                    <span style="font-size:0.7rem;color:#a855f7;font-weight:700">🎯 ${st.tankName}</span>
+                    <button onclick="tbClearTank()" style="margin-left:auto;background:none;border:none;color:#f87171;cursor:pointer;font-size:0.7rem">✕</button>
+                </div>
+            ` : ''}
+            <div style="margin-top:8px">
+                <div style="font-size:0.6rem;color:#5A6577;margin-bottom:6px">Или фильтр по уровню:</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                    ${[0,6,7,8,9,10].map(t => {
+                        const label = t === 0 ? 'Все' : ['','I','II','III','IV','V','VI','VII','VIII','IX','X'][t];
+                        return `<button class="tb-timer-btn ${(st.tankTier||0) === t ? 'active' : ''}" onclick="tbSetTankTier(${t})" style="min-width:40px;padding:6px">${label}</button>`;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Team size -->
+        <div class="tb-create-step">
+            <div class="tb-step-header">
+                <div class="tb-step-num">3</div>
                 <div class="tb-step-title">Размер команд</div>
             </div>
             <div class="tb-size-selector">
                 ${[2, 3, 5, 10, 15, 20].map(s => `
-                    <button class="tb-size-btn ${st.teamSize === s ? 'active' : ''}" onclick="tbSetSize(${s})">${s}×${s}</button>
+                    <button class="tb-size-btn ${st.teamSize === s && !st.customSize ? 'active' : ''}" onclick="tbSetSize(${s})">${s}×${s}</button>
                 `).join('')}
             </div>
             <div class="tb-size-custom">
                 <span>Своё:</span>
                 <input type="number" id="tbCustomSize" min="2" max="50" placeholder="2-50"
                     value="${st.customSize || ''}" onchange="tbSetCustomSize(this.value)">
-                <span style="color:#C8AA6E">на</span>
-                <input type="number" id="tbCustomSize2" min="2" max="50" placeholder="2-50"
-                    value="${st.customSize || ''}" disabled style="opacity:0.5">
+                <span style="color:#C8AA6E">×</span>
+                <input type="number" value="${st.customSize || st.teamSize}" disabled style="width:60px;padding:8px 10px;border-radius:8px;border:1px solid rgba(200,170,110,0.15);background:rgba(0,0,0,0.3);color:#5A6577;font-size:0.8rem;text-align:center;opacity:0.5;font-family:Inter,sans-serif">
             </div>
         </div>
 
-        <!-- Step 3: Battles count -->
+        <!-- Step 4: Battles count -->
         <div class="tb-create-step">
             <div class="tb-step-header">
-                <div class="tb-step-num">3</div>
+                <div class="tb-step-num">4</div>
                 <div class="tb-step-title">Количество боёв</div>
             </div>
             <div class="tb-battles-selector">
-                ${[1, 3, 5, 10].map(n => `
+                ${[1, 3, 5, 10, 20].map(n => `
                     <button class="tb-battles-btn ${st.battles === n ? 'active' : ''}" onclick="tbSetBattles(${n})">${n}</button>
                 `).join('')}
             </div>
         </div>
 
-        <!-- Step 4: Join time -->
+        <!-- Step 5: Join time -->
         <div class="tb-create-step">
             <div class="tb-step-header">
-                <div class="tb-step-num">4</div>
+                <div class="tb-step-num">5</div>
                 <div class="tb-step-title">Время на вступление</div>
             </div>
             <div class="tb-timer-presets">
@@ -403,10 +504,10 @@ function tbRenderCreateForm() {
             </div>
         </div>
 
-        <!-- Step 5: Wager -->
+        <!-- Step 6: Wager -->
         <div class="tb-create-step">
             <div class="tb-step-header">
-                <div class="tb-step-num">5</div>
+                <div class="tb-step-num">6</div>
                 <div class="tb-step-title">Ставка 🧀 (каждый игрок)</div>
             </div>
             <div class="tb-wager-wrap">
@@ -435,6 +536,14 @@ function tbRenderCreateForm() {
                     <span style="color:#5A6577">Условие</span>
                     <span style="color:#E8E6E3;font-weight:700">${TB_COND_MAP[st.condition].icon} ${TB_COND_MAP[st.condition].name}</span>
                 </div>
+                ${st.tankName ? `<div style="display:flex;justify-content:space-between">
+                    <span style="color:#5A6577">Техника</span>
+                    <span style="color:#a855f7;font-weight:700">🎯 ${st.tankName}</span>
+                </div>` : ''}
+                ${st.tankTier ? `<div style="display:flex;justify-content:space-between">
+                    <span style="color:#5A6577">Уровень</span>
+                    <span style="color:#a855f7;font-weight:700">${['','I','II','III','IV','V','VI','VII','VIII','IX','X'][st.tankTier]}</span>
+                </div>` : ''}
                 <div style="display:flex;justify-content:space-between">
                     <span style="color:#5A6577">Команды</span>
                     <span style="color:#E8E6E3;font-weight:700">${st.teamSize} × ${st.teamSize}</span>
@@ -481,18 +590,12 @@ function tbSetCustomSize(val) {
     if (n >= 2 && n <= 50) {
         tbCreateState.teamSize = n;
         tbCreateState.customSize = n;
-        // Deselect presets
-        document.querySelectorAll('.tb-size-btn').forEach(b => b.classList.remove('active'));
-        // Update second readonly input
-        const el2 = document.getElementById('tbCustomSize2');
-        if (el2) el2.value = n;
+        tbRenderCreateForm();
     }
 }
 
 function tbSetBattles(n) {
     tbCreateState.battles = n;
-    document.querySelectorAll('.tb-battles-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.tb-battles-btn[onclick="tbSetBattles(${n})"]`)?.classList.add('active');
     tbRenderCreateForm();
 }
 
@@ -504,8 +607,59 @@ function tbSetJoinTime(m) {
 function tbSetWager(w) {
     if (w < 50) w = 50;
     tbCreateState.wager = w;
-    const input = document.getElementById('tbWagerInput');
-    if (input) input.value = w;
+    tbRenderCreateForm();
+}
+
+// Tank search
+let _tbSearchTimeout = null;
+async function tbSearchTank(query) {
+    clearTimeout(_tbSearchTimeout);
+    const el = document.getElementById('tbTankResults');
+    if (!query || query.length < 2) {
+        el.innerHTML = '';
+        return;
+    }
+    _tbSearchTimeout = setTimeout(async () => {
+        try {
+            const resp = await fetch(`${BOT_API_URL}/api/global-challenge/search-tanks?search=${encodeURIComponent(query)}&limit=8`);
+            const data = await resp.json();
+            const tanks = data.tanks || [];
+            if (tanks.length === 0) {
+                el.innerHTML = `<div style="font-size:0.6rem;color:#5A6577;padding:6px">Не найдено</div>`;
+                return;
+            }
+            el.innerHTML = tanks.map(t => `
+                <div onclick="tbSelectTank(${t.tank_id}, '${(t.name||'').replace(/'/g,"\\'")}', ${t.tier || 0})"
+                    style="padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:0.65rem;transition:background 0.15s;border:1px solid transparent"
+                    onmouseover="this.style.background='rgba(200,170,110,0.08)';this.style.borderColor='rgba(200,170,110,0.15)'"
+                    onmouseout="this.style.background='none';this.style.borderColor='transparent'">
+                    <span style="color:#E8E6E3;font-weight:600">${t.name}</span>
+                    <span style="color:#5A6577">Ур. ${t.tier || '?'}</span>
+                </div>
+            `).join('');
+        } catch (e) {
+            el.innerHTML = `<div style="font-size:0.6rem;color:#f87171;padding:6px">Ошибка поиска</div>`;
+        }
+    }, 300);
+}
+
+function tbSelectTank(tankId, tankName, tier) {
+    tbCreateState.tankId = tankId;
+    tbCreateState.tankName = tankName;
+    tbCreateState.tankTier = tier || null;
+    tbRenderCreateForm();
+}
+
+function tbClearTank() {
+    tbCreateState.tankId = null;
+    tbCreateState.tankName = null;
+    tbRenderCreateForm();
+}
+
+function tbSetTankTier(tier) {
+    tbCreateState.tankTier = tier || null;
+    tbCreateState.tankId = null;
+    tbCreateState.tankName = null;
     tbRenderCreateForm();
 }
 
@@ -542,6 +696,9 @@ async function tbCreateBattle() {
                 wager: st.wager,
                 wot_nickname: localStorage.getItem('wot_nickname') || '',
                 wot_account_id: localStorage.getItem('wot_account_id') || '',
+                tank_id_filter: st.tankId || 0,
+                tank_name_filter: st.tankName || '',
+                tank_tier_filter: st.tankTier || 0,
             })
         });
         const data = await resp.json();

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Battle Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            color: #E8E6E3;
+            overflow: hidden;
+        }
+
+        .widget {
+            width: 420px;
+            background: linear-gradient(145deg, rgba(10,14,20,0.95), rgba(15,20,30,0.95));
+            border: 1px solid rgba(200,170,110,0.15);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        /* Header */
+        .w-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(200,170,110,0.1);
+        }
+        .w-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 14px;
+            color: #C8AA6E;
+        }
+        .w-status {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .w-status--active {
+            background: rgba(34,197,94,0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+        .w-status--waiting {
+            background: rgba(245,190,11,0.15);
+            color: #f5be0b;
+            border: 1px solid rgba(245,190,11,0.2);
+        }
+        .w-status--finished {
+            background: rgba(200,170,110,0.15);
+            color: #C8AA6E;
+        }
+
+        /* Score bar */
+        .w-scorebar {
+            display: flex;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            background: rgba(0,0,0,0.4);
+        }
+        .w-scorebar__alpha {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 1s ease;
+        }
+        .w-scorebar__bravo {
+            background: linear-gradient(90deg, #f87171, #ef4444);
+            transition: width 1s ease;
+        }
+
+        /* Score totals */
+        .w-scores {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .w-team-score {
+            text-align: center;
+        }
+        .w-team-score__label {
+            font-family: 'Russo One', sans-serif;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        .w-team-score__value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 22px;
+            margin-top: 2px;
+        }
+        .w-alpha .w-team-score__label { color: #60a5fa; }
+        .w-alpha .w-team-score__value { color: #60a5fa; }
+        .w-bravo .w-team-score__label { color: #f87171; }
+        .w-bravo .w-team-score__value { color: #f87171; }
+        .w-vs {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #C8AA6E, #8B7340);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Russo One', sans-serif;
+            font-size: 11px;
+            color: #0a0e14;
+            flex-shrink: 0;
+        }
+
+        /* Teams columns */
+        .w-teams {
+            display: flex;
+            gap: 8px;
+        }
+        .w-team-col {
+            flex: 1;
+            border-radius: 10px;
+            padding: 8px;
+        }
+        .w-team-col--alpha {
+            background: rgba(59,130,246,0.06);
+            border: 1px solid rgba(59,130,246,0.12);
+        }
+        .w-team-col--bravo {
+            background: rgba(239,68,68,0.06);
+            border: 1px solid rgba(239,68,68,0.12);
+        }
+        .w-player {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 6px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        .w-player:nth-child(odd) {
+            background: rgba(0,0,0,0.15);
+        }
+        .w-player__name {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100px;
+        }
+        .w-player__val {
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            color: #C8AA6E;
+        }
+
+        /* Bet info */
+        .w-bet {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 11px;
+            color: #5A6577;
+        }
+        .w-bet b {
+            color: #f5d36e;
+        }
+
+        /* Winner */
+        .w-winner {
+            text-align: center;
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 10px;
+            background: linear-gradient(145deg, rgba(200,170,110,0.1), rgba(0,0,0,0.2));
+        }
+        .w-winner__text {
+            font-family: 'Russo One', sans-serif;
+            font-size: 14px;
+        }
+        .w-winner--alpha .w-winner__text { color: #60a5fa; }
+        .w-winner--bravo .w-winner__text { color: #f87171; }
+
+        /* Condition badge */
+        .w-cond {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: #8a94a6;
+        }
+
+        /* Loading */
+        .w-loading {
+            text-align: center;
+            padding: 40px;
+            color: #5A6577;
+            font-size: 13px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget" id="widget">
+        <div class="w-loading" style="animation:pulse 1.5s infinite">⏳ Загрузка...</div>
+    </div>
+
+    <script>
+        // Get params
+        const params = new URLSearchParams(location.search);
+        const battleId = params.get('battle_id');
+        const BOT_API_URL = params.get('api') || 'https://mir-tankov-production.up.railway.app';
+        const refreshRate = parseInt(params.get('refresh') || '10') * 1000;
+
+        // Theme params
+        const theme = params.get('theme') || 'dark';
+        const hideNames = params.get('hide_names') === '1';
+        const compact = params.get('compact') === '1';
+
+        if (theme === 'light') {
+            document.querySelector('.widget').style.background = 'rgba(255,255,255,0.95)';
+            document.body.style.color = '#1a1a2e';
+        }
+
+        const COND_MAP = {
+            damage: '💥 Урон', frags: '🎯 Фраги', xp: '⭐ Опыт',
+            spotting: '👁 Засвет', blocked: '🛡️ Блок', wins: '🏆 Победы'
+        };
+
+        async function loadWidget() {
+            if (!battleId) {
+                document.getElementById('widget').innerHTML = '<div class="w-loading">❌ battle_id не указан</div>';
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${BOT_API_URL}/api/team-battle/widget?battle_id=${battleId}`);
+                const data = await resp.json();
+                if (data.error) {
+                    document.getElementById('widget').innerHTML = `<div class="w-loading">❌ ${data.error}</div>`;
+                    return;
+                }
+
+                const b = data.battle;
+                const alpha = b.team_alpha || [];
+                const bravo = b.team_bravo || [];
+                const aTotal = b.alpha_total || 0;
+                const bTotal = b.bravo_total || 0;
+                const total = aTotal + bTotal || 1;
+                const aPct = Math.round((aTotal / total) * 100);
+                const bPct = 100 - aPct;
+                const isActive = b.status === 'active';
+                const isFinished = b.status === 'finished';
+                const isWaiting = b.status === 'waiting';
+                const cond = COND_MAP[b.condition] || '💥 Урон';
+                const totalPot = (b.wager || 0) * (alpha.length + bravo.length);
+
+                let winnerHtml = '';
+                if (isFinished && b.winner_team) {
+                    const wName = b.winner_team === 'alpha' ? '🔵 АЛЬФА' : '🔴 БРАВО';
+                    winnerHtml = `
+                        <div class="w-winner w-winner--${b.winner_team}">
+                            <div class="w-winner__text">👑 ${wName} ПОБЕДИЛА!</div>
+                        </div>`;
+                }
+
+                const renderPlayers = (players) => {
+                    if (players.length === 0) return '<div style="font-size:11px;color:#3E4A5C;text-align:center;padding:8px">Пусто</div>';
+                    return players.map(p => `
+                        <div class="w-player">
+                            <span class="w-player__name">${hideNames ? '•••' : (p.nickname || 'Танкист')}</span>
+                            <span class="w-player__val">${(p.current_value || 0).toLocaleString('ru')}</span>
+                        </div>
+                    `).join('');
+                };
+
+                document.getElementById('widget').innerHTML = `
+                    <div class="w-header">
+                        <div>
+                            <div class="w-title">⚔️ ${b.team_size}×${b.team_size} ${cond}</div>
+                            ${b.tank_name_filter ? `<div class="w-cond">🎯 ${b.tank_name_filter}</div>` : ''}
+                        </div>
+                        <div class="w-status w-status--${b.status}">
+                            ${isActive ? '🔥 БОЙ' : (isWaiting ? '⏳ НАБОР' : '🏆 ИТОГИ')}
+                        </div>
+                    </div>
+
+                    ${isActive || isFinished ? `
+                        <div class="w-scorebar">
+                            <div class="w-scorebar__alpha" style="width:${aPct}%"></div>
+                            <div class="w-scorebar__bravo" style="width:${bPct}%"></div>
+                        </div>
+                    ` : ''}
+
+                    <div class="w-scores">
+                        <div class="w-team-score w-alpha">
+                            <div class="w-team-score__label">🔵 АЛЬФА</div>
+                            <div class="w-team-score__value">${aTotal.toLocaleString('ru')}</div>
+                        </div>
+                        <div class="w-vs">VS</div>
+                        <div class="w-team-score w-bravo">
+                            <div class="w-team-score__label">🔴 БРАВО</div>
+                            <div class="w-team-score__value">${bTotal.toLocaleString('ru')}</div>
+                        </div>
+                    </div>
+
+                    <div class="w-teams">
+                        <div class="w-team-col w-team-col--alpha">
+                            ${renderPlayers(alpha)}
+                        </div>
+                        <div class="w-team-col w-team-col--bravo">
+                            ${renderPlayers(bravo)}
+                        </div>
+                    </div>
+
+                    <div class="w-bet">
+                        Ставка: <b>🧀 ${b.wager || 0}</b> · Банк: <b>🧀 ${totalPot.toLocaleString('ru')}</b> · Боёв: ${b.battles_count || 5}
+                    </div>
+
+                    ${winnerHtml}
+                `;
+            } catch (e) {
+                console.error('Widget error:', e);
+            }
+        }
+
+        // Initial load
+        loadWidget();
+        // Periodic refresh
+        setInterval(loadWidget, refreshRate);
+    </script>
+</body>
+</html>

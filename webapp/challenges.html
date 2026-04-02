@@ -963,6 +963,7 @@
                 <button class="tb-subtab active" data-tab="browse" onclick="tbSwitchSubTab('browse')">🔥 Активные</button>
                 <button class="tb-subtab" data-tab="create" onclick="tbSwitchSubTab('create')">➕ Создать</button>
                 <button class="tb-subtab" data-tab="my" onclick="tbSwitchSubTab('my')">📋 Мои</button>
+                <button class="tb-subtab" data-tab="history" onclick="tbSwitchSubTab('history')">📜 История</button>
             </div>
 
             <!-- How it works -->
@@ -1004,6 +1005,17 @@
                 <div class="tb-section-label">📋 Мои командные бои</div>
                 <div class="tb-list" id="tb-my-list">
                     <div class="tb-skeleton">
+                        <div class="tb-skeleton__card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORY panel -->
+            <div id="tb-panel-history" style="display:none">
+                <div class="tb-section-label">📜 История командных боёв</div>
+                <div class="tb-list" id="tb-history-list">
+                    <div class="tb-skeleton">
+                        <div class="tb-skeleton__card"></div>
                         <div class="tb-skeleton__card"></div>
                     </div>
                 </div>
