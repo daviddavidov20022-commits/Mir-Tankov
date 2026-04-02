@@ -767,3 +767,72 @@
     font-size: 0.5rem;
     font-weight: 700;
 }
+
+/* ── Player Detail Modal ── */
+#tb-player-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+.tb-modal-backdrop {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+}
+
+.tb-modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: linear-gradient(145deg, #1a2032, #0d1117);
+    border: 1px solid rgba(200,170,110,0.15);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.tb-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(200,170,110,0.1);
+}
+
+.tb-modal-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    color: #E8E6E3;
+}
+
+.tb-modal-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(200,170,110,0.15);
+    background: rgba(0,0,0,0.3);
+    color: #5A6577;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.tb-modal-close:hover {
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+    border-color: rgba(239,68,68,0.3);
+}
+
+.tb-modal-body {
+    padding: 16px 20px;
+}

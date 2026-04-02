@@ -8742,6 +8742,26 @@ def _ensure_team_battle_tables():
             conn.execute("ALTER TABLE team_battle_participants ADD COLUMN is_ready INTEGER DEFAULT 0")
         except Exception:
             pass
+        try:
+            conn.execute("ALTER TABLE team_battle_participants ADD COLUMN baseline_tank_json TEXT")
+        except Exception:
+            pass
+
+        # Per-tank battle logs
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS team_battle_tank_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                battle_id INTEGER NOT NULL,
+                telegram_id INTEGER NOT NULL,
+                tank_id INTEGER NOT NULL,
+                tank_name TEXT,
+                tank_tier INTEGER DEFAULT 0,
+                tank_type TEXT,
+                stat_value INTEGER DEFAULT 0,
+                battles_count INTEGER DEFAULT 0,
+                UNIQUE(battle_id, telegram_id, tank_id)
+            )
+        """)
     logger.info("Team battle tables ensured")
 
 # Ensure tables exist on import
@@ -8902,8 +8922,30 @@ async def api_team_battle_list(request):
                     "SELECT * FROM team_battle_participants WHERE battle_id = ? ORDER BY team, joined_at",
                     (b["id"],)
                 ).fetchall()
-                b["team_alpha"] = [dict(p) for p in participants if p["team"] == "alpha"]
-                b["team_bravo"] = [dict(p) for p in participants if p["team"] == "bravo"]
+
+                # Get tank logs for this battle
+                tank_logs = conn.execute(
+                    "SELECT * FROM team_battle_tank_logs WHERE battle_id = ? ORDER BY stat_value DESC",
+                    (b["id"],)
+                ).fetchall()
+
+                # Build tank logs per player
+                player_tanks = {}
+                for tl in tank_logs:
+                    key = str(tl["telegram_id"])
+                    if key not in player_tanks:
+                        player_tanks[key] = []
+                    player_tanks[key].append(dict(tl))
+
+                for p in participants:
+                    pd = dict(p)
+                    pd.pop("baseline_tank_json", None)  # Don't send huge JSON to client
+                    pd["tank_logs"] = player_tanks.get(str(pd["telegram_id"]), [])
+                    if pd["team"] == "alpha":
+                        b.setdefault("team_alpha", []).append(pd)
+                    else:
+                        b.setdefault("team_bravo", []).append(pd)
+
                 battles.append(b)
 
         return cors_response({"battles": battles})
@@ -9080,9 +9122,10 @@ async def api_team_battle_refresh(request):
 
 
 async def _tb_start_battle(battle_id):
-    """Запуск боя: зафиксировать baselines для всех участников"""
+    """Запуск боя: зафиксировать per-tank baselines для античита"""
     from database import get_db
     from datetime import datetime, timezone
+    import json
 
     with get_db() as conn:
         battle = conn.execute("SELECT * FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
@@ -9095,53 +9138,87 @@ async def _tb_start_battle(battle_id):
         ).fetchall()
 
     condition = battle["condition"]
+    STAT_FIELD_MAP = {
+        'damage': 'damage_dealt', 'frags': 'frags', 'xp': 'xp',
+        'spotting': 'spotted', 'blocked': 'damage_received', 'wins': 'wins',
+    }
+    stat_field = STAT_FIELD_MAP.get(condition, 'damage_dealt')
 
-    # Fetch baselines for all participants
+    # Fetch per-tank baselines for each participant
     for p in participants:
         p_dict = dict(p)
         aid = p_dict.get("wot_account_id")
-        if aid:
-            try:
-                stat = await gc_fetch_player_stat(aid, condition)
-                if stat:
-                    with get_db() as conn:
-                        conn.execute("""
-                            UPDATE team_battle_participants 
-                            SET baseline_value = ?, baseline_battles = ?, current_value = 0, battles_played = 0
-                            WHERE battle_id = ? AND telegram_id = ?
-                        """, (stat["value"], stat["battles"], battle_id, p_dict["telegram_id"]))
-            except Exception as e:
-                logger.warning(f"TB baseline fetch failed for {p_dict['telegram_id']}: {e}")
+        if not aid:
+            continue
 
-    # Update battle status
+        try:
+            tanks = await gc_fetch_tank_stats(aid)
+            if not tanks:
+                continue
+
+            # Build baseline dict: {tank_id: {value, battles}}
+            baseline = {}
+            total_value = 0
+            total_battles = 0
+            for t in tanks:
+                tid = t["tank_id"]
+                all_stats = t.get("all", {})
+                val = all_stats.get(stat_field, 0)
+                bat = all_stats.get("battles", 0)
+                baseline[str(tid)] = {"v": val, "b": bat}
+                total_value += val
+                total_battles += bat
+
+            with get_db() as conn:
+                conn.execute("""
+                    UPDATE team_battle_participants 
+                    SET baseline_value = ?, baseline_battles = ?, current_value = 0, 
+                        battles_played = 0, baseline_tank_json = ?
+                    WHERE battle_id = ? AND telegram_id = ?
+                """, (total_value, total_battles, json.dumps(baseline),
+                      battle_id, p_dict["telegram_id"]))
+        except Exception as e:
+            logger.warning(f"TB baseline fetch failed for {p_dict['telegram_id']}: {e}")
+
+    # Update battle status with UTC timestamp
+    started_ts = int(datetime.now(timezone.utc).timestamp())
     with get_db() as conn:
         conn.execute("""
-            UPDATE team_battles SET status = 'active', started_at = datetime('now')
+            UPDATE team_battles SET status = 'active', started_at = ?
             WHERE id = ?
-        """, (battle_id,))
+        """, (str(started_ts), battle_id))
 
-    logger.info(f"⚔️ Team battle {battle_id} started!")
+    logger.info(f"⚔️ Team battle {battle_id} started! (ts={started_ts})")
 
 
 async def _tb_refresh_battle_stats(battle_id, condition, battles_count):
-    """Обновить статистику всех участников активного боя"""
+    """Обновить статистику: per-tank tracking + антиЧит (only battles after start)"""
     from database import get_db
+    import json
 
     STAT_FIELD_MAP = {
-        'damage': 'damage_dealt',
-        'frags': 'frags',
-        'xp': 'xp',
-        'spotting': 'spotted',
-        'blocked': 'damage_received',
-        'wins': 'wins',
+        'damage': 'damage_dealt', 'frags': 'frags', 'xp': 'xp',
+        'spotting': 'spotted', 'blocked': 'damage_received', 'wins': 'wins',
     }
     stat_field = STAT_FIELD_MAP.get(condition, 'damage_dealt')
 
     with get_db() as conn:
+        battle = conn.execute("SELECT started_at FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
         participants = conn.execute(
             "SELECT * FROM team_battle_participants WHERE battle_id = ?",
             (battle_id,)
         ).fetchall()
+
+    # Parse started_at as unix timestamp
+    started_ts = 0
+    if battle and battle["started_at"]:
+        try:
+            started_ts = int(battle["started_at"])
+        except (ValueError, TypeError):
+            started_ts = 0
+
+    # Get tank names for display
+    all_tank_ids = set()
 
     for p in participants:
         p_dict = dict(p)
@@ -9150,24 +9227,83 @@ async def _tb_refresh_battle_stats(battle_id, condition, battles_count):
             continue
 
         try:
-            stat = await gc_fetch_player_stat(aid, condition)
-            if stat:
-                new_value = stat["value"] - p_dict["baseline_value"]
-                new_battles = stat["battles"] - p_dict["baseline_battles"]
-                if new_value < 0:
-                    new_value = 0
-                if new_battles < 0:
-                    new_battles = 0
-                # Cap battles
-                if battles_count > 0 and new_battles > battles_count:
-                    new_battles = battles_count
+            tanks = await gc_fetch_tank_stats(aid)
+            if not tanks:
+                continue
+
+            # Load baseline
+            baseline = {}
+            if p_dict.get("baseline_tank_json"):
+                try:
+                    baseline = json.loads(p_dict["baseline_tank_json"])
+                except Exception:
+                    pass
+
+            total_progress = 0
+            total_new_battles = 0
+            tank_deltas = {}  # {tank_id: {value, battles, name?, tier?, type?}}
+
+            for t in tanks:
+                tid = t["tank_id"]
+                all_stats = t.get("all", {})
+                cur_val = all_stats.get(stat_field, 0)
+                cur_bat = all_stats.get("battles", 0)
+
+                # Get baseline for this tank
+                bl = baseline.get(str(tid), {"v": 0, "b": 0})
+                val_diff = cur_val - bl["v"]
+                bat_diff = cur_bat - bl["b"]
+
+                # Only count tanks where new battles happened
+                if bat_diff > 0 and val_diff > 0:
+                    # Anti-cheat: check updated_at > started_at
+                    updated_at = t.get("updated_at", 0)
+                    if started_ts > 0 and updated_at > 0 and updated_at < started_ts:
+                        # This tank was last played BEFORE challenge start — skip
+                        continue
+
+                    total_progress += val_diff
+                    total_new_battles += bat_diff
+                    tank_deltas[tid] = {"value": val_diff, "battles": bat_diff}
+                    all_tank_ids.add(tid)
+
+            # Cap battles
+            if battles_count > 0 and total_new_battles > battles_count:
+                total_new_battles = battles_count
+
+            # Update participant totals
+            with get_db() as conn:
+                conn.execute("""
+                    UPDATE team_battle_participants
+                    SET current_value = ?, battles_played = ?
+                    WHERE battle_id = ? AND telegram_id = ?
+                """, (max(0, total_progress), total_new_battles,
+                      battle_id, p_dict["telegram_id"]))
+
+            # Update per-tank logs
+            if tank_deltas:
+                # Fetch tank names
+                try:
+                    tank_info = await gc_get_tank_names(list(tank_deltas.keys()))
+                except Exception:
+                    tank_info = {}
 
                 with get_db() as conn:
-                    conn.execute("""
-                        UPDATE team_battle_participants
-                        SET current_value = ?, battles_played = ?
-                        WHERE battle_id = ? AND telegram_id = ?
-                    """, (new_value, new_battles, battle_id, p_dict["telegram_id"]))
+                    for tid, delta in tank_deltas.items():
+                        info = tank_info.get(tid, {})
+                        conn.execute("""
+                            INSERT INTO team_battle_tank_logs
+                            (battle_id, telegram_id, tank_id, tank_name, tank_tier, tank_type, stat_value, battles_count)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            ON CONFLICT(battle_id, telegram_id, tank_id) DO UPDATE SET
+                            stat_value = excluded.stat_value,
+                            battles_count = excluded.battles_count
+                        """, (battle_id, p_dict["telegram_id"], tid,
+                              info.get("name", f"Tank #{tid}"),
+                              info.get("tier", 0),
+                              info.get("type", ""),
+                              delta["value"], delta["battles"]))
+
         except Exception as e:
             logger.warning(f"TB stat refresh failed for {p_dict['telegram_id']}: {e}")
 
@@ -9321,6 +9457,64 @@ async def api_team_battle_widget(request):
         logger.error(f"API team_battle_widget error: {e}")
         return cors_response({"error": str(e)}, 500)
 
+async def api_team_battle_player_tanks(request):
+    """GET /api/team-battle/player-tanks?battle_id=X&telegram_id=Y — детали по танкам игрока"""
+    try:
+        from database import get_db
+        battle_id = int(request.query.get("battle_id", 0))
+        telegram_id = request.query.get("telegram_id", "0")
+        if not battle_id or telegram_id == "0":
+            return cors_response({"error": "battle_id и telegram_id обязательны"}, 400)
+
+        with get_db() as conn:
+            # Get battle info
+            battle = conn.execute("SELECT * FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
+            if not battle:
+                return cors_response({"error": "Бой не найден"}, 404)
+
+            # Get participant info
+            participant = conn.execute(
+                "SELECT * FROM team_battle_participants WHERE battle_id = ? AND telegram_id = ?",
+                (battle_id, telegram_id)
+            ).fetchone()
+            if not participant:
+                return cors_response({"error": "Игрок не участвует"}, 404)
+
+            # Get tank logs
+            tank_logs = conn.execute("""
+                SELECT * FROM team_battle_tank_logs
+                WHERE battle_id = ? AND telegram_id = ?
+                ORDER BY stat_value DESC
+            """, (battle_id, telegram_id)).fetchall()
+
+        cond = battle["condition"]
+        tier_names = {1:'I',2:'II',3:'III',4:'IV',5:'V',6:'VI',7:'VII',8:'VIII',9:'IX',10:'X'}
+        class_names = {
+            'heavyTank': '🛡️ТТ', 'mediumTank': '⚙️СТ', 'lightTank': '🏎️ЛТ',
+            'AT-SPG': '🎯ПТ', 'SPG': '💣САУ'
+        }
+
+        tanks = []
+        for log in tank_logs:
+            d = dict(log)
+            d["tier_label"] = tier_names.get(d.get("tank_tier", 0), "?")
+            d["class_label"] = class_names.get(d.get("tank_type", ""), "")
+            tanks.append(d)
+
+        return cors_response({
+            "player": {
+                "nickname": participant["nickname"],
+                "team": participant["team"],
+                "total_value": participant["current_value"],
+                "battles_played": participant["battles_played"],
+            },
+            "condition": cond,
+            "tanks": tanks,
+        })
+    except Exception as e:
+        logger.error(f"API player_tanks error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
 
 # ==========================================
 # ЗАПУСК
@@ -9425,6 +9619,7 @@ def create_api_app():
     app.router.add_post("/api/team-battle/refresh", api_team_battle_refresh)
     app.router.add_get("/api/team-battle/history", api_team_battle_history)
     app.router.add_get("/api/team-battle/widget", api_team_battle_widget)
+    app.router.add_get("/api/team-battle/player-tanks", api_team_battle_player_tanks)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)

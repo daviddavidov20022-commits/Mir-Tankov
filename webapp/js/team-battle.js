@@ -156,15 +156,25 @@ function tbRenderBattleCard(b, isMy = false, isHistory = false) {
         tankFilterHtml = `<span style="color:#a855f7">Ур. ${tierNames[b.tank_tier_filter] || b.tank_tier_filter}</span>`;
     }
 
-    // Player rows with ready indicator
+    // Player rows with ready indicator + tank info + clickable
+    const tierLabels = ['','I','II','III','IV','V','VI','VII','VIII','IX','X'];
     const renderPlayers = (players, maxSlots) => {
         let html = '';
         for (const p of players) {
             const isMe = String(p.telegram_id) === myTgStr;
             const readyIcon = isWaiting ? (p.is_ready ? '✅' : '⬜') : '';
-            html += `<div class="tb-player ${isMe ? 'tb-player--me' : ''}">
-                <span class="tb-player__name">${readyIcon} ${p.nickname || 'Танкист'}${p.is_creator ? ' 👑' : ''}</span>
-                <span class="tb-player__value">${isActive || isFinished ? (p.current_value || 0).toLocaleString('ru') : '—'}</span>
+            const showStats = isActive || isFinished;
+            const topTanks = (p.tank_logs || []).slice(0, 2);
+            const tankBadges = showStats && topTanks.length > 0
+                ? topTanks.map(t => `<span style="display:inline-block;padding:1px 5px;border-radius:4px;background:rgba(168,85,247,0.12);color:#c084fc;font-size:0.5rem;margin-left:3px">${tierLabels[t.tank_tier]||'?'} ${t.tank_name || ''}</span>`).join('')
+                : '';
+            const clickable = showStats && (p.tank_logs || []).length > 0;
+            html += `<div class="tb-player ${isMe ? 'tb-player--me' : ''}" ${clickable ? `onclick="tbShowPlayerDetail(${b.id}, ${p.telegram_id})" style="cursor:pointer"` : ''}>
+                <div style="display:flex;flex-direction:column;gap:1px;min-width:0;flex:1">
+                    <span class="tb-player__name">${readyIcon} ${p.nickname || 'Танкист'}${p.is_creator ? ' 👑' : ''}</span>
+                    ${tankBadges ? `<div style="display:flex;flex-wrap:wrap;gap:2px">${tankBadges}</div>` : ''}
+                </div>
+                <span class="tb-player__value">${showStats ? (p.current_value || 0).toLocaleString('ru') : '—'}</span>
             </div>`;
         }
         if (isWaiting) {
@@ -407,6 +417,7 @@ function tbCopyWidgetLink(battleId) {
 // ============================================================
 function tbRenderCreateForm() {
     const st = tbCreateState;
+    const cond = TB_COND_MAP[st.condition];
     const container = document.getElementById('tb-panel-create');
     container.innerHTML = `
         <!-- Step 1: Condition -->
@@ -776,4 +787,110 @@ async function tbLoadHistoryMain() {
     } catch (e) {
         el.innerHTML = `<div style="text-align:center;color:#f87171;font-size:0.7rem;padding:16px">Ошибка загрузки</div>`;
     }
+}
+
+// ============================================================
+// PLAYER DETAIL MODAL — per-tank breakdown
+// ============================================================
+async function tbShowPlayerDetail(battleId, telegramId) {
+    // Create modal if not exists
+    let modal = document.getElementById('tb-player-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'tb-player-modal';
+        modal.innerHTML = `
+            <div class="tb-modal-backdrop" onclick="tbClosePlayerModal()"></div>
+            <div class="tb-modal-content">
+                <div class="tb-modal-header">
+                    <div class="tb-modal-title" id="tb-modal-title">Детали игрока</div>
+                    <button class="tb-modal-close" onclick="tbClosePlayerModal()">×</button>
+                </div>
+                <div class="tb-modal-body" id="tb-modal-body">
+                    <div style="text-align:center;padding:20px;color:#5A6577">⏳ Загрузка...</div>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    modal.style.display = 'flex';
+    document.getElementById('tb-modal-body').innerHTML = '<div style="text-align:center;padding:20px;color:#5A6577">⏳ Загрузка деталей...</div>';
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/team-battle/player-tanks?battle_id=${battleId}&telegram_id=${telegramId}`);
+        const data = await resp.json();
+        if (data.error) {
+            document.getElementById('tb-modal-body').innerHTML = `<div style="text-align:center;padding:20px;color:#f87171">❌ ${data.error}</div>`;
+            return;
+        }
+
+        const player = data.player;
+        const tanks = data.tanks || [];
+        const condInfo = TB_COND_MAP[data.condition] || TB_COND_MAP.damage;
+        const teamColor = player.team === 'alpha' ? '#60a5fa' : '#f87171';
+        const teamName = player.team === 'alpha' ? '🔵 АЛЬФА' : '🔴 БРАВО';
+
+        document.getElementById('tb-modal-title').innerHTML = `
+            <span style="color:${teamColor}">${player.nickname || 'Танкист'}</span>
+            <span style="font-size:0.55rem;color:#5A6577;font-weight:400;margin-left:6px">${teamName}</span>`;
+
+        if (tanks.length === 0) {
+            document.getElementById('tb-modal-body').innerHTML = `
+                <div style="text-align:center;padding:20px;color:#5A6577">
+                    <div style="font-size:1.5rem;margin-bottom:8px">🎮</div>
+                    <div>Ещё нет сыгранных боёв</div>
+                </div>`;
+            return;
+        }
+
+        // Summary bar
+        let html = `
+            <div style="display:flex;justify-content:space-around;padding:12px;margin-bottom:12px;background:rgba(0,0,0,0.2);border-radius:10px">
+                <div style="text-align:center">
+                    <div style="font-size:1.1rem;font-weight:700;color:#C8AA6E">${(player.total_value || 0).toLocaleString('ru')}</div>
+                    <div style="font-size:0.55rem;color:#5A6577">${condInfo.icon} ${condInfo.unit}</div>
+                </div>
+                <div style="text-align:center">
+                    <div style="font-size:1.1rem;font-weight:700;color:#E8E6E3">${player.battles_played || 0}</div>
+                    <div style="font-size:0.55rem;color:#5A6577">⚔️ боёв</div>
+                </div>
+                <div style="text-align:center">
+                    <div style="font-size:1.1rem;font-weight:700;color:#a855f7">${tanks.length}</div>
+                    <div style="font-size:0.55rem;color:#5A6577">🪖 танков</div>
+                </div>
+            </div>`;
+
+        // Per-tank rows
+        const maxVal = tanks.length > 0 ? Math.max(...tanks.map(t => t.stat_value || 0)) : 1;
+        html += `<div style="display:flex;flex-direction:column;gap:6px">`;
+        for (const t of tanks) {
+            const pct = Math.round(((t.stat_value || 0) / maxVal) * 100);
+            const tierLabel = t.tier_label || '?';
+            const classLabel = t.class_label || '';
+            html += `
+                <div style="position:relative;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,0.15);border:1px solid rgba(200,170,110,0.08);overflow:hidden">
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:linear-gradient(90deg,rgba(168,85,247,0.12),rgba(168,85,247,0.03));border-radius:10px"></div>
+                    <div style="position:relative;display:flex;justify-content:space-between;align-items:center">
+                        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
+                            <span style="display:inline-block;min-width:22px;text-align:center;padding:2px 5px;border-radius:4px;background:rgba(200,170,110,0.12);color:#C8AA6E;font-size:0.6rem;font-weight:700">${tierLabel}</span>
+                            <span style="font-size:0.6rem;color:#5A6577">${classLabel}</span>
+                            <span style="font-size:0.7rem;font-weight:600;color:#E8E6E3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.tank_name || 'Tank'}</span>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;margin-left:8px">
+                            <span style="font-size:0.75rem;font-weight:700;color:#c084fc">${(t.stat_value || 0).toLocaleString('ru')}</span>
+                            <span style="font-size:0.5rem;color:#5A6577">${t.battles_count || 0} ${t.battles_count === 1 ? 'бой' : 'боёв'}</span>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        html += `</div>`;
+
+        document.getElementById('tb-modal-body').innerHTML = html;
+    } catch (e) {
+        document.getElementById('tb-modal-body').innerHTML = `<div style="text-align:center;padding:20px;color:#f87171">❌ Ошибка загрузки</div>`;
+    }
+}
+
+function tbClosePlayerModal() {
+    const modal = document.getElementById('tb-player-modal');
+    if (modal) modal.style.display = 'none';
 }
