@@ -720,3 +720,64 @@ async function tbCreateBattle() {
         }
     }
 }
+
+// ============================================================
+// RENDER SUB-TABS (already in HTML, just ensure active state)
+// ============================================================
+function tbRenderSubTabs() {
+    // Sub-tabs are already rendered in HTML, nothing to do
+}
+
+// ============================================================
+// MAIN HISTORY — loaded in the global "История" tab
+// ============================================================
+async function tbLoadHistoryMain() {
+    const el = document.getElementById('tbHistoryMainList');
+    if (!el) return;
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/team-battle/history?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        const battles = data.battles || [];
+
+        if (battles.length === 0) {
+            el.innerHTML = `<div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">Нет завершённых командных боёв</div>`;
+            return;
+        }
+
+        el.innerHTML = battles.slice(0, 10).map(b => {
+            const cond = TB_COND_MAP[b.condition] || TB_COND_MAP.damage;
+            const alphaPlayers = b.team_alpha || [];
+            const bravoPlayers = b.team_bravo || [];
+            const alphaTotal = alphaPlayers.reduce((s, p) => s + (p.current_value || 0), 0);
+            const bravoTotal = bravoPlayers.reduce((s, p) => s + (p.current_value || 0), 0);
+            const winner = b.winner_team;
+            const winLabel = winner === 'alpha' ? '🔵 АЛЬФА' : (winner === 'bravo' ? '🔴 БРАВО' : '🤝 НИЧЬЯ');
+            const totalPot = (b.wager || 0) * (alphaPlayers.length + bravoPlayers.length);
+            const iParticipated = b.my_participation;
+            const tankInfo = b.tank_name_filter ? ` · 🎯 ${b.tank_name_filter}` : '';
+
+            return `<div style="padding:10px 12px;margin-bottom:6px;border-radius:10px;background:rgba(0,0,0,0.15);border:1px solid rgba(200,170,110,0.08)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <span style="font-size:0.7rem;font-weight:700;color:#E8E6E3">${cond.icon} ${b.team_size}×${b.team_size} ${cond.name}${tankInfo}</span>
+                    <span style="font-size:0.6rem;padding:2px 8px;border-radius:8px;${
+                        b.status === 'finished' ? 'background:rgba(200,170,110,0.1);color:#C8AA6E' : 'background:rgba(239,68,68,0.1);color:#f87171'
+                    }">${b.status === 'finished' ? '🏆 Завершён' : '❌ Отменён'}</span>
+                </div>
+                ${b.status === 'finished' ? `
+                    <div style="display:flex;justify-content:space-between;font-size:0.65rem;margin-bottom:4px">
+                        <span style="color:${winner === 'alpha' ? '#60a5fa' : '#5A6577'}">🔵 ${alphaTotal.toLocaleString('ru')}</span>
+                        <span style="font-weight:700;color:${winner === 'alpha' ? '#60a5fa' : (winner === 'bravo' ? '#f87171' : '#C8AA6E')}">${winLabel}</span>
+                        <span style="color:${winner === 'bravo' ? '#f87171' : '#5A6577'}">🔴 ${bravoTotal.toLocaleString('ru')}</span>
+                    </div>
+                ` : ''}
+                <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:#5A6577">
+                    <span>🧀 ${totalPot.toLocaleString('ru')} банк</span>
+                    ${iParticipated ? '<span style="color:#4ade80">✅ Вы участвовали</span>' : ''}
+                </div>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        el.innerHTML = `<div style="text-align:center;color:#f87171;font-size:0.7rem;padding:16px">Ошибка загрузки</div>`;
+    }
+}

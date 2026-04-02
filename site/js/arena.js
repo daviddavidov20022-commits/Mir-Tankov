@@ -164,7 +164,7 @@ function switchTab(tabId, btn) {
     btn.classList.add('arena-tab--active');
 
     if (tabId === 'active') loadChallenges();
-    if (tabId === 'history') { loadChallenges(); loadGcHistory(); }
+    if (tabId === 'history') { loadChallenges(); loadGcHistory(); if (typeof tbLoadHistoryMain === 'function') tbLoadHistoryMain(); }
     if (tabId === 'admin') loadAdminUsers();
     if (tabId === 'global' && typeof gcLoadChallenge === 'function') gcLoadChallenge(true);
     if (tabId === 'teams' && typeof tbInit === 'function') tbInit();
