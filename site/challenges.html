@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/style.css?v=50">
     <link rel="stylesheet" href="css/arena.css?v=50">
     <link rel="stylesheet" href="css/global-challenge.css?v=50">
+    <link rel="stylesheet" href="css/team-battle.css?v=1">
 </head>
 
 <body>
@@ -79,6 +80,7 @@
         <div class="arena-tabs">
             <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">⚔️ Создать</button>
             <button class="arena-tab" onclick="switchTab('global', this)">🔥 Общий</button>
+            <button class="arena-tab" onclick="switchTab('teams', this)">👥 Команды</button>
             <button class="arena-tab" onclick="switchTab('active', this)">📋 Мои <span class="arena-badge"
                     id="activeBadge" style="display:none">0</span></button>
             <button class="arena-tab" onclick="switchTab('history', this)">📜 История</button>
@@ -952,6 +954,62 @@
 
         </div>
 
+        <!-- ============================== -->
+        <!-- TAB: TEAM BATTLES              -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-teams">
+            <!-- Sub-tabs: Browse / Create / My -->
+            <div class="tb-subtabs">
+                <button class="tb-subtab active" data-tab="browse" onclick="tbSwitchSubTab('browse')">🔥 Активные</button>
+                <button class="tb-subtab" data-tab="create" onclick="tbSwitchSubTab('create')">➕ Создать</button>
+                <button class="tb-subtab" data-tab="my" onclick="tbSwitchSubTab('my')">📋 Мои</button>
+            </div>
+
+            <!-- How it works -->
+            <div onclick="this.querySelector('.tb-howto-body').style.display = this.querySelector('.tb-howto-body').style.display === 'none' ? 'block' : 'none'"
+                style="margin-bottom:12px;padding:10px 14px;background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.1);border-radius:12px;cursor:pointer">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">❓ Как работают командные бои?</span>
+                    <span style="font-size:0.6rem;color:#5A6577">▼</span>
+                </div>
+                <div class="tb-howto-body" style="display:none;margin-top:10px;font-size:0.65rem;color:#8a94a6;line-height:1.6">
+                    <b style="color:#E8E6E3">1.</b> Создай челлендж: выбери условие, размер команд и ставку 🧀<br>
+                    <b style="color:#E8E6E3">2.</b> Два отряда: 🔵 АЛЬФА и 🔴 БРАВО — любой может вступить<br>
+                    <b style="color:#E8E6E3">3.</b> Когда обе команды заполнены — бой начинается автоматически<br>
+                    <b style="color:#E8E6E3">4.</b> Каждый играет заданное количество боёв, урон суммируется<br>
+                    <b style="color:#E8E6E3">5.</b> Команда с большим суммарным результатом — побеждает!<br>
+                    <b style="color:#E8E6E3">6.</b> Победители делят весь банк между собой 🏆<br>
+                    <span style="color:#f5d36e;margin-top:4px;display:inline-block">💡 Минимальная ставка — 50 🧀. Размер: от 2×2 до 50×50</span>
+                </div>
+            </div>
+
+            <!-- BROWSE panel -->
+            <div id="tb-panel-browse">
+                <div class="tb-section-label">🔥 Активные командные бои</div>
+                <div class="tb-list" id="tb-browse-list">
+                    <div class="tb-skeleton">
+                        <div class="tb-skeleton__card"></div>
+                        <div class="tb-skeleton__card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CREATE panel -->
+            <div id="tb-panel-create" style="display:none">
+                <!-- Filled dynamically by tbRenderCreateForm() -->
+            </div>
+
+            <!-- MY panel -->
+            <div id="tb-panel-my" style="display:none">
+                <div class="tb-section-label">📋 Мои командные бои</div>
+                <div class="tb-list" id="tb-my-list">
+                    <div class="tb-skeleton">
+                        <div class="tb-skeleton__card"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Bottom nav -->
@@ -981,6 +1039,7 @@
     <script src="js/arena.js?v=50"></script>
     <script src="js/global-challenge-tab.js?v=50"></script>
     <script src="js/gc-obs-links.js?v=50"></script>
+    <script src="js/team-battle.js?v=1"></script>
 </body>
 
 </html>

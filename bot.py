@@ -8682,6 +8682,491 @@ async def api_admin_finance(request):
 
 
 # ==========================================
+# TEAM BATTLE — Команда на Команду
+# ==========================================
+
+def _ensure_team_battle_tables():
+    """Создаём таблицы для командных боёв если их нет"""
+    from database import get_db
+    with get_db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS team_battles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                creator_telegram_id INTEGER NOT NULL,
+                creator_nickname TEXT,
+                condition TEXT DEFAULT 'damage',
+                team_size INTEGER DEFAULT 5,
+                battles_count INTEGER DEFAULT 5,
+                wager INTEGER DEFAULT 100,
+                status TEXT DEFAULT 'waiting',
+                join_deadline TEXT,
+                started_at TEXT,
+                finished_at TEXT,
+                winner_team TEXT,
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS team_battle_participants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                battle_id INTEGER NOT NULL,
+                telegram_id INTEGER NOT NULL,
+                nickname TEXT,
+                wot_account_id INTEGER,
+                team TEXT NOT NULL,
+                is_creator INTEGER DEFAULT 0,
+                baseline_value INTEGER DEFAULT 0,
+                baseline_battles INTEGER DEFAULT 0,
+                current_value INTEGER DEFAULT 0,
+                battles_played INTEGER DEFAULT 0,
+                joined_at TEXT DEFAULT (datetime('now')),
+                UNIQUE(battle_id, telegram_id)
+            )
+        """)
+    logger.info("Team battle tables ensured")
+
+# Ensure tables exist on import
+try:
+    _ensure_team_battle_tables()
+except Exception as e:
+    logger.warning(f"Team battle tables init deferred: {e}")
+
+
+async def api_team_battle_create(request):
+    """POST /api/team-battle/create — любой подписчик создаёт командный бой"""
+    try:
+        data = await request.json()
+        telegram_id = int(data.get("telegram_id", 0))
+        if not telegram_id:
+            return cors_response({"error": "telegram_id обязателен"}, 400)
+
+        condition = data.get("condition", "damage")
+        team_size = int(data.get("team_size", 5))
+        battles_count = int(data.get("battles_count", 5))
+        join_time_minutes = int(data.get("join_time_minutes", 5))
+        wager = int(data.get("wager", 100))
+        wot_nickname = data.get("wot_nickname", "").strip()
+        wot_account_id = data.get("wot_account_id", "")
+
+        # Validation
+        if team_size < 2 or team_size > 50:
+            return cors_response({"error": "Размер команды: от 2 до 50"}, 400)
+        if wager < 50:
+            return cors_response({"error": "Минимальная ставка — 50 🧀"}, 400)
+        if battles_count < 1 or battles_count > 50:
+            return cors_response({"error": "Количество боёв: от 1 до 50"}, 400)
+        if condition not in ('damage', 'frags', 'xp', 'spotting', 'blocked', 'wins'):
+            return cors_response({"error": "Неизвестное условие"}, 400)
+
+        # Check cheese balance
+        cheese_balance = get_cheese_balance(telegram_id)
+        if cheese_balance < wager:
+            return cors_response({"error": f"Недостаточно сыра! У вас {cheese_balance} 🧀"}, 400)
+
+        # Get nickname
+        user = get_user_by_telegram_id(telegram_id)
+        if not wot_nickname and user:
+            wot_nickname = user.get("wot_nickname", "") or user.get("first_name", "") or "Танкист"
+        if not wot_account_id and user:
+            wot_account_id = user.get("wot_account_id", "")
+
+        from datetime import datetime, timedelta, timezone
+        from database import get_db
+        join_deadline = datetime.now(timezone.utc) + timedelta(minutes=join_time_minutes)
+
+        with get_db() as conn:
+            # Limit: max 3 active battles per creator
+            active_count = conn.execute(
+                "SELECT COUNT(*) FROM team_battles WHERE creator_telegram_id = ? AND status IN ('waiting', 'active')",
+                (telegram_id,)
+            ).fetchone()[0]
+            if active_count >= 3:
+                return cors_response({"error": "Максимум 3 активных командных боя"}, 400)
+
+            cursor = conn.execute("""
+                INSERT INTO team_battles 
+                (creator_telegram_id, creator_nickname, condition, team_size, battles_count, wager, status, join_deadline)
+                VALUES (?, ?, ?, ?, ?, ?, 'waiting', ?)
+            """, (telegram_id, wot_nickname, condition, team_size, battles_count, wager,
+                  join_deadline.strftime('%Y-%m-%d %H:%M:%S')))
+            battle_id = cursor.lastrowid
+
+            # Creator auto-joins team alpha and pays wager
+            import sqlite3
+            try:
+                account_id_int = int(wot_account_id) if wot_account_id else None
+            except (ValueError, TypeError):
+                account_id_int = None
+
+            conn.execute("""
+                INSERT INTO team_battle_participants 
+                (battle_id, telegram_id, nickname, wot_account_id, team, is_creator)
+                VALUES (?, ?, ?, ?, 'alpha', 1)
+            """, (battle_id, telegram_id, wot_nickname, account_id_int))
+
+        # Freeze creator's wager
+        spend_cheese(telegram_id, wager, reason=f"team_battle_{battle_id}_wager")
+
+        return cors_response({
+            "success": True,
+            "battle_id": battle_id,
+            "join_deadline": join_deadline.isoformat()
+        })
+    except Exception as e:
+        logger.error(f"API team_battle_create error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_team_battle_list(request):
+    """GET /api/team-battle/list — список командных боёв"""
+    try:
+        from database import get_db
+        from datetime import datetime, timezone
+
+        telegram_id = request.query.get("telegram_id", "0")
+        now_utc = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+
+        with get_db() as conn:
+            # Auto-expire: cancel waiting battles past deadline
+            expired = conn.execute(
+                "SELECT id FROM team_battles WHERE status = 'waiting' AND join_deadline <= ?",
+                (now_utc,)
+            ).fetchall()
+            for ex in expired:
+                _tb_cancel_battle(conn, ex["id"])
+
+            # Auto-finish: active battles where all participants played enough
+            active_battles = conn.execute(
+                "SELECT id, battles_count FROM team_battles WHERE status = 'active'"
+            ).fetchall()
+            for ab in active_battles:
+                not_done = conn.execute(
+                    "SELECT COUNT(*) FROM team_battle_participants WHERE battle_id = ? AND battles_played < ?",
+                    (ab["id"], ab["battles_count"])
+                ).fetchone()[0]
+                total_p = conn.execute(
+                    "SELECT COUNT(*) FROM team_battle_participants WHERE battle_id = ?",
+                    (ab["id"],)
+                ).fetchone()[0]
+                if total_p > 0 and not_done == 0:
+                    _tb_finish_battle(conn, ab["id"])
+
+            # Fetch battles (recent first, limit 30)
+            rows = conn.execute("""
+                SELECT * FROM team_battles 
+                WHERE status IN ('waiting', 'active', 'finished')
+                ORDER BY 
+                    CASE status 
+                        WHEN 'active' THEN 0 
+                        WHEN 'waiting' THEN 1 
+                        WHEN 'finished' THEN 2 
+                    END,
+                    created_at DESC
+                LIMIT 30
+            """).fetchall()
+
+            battles = []
+            for row in rows:
+                b = dict(row)
+                # Get participants
+                participants = conn.execute(
+                    "SELECT * FROM team_battle_participants WHERE battle_id = ? ORDER BY team, joined_at",
+                    (b["id"],)
+                ).fetchall()
+                b["team_alpha"] = [dict(p) for p in participants if p["team"] == "alpha"]
+                b["team_bravo"] = [dict(p) for p in participants if p["team"] == "bravo"]
+                battles.append(b)
+
+        return cors_response({"battles": battles})
+    except Exception as e:
+        logger.error(f"API team_battle_list error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_team_battle_join(request):
+    """POST /api/team-battle/join — вступить в команду"""
+    try:
+        data = await request.json()
+        battle_id = int(data.get("battle_id", 0))
+        telegram_id = int(data.get("telegram_id", 0))
+        team = data.get("team", "alpha")
+        wot_nickname = data.get("wot_nickname", "").strip()
+        wot_account_id = data.get("wot_account_id", "")
+
+        if not battle_id or not telegram_id:
+            return cors_response({"error": "battle_id и telegram_id обязательны"}, 400)
+        if team not in ("alpha", "bravo"):
+            return cors_response({"error": "Команда: alpha или bravo"}, 400)
+
+        # Get nickname
+        user = get_user_by_telegram_id(telegram_id)
+        if not wot_nickname and user:
+            wot_nickname = user.get("wot_nickname", "") or user.get("first_name", "") or "Танкист"
+        if not wot_account_id and user:
+            wot_account_id = user.get("wot_account_id", "")
+
+        try:
+            account_id_int = int(wot_account_id) if wot_account_id else None
+        except (ValueError, TypeError):
+            account_id_int = None
+
+        from database import get_db
+        import sqlite3
+
+        with get_db() as conn:
+            battle = conn.execute("SELECT * FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
+            if not battle:
+                return cors_response({"error": "Бой не найден"}, 404)
+            if battle["status"] != "waiting":
+                return cors_response({"error": "Набор уже завершён"}, 400)
+
+            # Check if already in this battle
+            existing = conn.execute(
+                "SELECT id FROM team_battle_participants WHERE battle_id = ? AND telegram_id = ?",
+                (battle_id, telegram_id)
+            ).fetchone()
+            if existing:
+                return cors_response({"error": "Вы уже в команде"}, 400)
+
+            # Check team capacity
+            team_count = conn.execute(
+                "SELECT COUNT(*) FROM team_battle_participants WHERE battle_id = ? AND team = ?",
+                (battle_id, team)
+            ).fetchone()[0]
+            if team_count >= battle["team_size"]:
+                return cors_response({"error": f"Команда {team} заполнена"}, 400)
+
+            # Check cheese balance
+            wager = battle["wager"]
+            cheese_balance = get_cheese_balance(telegram_id)
+            if cheese_balance < wager:
+                return cors_response({"error": f"Недостаточно сыра! Нужно {wager} 🧀, у вас {cheese_balance} 🧀"}, 400)
+
+            # Join
+            conn.execute("""
+                INSERT INTO team_battle_participants 
+                (battle_id, telegram_id, nickname, wot_account_id, team, is_creator)
+                VALUES (?, ?, ?, ?, ?, 0)
+            """, (battle_id, telegram_id, wot_nickname, account_id_int, team))
+
+        # Freeze wager
+        spend_cheese(telegram_id, wager, reason=f"team_battle_{battle_id}_wager")
+
+        # Check if both teams are now full → auto-start
+        with get_db() as conn:
+            alpha_count = conn.execute(
+                "SELECT COUNT(*) FROM team_battle_participants WHERE battle_id = ? AND team = 'alpha'",
+                (battle_id,)
+            ).fetchone()[0]
+            bravo_count = conn.execute(
+                "SELECT COUNT(*) FROM team_battle_participants WHERE battle_id = ? AND team = 'bravo'",
+                (battle_id,)
+            ).fetchone()[0]
+            ts = battle["team_size"]
+
+            if alpha_count >= ts and bravo_count >= ts:
+                # AUTO-START!
+                await _tb_start_battle(battle_id)
+                return cors_response({"success": True, "status": "started", "message": "Бой начался!"})
+
+        return cors_response({"success": True, "status": "joined"})
+    except Exception as e:
+        logger.error(f"API team_battle_join error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_team_battle_refresh(request):
+    """POST /api/team-battle/refresh — обновить статистику активных командных боёв"""
+    try:
+        from database import get_db
+        with get_db() as conn:
+            active = conn.execute(
+                "SELECT id, condition, battles_count FROM team_battles WHERE status = 'active'"
+            ).fetchall()
+
+        for battle in active:
+            await _tb_refresh_battle_stats(battle["id"], battle["condition"], battle["battles_count"])
+
+        return cors_response({"success": True, "refreshed": len(active)})
+    except Exception as e:
+        logger.error(f"API team_battle_refresh error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def _tb_start_battle(battle_id):
+    """Запуск боя: зафиксировать baselines для всех участников"""
+    from database import get_db
+    from datetime import datetime, timezone
+
+    with get_db() as conn:
+        battle = conn.execute("SELECT * FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
+        if not battle or battle["status"] != "waiting":
+            return
+
+        participants = conn.execute(
+            "SELECT * FROM team_battle_participants WHERE battle_id = ?",
+            (battle_id,)
+        ).fetchall()
+
+    condition = battle["condition"]
+
+    # Fetch baselines for all participants
+    for p in participants:
+        p_dict = dict(p)
+        aid = p_dict.get("wot_account_id")
+        if aid:
+            try:
+                stat = await gc_fetch_player_stat(aid, condition)
+                if stat:
+                    with get_db() as conn:
+                        conn.execute("""
+                            UPDATE team_battle_participants 
+                            SET baseline_value = ?, baseline_battles = ?, current_value = 0, battles_played = 0
+                            WHERE battle_id = ? AND telegram_id = ?
+                        """, (stat["value"], stat["battles"], battle_id, p_dict["telegram_id"]))
+            except Exception as e:
+                logger.warning(f"TB baseline fetch failed for {p_dict['telegram_id']}: {e}")
+
+    # Update battle status
+    with get_db() as conn:
+        conn.execute("""
+            UPDATE team_battles SET status = 'active', started_at = datetime('now')
+            WHERE id = ?
+        """, (battle_id,))
+
+    logger.info(f"⚔️ Team battle {battle_id} started!")
+
+
+async def _tb_refresh_battle_stats(battle_id, condition, battles_count):
+    """Обновить статистику всех участников активного боя"""
+    from database import get_db
+
+    STAT_FIELD_MAP = {
+        'damage': 'damage_dealt',
+        'frags': 'frags',
+        'xp': 'xp',
+        'spotting': 'spotted',
+        'blocked': 'damage_received',
+        'wins': 'wins',
+    }
+    stat_field = STAT_FIELD_MAP.get(condition, 'damage_dealt')
+
+    with get_db() as conn:
+        participants = conn.execute(
+            "SELECT * FROM team_battle_participants WHERE battle_id = ?",
+            (battle_id,)
+        ).fetchall()
+
+    for p in participants:
+        p_dict = dict(p)
+        aid = p_dict.get("wot_account_id")
+        if not aid:
+            continue
+
+        try:
+            stat = await gc_fetch_player_stat(aid, condition)
+            if stat:
+                new_value = stat["value"] - p_dict["baseline_value"]
+                new_battles = stat["battles"] - p_dict["baseline_battles"]
+                if new_value < 0:
+                    new_value = 0
+                if new_battles < 0:
+                    new_battles = 0
+                # Cap battles
+                if battles_count > 0 and new_battles > battles_count:
+                    new_battles = battles_count
+
+                with get_db() as conn:
+                    conn.execute("""
+                        UPDATE team_battle_participants
+                        SET current_value = ?, battles_played = ?
+                        WHERE battle_id = ? AND telegram_id = ?
+                    """, (new_value, new_battles, battle_id, p_dict["telegram_id"]))
+        except Exception as e:
+            logger.warning(f"TB stat refresh failed for {p_dict['telegram_id']}: {e}")
+
+
+def _tb_finish_battle(conn, battle_id):
+    """Завершить бой: определить победителя, раздать выигрыш"""
+    try:
+        battle = conn.execute("SELECT * FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
+        if not battle:
+            return
+
+        participants = conn.execute(
+            "SELECT * FROM team_battle_participants WHERE battle_id = ?",
+            (battle_id,)
+        ).fetchall()
+
+        # Calculate team totals
+        alpha_total = sum(p["current_value"] for p in participants if p["team"] == "alpha")
+        bravo_total = sum(p["current_value"] for p in participants if p["team"] == "bravo")
+
+        if alpha_total > bravo_total:
+            winner_team = "alpha"
+        elif bravo_total > alpha_total:
+            winner_team = "bravo"
+        else:
+            winner_team = "draw"
+
+        conn.execute("""
+            UPDATE team_battles SET status = 'finished', finished_at = datetime('now'), winner_team = ?
+            WHERE id = ?
+        """, (winner_team, battle_id))
+
+        # Distribute winnings
+        wager = battle["wager"]
+        total_pot = wager * len(participants)
+
+        if winner_team == "draw":
+            # Refund everyone
+            for p in participants:
+                try:
+                    buy_cheese(p["telegram_id"], wager, method="team_battle_refund")
+                except Exception:
+                    pass
+        else:
+            # Winners split the pot
+            winners = [p for p in participants if p["team"] == winner_team]
+            if winners:
+                share = total_pot // len(winners)
+                for w in winners:
+                    try:
+                        buy_cheese(w["telegram_id"], share, method="team_battle_win")
+                    except Exception:
+                        pass
+
+        logger.info(f"🏆 Team battle {battle_id} finished! Winner: {winner_team} (α:{alpha_total} β:{bravo_total})")
+    except Exception as e:
+        logger.error(f"TB finish error: {e}")
+
+
+def _tb_cancel_battle(conn, battle_id):
+    """Отменить бой (время вышло) — вернуть ставки"""
+    try:
+        battle = conn.execute("SELECT * FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
+        if not battle:
+            return
+
+        participants = conn.execute(
+            "SELECT telegram_id FROM team_battle_participants WHERE battle_id = ?",
+            (battle_id,)
+        ).fetchall()
+
+        # Refund all
+        for p in participants:
+            try:
+                buy_cheese(p["telegram_id"], battle["wager"], method="team_battle_cancel_refund")
+            except Exception:
+                pass
+
+        conn.execute("UPDATE team_battles SET status = 'cancelled' WHERE id = ?", (battle_id,))
+        logger.info(f"❌ Team battle {battle_id} cancelled (deadline expired), {len(participants)} refunded")
+    except Exception as e:
+        logger.error(f"TB cancel error: {e}")
+
+
+# ==========================================
 # ЗАПУСК
 # ==========================================
 
@@ -8774,6 +9259,12 @@ def create_api_app():
     app.router.add_post("/api/global-challenge/auto-start", api_global_challenge_auto_start)
     app.router.add_post("/api/upload-prize-image", api_upload_prize_image)
     app.router.add_post("/api/global-challenge/force-wheel", api_global_challenge_force_wheel)
+
+    # Team Battle API
+    app.router.add_post("/api/team-battle/create", api_team_battle_create)
+    app.router.add_get("/api/team-battle/list", api_team_battle_list)
+    app.router.add_post("/api/team-battle/join", api_team_battle_join)
+    app.router.add_post("/api/team-battle/refresh", api_team_battle_refresh)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)

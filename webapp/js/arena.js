@@ -167,6 +167,7 @@ function switchTab(tabId, btn) {
     if (tabId === 'history') { loadChallenges(); loadGcHistory(); }
     if (tabId === 'admin') loadAdminUsers();
     if (tabId === 'global' && typeof gcLoadChallenge === 'function') gcLoadChallenge(true);
+    if (tabId === 'teams' && typeof tbInit === 'function') tbInit();
 }
 
 // ============================================================

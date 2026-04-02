@@ -36,6 +36,8 @@ DIRECT_COPY = [
     'js/subscribe.js',
     'js/top-page.js',
     'js/friends.js',
+    'css/team-battle.css',
+    'js/team-battle.js',
 ]
 
 # ==========================================
