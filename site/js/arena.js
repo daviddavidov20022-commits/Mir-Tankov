@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMyProfile();
     createParticles();
 
+    // Load my PVP challenges on the create tab
+    setTimeout(() => loadMyPvpChallenges(), 500);
+
     // Auto-fill from friends page
     const params = new URLSearchParams(window.location.search);
     const opponent = params.get('opponent');
@@ -953,8 +956,11 @@ async function sendChallenge() {
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
             setTimeout(() => {
-                switchTab('active', document.querySelectorAll('.arena-tab')[1]);
                 resetChallengeBuilder();
+                loadMyPvpChallenges();
+                // Scroll to the challenges list
+                const pvpSection = document.getElementById('myPvpSection');
+                if (pvpSection) pvpSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 1500);
         } else {
             showToast(`❌ ${data.error || 'Ошибка'}`, 'error');
@@ -1043,6 +1049,185 @@ function createParticles() {
     }
 }
 
+// ============================================================
+// MY PVP CHALLENGES (inline on create tab)
+// ============================================================
+const STATUS_MAP = {
+    pending:  { label: '⏳ Ожидание', color: '#f5be0b', bg: 'rgba(245,190,11,0.08)', border: 'rgba(245,190,11,0.2)' },
+    active:   { label: '🔥 В бою', color: '#4ade80', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.2)' },
+    finished: { label: '✅ Завершён', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)' },
+    declined: { label: '❌ Отклонён', color: '#ef4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' },
+};
+
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - d;
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'только что';
+    if (mins < 60) return `${mins} мин. назад`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} ч. назад`;
+    const days = Math.floor(hrs / 24);
+    return `${days} дн. назад`;
+}
+
+async function loadMyPvpChallenges() {
+    if (!myTelegramId) return;
+    const container = document.getElementById('myPvpList');
+    if (!container) return;
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/challenges?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        if (!data.challenges || !data.challenges.length) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:24px">
+                    <div style="font-size:1.5rem;margin-bottom:8px">⚔️</div>
+                    <div style="color:#5A6577;font-size:0.72rem">У вас пока нет вызовов</div>
+                    <div style="color:#3A4555;font-size:0.6rem;margin-top:4px">Создайте первый вызов выше ☝️</div>
+                </div>`;
+            return;
+        }
+
+        // Show recent challenges (last 15)
+        const recent = data.challenges.slice(0, 15);
+
+        container.innerHTML = recent.map(c => {
+            const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
+            const cond = COND_LABELS_SHORT[c.condition] || c.condition;
+            const isSent = !c.is_incoming; // I sent this challenge
+            const direction = isSent ? '📤' : '📩';
+            const dirLabel = isSent ? 'Вы вызвали' : 'Вас вызвал';
+            const ago = timeAgo(c.created_at);
+
+            // Winner info for finished
+            let winnerHtml = '';
+            if (c.status === 'finished' && c.winner_telegram_id) {
+                const isWin = c.winner_telegram_id === myTelegramId;
+                winnerHtml = `
+                    <div style="margin-top:8px;padding:8px 12px;border-radius:10px;text-align:center;
+                        background:${isWin ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'};
+                        border:1px solid ${isWin ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}">
+                        <span style="font-size:0.8rem">${isWin ? '🏆' : '😞'}</span>
+                        <span style="font-size:0.7rem;color:${isWin ? '#4ade80' : '#ef4444'};font-weight:700;margin-left:4px">
+                            ${isWin ? `Победа! +🧀 ${c.wager * 2}` : `Поражение. -🧀 ${c.wager}`}
+                        </span>
+                    </div>`;
+            }
+
+            // Cancel button (only for pending challenges I sent)
+            let cancelHtml = '';
+            if (c.status === 'pending' && isSent) {
+                cancelHtml = `
+                    <button onclick="cancelMyChallenge(${c.id})" style="margin-top:8px;width:100%;padding:8px;
+                        border-radius:8px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.06);
+                        color:#ef4444;font-size:0.65rem;font-weight:600;cursor:pointer;
+                        font-family:'Inter',sans-serif;transition:all 0.2s"
+                        onmouseover="this.style.background='rgba(239,68,68,0.12)'"
+                        onmouseout="this.style.background='rgba(239,68,68,0.06)'">
+                        ✕ Отменить вызов
+                    </button>`;
+            }
+
+            // Accept/Decline (only for incoming pending)
+            let actionHtml = '';
+            if (c.status === 'pending' && c.is_incoming) {
+                actionHtml = `
+                    <div style="display:flex;gap:6px;margin-top:8px">
+                        <button onclick="acceptChallenge(${c.id});setTimeout(loadMyPvpChallenges,1000)" style="flex:1;padding:8px;border-radius:8px;border:none;
+                            background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;font-size:0.65rem;cursor:pointer">
+                            ✅ Принять
+                        </button>
+                        <button onclick="declineChallenge(${c.id});setTimeout(loadMyPvpChallenges,1000)" style="flex:1;padding:8px;border-radius:8px;
+                            border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-weight:700;font-size:0.65rem;cursor:pointer">
+                            ❌ Отклонить
+                        </button>
+                    </div>`;
+            }
+
+            // Check results button for active
+            let activeHtml = '';
+            if (c.status === 'active') {
+                activeHtml = `
+                    <div style="margin-top:8px;display:flex;gap:6px">
+                        <button onclick="switchTab('active', document.querySelectorAll('.arena-tab')[3])" style="flex:1;padding:8px;
+                            border-radius:8px;border:1px solid rgba(200,170,110,0.2);background:rgba(200,170,110,0.06);
+                            color:#C8AA6E;font-size:0.65rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">
+                            📊 Смотреть результаты
+                        </button>
+                    </div>`;
+            }
+
+            return `
+                <div style="padding:14px;border-radius:14px;background:${st.bg};border:1px solid ${st.border};
+                    margin-bottom:8px;animation:fadeInUp 0.3s ease">
+                    <!-- Header: opponent + status -->
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                        <div style="flex:1;min-width:0">
+                            <div style="display:flex;align-items:center;gap:6px">
+                                <span style="font-size:0.65rem">${direction}</span>
+                                <span style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">
+                                    ${c.opponent_name}
+                                </span>
+                            </div>
+                            <div style="font-size:0.55rem;color:#5A6577;margin-top:3px">${dirLabel} · ${ago}</div>
+                        </div>
+                        <div style="padding:4px 10px;border-radius:8px;background:${st.bg};border:1px solid ${st.border};
+                            font-size:0.6rem;font-weight:700;color:${st.color};white-space:nowrap">
+                            ${st.label}
+                        </div>
+                    </div>
+
+                    <!-- Details row -->
+                    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+                        <div style="padding:4px 8px;border-radius:6px;background:rgba(0,0,0,0.2);font-size:0.6rem;color:#8a94a6">
+                            🪖 ${c.tank_name || 'Любой'}
+                        </div>
+                        <div style="padding:4px 8px;border-radius:6px;background:rgba(0,0,0,0.2);font-size:0.6rem;color:#8a94a6">
+                            ${cond}
+                        </div>
+                        <div style="padding:4px 8px;border-radius:6px;background:rgba(0,0,0,0.2);font-size:0.6rem;color:#8a94a6">
+                            ⚔️ ${c.battles} боёв
+                        </div>
+                        <div style="padding:4px 8px;border-radius:6px;background:rgba(0,0,0,0.2);font-size:0.6rem;color:#C8AA6E;font-weight:600">
+                            🧀 ${c.wager}
+                        </div>
+                    </div>
+
+                    ${winnerHtml}
+                    ${cancelHtml}
+                    ${actionHtml}
+                    ${activeHtml}
+                </div>`;
+        }).join('');
+
+    } catch (e) {
+        console.error('loadMyPvpChallenges error:', e);
+        container.innerHTML = '<div style="text-align:center;color:#ef4444;font-size:0.7rem;padding:16px">❌ Ошибка загрузки</div>';
+    }
+}
+
+async function cancelMyChallenge(id) {
+    if (!confirm('Отменить вызов? Сыр вернётся вам.')) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/challenges/decline`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: id, telegram_id: myTelegramId })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast('✅ Вызов отменён, сыр возвращён', 'success');
+            loadMyPvpChallenges();
+        } else {
+            showToast(`❌ ${data.error}`, 'error');
+        }
+    } catch (e) {
+        showToast('❌ Нет подключения', 'error');
+    }
+}
+
 // Expose functions
 window.switchTab = switchTab;
 window.searchOpponent = searchOpponent;
@@ -1075,6 +1260,8 @@ window.openGiftModal = openGiftModal;
 window.giftCheese = giftCheese;
 window.addSelfCheese = addSelfCheese;
 window.closeGiftModal = closeGiftModal;
+window.loadMyPvpChallenges = loadMyPvpChallenges;
+window.cancelMyChallenge = cancelMyChallenge;
 
 function toggleBattleHistory(id) {
     const el = document.getElementById(`battleHistory-${id}`);
