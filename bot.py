@@ -4091,7 +4091,7 @@ async def fetch_player_stats(user, ch):
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
                    f"&fields=tank_id,all.battles,all.damage_dealt,all.spotted,all.frags,"
-                   f"all.xp,all.wins,all.damage_received,all.damage_blocked,all.damage_assisted,all.shots,all.hits,all.survived_battles")
+                   f"all.xp,all.wins,all.damage_received,all.shots,all.hits,all.survived_battles")
             async with session.get(url) as resp:
                 data = await resp.json()
 
@@ -4995,7 +4995,7 @@ async def gc_fetch_tank_stats(account_id):
         async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
-                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.damage_blocked,all.xp,all.wins")
+                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.xp,all.wins")
             async with session.get(url) as resp:
                 data = await resp.json()
             if data.get("status") != "ok":
