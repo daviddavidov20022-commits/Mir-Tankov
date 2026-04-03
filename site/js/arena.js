@@ -303,39 +303,41 @@ async function loadChallenges() {
 }
 
 const COND_DISPLAY = {
-    damage: { icon: '💥', name: 'Урон', key: 'damage', unit: '' },
-    spotting: { icon: '👁', name: 'Засвет', key: 'spotted', unit: '' },
-    blocked: { icon: '🛡', name: 'Заблокировано', key: 'blocked', unit: '' },
-    frags: { icon: '🎯', name: 'Фраги', key: 'frags', unit: '' },
-    xp: { icon: '⭐', name: 'Опыт', key: 'xp', unit: '' },
-    wins: { icon: '🏆', name: 'Победы', key: 'wins', unit: '' },
+    damage: { icon: '💥', name: 'Урон', key: 'avg_damage', totalKey: 'damage', unit: '' },
+    spotting: { icon: '👁', name: 'Засвет', key: 'avg_spotted', totalKey: 'spotted', unit: '' },
+    blocked: { icon: '🛡', name: 'Заблокировано', key: 'blocked', totalKey: 'blocked', unit: '' },
+    frags: { icon: '🎯', name: 'Фраги', key: 'avg_frags', totalKey: 'frags', unit: '' },
+    xp: { icon: '⭐', name: 'Опыт', key: 'avg_xp', totalKey: 'xp', unit: '' },
+    wins: { icon: '🏆', name: 'Победы', key: 'winrate', totalKey: 'wins', unit: '%' },
 };
 
 function renderAnalytics(fd, td, ch) {
     const cond = COND_DISPLAY[ch.condition] || COND_DISPLAY.damage;
-    const v1 = fd[cond.key] ?? 0;
-    const v2 = td[cond.key] ?? 0;
+    // Use avg values for display, fall back to total
+    const v1 = fd[cond.key] ?? fd[cond.totalKey] ?? 0;
+    const v2 = td[cond.key] ?? td[cond.totalKey] ?? 0;
     const c1 = v1 >= v2 ? '#4ade80' : '#ef4444';
     const c2 = v2 >= v1 ? '#4ade80' : '#ef4444';
     const name1 = ch.is_incoming ? ch.opponent_name : 'Я';
     const name2 = ch.is_incoming ? 'Я' : ch.opponent_name;
+    const fmt = (n) => typeof n === 'number' ? n.toLocaleString('ru') : n;
 
     return `
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
             <div style="text-align:center;font-size:0.6rem;color:#5A6577;margin-bottom:8px">
-                ${cond.icon} ${cond.name} · ${ch.tank_name} · 🧀 ${ch.wager}
+                ${cond.icon} Ср. ${cond.name} · ${ch.tank_name} · 🧀 ${ch.wager}
             </div>
             <div style="display:flex;gap:8px;align-items:center">
                 <div style="flex:1;text-align:center;padding:10px;border-radius:10px;background:rgba(0,0,0,0.2)">
                     <div style="font-size:0.6rem;color:#8a94a6;margin-bottom:4px">${name1}</div>
-                    <div style="font-size:1.2rem;font-family:'Russo One',sans-serif;color:${c1}">${v1}${cond.unit}</div>
-                    <div style="font-size:0.55rem;color:#5A6577">${fd.battles_played} боёв</div>
+                    <div style="font-size:1.2rem;font-family:'Russo One',sans-serif;color:${c1}">${fmt(v1)}${cond.unit}</div>
+                    <div style="font-size:0.55rem;color:#5A6577">${fd.battles_played || '?'} боёв</div>
                 </div>
                 <div style="font-size:0.9rem;color:#5A6577">⚔️</div>
                 <div style="flex:1;text-align:center;padding:10px;border-radius:10px;background:rgba(0,0,0,0.2)">
                     <div style="font-size:0.6rem;color:#8a94a6;margin-bottom:4px">${name2}</div>
-                    <div style="font-size:1.2rem;font-family:'Russo One',sans-serif;color:${c2}">${v2}${cond.unit}</div>
-                    <div style="font-size:0.55rem;color:#5A6577">${td.battles_played} боёв</div>
+                    <div style="font-size:1.2rem;font-family:'Russo One',sans-serif;color:${c2}">${fmt(v2)}${cond.unit}</div>
+                    <div style="font-size:0.55rem;color:#5A6577">${td.battles_played || '?'} боёв</div>
                 </div>
             </div>
         </div>`;
