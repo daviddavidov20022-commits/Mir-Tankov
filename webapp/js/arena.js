@@ -480,7 +480,17 @@ async function checkChallengeResults(id) {
 }
 
 function copyOverlayLink(challengeId) {
-    const url = `${window.location.origin}/webapp/overlay.html?id=${challengeId}`;
+    // Always use Railway for OBS widgets — GitHub Pages doesn't serve /webapp/
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+    let base;
+    if (isLocal || window.location.hostname.includes('github.io')) {
+        base = 'https://mir-tankov-production.up.railway.app/webapp/overlay.html';
+    } else {
+        const pathParts = window.location.pathname.split('/');
+        pathParts[pathParts.length - 1] = 'overlay.html';
+        base = window.location.origin + pathParts.join('/');
+    }
+    const url = `${base}?id=${challengeId}`;
     navigator.clipboard.writeText(url).then(() => {
         showToast('📋 Ссылка для OBS скопирована!', 'success');
     }).catch(() => {

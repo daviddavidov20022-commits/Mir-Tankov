@@ -10190,6 +10190,9 @@ def create_api_app():
     app.router.add_get('/challenges.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'challenges.html')))
     app.router.add_get('/player.html', lambda r: web.FileResponse(os.path.join(webapp_dir, 'player.html')))
     
+    # Generic webapp file serving (for overlay.html, etc.)
+    app.router.add_get('/webapp/{filename:.*}', serve_webapp_file)
+    
     return app
 
 
