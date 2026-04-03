@@ -9974,6 +9974,218 @@ async def api_donate_contest_widget(request):
 
 
 # ==========================================
+# BACKGROUND CHALLENGE MONITOR
+# ==========================================
+
+async def challenge_monitor_loop():
+    """Background task: check all active challenges every 30 seconds.
+    This ensures freeze/finish happens promptly even without OBS widget open."""
+    INTERVAL = 30  # seconds
+    logger.info("Challenge monitor started (interval: %ds)", INTERVAL)
+
+    while True:
+        try:
+            await asyncio.sleep(INTERVAL)
+
+            from database import get_db
+            with get_db() as conn:
+                active = conn.execute(
+                    "SELECT id, from_telegram_id, to_telegram_id FROM arena_challenges WHERE status = 'active'"
+                ).fetchall()
+
+            if not active:
+                continue
+
+            logger.debug(f"Challenge monitor: checking {len(active)} active challenges")
+
+            for ch_row in active:
+                try:
+                    challenge_id = ch_row["id"]
+
+                    # Simulate the check API call internally
+                    with get_db() as conn:
+                        ch = dict(conn.execute("SELECT * FROM arena_challenges WHERE id = ? AND status = 'active'", (challenge_id,)).fetchone() or {})
+
+                    if not ch:
+                        continue
+
+                    from_user = get_user_by_telegram_id(ch["from_telegram_id"])
+                    to_user = get_user_by_telegram_id(ch["to_telegram_id"])
+
+                    from_current = await fetch_player_stats(from_user, ch) if from_user else None
+                    to_current = await fetch_player_stats(to_user, ch) if to_user else None
+
+                    if not from_current or not to_current:
+                        continue
+
+                    from_start = json.loads(ch["from_start_stats"]) if ch.get("from_start_stats") else None
+                    to_start = json.loads(ch["to_start_stats"]) if ch.get("to_start_stats") else None
+
+                    if not from_start or not to_start:
+                        # No snapshot yet — save one
+                        from_start = from_start or from_current
+                        to_start = to_start or to_current
+                        with get_db() as conn:
+                            conn.execute(
+                                "UPDATE arena_challenges SET from_start_stats = ?, to_start_stats = ? WHERE id = ?",
+                                (json.dumps(from_start), json.dumps(to_start), challenge_id))
+                        continue
+
+                    required_battles = ch["battles"]
+                    condition = ch["condition"]
+
+                    from_battles_played = from_current["battles"] - from_start["battles"]
+                    to_battles_played = to_current["battles"] - to_start["battles"]
+
+                    # Update last stats for per-battle tracking
+                    battle_history = json.loads(ch.get("battle_history") or "[]")
+                    from_last = json.loads(ch["from_last_stats"]) if ch.get("from_last_stats") else from_start
+                    to_last = json.loads(ch["to_last_stats"]) if ch.get("to_last_stats") else to_start
+
+                    STAT_KEY = {
+                        "damage": "damage_dealt", "spotting": "spotted", "blocked": "damage_received",
+                        "frags": "frags", "xp": "xp", "wins": "wins"
+                    }
+                    stat_key = STAT_KEY.get(condition, "damage_dealt")
+
+                    # Detect new battles from "from" player
+                    from_new_b = from_current["battles"] - from_last["battles"]
+                    if from_new_b > 0 and from_battles_played <= required_battles + 5:
+                        val = from_current[stat_key] - from_last[stat_key]
+                        for i in range(from_new_b):
+                            bn = len([x for x in battle_history if x.get("player") == "from"]) + 1
+                            if bn <= required_battles:
+                                battle_history.append({
+                                    "player": "from", "nickname": from_start.get("nickname", "?"),
+                                    "battle_num": bn, "damage": round(val / from_new_b),
+                                    stat_key.replace("damage_dealt", "damage"): round(val / from_new_b)
+                                })
+
+                    to_new_b = to_current["battles"] - to_last["battles"]
+                    if to_new_b > 0 and to_battles_played <= required_battles + 5:
+                        val = to_current[stat_key] - to_last[stat_key]
+                        for i in range(to_new_b):
+                            bn = len([x for x in battle_history if x.get("player") == "to"]) + 1
+                            if bn <= required_battles:
+                                battle_history.append({
+                                    "player": "to", "nickname": to_start.get("nickname", "?"),
+                                    "battle_num": bn, "damage": round(val / to_new_b),
+                                    stat_key.replace("damage_dealt", "damage"): round(val / to_new_b)
+                                })
+
+                    # Save last stats
+                    with get_db() as conn:
+                        conn.execute(
+                            "UPDATE arena_challenges SET from_last_stats = ?, to_last_stats = ?, battle_history = ? WHERE id = ?",
+                            (json.dumps(from_current), json.dumps(to_current), json.dumps(battle_history), challenge_id))
+
+                    # FREEZE stats when player reaches required battles
+                    from_end = json.loads(ch["from_end_stats"]) if ch.get("from_end_stats") else None
+                    to_end = json.loads(ch["to_end_stats"]) if ch.get("to_end_stats") else None
+
+                    freeze_updates = {}
+                    if from_battles_played >= required_battles and not from_end:
+                        freeze_updates["from_end_stats"] = json.dumps(from_current)
+                        from_end = from_current
+                        logger.info(f"Challenge {challenge_id}: FREEZE from_player at {from_battles_played} battles")
+                    if to_battles_played >= required_battles and not to_end:
+                        freeze_updates["to_end_stats"] = json.dumps(to_current)
+                        to_end = to_current
+                        logger.info(f"Challenge {challenge_id}: FREEZE to_player at {to_battles_played} battles")
+
+                    if freeze_updates:
+                        sets = ", ".join(f"{k} = ?" for k in freeze_updates)
+                        vals = list(freeze_updates.values()) + [challenge_id]
+                        with get_db() as conn:
+                            conn.execute(f"UPDATE arena_challenges SET {sets} WHERE id = ?", vals)
+
+                    # Auto-finish if both reached required battles
+                    both_ready = from_battles_played >= required_battles and to_battles_played >= required_battles
+                    if both_ready and ch["status"] == "active":
+                        from_final = from_end or from_current
+                        to_final = to_end or to_current
+
+                        from_battles_capped = min(from_battles_played, required_battles)
+                        to_battles_capped = min(to_battles_played, required_battles)
+
+                        def _calc(final, start, bc):
+                            bp = max(bc, 1)
+                            d_dmg = final["damage_dealt"] - start["damage_dealt"]
+                            return {
+                                "battles_played": bc,
+                                "damage": d_dmg,
+                                "spotted": final["spotted"] - start["spotted"],
+                                "frags": final["frags"] - start["frags"],
+                                "xp": final["xp"] - start["xp"],
+                                "wins": final["wins"] - start["wins"],
+                                "blocked": final["damage_received"] - start["damage_received"],
+                                "avg_damage": round(d_dmg / bp),
+                            }
+
+                        fd = _calc(from_final, from_start, from_battles_capped)
+                        td = _calc(to_final, to_start, to_battles_capped)
+
+                        DELTA_KEY = {
+                            "damage": "damage", "spotting": "spotted", "blocked": "blocked",
+                            "frags": "frags", "xp": "xp", "wins": "wins"
+                        }
+                        dk = DELTA_KEY.get(condition, "damage")
+                        from_score = fd.get(dk, 0)
+                        to_score = td.get(dk, 0)
+
+                        if from_score >= to_score:
+                            winner_tg = ch["from_telegram_id"]
+                            winner_name = from_start.get("nickname", "Игрок 1")
+                        else:
+                            winner_tg = ch["to_telegram_id"]
+                            winner_name = to_start.get("nickname", "Игрок 2")
+
+                        prize = ch["wager"] * 2
+                        with get_db() as conn:
+                            conn.execute("""
+                                UPDATE arena_challenges 
+                                SET status = 'finished', winner_telegram_id = ?,
+                                    from_end_stats = ?, to_end_stats = ?,
+                                    finished_at = datetime('now')
+                                WHERE id = ? AND status = 'active'
+                            """, (winner_tg, json.dumps(fd), json.dumps(td), challenge_id))
+                            conn.execute(
+                                "UPDATE users SET coins = coins + ? WHERE telegram_id = ?",
+                                (prize, winner_tg))
+
+                        logger.info(f"Challenge {challenge_id}: AUTO-FINISHED! Winner: {winner_name} ({from_score} vs {to_score})")
+
+                        # Notify players
+                        try:
+                            COND_NAMES = {"damage": "💥 Урон", "spotting": "👁 Засвет", "blocked": "🛡 Блок",
+                                          "frags": "🎯 Фраги", "xp": "⭐ Опыт", "wins": "🏆 Победы"}
+                            cond_name = COND_NAMES.get(condition, condition)
+                            text = (
+                                f"🏆 <b>Челлендж завершён!</b>\n\n"
+                                f"📋 {ch['tank_name']} · {cond_name}\n"
+                                f"⚔️ {from_start.get('nickname')}: <b>{from_score}</b>\n"
+                                f"⚔️ {to_start.get('nickname')}: <b>{to_score}</b>\n\n"
+                                f"🏆 Победитель: <b>{winner_name}</b>\n"
+                                f"🧀 Приз: <b>{prize} 🧀</b>"
+                            )
+                            await bot.send_message(ch["from_telegram_id"], text, parse_mode="HTML")
+                            await bot.send_message(ch["to_telegram_id"], text, parse_mode="HTML")
+                        except Exception as ne:
+                            logger.warning(f"Challenge {challenge_id}: notify failed: {ne}")
+
+                except Exception as ce:
+                    logger.warning(f"Challenge monitor error for #{ch_row['id']}: {ce}")
+                    continue
+
+                # Small delay between challenges to avoid API rate limits
+                await asyncio.sleep(2)
+
+        except Exception as e:
+            logger.error(f"Challenge monitor loop error: {e}")
+            await asyncio.sleep(60)
+
+
+# ==========================================
 # ЗАПУСК
 # ==========================================
 
@@ -10221,6 +10433,9 @@ async def main():
 
     # Предзагрузка энциклопедии танков, чтобы админка открывалась мгновенно
     asyncio.create_task(_load_tank_encyclopedia())
+
+    # Фоновый мониторинг активных PVP челленджей (freeze + auto-finish)
+    asyncio.create_task(challenge_monitor_loop())
 
     # Запускаем серверное чтение Twitch чата
     twitch_ch = stream_config.get('twitch', {}).get('channel', 'iserveri')
