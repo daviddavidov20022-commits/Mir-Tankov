@@ -4337,16 +4337,15 @@ async def api_check_challenge_results(request):
 
         # If both ready, determine winner and complete
         if both_ready:
-            # Use AVERAGE values for fair comparison
-            AVG_KEY = {
-                "damage": "avg_damage", "spotting": "avg_spotted",
-                "blocked": "blocked", "frags": "avg_frags",
-                "xp": "avg_xp", "wins": "winrate"
+            DELTA_KEY = {
+                "damage": "damage", "spotting": "spotted",
+                "blocked": "blocked", "frags": "frags",
+                "xp": "xp", "wins": "wins"
             }
-            dk = AVG_KEY.get(condition, "avg_damage")
+            dk = DELTA_KEY.get(condition, "damage")
 
-            from_score = from_delta.get(dk, from_delta.get("damage", 0))
-            to_score = to_delta.get(dk, to_delta.get("damage", 0))
+            from_score = from_delta.get(dk, 0)
+            to_score = to_delta.get(dk, 0)
 
             if from_score >= to_score:
                 winner_tg = ch["from_telegram_id"]

@@ -303,19 +303,18 @@ async function loadChallenges() {
 }
 
 const COND_DISPLAY = {
-    damage: { icon: '💥', name: 'Урон', key: 'avg_damage', totalKey: 'damage', unit: '' },
-    spotting: { icon: '👁', name: 'Засвет', key: 'avg_spotted', totalKey: 'spotted', unit: '' },
-    blocked: { icon: '🛡', name: 'Заблокировано', key: 'blocked', totalKey: 'blocked', unit: '' },
-    frags: { icon: '🎯', name: 'Фраги', key: 'avg_frags', totalKey: 'frags', unit: '' },
-    xp: { icon: '⭐', name: 'Опыт', key: 'avg_xp', totalKey: 'xp', unit: '' },
-    wins: { icon: '🏆', name: 'Победы', key: 'winrate', totalKey: 'wins', unit: '%' },
+    damage: { icon: '💥', name: 'Урон', key: 'damage', unit: '' },
+    spotting: { icon: '👁', name: 'Засвет', key: 'spotted', unit: '' },
+    blocked: { icon: '🛡', name: 'Заблокировано', key: 'blocked', unit: '' },
+    frags: { icon: '🎯', name: 'Фраги', key: 'frags', unit: '' },
+    xp: { icon: '⭐', name: 'Опыт', key: 'xp', unit: '' },
+    wins: { icon: '🏆', name: 'Победы', key: 'wins', unit: '' },
 };
 
 function renderAnalytics(fd, td, ch) {
     const cond = COND_DISPLAY[ch.condition] || COND_DISPLAY.damage;
-    // Use avg values for display, fall back to total
-    const v1 = fd[cond.key] ?? fd[cond.totalKey] ?? 0;
-    const v2 = td[cond.key] ?? td[cond.totalKey] ?? 0;
+    const v1 = fd[cond.key] ?? 0;
+    const v2 = td[cond.key] ?? 0;
     const c1 = v1 >= v2 ? '#4ade80' : '#ef4444';
     const c2 = v2 >= v1 ? '#4ade80' : '#ef4444';
     const name1 = ch.is_incoming ? ch.opponent_name : 'Я';
@@ -325,7 +324,7 @@ function renderAnalytics(fd, td, ch) {
     return `
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
             <div style="text-align:center;font-size:0.6rem;color:#5A6577;margin-bottom:8px">
-                ${cond.icon} Ср. ${cond.name} · ${ch.tank_name} · 🧀 ${ch.wager}
+                ${cond.icon} ${cond.name} · ${ch.tank_name} · 🧀 ${ch.wager}
             </div>
             <div style="display:flex;gap:8px;align-items:center">
                 <div style="flex:1;text-align:center;padding:10px;border-radius:10px;background:rgba(0,0,0,0.2)">
