@@ -5992,8 +5992,10 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
         existing_count = existing_logs["cnt"] if existing_logs else 0
 
     # Если нет baselines — пропускаем
-    if not baseline_map:
+    if not baselines:
         return
+
+    baseline_map = {b["tank_id"]: b for b in baselines}
 
     # Находим танки с новыми боями
     new_battles_list = []
