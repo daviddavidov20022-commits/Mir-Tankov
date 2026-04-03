@@ -1205,6 +1205,8 @@ async function loadMyPvpChallenges() {
 
         // Show recent challenges (last 15)
         const recent = data.challenges.slice(0, 15);
+        window._historyData = window._historyData || {};
+        recent.forEach(c => window._historyData[c.id] = c);
 
         container.innerHTML = recent.map(c => {
             const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
@@ -1233,7 +1235,7 @@ async function loadMyPvpChallenges() {
             let cancelHtml = '';
             if (c.status === 'pending' && isSent) {
                 cancelHtml = `
-                    <button onclick="cancelMyChallenge(${c.id})" style="margin-top:8px;width:100%;padding:8px;
+                    <button onclick="event.stopPropagation();cancelMyChallenge(${c.id})" style="margin-top:8px;width:100%;padding:8px;
                         border-radius:8px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.06);
                         color:#ef4444;font-size:0.65rem;font-weight:600;cursor:pointer;
                         font-family:'Inter',sans-serif;transition:all 0.2s"
@@ -1248,11 +1250,11 @@ async function loadMyPvpChallenges() {
             if (c.status === 'pending' && c.is_incoming) {
                 actionHtml = `
                     <div style="display:flex;gap:6px;margin-top:8px">
-                        <button onclick="acceptChallenge(${c.id});setTimeout(loadMyPvpChallenges,1000)" style="flex:1;padding:8px;border-radius:8px;border:none;
+                        <button onclick="event.stopPropagation();acceptChallenge(${c.id});setTimeout(loadMyPvpChallenges,1000)" style="flex:1;padding:8px;border-radius:8px;border:none;
                             background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;font-size:0.65rem;cursor:pointer">
                             ✅ Принять
                         </button>
-                        <button onclick="declineChallenge(${c.id});setTimeout(loadMyPvpChallenges,1000)" style="flex:1;padding:8px;border-radius:8px;
+                        <button onclick="event.stopPropagation();declineChallenge(${c.id});setTimeout(loadMyPvpChallenges,1000)" style="flex:1;padding:8px;border-radius:8px;
                             border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-weight:700;font-size:0.65rem;cursor:pointer">
                             ❌ Отклонить
                         </button>
@@ -1264,7 +1266,7 @@ async function loadMyPvpChallenges() {
             if (c.status === 'active') {
                 activeHtml = `
                     <div style="margin-top:8px;display:flex;gap:6px">
-                        <button onclick="switchTab('active', document.querySelectorAll('.arena-tab')[3])" style="flex:1;padding:8px;
+                        <button onclick="event.stopPropagation();switchTab('active', document.querySelectorAll('.arena-tab')[3])" style="flex:1;padding:8px;
                             border-radius:8px;border:1px solid rgba(200,170,110,0.2);background:rgba(200,170,110,0.06);
                             color:#C8AA6E;font-size:0.65rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">
                             📊 Смотреть результаты
@@ -1273,8 +1275,9 @@ async function loadMyPvpChallenges() {
             }
 
             return `
-                <div style="padding:14px;border-radius:14px;background:${st.bg};border:1px solid ${st.border};
-                    margin-bottom:8px;animation:fadeInUp 0.3s ease">
+                <div onclick="showChallengeDetail(${c.id})" style="padding:14px;border-radius:14px;background:${st.bg};border:1px solid ${st.border};
+                    margin-bottom:8px;animation:fadeInUp 0.3s ease;cursor:pointer;transition:transform 0.2s"
+                    onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
                     <!-- Header: opponent + status -->
                     <div style="display:flex;justify-content:space-between;align-items:flex-start">
                         <div style="flex:1;min-width:0">

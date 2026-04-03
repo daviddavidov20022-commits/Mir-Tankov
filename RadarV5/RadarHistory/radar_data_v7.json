@@ -175,6 +175,13 @@
           "tank": "Grille 15",
           "dmg": 3464,
           "kills": 2
+        },
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Grille 15",
+          "dmg": 1625,
+          "kills": 0
         }
       ]
     },
@@ -4083,6 +4090,162 @@
           "kills": 1
         }
       ]
+    },
+    "NAGIBATOR318": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "WZ-132-1",
+          "dmg": 5448,
+          "kills": 1
+        }
+      ]
+    },
+    "oxotnik__2019": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Wilk",
+          "dmg": 5153,
+          "kills": 2
+        }
+      ]
+    },
+    "bvadder": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Concept 5",
+          "dmg": 4074,
+          "kills": 2
+        }
+      ]
+    },
+    "Orange_fox_in_the_tank": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "TVP T 50/51",
+          "dmg": 3531,
+          "kills": 0
+        }
+      ]
+    },
+    "Per_aspera_ad_astr": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Об. 278",
+          "dmg": 2820,
+          "kills": 1
+        }
+      ]
+    },
+    "Rav_Engels88": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Об. 430У",
+          "dmg": 2499,
+          "kills": 1
+        }
+      ]
+    },
+    "17209016": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Unknown",
+          "dmg": 3130,
+          "kills": 0
+        }
+      ]
+    },
+    "21114811": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Unknown",
+          "dmg": 2420,
+          "kills": 1
+        }
+      ]
+    },
+    "57738265": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Unknown",
+          "dmg": 2088,
+          "kills": 1
+        }
+      ]
+    },
+    "93175600": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Unknown",
+          "dmg": 1754,
+          "kills": 0
+        }
+      ]
+    },
+    "6426919": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Unknown",
+          "dmg": 1634,
+          "kills": 1
+        }
+      ]
+    },
+    "220355": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Unknown",
+          "dmg": 1072,
+          "kills": 0
+        }
+      ]
+    },
+    "7574596": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 28,
+          "date": "04.04.2026 01:26",
+          "tank": "Unknown",
+          "dmg": 799,
+          "kills": 0
+        }
+      ]
     }
   },
   "favorites": [],
@@ -6672,6 +6835,113 @@
           "damage": 509,
           "kills": 1,
           "account_id": "3695953"
+        }
+      ],
+      "winner": "ally"
+    },
+    {
+      "battle_number": 28,
+      "date": "04.04.2026 01:26",
+      "allies": [
+        {
+          "nick": "NAGIBATOR318",
+          "tank": "WZ-132-1",
+          "damage": 5448,
+          "kills": 1,
+          "account_id": "27975119"
+        },
+        {
+          "nick": "oxotnik__2019",
+          "tank": "Wilk",
+          "damage": 5153,
+          "kills": 2,
+          "account_id": "103534417"
+        },
+        {
+          "nick": "bvadder",
+          "tank": "Concept 5",
+          "damage": 4074,
+          "kills": 2,
+          "account_id": "22153549"
+        },
+        {
+          "nick": "Orange_fox_in_the_tank",
+          "tank": "TVP T 50/51",
+          "damage": 3531,
+          "kills": 0,
+          "account_id": "96175279"
+        },
+        {
+          "nick": "Per_aspera_ad_astr",
+          "tank": "Об. 278",
+          "damage": 2820,
+          "kills": 1,
+          "account_id": "33321404"
+        },
+        {
+          "nick": "Rav_Engels88",
+          "tank": "Об. 430У",
+          "damage": 2499,
+          "kills": 1,
+          "account_id": "6858263"
+        },
+        {
+          "nick": "GloriAmtower",
+          "tank": "Grille 15",
+          "damage": 1625,
+          "kills": 0,
+          "account_id": "101862451"
+        }
+      ],
+      "enemies": [
+        {
+          "nick": "17209016",
+          "tank": "Unknown",
+          "damage": 3130,
+          "kills": 0,
+          "account_id": "17209016"
+        },
+        {
+          "nick": "21114811",
+          "tank": "Unknown",
+          "damage": 2420,
+          "kills": 1,
+          "account_id": "21114811"
+        },
+        {
+          "nick": "57738265",
+          "tank": "Unknown",
+          "damage": 2088,
+          "kills": 1,
+          "account_id": "57738265"
+        },
+        {
+          "nick": "93175600",
+          "tank": "Unknown",
+          "damage": 1754,
+          "kills": 0,
+          "account_id": "93175600"
+        },
+        {
+          "nick": "6426919",
+          "tank": "Unknown",
+          "damage": 1634,
+          "kills": 1,
+          "account_id": "6426919"
+        },
+        {
+          "nick": "220355",
+          "tank": "Unknown",
+          "damage": 1072,
+          "kills": 0,
+          "account_id": "220355"
+        },
+        {
+          "nick": "7574596",
+          "tank": "Unknown",
+          "damage": 799,
+          "kills": 0,
+          "account_id": "7574596"
         }
       ],
       "winner": "ally"
