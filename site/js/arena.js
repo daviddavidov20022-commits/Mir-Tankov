@@ -511,6 +511,7 @@ async function deleteChallenge(id) {
         if (data.success) {
             showToast('🗑 Вызов удалён', 'info');
             loadChallenges();
+            if (typeof loadMyPvpChallenges === 'function') loadMyPvpChallenges();
         } else {
             showToast(`❌ ${data.error}`, 'error');
         }
@@ -1285,9 +1286,17 @@ async function loadMyPvpChallenges() {
                             </div>
                             <div style="font-size:0.55rem;color:#5A6577;margin-top:3px">${dirLabel} · ${ago}</div>
                         </div>
-                        <div style="padding:4px 10px;border-radius:8px;background:${st.bg};border:1px solid ${st.border};
-                            font-size:0.6rem;font-weight:700;color:${st.color};white-space:nowrap">
-                            ${st.label}
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <div style="padding:4px 10px;border-radius:8px;background:${st.bg};border:1px solid ${st.border};
+                                font-size:0.6rem;font-weight:700;color:${st.color};white-space:nowrap">
+                                ${st.label}
+                            </div>
+                            ${c.status !== 'active' ? `
+                            <button onclick="event.stopPropagation();deleteChallenge(${c.id})" style="padding:4px;border-radius:6px;border:none;background:transparent;color:#5A6577;font-size:0.85rem;cursor:pointer;transition:color 0.2s" 
+                                onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#5A6577'" title="Удалить">
+                                🗑
+                            </button>
+                            ` : ''}
                         </div>
                     </div>
 
