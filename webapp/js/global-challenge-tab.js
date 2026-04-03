@@ -329,9 +329,13 @@ function gcShowActive(ch) {
             const totalPlayers = (ch.leaderboard || []).length;
             const donePlayers = (ch.leaderboard || []).filter(p => p.battles_played >= ch.max_battles).length;
             
+            // Remove old ones first to prevent duplication!
+            const oldFinishDivs = joinBtn.parentElement.querySelectorAll('.gc-finish-progress-div');
+            oldFinishDivs.forEach(d => d.remove());
             
             if (allDone && totalPlayers > 0) {
                 const finishDiv = document.createElement('div');
+                finishDiv.className = 'gc-finish-progress-div';
                 finishDiv.style.cssText = 'padding:12px 0;';
                 const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
                 finishDiv.innerHTML = `
@@ -351,6 +355,7 @@ function gcShowActive(ch) {
                 joinBtn.parentElement.insertBefore(finishDiv, joinBtn.nextSibling);
             } else if (totalPlayers > 0) {
                 const progressDiv = document.createElement('div');
+                progressDiv.className = 'gc-finish-progress-div';
                 progressDiv.style.cssText = 'text-align:center;padding:8px 0;font-size:0.65rem;color:#5A6577';
                 progressDiv.textContent = `⏳ Боёв сыграно: ${donePlayers}/${totalPlayers} участников (нужно ${ch.max_battles} боёв)`;
                 joinBtn.parentElement.insertBefore(progressDiv, joinBtn.nextSibling);
