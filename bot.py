@@ -4694,7 +4694,8 @@ async def gc_fetch_account_assisted(account_ids):
                 ids_str = ",".join(str(aid) for aid in batch)
                 url = (f"https://api.tanki.su/wot/account/info/"
                        f"?application_id={get_lesta_app_id()}&account_id={ids_str}"
-                       f"&fields=statistics.all.damage_assisted_radio,statistics.all.damage_assisted_track,"
+                       f"&fields=statistics.all.avg_damage_assisted,statistics.all.avg_damage_assisted_radio,"
+                       f"statistics.all.avg_damage_assisted_track,statistics.all.avg_damage_blocked,"
                        f"statistics.all.battles,statistics.all.damage_dealt")
                 async with session.get(url) as resp:
                     data = await resp.json()
@@ -4707,11 +4708,13 @@ async def gc_fetch_account_assisted(account_ids):
                     if not pdata:
                         continue
                     stats_all = pdata.get("statistics", {}).get("all", {})
-                    radio = stats_all.get("damage_assisted_radio", 0) or 0
-                    track = stats_all.get("damage_assisted_track", 0) or 0
+                    battles = stats_all.get("battles", 0) or 0
+                    # Lesta API only has AVG fields — multiply by battles to get totals
+                    avg_assisted = stats_all.get("avg_damage_assisted", 0) or 0
+                    total_assisted = int(avg_assisted * battles)
                     results[int(aid_str)] = {
-                        "assisted": radio + track,
-                        "battles": stats_all.get("battles", 0) or 0,
+                        "assisted": total_assisted,
+                        "battles": battles,
                         "damage_dealt": stats_all.get("damage_dealt", 0) or 0,
                     }
     except Exception as e:
