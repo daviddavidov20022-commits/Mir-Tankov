@@ -480,17 +480,17 @@ async function checkChallengeResults(id) {
 }
 
 function copyOverlayLink(challengeId) {
-    // Always use Railway for OBS widgets — GitHub Pages doesn't serve /webapp/
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
-    let base;
-    if (isLocal || window.location.hostname.includes('github.io')) {
-        base = 'https://mir-tankov-production.up.railway.app/webapp/overlay.html';
-    } else {
-        const pathParts = window.location.pathname.split('/');
-        pathParts[pathParts.length - 1] = 'overlay.html';
-        base = window.location.origin + pathParts.join('/');
+    // Use widget constructor settings if available
+    if (typeof _wcBuildUrl === 'function') {
+        const url = _wcBuildUrl(challengeId);
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('📋 Ссылка для OBS скопирована (с настройками виджета)!', 'success');
+        }).catch(() => {
+            prompt('Скопируйте ссылку:', url);
+        });
+        return;
     }
-    const url = `${base}?id=${challengeId}`;
+    const url = `https://mir-tankov-production.up.railway.app/webapp/overlay.html?id=${challengeId}`;
     navigator.clipboard.writeText(url).then(() => {
         showToast('📋 Ссылка для OBS скопирована!', 'success');
     }).catch(() => {
@@ -1272,6 +1272,207 @@ window.addSelfCheese = addSelfCheese;
 window.closeGiftModal = closeGiftModal;
 window.loadMyPvpChallenges = loadMyPvpChallenges;
 window.cancelMyChallenge = cancelMyChallenge;
+window.toggleWidgetConstructor = toggleWidgetConstructor;
+window.wcSelectTheme = wcSelectTheme;
+window.wcSelectLayout = wcSelectLayout;
+window.wcSelectFont = wcSelectFont;
+window.wcUpdateSlider = wcUpdateSlider;
+window.wcUpdatePreview = wcUpdatePreview;
+window.wcCopyLink = wcCopyLink;
+window.wcResetDefaults = wcResetDefaults;
+
+// ============================================================
+// PVP WIDGET CONSTRUCTOR
+// ============================================================
+const wcConfig = {
+    theme: 'gold',
+    layout: 'full',
+    font: 'russo',
+    scale: 1.0,
+    bgOp: 94,
+    radius: 18,
+    header: true,
+    info: true,
+    progress: true,
+    history: true,
+    footer: true,
+    brand: true,
+    anim: true,
+    glow: false,
+    accentOn: false,
+    accent: '#C8AA6E',
+};
+
+// Try to restore from localStorage
+try {
+    const saved = localStorage.getItem('pvp_wc_config');
+    if (saved) Object.assign(wcConfig, JSON.parse(saved));
+} catch (e) {}
+
+function saveWcConfig() {
+    localStorage.setItem('pvp_wc_config', JSON.stringify(wcConfig));
+}
+
+function toggleWidgetConstructor() {
+    const body = document.getElementById('wcBody');
+    const btn = document.getElementById('wcToggleBtn');
+    if (body.style.display === 'none') {
+        body.style.display = '';
+        btn.textContent = '▲';
+        wcRestoreUI();
+        wcUpdatePreview();
+    } else {
+        body.style.display = 'none';
+        btn.textContent = '▼';
+    }
+}
+
+function wcRestoreUI() {
+    // Restore theme buttons
+    document.querySelectorAll('#wcThemes .wc-theme-btn').forEach(b => {
+        b.classList.toggle('wc-theme-active', b.dataset.theme === wcConfig.theme);
+    });
+    // Restore layout buttons
+    document.querySelectorAll('#wcLayouts .wc-layout-btn').forEach(b => {
+        b.classList.remove('wc-theme-active');
+    });
+    const layouts = ['full', 'compact', 'minimal', 'horizontal'];
+    const layoutBtns = document.querySelectorAll('#wcLayouts .wc-layout-btn');
+    const li = layouts.indexOf(wcConfig.layout);
+    if (li >= 0 && layoutBtns[li]) layoutBtns[li].classList.add('wc-theme-active');
+
+    // Sliders
+    document.getElementById('wcScale').value = wcConfig.scale;
+    document.getElementById('wcScaleVal').textContent = wcConfig.scale.toFixed(1);
+    document.getElementById('wcBgOp').value = wcConfig.bgOp;
+    document.getElementById('wcBgVal').textContent = wcConfig.bgOp + '%';
+    document.getElementById('wcRadius').value = wcConfig.radius;
+    document.getElementById('wcRadiusVal').textContent = wcConfig.radius + 'px';
+
+    // Toggles
+    document.getElementById('wcHeader').checked = wcConfig.header;
+    document.getElementById('wcInfo').checked = wcConfig.info;
+    document.getElementById('wcProgress').checked = wcConfig.progress;
+    document.getElementById('wcHistory').checked = wcConfig.history;
+    document.getElementById('wcFooter').checked = wcConfig.footer;
+    document.getElementById('wcBrand').checked = wcConfig.brand;
+    document.getElementById('wcAnim').checked = wcConfig.anim;
+    document.getElementById('wcGlow').checked = wcConfig.glow;
+    document.getElementById('wcAccentOn').checked = wcConfig.accentOn;
+    document.getElementById('wcAccent').value = wcConfig.accent;
+}
+
+function wcSelectTheme(theme, btn) {
+    wcConfig.theme = theme;
+    document.querySelectorAll('#wcThemes .wc-theme-btn').forEach(b => b.classList.remove('wc-theme-active'));
+    btn.classList.add('wc-theme-active');
+    saveWcConfig();
+    wcUpdatePreview();
+}
+
+function wcSelectLayout(layout, btn) {
+    wcConfig.layout = layout;
+    document.querySelectorAll('#wcLayouts .wc-layout-btn').forEach(b => b.classList.remove('wc-theme-active'));
+    btn.classList.add('wc-theme-active');
+    saveWcConfig();
+    wcUpdatePreview();
+}
+
+function wcSelectFont(font, btn) {
+    wcConfig.font = font;
+    btn.parentElement.querySelectorAll('.wc-layout-btn').forEach(b => b.classList.remove('wc-theme-active'));
+    btn.classList.add('wc-theme-active');
+    saveWcConfig();
+    wcUpdatePreview();
+}
+
+function wcUpdateSlider() {
+    wcConfig.scale = parseFloat(document.getElementById('wcScale').value);
+    wcConfig.bgOp = parseInt(document.getElementById('wcBgOp').value);
+    wcConfig.radius = parseInt(document.getElementById('wcRadius').value);
+    document.getElementById('wcScaleVal').textContent = wcConfig.scale.toFixed(1);
+    document.getElementById('wcBgVal').textContent = wcConfig.bgOp + '%';
+    document.getElementById('wcRadiusVal').textContent = wcConfig.radius + 'px';
+    saveWcConfig();
+    wcUpdatePreview();
+}
+
+function wcUpdatePreview() {
+    wcConfig.header = document.getElementById('wcHeader').checked;
+    wcConfig.info = document.getElementById('wcInfo').checked;
+    wcConfig.progress = document.getElementById('wcProgress').checked;
+    wcConfig.history = document.getElementById('wcHistory').checked;
+    wcConfig.footer = document.getElementById('wcFooter').checked;
+    wcConfig.brand = document.getElementById('wcBrand').checked;
+    wcConfig.anim = document.getElementById('wcAnim').checked;
+    wcConfig.glow = document.getElementById('wcGlow').checked;
+    wcConfig.accentOn = document.getElementById('wcAccentOn').checked;
+    wcConfig.accent = document.getElementById('wcAccent').value;
+    saveWcConfig();
+
+    const c = wcConfig;
+    const preview = document.getElementById('wcPreview');
+    if (!preview) return;
+
+    // Build a static demo preview
+    const url = _wcBuildUrl('preview');
+    preview.innerHTML = `<iframe src="${url}" style="width:580px;height:340px;border:none;border-radius:14px;pointer-events:none" scrolling="no"></iframe>`;
+}
+
+function _wcBuildUrl(challengeId) {
+    const c = wcConfig;
+    const base = 'https://mir-tankov-production.up.railway.app/webapp/overlay.html';
+    const p = new URLSearchParams();
+    if (challengeId) p.set('id', challengeId);
+    if (c.theme !== 'gold') p.set('theme', c.theme);
+    if (c.layout !== 'full') p.set('layout', c.layout);
+    if (c.font !== 'russo') p.set('font', c.font);
+    if (c.scale !== 1.0) p.set('scale', c.scale);
+    if (c.bgOp !== 94) p.set('bgop', (c.bgOp / 100).toFixed(2));
+    if (c.radius !== 18) p.set('radius', c.radius);
+    if (!c.header) p.set('header', '0');
+    if (!c.info) p.set('info', '0');
+    if (!c.progress) p.set('progress', '0');
+    if (!c.history) p.set('history', '0');
+    if (!c.footer) p.set('footer', '0');
+    if (!c.brand) p.set('brand', '0');
+    if (!c.anim) p.set('anim', '0');
+    if (c.glow) p.set('glow', '1');
+    if (c.accentOn && c.accent) p.set('accent', c.accent.replace('#', ''));
+    return base + '?' + p.toString();
+}
+
+function wcCopyLink() {
+    // Find the latest active challenge ID to use
+    // Or use a generic link
+    const url = _wcBuildUrl('CHALLENGE_ID');
+    const display = url.replace('CHALLENGE_ID', '<ID вашего челленджа>');
+    
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('📋 Шаблон OBS ссылки скопирован! Замените CHALLENGE_ID на ID вызова', 'success');
+    }).catch(() => {
+        prompt('Скопируйте ссылку (замените CHALLENGE_ID на ID вызова):', url);
+    });
+
+    // Show preview
+    const linkEl = document.getElementById('wcLinkPreview');
+    linkEl.style.display = '';
+    linkEl.innerHTML = `<div style="color:#C8AA6E;margin-bottom:4px;font-size:0.55rem;font-family:Inter,sans-serif">📋 Скопировано! Замените CHALLENGE_ID на номер</div>${display}`;
+}
+
+function wcResetDefaults() {
+    Object.assign(wcConfig, {
+        theme: 'gold', layout: 'full', font: 'russo',
+        scale: 1.0, bgOp: 94, radius: 18,
+        header: true, info: true, progress: true, history: true,
+        footer: true, brand: true, anim: true, glow: false,
+        accentOn: false, accent: '#C8AA6E',
+    });
+    saveWcConfig();
+    wcRestoreUI();
+    wcUpdatePreview();
+    showToast('🔄 Настройки сброшены', 'info');
+}
 
 function toggleBattleHistory(id) {
     const el = document.getElementById(`battleHistory-${id}`);

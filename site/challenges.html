@@ -319,16 +319,113 @@
                 </div>
             </div>
 
-            <!-- MY PVP CHALLENGES (inline) -->
-            <div class="my-pvp-section" id="myPvpSection" style="margin-top:24px">
+            
+
+            <!-- PVP WIDGET CONSTRUCTOR -->
+            <div class="my-pvp-section" id="pvpWidgetConstructor" style="margin-top:24px">
                 <div class="section-lbl" style="display:flex;justify-content:space-between;align-items:center">
-                    <span>📋 Мои вызовы</span>
-                    <button onclick="loadMyPvpChallenges()" style="background:none;border:none;color:#C8AA6E;font-size:0.7rem;cursor:pointer;padding:4px 8px">🔄</button>
+                    <span>🎨 Конструктор виджета OBS</span>
+                    <button onclick="toggleWidgetConstructor()" id="wcToggleBtn" style="background:none;border:none;color:#C8AA6E;font-size:0.7rem;cursor:pointer;padding:4px 8px">▼</button>
                 </div>
-                <div id="myPvpList">
-                    <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">⏳ Загрузка...</div>
+                <div id="wcBody" style="display:none">
+                    <!-- Preview -->
+                    <div style="margin-bottom:16px;border-radius:14px;overflow:hidden;background:rgba(0,0,0,0.4);padding:12px;border:1px solid rgba(255,255,255,0.05)">
+                        <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px;text-align:center">👁 Предпросмотр</div>
+                        <div id="wcPreview" style="transform:scale(0.65);transform-origin:top center;margin-bottom:-80px"></div>
+                    </div>
+
+                    <!-- Theme -->
+                    <div class="wc-group">
+                        <div class="wc-label">🎨 Тема</div>
+                        <div class="wc-theme-row" id="wcThemes">
+                            <button class="wc-theme-btn wc-theme-active" data-theme="gold" style="--tc:#C8AA6E" onclick="wcSelectTheme('gold',this)">Золото</button>
+                            <button class="wc-theme-btn" data-theme="neon" style="--tc:#a855f7" onclick="wcSelectTheme('neon',this)">Неон</button>
+                            <button class="wc-theme-btn" data-theme="fire" style="--tc:#f97316" onclick="wcSelectTheme('fire',this)">Огонь</button>
+                            <button class="wc-theme-btn" data-theme="ice" style="--tc:#38bdf8" onclick="wcSelectTheme('ice',this)">Лёд</button>
+                            <button class="wc-theme-btn" data-theme="blood" style="--tc:#dc2626" onclick="wcSelectTheme('blood',this)">Кровь</button>
+                            <button class="wc-theme-btn" data-theme="cyber" style="--tc:#22d3ee" onclick="wcSelectTheme('cyber',this)">Кибер</button>
+                            <button class="wc-theme-btn" data-theme="military" style="--tc:#6b8a3d" onclick="wcSelectTheme('military',this)">Милитари</button>
+                        </div>
+                    </div>
+
+                    <!-- Layout -->
+                    <div class="wc-group">
+                        <div class="wc-label">📐 Макет</div>
+                        <div class="wc-theme-row" id="wcLayouts">
+                            <button class="wc-layout-btn wc-theme-active" onclick="wcSelectLayout('full',this)">🖼 Полный</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('compact',this)">📦 Компакт</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('minimal',this)">✨ Мини</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('horizontal',this)">↔ Широкий</button>
+                        </div>
+                    </div>
+
+                    <!-- Font -->
+                    <div class="wc-group">
+                        <div class="wc-label">🔤 Шрифт счёта</div>
+                        <div class="wc-theme-row">
+                            <button class="wc-layout-btn wc-theme-active" onclick="wcSelectFont('russo',this)">Russo One</button>
+                            <button class="wc-layout-btn" onclick="wcSelectFont('orbitron',this)">Orbitron</button>
+                        </div>
+                    </div>
+
+                    <!-- Scale slider -->
+                    <div class="wc-group">
+                        <div class="wc-label">🔍 Масштаб: <span id="wcScaleVal">1.0</span></div>
+                        <input type="range" class="wc-slider" id="wcScale" min="0.6" max="1.6" step="0.05" value="1" oninput="wcUpdateSlider()">
+                    </div>
+
+                    <!-- BG Opacity slider -->
+                    <div class="wc-group">
+                        <div class="wc-label">🌅 Прозрачность фона: <span id="wcBgVal">94%</span></div>
+                        <input type="range" class="wc-slider" id="wcBgOp" min="0" max="100" step="2" value="94" oninput="wcUpdateSlider()">
+                    </div>
+
+                    <!-- Border radius slider -->
+                    <div class="wc-group">
+                        <div class="wc-label">⭕ Скругление: <span id="wcRadiusVal">18px</span></div>
+                        <input type="range" class="wc-slider" id="wcRadius" min="0" max="32" step="2" value="18" oninput="wcUpdateSlider()">
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="wc-group">
+                        <div class="wc-label">⚙ Элементы</div>
+                        <div class="wc-toggles">
+                            <label class="wc-toggle"><input type="checkbox" id="wcHeader" checked onchange="wcUpdatePreview()"><span>🏷 Заголовок</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcInfo" checked onchange="wcUpdatePreview()"><span>📋 Инфо-теги</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcProgress" checked onchange="wcUpdatePreview()"><span>📊 Прогресс-бар</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcHistory" checked onchange="wcUpdatePreview()"><span>📖 Бои</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcFooter" checked onchange="wcUpdatePreview()"><span>🧀 Ставка/приз</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcBrand" checked onchange="wcUpdatePreview()"><span>✨ Бренд</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Effects -->
+                    <div class="wc-group">
+                        <div class="wc-label">✨ Эффекты</div>
+                        <div class="wc-toggles">
+                            <label class="wc-toggle"><input type="checkbox" id="wcAnim" checked onchange="wcUpdatePreview()"><span>🎬 Анимации</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcGlow" onchange="wcUpdatePreview()"><span>💡 Свечение рамки</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Custom accent color -->
+                    <div class="wc-group">
+                        <div class="wc-label">🌈 Свой акцент</div>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <input type="color" id="wcAccent" value="#C8AA6E" style="width:36px;height:28px;border:none;background:none;cursor:pointer">
+                            <label class="wc-toggle" style="margin:0"><input type="checkbox" id="wcAccentOn" onchange="wcUpdatePreview()"><span>Использовать</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Copy button -->
+                    <div style="margin-top:14px;display:flex;gap:8px">
+                        <button onclick="wcCopyLink()" class="wc-copy-btn">📋 Скопировать OBS ссылку</button>
+                        <button onclick="wcResetDefaults()" class="wc-reset-btn">🔄 Сброс</button>
+                    </div>
+                    <div id="wcLinkPreview" style="display:none;margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,0.3);font-size:0.5rem;color:#5A6577;word-break:break-all;font-family:monospace"></div>
                 </div>
             </div>
+
         </div>
 
         <!-- ============================== -->
