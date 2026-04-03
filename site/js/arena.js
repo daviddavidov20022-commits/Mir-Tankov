@@ -612,9 +612,38 @@ async function searchOpponent() {
             registered = checkData.registered || {};
         } catch (e) { console.warn('API check failed:', e); }
 
+        // Also fetch basic Lesta stats for registered users 
+        let playerStats = {};
+        try {
+            const idsToCheck = data.data.map(p => p.account_id).join(',');
+            const statsResp = await fetch(`${LESTA_API}/account/info/?application_id=${LESTA_APP}&account_id=${idsToCheck}&fields=statistics.all.battles,statistics.all.wins`);
+            const statsData = await statsResp.json();
+            if (statsData.status === 'ok' && statsData.data) playerStats = statsData.data;
+        } catch(e) {}
+
+        // Check who's already friends
+        let myFriends = [];
+        try {
+            const fResp = await fetch(`${BOT_API_URL}/api/friends?telegram_id=${myTelegramId}`);
+            const fData = await fResp.json();
+            myFriends = (fData.friends || []).map(f => f.telegram_id);
+        } catch(e) {}
+
         results.innerHTML = data.data.map((p, i) => {
             const reg = registered[String(p.account_id)];
             const isMe = reg && reg.telegram_id === myTelegramId;
+            const isFriend = reg && myFriends.includes(reg.telegram_id);
+
+            // Stats
+            const st = playerStats[String(p.account_id)];
+            let statsLine = '';
+            if (st && st.statistics) {
+                const b = st.statistics.all.battles || 0;
+                const w = st.statistics.all.wins || 0;
+                const wr = b > 0 ? ((w / b) * 100).toFixed(1) : '—';
+                const wrColor = wr >= 55 ? '#4ade80' : wr >= 50 ? '#C8AA6E' : wr >= 47 ? '#8a94a6' : '#ef4444';
+                statsLine = `<span class="player-card__stat" style="color:${wrColor}">${wr}% WR</span> · <span class="player-card__stat">${b.toLocaleString()} боёв</span>`;
+            }
 
             if (isMe) {
                 return `<div class="player-card" style="opacity:0.4;animation-delay:${i * 0.04}s">
@@ -626,15 +655,22 @@ async function searchOpponent() {
             }
 
             if (reg) {
+                const friendBtn = isFriend
+                    ? `<span style="font-size:0.55rem;color:#4ade80;padding:4px 6px">✅ Друг</span>`
+                    : `<button onclick="event.stopPropagation();addFriendFromArena('${p.nickname.replace(/'/g, "\\'")}',${reg.telegram_id})" style="padding:5px 8px;border-radius:6px;border:1px solid rgba(34,197,94,0.3);background:transparent;color:#4ade80;font-size:0.55rem;cursor:pointer" title="Добавить в друзья">➕👥</button>`;
                 return `<div class="player-card" style="animation-delay:${i * 0.04}s" onclick="selectOpponent('${p.nickname.replace(/'/g, "\\'")}', ${reg.telegram_id}, ${p.account_id})">
                     <div class="player-card__avatar">🪖</div>
                     <div class="player-card__info">
                         <div class="player-card__nick">${p.nickname}</div>
                         <div class="player-card__stats-row">
                             <span class="player-card__stat" style="color:#4ade80">● В приложении</span>
+                            ${statsLine ? ` · ${statsLine}` : ''}
                         </div>
                     </div>
-                    <button class="player-card__challenge-btn">⚔️ Вызвать</button></div>`;
+                    <div style="display:flex;gap:4px;align-items:center">
+                        ${friendBtn}
+                        <button class="player-card__challenge-btn">⚔️</button>
+                    </div></div>`;
             }
 
             return `<div class="player-card" style="opacity:0.5;animation-delay:${i * 0.04}s">
@@ -643,6 +679,7 @@ async function searchOpponent() {
                     <div class="player-card__nick">${p.nickname}</div>
                     <div class="player-card__stats-row">
                         <span class="player-card__stat">⚫ Не в приложении</span>
+                        ${statsLine ? ` · ${statsLine}` : ''}
                     </div>
                 </div>
                 <button class="invite-btn" onclick="event.stopPropagation();invitePlayer('${p.nickname}')">📨</button></div>`;
@@ -687,6 +724,23 @@ function invitePlayer(nickname) {
     } else {
         navigator.clipboard.writeText(`Присоединяйся к «Мир Танков Клуб»! ${url}`).then(() => showToast('📋 Ссылка скопирована!'));
     }
+}
+
+async function addFriendFromArena(nickname, toTelegramId) {
+    if (!myTelegramId) { showToast('⚠️ Войдите в аккаунт'); return; }
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/friends/add`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from_telegram_id: myTelegramId, to_telegram_id: toTelegramId })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast(data.auto_accepted ? `🤝 ${nickname} — теперь друг!` : `📩 Запрос отправлен ${nickname}!`, 'success');
+            searchOpponent(); // re-render results
+        } else {
+            showToast(`ℹ️ ${data.error || 'Ошибка'}`);
+        }
+    } catch(e) { showToast('❌ Ошибка подключения', 'error'); }
 }
 
 // ============================================================
@@ -1315,6 +1369,7 @@ window.filterAdminUsers = filterAdminUsers;
 window.toggleAdmin = toggleAdmin;
 window.toggleBattleHistory = toggleBattleHistory;
 window.cancelChallenge = cancelChallenge;
+window.addFriendFromArena = addFriendFromArena;
 window.openGiftModal = openGiftModal;
 window.giftCheese = giftCheese;
 window.addSelfCheese = addSelfCheese;
