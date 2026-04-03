@@ -183,15 +183,14 @@ const COND_LABELS_SHORT = {
 
 async function loadChallenges() {
     if (!myTelegramId) return;
-
     try {
         const resp = await fetch(`${BOT_API_URL}/api/challenges?telegram_id=${myTelegramId}`);
         const data = await resp.json();
         if (!data.challenges) return;
-
         const incoming = data.challenges.filter(c => c.is_incoming && c.status === 'pending');
+        const outgoing = data.challenges.filter(c => !c.is_incoming && c.status === 'pending');
         const active = data.challenges.filter(c => c.status === 'active');
-        const history = data.challenges.filter(c => c.status === 'declined' || c.status === 'finished');
+        const finished = data.challenges.filter(c => c.status === 'declined' || c.status === 'finished').slice(0, 10);
 
         // Incoming
         const inEl = document.getElementById('incomingDuels');
@@ -200,12 +199,8 @@ async function loadChallenges() {
                 <div class="duel-card" style="animation:fadeInUp 0.3s ease">
                     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
                         <div>
-                            <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">
-                                ⚔️ ${c.opponent_name}
-                            </div>
-                            <div style="font-size:0.65rem;color:#5A6577;margin-top:2px">
-                                ${c.tank_name} · ${COND_LABELS_SHORT[c.condition] || c.condition}
-                            </div>
+                            <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">⚔️ ${c.opponent_name}</div>
+                            <div style="font-size:0.65rem;color:#5A6577;margin-top:2px">${c.tank_name} · ${COND_LABELS_SHORT[c.condition] || c.condition}</div>
                         </div>
                         <div style="text-align:right">
                             <div style="font-size:0.75rem;color:#C8AA6E;font-weight:700">🧀 ${c.wager}</div>
@@ -213,17 +208,28 @@ async function loadChallenges() {
                         </div>
                     </div>
                     <div style="display:flex;gap:8px">
-                        <button onclick="acceptChallenge(${c.id})" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;font-size:0.75rem;cursor:pointer">
-                            ✅ Принять
-                        </button>
-                        <button onclick="declineChallenge(${c.id})" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-weight:700;font-size:0.75rem;cursor:pointer">
-                            ❌ Отклонить
-                        </button>
+                        <button onclick="acceptChallenge(${c.id})" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;font-size:0.75rem;cursor:pointer">✅ Принять</button>
+                        <button onclick="declineChallenge(${c.id})" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-weight:700;font-size:0.75rem;cursor:pointer">❌ Отклонить</button>
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         } else {
             inEl.innerHTML = '<div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:12px">Нет входящих вызовов</div>';
+        }
+
+        // Outgoing (sent by me, pending)
+        const outEl = document.getElementById('outgoingDuels');
+        if (outEl) {
+            if (outgoing.length) {
+                outEl.innerHTML = '<div style="font-size:0.7rem;color:#C8AA6E;font-weight:700;margin:16px 0 8px;font-family:\'Russo One\',sans-serif">📤 Отправленные</div>' +
+                    outgoing.map(c => `<div class="duel-card" style="animation:fadeInUp .3s ease;border-color:rgba(200,170,110,0.15)">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <div><div style="font-size:0.75rem;color:#E8E6E3">📤 → ${c.opponent_name}</div>
+                            <div style="font-size:0.6rem;color:#5A6577">${c.tank_name} · ${c.battles} боёв · 🧀 ${c.wager}</div></div>
+                            <button onclick="deleteChallenge(${c.id})" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:0.6rem;cursor:pointer">🗑 Отмена</button>
+                        </div>
+                        <div style="font-size:0.55rem;color:#5A6577;margin-top:6px;text-align:center">⏳ Ожидает ответа...</div>
+                    </div>`).join('');
+            } else { outEl.innerHTML = ''; }
         }
 
         // Active
@@ -235,72 +241,65 @@ async function loadChallenges() {
                 <div class="duel-card" style="animation:fadeInUp 0.3s ease;border-color:rgba(34,197,94,0.2)">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
                         <div>
-                            <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">
-                                🔥 vs ${c.opponent_name}
-                            </div>
-                            <div style="font-size:0.65rem;color:#5A6577;margin-top:2px">
-                                ${c.tank_name} · ${COND_LABELS_SHORT[c.condition] || c.condition} · ${c.battles} боёв
-                            </div>
+                            <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3">🔥 vs ${c.opponent_name}</div>
+                            <div style="font-size:0.65rem;color:#5A6577;margin-top:2px">${c.tank_name} · ${COND_LABELS_SHORT[c.condition] || c.condition} · ${c.battles} боёв</div>
                         </div>
                         <div style="text-align:right">
                             <div style="font-size:0.85rem;color:#4ade80;font-weight:700">🏆 🧀 ${c.wager * 2}</div>
                             <div style="font-size:0.55rem;color:#5A6577">Приз</div>
                         </div>
                     </div>
-                    <div id="results-${c.id}">
-                        <div style="text-align:center;color:#5A6577;padding:8px;font-size:0.7rem">⏳ Загрузка...</div>
-                    </div>
-                </div>
-            `).join('');
-            // Auto-load results for all active challenges
+                    <div id="results-${c.id}"><div style="text-align:center;color:#5A6577;padding:8px;font-size:0.7rem">⏳ Загрузка...</div></div>
+                </div>`).join('');
             active.forEach(c => checkChallengeResults(c.id));
-            // Auto-refresh every 30 seconds
             clearInterval(window._challengeRefresh);
-            window._challengeRefresh = setInterval(() => {
-                active.forEach(c => checkChallengeResults(c.id));
-            }, 30000);
+            window._challengeRefresh = setInterval(() => { active.forEach(c => checkChallengeResults(c.id)); }, 30000);
         } else {
             noActive.style.display = '';
             clearInterval(window._challengeRefresh);
             actEl.innerHTML = '';
         }
 
-        // History — show finished with analytics
+        // History — clickable, max 10
         const hEl = document.getElementById('historyList');
-        const finished = data.challenges.filter(c => c.status === 'declined' || c.status === 'finished');
         if (finished.length) {
+            window._historyData = {};
             hEl.innerHTML = finished.map(c => {
                 const icon = c.status === 'declined' ? '❌' : (c.winner_telegram_id === myTelegramId ? '🏆' : '😞');
                 const label = c.status === 'declined' ? 'Отклонён' : (c.winner_telegram_id === myTelegramId ? 'Победа' : 'Поражение');
                 const color = c.status === 'declined' ? '#5A6577' : (c.winner_telegram_id === myTelegramId ? '#4ade80' : '#ef4444');
-
                 let analyticsHtml = '';
                 if (c.status === 'finished' && c.from_end_stats && c.to_end_stats) {
                     try {
                         const fd = typeof c.from_end_stats === 'string' ? JSON.parse(c.from_end_stats) : c.from_end_stats;
                         const td = typeof c.to_end_stats === 'string' ? JSON.parse(c.to_end_stats) : c.to_end_stats;
                         analyticsHtml = renderAnalytics(fd, td, c);
-                    } catch (e) { }
+                    } catch (e) {}
                 }
-
-                return `
-                    <div class="duel-card" style="border-color:${color}30">
-                        <div style="display:flex;justify-content:space-between;align-items:center">
-                            <div>
-                                <div style="font-size:0.75rem;color:#E8E6E3">${icon} vs ${c.opponent_name}</div>
-                                <div style="font-size:0.6rem;color:#5A6577">${c.tank_name} · ${c.battles} боёв</div>
-                            </div>
-                            <div style="font-size:0.7rem;color:${color};font-weight:700">${label}</div>
+                window._historyData[c.id] = c;
+                return `<div class="duel-card" style="border-color:${color}30;cursor:pointer;transition:all .2s" onclick="showChallengeDetail(${c.id})"
+                     onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="flex:1">
+                            <div style="font-size:0.75rem;color:#E8E6E3">${icon} vs ${c.opponent_name}</div>
+                            <div style="font-size:0.6rem;color:#5A6577">${c.tank_name} · ${c.battles} боёв · 🧀 ${c.wager}</div>
                         </div>
-                        ${analyticsHtml}
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <span style="font-size:0.7rem;color:${color};font-weight:700">${label}</span>
+                            <button onclick="event.stopPropagation();deleteChallenge(${c.id})" style="padding:3px 7px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#5A6577;font-size:0.5rem;cursor:pointer">🗑</button>
+                        </div>
                     </div>
-                `;
+                    ${analyticsHtml}
+                </div>`;
             }).join('');
         }
     } catch (e) {
         console.warn('Load challenges failed:', e);
     }
 }
+
+
+
 
 const COND_DISPLAY = {
     damage: { icon: '💥', name: 'Урон', key: 'damage', unit: '' },
@@ -320,7 +319,6 @@ function renderAnalytics(fd, td, ch) {
     const name1 = ch.is_incoming ? ch.opponent_name : 'Я';
     const name2 = ch.is_incoming ? 'Я' : ch.opponent_name;
     const fmt = (n) => typeof n === 'number' ? n.toLocaleString('ru') : n;
-
     return `
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
             <div style="text-align:center;font-size:0.6rem;color:#5A6577;margin-bottom:8px">
@@ -346,73 +344,44 @@ async function checkChallengeResults(id) {
     const el = document.getElementById(`results-${id}`);
     el.style.display = '';
     el.innerHTML = '<div style="text-align:center;color:#5A6577;padding:14px;font-size:0.8rem">⏳ Загружаем результаты...</div>';
-
     try {
         const resp = await fetch(`${BOT_API_URL}/api/challenges/check`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ challenge_id: id, telegram_id: myTelegramId })
         });
         const data = await resp.json();
-
-        if (data.error) {
-            el.innerHTML = `<div style="text-align:center;color:#ef4444;padding:14px;font-size:0.8rem">❌ ${data.error}</div>`;
-            return;
-        }
-
-        if (data.snapshot_saved) {
-            el.innerHTML = `<div style="text-align:center;color:#4ade80;padding:14px;font-size:0.8rem">📸 ${data.message}</div>`;
-            return;
-        }
-
-        const fp = data.from_player;
-        const tp = data.to_player;
-        const ch = data.challenge;
+        if (data.error) { el.innerHTML = `<div style="text-align:center;color:#ef4444;padding:14px;font-size:0.8rem">❌ ${data.error}</div>`; return; }
+        if (data.snapshot_saved) { el.innerHTML = `<div style="text-align:center;color:#4ade80;padding:14px;font-size:0.8rem">📸 ${data.message}</div>`; return; }
+        const fp = data.from_player, tp = data.to_player, ch = data.challenge;
         const cond = COND_DISPLAY[ch.condition] || COND_DISPLAY.damage;
-
-        const v1 = fp.delta[cond.key] ?? 0;
-        const v2 = tp.delta[cond.key] ?? 0;
-        const c1 = v1 >= v2 ? '#4ade80' : '#ef4444';
-        const c2 = v2 >= v1 ? '#4ade80' : '#ef4444';
-
+        const v1 = fp.delta[cond.key] ?? 0, v2 = tp.delta[cond.key] ?? 0;
+        const c1 = v1 >= v2 ? '#4ade80' : '#ef4444', c2 = v2 >= v1 ? '#4ade80' : '#ef4444';
         let statusHtml = '';
         if (data.both_ready && data.winner) {
             const isWinner = data.winner.telegram_id === myTelegramId;
-            statusHtml = `
-                <div style="text-align:center;padding:16px;margin-top:12px;border-radius:12px;
-                    background:${isWinner ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'}; 
-                    border:1px solid ${isWinner ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}">
-                    <div style="font-size:1.5rem">${isWinner ? '🏆' : '😞'}</div>
-                    <div style="font-size:1rem;font-family:'Russo One',sans-serif;color:${isWinner ? '#4ade80' : '#ef4444'};margin-top:6px">
-                        ${isWinner ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ'}
-                    </div>
-                    <div style="font-size:0.85rem;color:#C8AA6E;margin-top:6px">
-                        ${data.winner.nickname} получает 🧀 ${ch.wager * 2}
-                    </div>
-                </div>`;
+            statusHtml = `<div style="text-align:center;padding:16px;margin-top:12px;border-radius:12px;
+                background:${isWinner ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'}; 
+                border:1px solid ${isWinner ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}">
+                <div style="font-size:1.5rem">${isWinner ? '🏆' : '😞'}</div>
+                <div style="font-size:1rem;font-family:'Russo One',sans-serif;color:${isWinner ? '#4ade80' : '#ef4444'};margin-top:6px">${isWinner ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ'}</div>
+                <div style="font-size:0.85rem;color:#C8AA6E;margin-top:6px">${data.winner.nickname} получает 🧀 ${ch.wager * 2}</div>
+            </div>`;
             setTimeout(loadChallenges, 2000);
         } else {
-            statusHtml = `
-                <div style="text-align:center;margin-top:10px;padding:10px;border-radius:10px;background:rgba(200,170,110,0.05)">
-                    <div style="font-size:0.75rem;color:#C8AA6E;margin-bottom:4px">Прогресс боёв</div>
-                    <div style="display:flex;gap:12px;justify-content:center;font-size:0.75rem">
-                        <span style="color:${fp.ready ? '#4ade80' : '#8a94a6'}">${fp.nickname}: ${fp.delta.battles_played}/${ch.battles} ${fp.ready ? '✅' : '⏳'}</span>
-                        <span style="color:${tp.ready ? '#4ade80' : '#8a94a6'}">${tp.nickname}: ${tp.delta.battles_played}/${ch.battles} ${tp.ready ? '✅' : '⏳'}</span>
-                    </div>
-                </div>`;
+            statusHtml = `<div style="text-align:center;margin-top:10px;padding:10px;border-radius:10px;background:rgba(200,170,110,0.05)">
+                <div style="font-size:0.75rem;color:#C8AA6E;margin-bottom:4px">Прогресс боёв</div>
+                <div style="display:flex;gap:12px;justify-content:center;font-size:0.75rem">
+                    <span style="color:${fp.ready ? '#4ade80' : '#8a94a6'}">${fp.nickname}: ${fp.delta.battles_played}/${ch.battles} ${fp.ready ? '✅' : '⏳'}</span>
+                    <span style="color:${tp.ready ? '#4ade80' : '#8a94a6'}">${tp.nickname}: ${tp.delta.battles_played}/${ch.battles} ${tp.ready ? '✅' : '⏳'}</span>
+                </div>
+            </div>`;
         }
-
-        // OBS overlay link + Cancel button — показываем для админов И создателя челленджа
         const canManage = isAdmin || (ch && ch.from_telegram_id === myTelegramId);
-        const overlayBtn = canManage ? `
-            <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
+        const overlayBtn = canManage ? `<div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
                 <button onclick="copyOverlayLink(${id})" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(200,170,110,0.2);
-                    background:rgba(200,170,110,0.05);color:#C8AA6E;font-size:0.7rem;font-weight:600;cursor:pointer">
-                    📋 Ссылка OBS
-                </button>
-                <button onclick="cancelChallenge(${id})" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);
-                    background:rgba(239,68,68,0.05);color:#ef4444;font-size:0.7rem;font-weight:600;cursor:pointer">
-                    ❌ Отменить
-                </button>
+                    background:rgba(200,170,110,0.05);color:#C8AA6E;font-size:0.7rem;font-weight:600;cursor:pointer">📋 Ссылка OBS</button>
+                <button onclick="deleteChallenge(${id})" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);
+                    background:rgba(239,68,68,0.05);color:#ef4444;font-size:0.7rem;font-weight:600;cursor:pointer">❌ Отменить</button>
             </div>` : '';
 
         // Build per-battle history
@@ -529,6 +498,83 @@ async function declineChallenge(id) {
             showToast(`❌ ${data.error}`, 'error');
         }
     } catch (e) { showToast('❌ Нет подключения к серверу', 'error'); }
+}
+
+async function deleteChallenge(id) {
+    if (!confirm('Удалить/отменить этот вызов?')) return;
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/challenges/delete`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: id, telegram_id: myTelegramId })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast('🗑 Вызов удалён', 'info');
+            loadChallenges();
+        } else {
+            showToast(`❌ ${data.error}`, 'error');
+        }
+    } catch (e) { showToast('❌ Ошибка', 'error'); }
+}
+
+function showChallengeDetail(id) {
+    const c = (window._historyData || {})[id];
+    if (!c) return;
+    const condLabel = COND_LABELS_SHORT[c.condition] || c.condition;
+    const isWin = c.winner_telegram_id === myTelegramId;
+    const result = c.status === 'declined' ? '❌ Отклонён' : (isWin ? '🏆 Победа' : '😞 Поражение');
+    const resultColor = c.status === 'declined' ? '#5A6577' : (isWin ? '#4ade80' : '#ef4444');
+    let statsHtml = '';
+    if (c.status === 'finished' && c.from_end_stats && c.to_end_stats) {
+        try {
+            const fd = typeof c.from_end_stats === 'string' ? JSON.parse(c.from_end_stats) : c.from_end_stats;
+            const td = typeof c.to_end_stats === 'string' ? JSON.parse(c.to_end_stats) : c.to_end_stats;
+            const name1 = c.is_incoming ? c.opponent_name : 'Я';
+            const name2 = c.is_incoming ? 'Я' : c.opponent_name;
+            const fmt = (n) => typeof n === 'number' ? n.toLocaleString('ru') : (n || '—');
+            const rows = [['💥 Урон',fd.damage,td.damage],['🎯 Фраги',fd.frags,td.frags],['👁 Засвет',fd.spotted,td.spotted],
+                ['🛡 Заблок.',fd.blocked,td.blocked],['⭐ Опыт',fd.xp,td.xp],['🏆 Победы',fd.wins,td.wins],['⚔️ Боёв',fd.battles_played,td.battles_played]];
+            statsHtml = `<table style="width:100%;border-collapse:collapse;margin-top:12px">
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.08)"><th style="text-align:left;padding:6px;font-size:0.6rem;color:#5A6577"></th>
+                <th style="text-align:center;padding:6px;font-size:0.65rem;color:#C8AA6E;font-weight:700">${name1}</th>
+                <th style="text-align:center;padding:6px;font-size:0.65rem;color:#C8AA6E;font-weight:700">${name2}</th></tr>
+                ${rows.map(([label,v1,v2]) => {
+                    const c1 = (v1||0)>=(v2||0)?'#4ade80':'#E8E6E3', c2 = (v2||0)>=(v1||0)?'#4ade80':'#E8E6E3';
+                    return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04)"><td style="padding:5px 6px;font-size:0.6rem;color:#8a94a6">${label}</td>
+                    <td style="text-align:center;padding:5px;font-size:0.7rem;color:${c1};font-weight:600">${fmt(v1)}</td>
+                    <td style="text-align:center;padding:5px;font-size:0.7rem;color:${c2};font-weight:600">${fmt(v2)}</td></tr>`;
+                }).join('')}</table>`;
+        } catch(e){}
+    }
+    const createdDate = c.created_at ? new Date(c.created_at).toLocaleString('ru') : '—';
+    const modal = document.createElement('div');
+    modal.id = 'challengeDetailModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px)';
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    modal.innerHTML = `<div style="max-width:400px;width:90%;max-height:85vh;overflow-y:auto;background:linear-gradient(145deg,#1a2332,#0f1520);border:1px solid rgba(200,170,110,0.2);border-radius:20px;padding:24px">
+        <div style="text-align:center;margin-bottom:16px">
+            <div style="font-size:1.5rem">${c.status==='declined'?'❌':'⚔️'}</div>
+            <div style="font-family:'Russo One',sans-serif;font-size:1rem;color:#E8E6E3">vs ${c.opponent_name}</div>
+            <div style="font-size:1rem;font-weight:800;color:${resultColor};margin-top:6px">${result}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+            <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:0.55rem;color:#5A6577">Техника</div><div style="font-size:0.7rem;color:#E8E6E3;font-weight:600">🪖 ${c.tank_name}</div></div>
+            <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:0.55rem;color:#5A6577">Условие</div><div style="font-size:0.7rem;color:#E8E6E3;font-weight:600">${condLabel}</div></div>
+            <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:0.55rem;color:#5A6577">Боёв</div><div style="font-size:0.7rem;color:#E8E6E3;font-weight:600">${c.battles}</div></div>
+            <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:0.55rem;color:#5A6577">Ставка</div><div style="font-size:0.7rem;color:#C8AA6E;font-weight:600">🧀 ${c.wager}</div></div>
+        </div>
+        ${c.status==='finished'?`<div style="text-align:center;padding:8px;background:rgba(${isWin?'34,197,94':'239,68,68'},0.08);border-radius:10px;margin-bottom:12px">
+            <div style="font-size:0.6rem;color:#5A6577">Приз</div>
+            <div style="font-size:1rem;font-family:'Russo One',sans-serif;color:${isWin?'#4ade80':'#ef4444'}">${isWin?'+':'-'}🧀 ${isWin?c.wager*2:c.wager}</div></div>`:''}
+        ${statsHtml}
+        <div style="margin-top:14px;font-size:0.55rem;color:#5A6577">📅 Создан: ${createdDate}</div>
+        <button onclick="document.getElementById('challengeDetailModal').remove()" style="width:100%;margin-top:14px;padding:12px;border-radius:12px;border:1px solid rgba(200,170,110,0.2);background:transparent;color:#E8E6E3;font-size:0.75rem;cursor:pointer;font-weight:600">Закрыть</button>
+    </div>`;
+    document.body.appendChild(modal);
 }
 
 // ============================================================
@@ -1261,6 +1307,8 @@ window.buyCheese = buyCheese;
 window.showToast = showToast;
 window.acceptChallenge = acceptChallenge;
 window.declineChallenge = declineChallenge;
+window.deleteChallenge = deleteChallenge;
+window.showChallengeDetail = showChallengeDetail;
 window.checkChallengeResults = checkChallengeResults;
 window.copyOverlayLink = copyOverlayLink;
 window.filterAdminUsers = filterAdminUsers;

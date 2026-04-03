@@ -4487,7 +4487,8 @@ async def api_get_challenges(request):
         with get_db() as conn:
             rows = conn.execute("""
                 SELECT * FROM arena_challenges
-                WHERE from_telegram_id = ? OR to_telegram_id = ?
+                WHERE (from_telegram_id = ? OR to_telegram_id = ?)
+                  AND status != 'deleted'
                 ORDER BY created_at DESC LIMIT 50
             """, (tg_id, tg_id)).fetchall()
 
@@ -4615,6 +4616,40 @@ async def api_decline_challenge(request):
         return cors_response({"success": True})
     except Exception as e:
         logger.error(f"API decline_challenge error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_delete_challenge(request):
+    """POST /api/challenges/delete {challenge_id, telegram_id}"""
+    try:
+        data = await request.json()
+        challenge_id = data.get("challenge_id")
+        tg_id = data.get("telegram_id")
+
+        from database import get_db
+        with get_db() as conn:
+            ch = conn.execute("SELECT * FROM arena_challenges WHERE id = ?", (challenge_id,)).fetchone()
+            if not ch:
+                return cors_response({"error": "Челлендж не найден"}, 404)
+
+            ch = dict(ch)
+            # Only the creator or target can delete
+            if ch["from_telegram_id"] != tg_id and ch["to_telegram_id"] != tg_id:
+                return cors_response({"error": "Это не ваш вызов"}, 403)
+
+            if ch["status"] == "pending":
+                # Refund wager to creator
+                add_coins(ch["from_telegram_id"], ch["wager"], "↩️ Вызов отменён — возврат ставки")
+                conn.execute("DELETE FROM arena_challenges WHERE id = ?", (challenge_id,))
+            elif ch["status"] in ("declined", "finished"):
+                # Just remove from history (soft-delete via status)
+                conn.execute("UPDATE arena_challenges SET status = 'deleted' WHERE id = ?", (challenge_id,))
+            elif ch["status"] == "active":
+                return cors_response({"error": "Нельзя удалить активный челлендж"}, 400)
+
+        return cors_response({"success": True})
+    except Exception as e:
+        logger.error(f"API delete_challenge error: {e}")
         return cors_response({"error": str(e)}, 500)
 
 
@@ -10218,6 +10253,7 @@ def create_api_app():
     app.router.add_post("/api/challenges/accept", api_accept_challenge)
     app.router.add_post("/api/challenges/decline", api_decline_challenge)
     app.router.add_post("/api/challenges/check", api_check_challenge_results)
+    app.router.add_post("/api/challenges/delete", api_delete_challenge)
 
     # Admin API
     app.router.add_get("/api/admin/users", api_admin_users)

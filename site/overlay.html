@@ -349,8 +349,30 @@
         let lastV1 = null, lastV2 = null;
 
         async function loadWidget() {
-            if (!challengeId) {
-                document.getElementById('loading').innerHTML = '❌ Нет ID челленджа в URL';
+            // DEMO mode for widget constructor preview
+            if (!challengeId || challengeId === 'preview' || challengeId === 'demo') {
+                renderWidget({
+                    challenge: { tank_name: 'Объект 140', condition: 'damage', battles: 5, wager: 500 },
+                    from_player: {
+                        nickname: 'GloriAmtower',
+                        delta: { damage: 18420, avg_damage: 3684, spotted: 12, frags: 8, xp: 4200, wins: 3, blocked: 6800, battles_played: 5, battles_total: 5, avg_spotted: 2, avg_frags: 1.6, avg_xp: 840, winrate: 60, accuracy: 72 },
+                        ready: true
+                    },
+                    to_player: {
+                        nickname: 'Fors777_2016',
+                        delta: { damage: 14850, avg_damage: 2970, spotted: 8, frags: 5, xp: 3100, wins: 2, blocked: 4200, battles_played: 4, battles_total: 4, avg_spotted: 2, avg_frags: 1.3, avg_xp: 775, winrate: 50, accuracy: 65 },
+                        ready: false
+                    },
+                    battle_history: [
+                        { player: 'from', nickname: 'GloriAmtower', battle_num: 1, damage: 4200 },
+                        { player: 'to', nickname: 'Fors777_2016', battle_num: 1, damage: 3100 },
+                        { player: 'from', nickname: 'GloriAmtower', battle_num: 2, damage: 3800 },
+                        { player: 'to', nickname: 'Fors777_2016', battle_num: 2, damage: 4500 },
+                        { player: 'from', nickname: 'GloriAmtower', battle_num: 3, damage: 5100 },
+                    ],
+                    both_ready: false,
+                    winner: null
+                });
                 return;
             }
 

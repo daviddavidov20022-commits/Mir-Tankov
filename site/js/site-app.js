@@ -452,6 +452,10 @@ function checkAdmin() {
     if (!isAdmin && localStorage.getItem('admin_mode') === 'true') isAdmin = true;
     if (!isAdmin) return;
 
+    // Show admin quick link on main page
+    const adminLink = document.getElementById('adminQuickLink');
+    if (adminLink) adminLink.style.display = '';
+
     const container = document.getElementById('adminPanelContainer');
     if (!container) return;
     container.innerHTML = `
