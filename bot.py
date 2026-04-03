@@ -4126,14 +4126,15 @@ async def fetch_player_stats(user, ch):
                 continue
 
             s = ts.get("all", {})
-            totals["battles"] += s.get("battles", 0)
+            tank_b = s.get("battles", 0)
+            totals["battles"] += tank_b
             totals["damage_dealt"] += s.get("damage_dealt", 0)
             totals["spotted"] += s.get("spotted", 0)
             totals["frags"] += s.get("frags", 0)
             totals["xp"] += s.get("xp", 0)
             totals["wins"] += s.get("wins", 0)
             totals["damage_received"] += s.get("damage_received", 0)
-            totals["damage_blocked"] += s.get("damage_blocked", 0)
+            totals["damage_blocked"] += int((s.get("avg_damage_blocked", 0) or 0) * tank_b)
             totals["shots"] += s.get("shots", 0)
             totals["hits"] += s.get("hits", 0)
             totals["survived_battles"] += s.get("survived_battles", 0)
@@ -4664,7 +4665,7 @@ GC_CONDITION_TO_STAT = {
     "frags": "frags",
     "xp": "xp",
     "spotting": "spotted",
-    "blocked": "damage_blocked",
+    "blocked": "avg_damage_blocked",  # NOTE: avg per battle, needs * battles for total
     "wins": "wins",
 }
 # spotting_damage и combined требуют account/info (damage_assisted_radio + damage_assisted_track)
@@ -4767,7 +4768,14 @@ async def gc_fetch_player_stat(account_id, condition):
             if not tanks:
                 return None
 
-            total_value = sum(t.get("all", {}).get(stat_field, 0) for t in tanks)
+            if condition == "blocked":
+                # avg_damage_blocked * battles per tank = total blocked
+                total_value = sum(
+                    int((t.get("all", {}).get("avg_damage_blocked", 0) or 0) * t.get("all", {}).get("battles", 0))
+                    for t in tanks
+                )
+            else:
+                total_value = sum(t.get("all", {}).get(stat_field, 0) for t in tanks)
             total_battles = sum(t.get("all", {}).get("battles", 0) for t in tanks)
             return {
                 "value": total_value,
@@ -4801,7 +4809,7 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str, tank_class=Non
     if tank_conditions or not account_conditions:
         COND_TO_FIELD = {
             "damage": "damage_dealt", "frags": "frags", "xp": "xp",
-            "spotting": "spotted", "blocked": "damage_blocked", "wins": "wins",
+            "spotting": "spotted", "blocked": "avg_damage_blocked", "wins": "wins",
         }
         
         tank_fields = set(["battles"])
@@ -4844,10 +4852,15 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str, tank_class=Non
                     if tank_tier and info.get("tier") != tank_tier:
                         continue
                 
-                total_battles += all_stats.get("battles", 0)
+                tank_battles = all_stats.get("battles", 0)
+                total_battles += tank_battles
                 for cond in tank_conditions:
                     field = COND_TO_FIELD.get(cond, "damage_dealt")
-                    per_condition[cond] += all_stats.get(field, 0)
+                    if cond == "blocked":
+                        avg_blocked = all_stats.get("avg_damage_blocked", 0) or 0
+                        per_condition[cond] += int(avg_blocked * tank_battles)
+                    else:
+                        per_condition[cond] += all_stats.get(field, 0)
         except Exception as e:
             logger.error(f"GC fetch multi stats (tanks/stats) error for {account_id}: {e}")
             return None
@@ -4875,7 +4888,7 @@ async def gc_fetch_player_multi_stats(account_id, conditions_str, tank_class=Non
     result = {
         "battles": total_battles,
         "per_condition": per_condition,
-        "value": per_condition.get(first_cond, 0),
+        "value": per_condition.get(conditions[0], 0),
     }
     
     return result
@@ -4902,9 +4915,10 @@ async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tan
     account_conditions = [c for c in conditions if c in GC_ACCOUNT_LEVEL_CONDITIONS]
     
     # Маппинг условий → поля в tanks/stats
+    # NOTE: 'blocked' uses avg_damage_blocked * battles (no total field in API)
     COND_TO_TANK_FIELD = {
         "damage": "damage_dealt", "frags": "frags", "xp": "xp",
-        "spotting": "spotted", "blocked": "damage_blocked", "wins": "wins",
+        "spotting": "spotted", "blocked": "avg_damage_blocked", "wins": "wins",
     }
     
     # Собираем поля для запроса tanks/stats (только tank-level условия)
@@ -4963,10 +4977,16 @@ async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tan
                     if tank_tier and info.get("tier") != tank_tier:
                         continue
                 
-                total_battles += all_stats.get("battles", 0)
+                tank_battles = all_stats.get("battles", 0)
+                total_battles += tank_battles
                 for cond in tank_conditions:
                     field = COND_TO_TANK_FIELD.get(cond, "damage_dealt")
-                    per_condition[cond] += all_stats.get(field, 0)
+                    if cond == "blocked":
+                        # avg_damage_blocked * battles = total blocked for this tank
+                        avg_blocked = all_stats.get("avg_damage_blocked", 0) or 0
+                        per_condition[cond] += int(avg_blocked * tank_battles)
+                    else:
+                        per_condition[cond] += all_stats.get(field, 0)
             
             return (aid, {"battles": total_battles, "per_condition": per_condition})
         except Exception as e:
@@ -5030,7 +5050,7 @@ async def gc_fetch_tank_stats(account_id):
         async with aiohttp.ClientSession(timeout=timeout) as session:
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
-                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.xp,all.wins")
+                   f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,all.damage_received,all.xp,all.wins,all.avg_damage_blocked")
             async with session.get(url) as resp:
                 data = await resp.json()
             if data.get("status") != "ok":
@@ -5073,7 +5093,7 @@ async def gc_save_tank_baselines(challenge_id, telegram_id, account_id):
                       all_stats.get("xp", 0),
                       all_stats.get("spotted", 0),
                       all_stats.get("damage_assisted", 0),
-                      all_stats.get("damage_blocked", 0),
+                      int((all_stats.get("avg_damage_blocked", 0) or 0) * all_stats.get("battles", 0)),  # avg * battles = total
                       all_stats.get("wins", 0)))
             except Exception as e:
                 logger.warning(f"Failed to save tank baseline for tid={tid}: {e}")
@@ -6002,14 +6022,15 @@ async def _detect_new_battles(challenge_id, telegram_id, account_id, stat_field,
     for t in tanks:
         tid = t["tank_id"]
         stats = t.get("all", {})
+        tank_battles = stats.get("battles", 0)
         curr = {
-            "battles": stats.get("battles", 0),
+            "battles": tank_battles,
             "damage": stats.get("damage_dealt", 0),
             "frags": stats.get("frags", 0),
             "xp": stats.get("xp", 0),
             "spotting": stats.get("spotted", 0),
             "spotting_damage": 0,  # НЕ доступно в tanks/stats, только в account/info на уровне аккаунта
-            "blocked": stats.get("damage_blocked", 0),
+            "blocked": int((stats.get("avg_damage_blocked", 0) or 0) * tank_battles),  # avg * battles = total
             "wins": stats.get("wins", 0),
         }
 
