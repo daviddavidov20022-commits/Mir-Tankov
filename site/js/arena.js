@@ -913,6 +913,11 @@ async function sendChallenge() {
         return;
     }
 
+    if (challenge.wager < 100) {
+        showToast('❌ Минимальная ставка: 100 🧀', 'error');
+        return;
+    }
+
     const tankName = getTankDisplayName();
 
     const btn = document.getElementById('sendChallengeBtn');
@@ -1066,6 +1071,10 @@ window.filterAdminUsers = filterAdminUsers;
 window.toggleAdmin = toggleAdmin;
 window.toggleBattleHistory = toggleBattleHistory;
 window.cancelChallenge = cancelChallenge;
+window.openGiftModal = openGiftModal;
+window.giftCheese = giftCheese;
+window.addSelfCheese = addSelfCheese;
+window.closeGiftModal = closeGiftModal;
 
 function toggleBattleHistory(id) {
     const el = document.getElementById(`battleHistory-${id}`);
@@ -1132,7 +1141,28 @@ function renderAdminUsers(users) {
         return;
     }
 
-    listEl.innerHTML = users.map(u => {
+    // Admin self-cheese button at top
+    let selfBtnHtml = '';
+    if (isAdmin) {
+        selfBtnHtml = `
+            <div style="margin-bottom:12px;padding:12px;border-radius:12px;background:linear-gradient(135deg,rgba(200,170,110,0.08),rgba(200,170,110,0.03));
+                border:1px solid rgba(200,170,110,0.15)">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                    <span style="font-size:1rem">🧀</span>
+                    <span style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#C8AA6E">Сыр админа</span>
+                </div>
+                <div style="display:flex;gap:6px">
+                    <input type="number" id="adminSelfCheeseAmount" placeholder="Кол-во" min="1" value="1000"
+                        style="flex:1;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(200,170,110,0.15);
+                        color:#E8E6E3;font-size:0.7rem;outline:none;font-family:'Inter',sans-serif">
+                    <button onclick="addSelfCheese()" style="padding:8px 16px;border-radius:8px;border:none;
+                        background:linear-gradient(135deg,#C8AA6E,#a08540);color:#0a0e14;font-size:0.7rem;font-weight:700;
+                        cursor:pointer;white-space:nowrap">➕ Добавить себе</button>
+                </div>
+            </div>`;
+    }
+
+    listEl.innerHTML = selfBtnHtml + users.map(u => {
         const subInfo = u.subscription
             ? (u.subscription.active
                 ? `<span style="color:#4ade80">✅ ${u.subscription.days_left} дн.</span>`
@@ -1158,6 +1188,13 @@ function renderAdminUsers(users) {
                 ${u.is_admin ? '❌ Снять' : '✅ Дать админку'}
             </button>`;
 
+        const giftBtn = `
+            <button onclick="openGiftModal(${u.telegram_id}, '${(u.wot_nickname || u.first_name || '').replace(/'/g, "\\\'")}')" 
+                style="padding:5px 10px;border-radius:6px;font-size:0.6rem;cursor:pointer;margin-top:4px;
+                border:1px solid rgba(200,170,110,0.3);background:rgba(200,170,110,0.08);color:#C8AA6E">
+                🎁 Подарить 🧀
+            </button>`;
+
         return `
             <div class="duel-card" style="margin-bottom:8px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -1175,8 +1212,9 @@ function renderAdminUsers(users) {
                             🎮 ${u.wot_nickname || '—'} · 🧀 ${u.cheese.toLocaleString('ru')} · ${subInfo} ${method}
                         </div>
                     </div>
-                    <div style="flex-shrink:0;margin-left:8px">
+                    <div style="flex-shrink:0;margin-left:8px;display:flex;flex-direction:column;align-items:flex-end">
                         ${toggleBtn}
+                        ${giftBtn}
                     </div>
                 </div>
             </div>`;
@@ -1345,4 +1383,124 @@ function renderGcHistoryCard(ch) {
             ${prizeHtml}
             ${rewardHtml}
         </div>`;
+}
+
+// ============================================================
+// ADMIN: GIFT CHEESE
+// ============================================================
+
+function openGiftModal(targetTgId, targetName) {
+    // Remove existing modal
+    const existing = document.getElementById('giftCheeseModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'giftCheeseModal';
+    modal.style.cssText = `
+        position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;
+        display:flex;align-items:center;justify-content:center;
+        background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+        animation:fadeInUp 0.2s ease;
+    `;
+    modal.innerHTML = `
+        <div style="background:linear-gradient(145deg,#131a24,#0e1420);border:1px solid rgba(200,170,110,0.2);
+            border-radius:20px;padding:24px;max-width:340px;width:90%;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:8px">🎁</div>
+            <div style="font-family:'Russo One',sans-serif;font-size:0.85rem;color:#C8AA6E;margin-bottom:4px">
+                Подарить сыр
+            </div>
+            <div style="font-size:0.7rem;color:#8a94a6;margin-bottom:16px">
+                Игрок: <b style="color:#E8E6E3">${targetName || targetTgId}</b>
+            </div>
+            <input type="number" id="giftCheeseAmount" min="1" value="100" placeholder="Количество 🧀"
+                style="width:100%;padding:12px 14px;border-radius:10px;background:rgba(0,0,0,0.3);
+                border:1px solid rgba(200,170,110,0.2);color:#E8E6E3;font-size:0.8rem;
+                text-align:center;outline:none;margin-bottom:8px;font-family:'Inter',sans-serif">
+            <input type="text" id="giftCheeseReason" placeholder="Причина (необязательно)"
+                style="width:100%;padding:10px 14px;border-radius:10px;background:rgba(0,0,0,0.2);
+                border:1px solid rgba(200,170,110,0.1);color:#8a94a6;font-size:0.7rem;
+                outline:none;margin-bottom:16px;font-family:'Inter',sans-serif">
+            <div style="display:flex;gap:8px">
+                <button onclick="closeGiftModal()" style="flex:1;padding:12px;border-radius:10px;
+                    border:1px solid rgba(255,255,255,0.1);background:transparent;color:#8a94a6;
+                    font-size:0.75rem;cursor:pointer">Отмена</button>
+                <button onclick="giftCheese(${targetTgId}, '${(targetName || '').replace(/'/g, "\\\\'")}')"
+                    style="flex:1;padding:12px;border-radius:10px;border:none;
+                    background:linear-gradient(135deg,#C8AA6E,#a08540);color:#0a0e14;
+                    font-size:0.75rem;font-weight:700;cursor:pointer">🎁 Подарить</button>
+            </div>
+        </div>
+    `;
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeGiftModal(); });
+    document.body.appendChild(modal);
+    document.getElementById('giftCheeseAmount').focus();
+}
+
+function closeGiftModal() {
+    const modal = document.getElementById('giftCheeseModal');
+    if (modal) modal.remove();
+}
+
+async function giftCheese(targetTgId, targetName) {
+    const amount = parseInt(document.getElementById('giftCheeseAmount')?.value) || 0;
+    const reason = document.getElementById('giftCheeseReason')?.value || 'Подарок от админа';
+
+    if (amount <= 0) {
+        showToast('❌ Введите сумму больше 0', 'error');
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/admin/gift-cheese`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                admin_telegram_id: myTelegramId,
+                target_telegram_id: targetTgId,
+                amount: amount,
+                reason: reason,
+            })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeGiftModal();
+            loadAdminUsers(); // refresh balances
+            loadMyProfile(); // refresh own balance if self
+        } else {
+            showToast(`❌ ${data.error}`, 'error');
+        }
+    } catch (e) {
+        showToast('❌ Нет подключения', 'error');
+    }
+}
+
+async function addSelfCheese() {
+    const amount = parseInt(document.getElementById('adminSelfCheeseAmount')?.value) || 0;
+    if (amount <= 0) {
+        showToast('❌ Введите сумму больше 0', 'error');
+        return;
+    }
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/admin/gift-cheese`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                admin_telegram_id: myTelegramId,
+                target_telegram_id: myTelegramId,
+                amount: amount,
+                reason: 'Админ-начисление',
+            })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast(`✅ Добавлено ${amount} 🧀. Баланс: ${data.new_balance}`, 'success');
+            loadMyProfile(); // refresh balance on page
+            // Update cheese display
+            const cheeseEl = document.getElementById('cheeseBalance');
+            if (cheeseEl) cheeseEl.textContent = data.new_balance.toLocaleString('ru');
+        } else {
+            showToast(`❌ ${data.error}`, 'error');
+        }
+    } catch (e) {
+        showToast('❌ Нет подключения', 'error');
+    }
 }

@@ -3714,6 +3714,67 @@ async def api_admin_cancel_challenge(request):
         logger.error(f"API cancel_challenge error: {e}")
         return cors_response({"error": str(e)}, 500)
 
+async def api_admin_gift_cheese(request):
+    """POST /api/admin/gift-cheese {admin_telegram_id, target_telegram_id, amount, reason}"""
+    try:
+        data = await request.json()
+        admin_tg = data.get("admin_telegram_id")
+        target_tg = data.get("target_telegram_id")
+        amount = int(data.get("amount", 0))
+        reason = data.get("reason", "Подарок от админа")
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        if not target_tg or amount <= 0:
+            return cors_response({"error": "Укажите игрока и сумму > 0"}, 400)
+
+        if amount > 999999:
+            return cors_response({"error": "Максимум 999,999 🧀 за раз"}, 400)
+
+        from database import get_db
+        target_user = get_user_by_telegram_id(target_tg)
+        if not target_user:
+            return cors_response({"error": "Пользователь не найден"}, 404)
+
+        with get_db() as conn:
+            conn.execute(
+                "UPDATE users SET coins = coins + ? WHERE telegram_id = ?",
+                (amount, target_tg)
+            )
+            conn.execute(
+                "INSERT INTO transactions (user_id, amount, currency, type, description) "
+                "VALUES (?, ?, 'CHEESE', 'admin_gift', ?)",
+                (target_user["id"], amount, f"🎁 {reason} (от админа {admin_tg})")
+            )
+
+        new_balance = get_cheese_balance(target_tg)
+        target_name = target_user.get("wot_nickname") or target_user.get("first_name") or str(target_tg)
+
+        # Notify target player (if not self-gift)
+        if target_tg != admin_tg:
+            try:
+                await bot.send_message(
+                    target_tg,
+                    f"🎁 <b>Вам подарили {amount} 🧀!</b>\n\n"
+                    f"💬 {reason}\n"
+                    f"💰 Баланс: <b>{new_balance} 🧀</b>",
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to notify cheese gift: {e}")
+
+        logger.info(f"Admin {admin_tg} gifted {amount} cheese to {target_tg} ({target_name}). New balance: {new_balance}")
+        return cors_response({
+            "success": True,
+            "message": f"✅ Подарено {amount} 🧀 → {target_name}. Баланс: {new_balance}",
+            "new_balance": new_balance,
+            "target_name": target_name,
+        })
+    except Exception as e:
+        logger.error(f"API gift_cheese error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
 # --- STREAMS STATUS API ---
 
 _streams_cache = {"data": None, "ts": 0}
@@ -4112,9 +4173,11 @@ async def api_check_challenge_results(request):
         to_current = await fetch_player_stats(to_user, ch) if to_user else None
 
         if not from_current:
-            return cors_response({"error": f"Не удалось получить статистику игрока {from_user.get('wot_nickname') if from_user else '???'}. Убедитесь что WoT аккаунт привязан."}, 400)
+            from_nick = from_user.get('wot_nickname') if from_user else '???'
+            return cors_response({"error": f"Не удалось получить статистику игрока {from_nick}. Убедитесь что WoT аккаунт привязан и профиль в игре ОТКРЫТ (не скрыт в настройках).", "player": from_nick, "fix_hint": "bind_wot"}, 400)
         if not to_current:
-            return cors_response({"error": f"Не удалось получить статистику игрока {to_user.get('wot_nickname') if to_user else '???'}. Убедитесь что WoT аккаунт привязан."}, 400)
+            to_nick = to_user.get('wot_nickname') if to_user else '???'
+            return cors_response({"error": f"Не удалось получить статистику игрока {to_nick}. Убедитесь что WoT аккаунт привязан и профиль в игре ОТКРЫТ (не скрыт в настройках).", "player": to_nick, "fix_hint": "bind_wot"}, 400)
 
         from_start = json.loads(ch["from_start_stats"]) if ch.get("from_start_stats") else None
         to_start = json.loads(ch["to_start_stats"]) if ch.get("to_start_stats") else None
@@ -4361,8 +4424,8 @@ async def api_create_challenge(request):
         if from_tg_id == to_tg_id:
             return cors_response({"error": "Нельзя вызвать самого себя"}, 400)
 
-        if wager < 10:
-            return cors_response({"error": "Минимальная ставка: 10 🧀"}, 400)
+        if wager < 100:
+            return cors_response({"error": "Минимальная ставка: 100 🧀"}, 400)
 
         # Проверяем баланс (cheese из БД)
         balance = get_cheese_balance(from_tg_id)
@@ -9948,6 +10011,7 @@ def create_api_app():
     app.router.add_get("/api/admin/users", api_admin_users)
     app.router.add_post("/api/admin/toggle-admin", api_admin_toggle_admin)
     app.router.add_post("/api/admin/cancel-challenge", api_admin_cancel_challenge)
+    app.router.add_post("/api/admin/gift-cheese", api_admin_gift_cheese)
 
     # Profile API
     app.router.add_post("/api/profile/save", api_profile_save)

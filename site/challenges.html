@@ -78,7 +78,7 @@
 
         <!-- Tabs -->
         <div class="arena-tabs">
-            <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">⚔️ Создать</button>
+            <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">⚔️ 1x1(PVP)</button>
             <button class="arena-tab" onclick="switchTab('global', this)">🔥 Общий</button>
             <button class="arena-tab" onclick="switchTab('teams', this)">👥 Команды</button>
             <button class="arena-tab" onclick="switchTab('active', this)">📋 Мои <span class="arena-badge"
@@ -265,11 +265,11 @@
                 </div>
                 <div class="wager-input-wrap">
                     <div class="wager-currency">🧀</div>
-                    <input type="number" class="form-input" id="wagerAmount" value="100" min="10" max="10000">
+                    <input type="number" class="form-input" id="wagerAmount" value="100" min="100" max="10000">
                 </div>
                 <div class="wager-presets">
-                    <button class="wager-preset" onclick="setWager(50)">50</button>
                     <button class="wager-preset" onclick="setWager(100)">100</button>
+                    <button class="wager-preset" onclick="setWager(200)">200</button>
                     <button class="wager-preset" onclick="setWager(250)">250</button>
                     <button class="wager-preset" onclick="setWager(500)">500</button>
                     <button class="wager-preset" onclick="setWager(1000)">1000</button>

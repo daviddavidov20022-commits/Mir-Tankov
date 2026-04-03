@@ -53,6 +53,7 @@ HTML_FILES = [
     'index.html',
     'profile.html',
     'tb-widget.html',
+    'overlay.html',
 ]
 
 # ==========================================
