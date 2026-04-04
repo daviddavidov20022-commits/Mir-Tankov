@@ -523,8 +523,19 @@ function showChallengeDetail(id) {
     if (!c) return;
     const condLabel = COND_LABELS_SHORT[c.condition] || c.condition;
     const isWin = c.winner_telegram_id === myTelegramId;
-    const result = c.status === 'declined' ? '❌ Отклонён' : (isWin ? '🏆 Победа' : '😞 Поражение');
-    const resultColor = c.status === 'declined' ? '#5A6577' : (isWin ? '#4ade80' : '#ef4444');
+    let result, resultColor;
+    if (c.status === 'declined') {
+        result = '❌ Отклонён'; resultColor = '#5A6577';
+    } else if (c.status === 'active') {
+        result = '🔥 В бою'; resultColor = '#f5be0b';
+    } else if (c.status === 'pending') {
+        result = '⏳ Ожидание'; resultColor = '#f5be0b';
+    } else if (c.status === 'finished' && c.winner_telegram_id) {
+        result = isWin ? '🏆 Победа' : '😞 Поражение';
+        resultColor = isWin ? '#4ade80' : '#ef4444';
+    } else {
+        result = '⚔️ Челлендж'; resultColor = '#C8AA6E';
+    }
     let statsHtml = '';
     if (c.status === 'finished' && c.from_end_stats && c.to_end_stats) {
         try {

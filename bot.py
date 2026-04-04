@@ -4091,7 +4091,7 @@ async def fetch_player_stats(user, ch):
             url = (f"https://api.tanki.su/wot/tanks/stats/"
                    f"?application_id={get_lesta_app_id()}&account_id={account_id}"
                    f"&fields=tank_id,all.battles,all.damage_dealt,all.spotted,all.frags,"
-                   f"all.xp,all.wins,all.damage_received,all.shots,all.hits,all.survived_battles")
+                   f"all.xp,all.wins,all.damage_received,all.avg_damage_blocked,all.shots,all.hits,all.survived_battles")
             async with session.get(url) as resp:
                 data = await resp.json()
 
@@ -4231,7 +4231,7 @@ async def api_check_challenge_results(request):
         condition = ch["condition"]
 
         STAT_KEY = {
-            "damage": "damage_dealt", "spotting": "spotted", "blocked": "damage_received",
+            "damage": "damage_dealt", "spotting": "spotted", "blocked": "damage_blocked",
             "frags": "frags", "xp": "xp", "wins": "wins"
         }
         stat_key = STAT_KEY.get(condition, "damage_dealt")
@@ -4329,7 +4329,7 @@ async def api_check_challenge_results(request):
                 "frags": final["frags"] - start["frags"],
                 "xp": final["xp"] - start["xp"],
                 "wins": final["wins"] - start["wins"],
-                "blocked": final["damage_received"] - start["damage_received"],
+                "blocked": final.get("damage_blocked", 0) - start.get("damage_blocked", 0),
                 "shots": final["shots"] - start["shots"],
                 "hits": final["hits"] - start["hits"],
             }

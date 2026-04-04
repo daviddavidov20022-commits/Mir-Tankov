@@ -411,6 +411,8 @@
             }
         }
 
+        let widgetRendered = false;
+
         function renderWidget(data) {
             const fp = data.from_player;
             const tp = data.to_player;
@@ -436,12 +438,94 @@
             const p1Pct = Math.min(p1Battles / reqBattles * 50, 50);
             const p2Pct = Math.min(p2Battles / reqBattles * 50, 50);
 
-            // Battle history (last 6)
+            // If widget already rendered — just update values without replacing DOM
+            if (widgetRendered) {
+                // Update scores
+                const s1 = document.getElementById('ov-score1');
+                const s2 = document.getElementById('ov-score2');
+                if (s1) {
+                    s1.textContent = (typeof v1 === 'number' ? v1.toLocaleString('ru') : v1) + cond.unit;
+                    s1.style.color = p1Color;
+                    if (v1Changed) { s1.classList.remove('updated'); void s1.offsetWidth; s1.classList.add('updated'); }
+                }
+                if (s2) {
+                    s2.textContent = (typeof v2 === 'number' ? v2.toLocaleString('ru') : v2) + cond.unit;
+                    s2.style.color = p2Color;
+                    if (v2Changed) { s2.classList.remove('updated'); void s2.offsetWidth; s2.classList.add('updated'); }
+                }
+
+                // Update battles
+                const b1 = document.getElementById('ov-battles1');
+                const b2 = document.getElementById('ov-battles2');
+                if (b1) {
+                    b1.className = 'player-battles' + (p1Battles >= reqBattles ? ' battles-completed' : '');
+                    b1.innerHTML = p1Battles >= reqBattles
+                        ? `<span class="done">✅ ${p1Battles}/${reqBattles} боёв</span>`
+                        : `⚔️ ${p1Battles}/${reqBattles} боёв`;
+                }
+                if (b2) {
+                    b2.className = 'player-battles' + (p2Battles >= reqBattles ? ' battles-completed' : '');
+                    b2.innerHTML = p2Battles >= reqBattles
+                        ? `<span class="done">✅ ${p2Battles}/${reqBattles} боёв</span>`
+                        : `⚔️ ${p2Battles}/${reqBattles} боёв`;
+                }
+
+                // Update player card classes (leading/losing)
+                const c1 = document.getElementById('ov-card1');
+                const c2 = document.getElementById('ov-card2');
+                if (c1) c1.className = 'player-card ' + (p1Leading ? 'leading' : 'losing');
+                if (c2) c2.className = 'player-card ' + (!p1Leading ? 'leading' : 'losing');
+
+                // Update progress bars
+                const pf1 = document.getElementById('ov-prog1');
+                const pf2 = document.getElementById('ov-prog2');
+                if (pf1) pf1.style.width = p1Pct + '%';
+                if (pf2) pf2.style.width = p2Pct + '%';
+
+                // Update winner banner if appeared
+                const resultEl = document.getElementById('ov-result');
+                if (resultEl && data.both_ready && data.winner) {
+                    resultEl.innerHTML = `
+                        <div class="winner-banner">
+                            <div class="trophy">🏆</div>
+                            <div class="winner-name">${data.winner.nickname} ПОБЕДИЛ!</div>
+                            <div class="winner-prize">Приз: 🧀 ${(ch.wager * 2).toLocaleString('ru')}</div>
+                        </div>`;
+                }
+
+                // Update battle history
+                if (history.length > 0) {
+                    const logEl = document.getElementById('ov-history');
+                    if (logEl) {
+                        const recent = history.slice(-6);
+                        logEl.innerHTML = `
+                            <div class="battle-log-title">📋 Последние бои</div>
+                            ${recent.map(b => {
+                                const val = b[cond.key.replace('avg_','')] || b.damage || 0;
+                                const isFrom = b.player === 'from';
+                                const color = isFrom ? 'var(--p1-color)' : 'var(--p2-color)';
+                                return `
+                                    <div class="battle-entry">
+                                        <span class="be-num">#${b.battle_num}</span>
+                                        <span class="be-name" style="color:${color}">${b.nickname}</span>
+                                        <span class="be-value" style="color:${val > 0 ? 'var(--text)' : 'var(--text-muted)'}">${cond.icon} ${typeof val === 'number' ? val.toLocaleString('ru') : val}</span>
+                                    </div>`;
+                            }).join('')}`;
+                    }
+                }
+
+                return;
+            }
+
+            // ===== FIRST RENDER (full HTML) =====
+            widgetRendered = true;
+
+            // Battle history
             let historyHtml = '';
             if (history.length > 0) {
                 const recent = history.slice(-6);
                 historyHtml = `
-                    <div class="battle-log">
+                    <div class="battle-log" id="ov-history">
                         <div class="battle-log-title">📋 Последние бои</div>
                         ${recent.map(b => {
                             const val = b[cond.key.replace('avg_','')] || b.damage || 0;
@@ -455,6 +539,8 @@
                                 </div>`;
                         }).join('')}
                     </div>`;
+            } else {
+                historyHtml = '<div class="battle-log" id="ov-history"></div>';
             }
 
             // Winner banner
@@ -484,13 +570,13 @@
                     </div>
 
                     <div class="players-row">
-                        <div class="player-card ${p1Leading ? 'leading' : 'losing'}">
+                        <div class="player-card ${p1Leading ? 'leading' : 'losing'}" id="ov-card1">
                             <div class="player-label">Вызывающий</div>
                             <div class="player-name">${fp.nickname}</div>
-                            <div class="player-score ${v1Changed ? 'updated' : ''}" style="color:${p1Color}">
+                            <div class="player-score" id="ov-score1" style="color:${p1Color}">
                                 ${typeof v1 === 'number' ? v1.toLocaleString('ru') : v1}${cond.unit}
                             </div>
-                            <div class="player-battles ${p1Battles >= reqBattles ? 'battles-completed' : ''}">
+                            <div class="player-battles ${p1Battles >= reqBattles ? 'battles-completed' : ''}" id="ov-battles1">
                                 ${p1Battles >= reqBattles
                                     ? `<span class="done">✅ ${p1Battles}/${reqBattles} боёв</span>`
                                     : `⚔️ ${p1Battles}/${reqBattles} боёв`
@@ -503,13 +589,13 @@
                             <span class="vs-text">VS</span>
                         </div>
 
-                        <div class="player-card ${!p1Leading ? 'leading' : 'losing'}">
+                        <div class="player-card ${!p1Leading ? 'leading' : 'losing'}" id="ov-card2">
                             <div class="player-label">Принявший</div>
                             <div class="player-name">${tp.nickname}</div>
-                            <div class="player-score ${v2Changed ? 'updated' : ''}" style="color:${p2Color}">
+                            <div class="player-score" id="ov-score2" style="color:${p2Color}">
                                 ${typeof v2 === 'number' ? v2.toLocaleString('ru') : v2}${cond.unit}
                             </div>
-                            <div class="player-battles ${p2Battles >= reqBattles ? 'battles-completed' : ''}">
+                            <div class="player-battles ${p2Battles >= reqBattles ? 'battles-completed' : ''}" id="ov-battles2">
                                 ${p2Battles >= reqBattles
                                     ? `<span class="done">✅ ${p2Battles}/${reqBattles} боёв</span>`
                                     : `⚔️ ${p2Battles}/${reqBattles} боёв`
@@ -524,20 +610,20 @@
                             <span>${tp.nickname}</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill-left" style="width:${p1Pct}%"></div>
+                            <div class="progress-fill-left" id="ov-prog1" style="width:${p1Pct}%"></div>
                             <div style="flex:1"></div>
-                            <div class="progress-fill-right" style="width:${p2Pct}%"></div>
+                            <div class="progress-fill-right" id="ov-prog2" style="width:${p2Pct}%"></div>
                         </div>
                     </div>
 
                     ${historyHtml}
 
-                    ${resultHtml || `
+                    <div id="ov-result">${resultHtml || `
                         <div class="widget-footer">
                             <div class="footer-tag">🧀 Ставка: <span class="ft-val">${ch.wager}</span></div>
                             <div class="footer-tag">🏆 Приз: <span class="ft-val">${(ch.wager * 2).toLocaleString('ru')} 🧀</span></div>
                         </div>
-                    `}
+                    `}</div>
 
                     <div class="brand-watermark ${showBrand ? '' : 'hide'}">⚔️ Мир Танков PVP Arena</div>
                 </div>
