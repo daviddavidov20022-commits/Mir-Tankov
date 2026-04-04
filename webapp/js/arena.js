@@ -166,8 +166,12 @@ function switchTab(tabId, btn) {
     document.getElementById('tab-' + tabId).classList.add('tab-content--active');
     btn.classList.add('arena-tab--active');
 
-    if (tabId === 'active') loadChallenges();
-    if (tabId === 'history') { loadChallenges(); loadGcHistory(); if (typeof tbLoadHistoryMain === 'function') tbLoadHistoryMain(); }
+    if (tabId === 'history') {
+        loadChallenges();
+        loadMyPvpChallenges();
+        loadGcHistory();
+        if (typeof tbLoadHistoryMain === 'function') tbLoadHistoryMain();
+    }
     if (tabId === 'admin') loadAdminUsers();
     if (tabId === 'global' && typeof gcLoadChallenge === 'function') gcLoadChallenge(true);
     if (tabId === 'teams' && typeof tbInit === 'function') tbInit();
@@ -706,8 +710,13 @@ function selectOpponent(nickname, telegramId, accountId) {
     challenge.opponent = { nickname, telegram_id: telegramId, account_id: accountId };
 
     document.getElementById('opponentResults').innerHTML = '';
-    document.getElementById('opponentSearch').style.display = 'none';
-    document.querySelector('#step-opponent .search-box').style.display = 'none';
+    // Hide both modes
+    const searchMode = document.getElementById('oppSearchMode');
+    const friendsMode = document.getElementById('oppFriendsMode');
+    const sourceToggle = document.querySelector('.opp-source-toggle');
+    if (searchMode) searchMode.style.display = 'none';
+    if (friendsMode) friendsMode.style.display = 'none';
+    if (sourceToggle) sourceToggle.style.display = 'none';
 
     const sel = document.getElementById('selectedOpponent');
     sel.style.display = 'flex';
@@ -722,8 +731,24 @@ function selectOpponent(nickname, telegramId, accountId) {
 function changeOpponent() {
     challenge.opponent = null;
     document.getElementById('selectedOpponent').style.display = 'none';
-    document.querySelector('#step-opponent .search-box').style.display = 'flex';
-    document.getElementById('opponentSearch').style.display = '';
+    // Restore source toggle
+    const sourceToggle = document.querySelector('.opp-source-toggle');
+    if (sourceToggle) sourceToggle.style.display = 'flex';
+    // Restore the active mode
+    const searchBtn = document.getElementById('oppSrcSearch');
+    const friendsBtn = document.getElementById('oppSrcFriends');
+    const isSearchActive = searchBtn && searchBtn.style.color === 'rgb(200, 170, 110)';
+    const searchMode = document.getElementById('oppSearchMode');
+    const friendsMode = document.getElementById('oppFriendsMode');
+    if (!isSearchActive && friendsMode) {
+        // Friends mode was active
+        if (searchMode) searchMode.style.display = 'none';
+        friendsMode.style.display = '';
+    } else {
+        // Default: search mode
+        if (searchMode) searchMode.style.display = '';
+        if (friendsMode) friendsMode.style.display = 'none';
+    }
     lockStepsFrom('step-tank');
     updateSummary();
 }
@@ -1080,10 +1105,10 @@ async function sendChallenge() {
 
             setTimeout(() => {
                 resetChallengeBuilder();
+                // Switch to History > Мои tab
+                const histTab = document.querySelector('.arena-tab[onclick*="history"]');
+                if (histTab) switchTab('history', histTab);
                 loadMyPvpChallenges();
-                // Scroll to the challenges list
-                const pvpSection = document.getElementById('myPvpSection');
-                if (pvpSection) pvpSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 1500);
         } else {
             showToast(`❌ ${data.error || 'Ошибка'}`, 'error');
@@ -1395,6 +1420,126 @@ window.cancelChallenge = cancelChallenge;
 window.addFriendFromArena = addFriendFromArena;
 window.openGiftModal = openGiftModal;
 window.giftCheese = giftCheese;
+window.switchHistorySub = switchHistorySub;
+window.switchOppSource = switchOppSource;
+window.loadFriendsForOpponent = loadFriendsForOpponent;
+
+// ============================================================
+// HISTORY SUB-TABS
+// ============================================================
+function switchHistorySub(sub) {
+    const myBtn = document.getElementById('histSubMy');
+    const histBtn = document.getElementById('histSubHistory');
+    const myPanel = document.getElementById('histPanelMy');
+    const histPanel = document.getElementById('histPanelHistory');
+
+    if (sub === 'my') {
+        myBtn.style.border = '1px solid rgba(200,170,110,0.3)';
+        myBtn.style.background = 'linear-gradient(135deg,rgba(200,170,110,0.12),rgba(200,170,110,0.04))';
+        myBtn.style.color = '#C8AA6E';
+        histBtn.style.border = '1px solid rgba(255,255,255,0.06)';
+        histBtn.style.background = 'rgba(255,255,255,0.03)';
+        histBtn.style.color = '#5A6577';
+        myPanel.style.display = '';
+        histPanel.style.display = 'none';
+        loadChallenges();
+        loadMyPvpChallenges();
+    } else {
+        histBtn.style.border = '1px solid rgba(200,170,110,0.3)';
+        histBtn.style.background = 'linear-gradient(135deg,rgba(200,170,110,0.12),rgba(200,170,110,0.04))';
+        histBtn.style.color = '#C8AA6E';
+        myBtn.style.border = '1px solid rgba(255,255,255,0.06)';
+        myBtn.style.background = 'rgba(255,255,255,0.03)';
+        myBtn.style.color = '#5A6577';
+        myPanel.style.display = 'none';
+        histPanel.style.display = '';
+        loadGcHistory();
+        if (typeof tbLoadHistoryMain === 'function') tbLoadHistoryMain();
+    }
+}
+
+// ============================================================
+// OPPONENT SOURCE TOGGLE (Search / Friends)
+// ============================================================
+function switchOppSource(mode) {
+    const searchBtn = document.getElementById('oppSrcSearch');
+    const friendsBtn = document.getElementById('oppSrcFriends');
+    const searchMode = document.getElementById('oppSearchMode');
+    const friendsMode = document.getElementById('oppFriendsMode');
+
+    if (mode === 'search') {
+        searchBtn.style.border = '1px solid rgba(200,170,110,0.3)';
+        searchBtn.style.background = 'rgba(200,170,110,0.12)';
+        searchBtn.style.color = '#C8AA6E';
+        friendsBtn.style.border = '1px solid rgba(255,255,255,0.06)';
+        friendsBtn.style.background = 'rgba(255,255,255,0.03)';
+        friendsBtn.style.color = '#5A6577';
+        searchMode.style.display = '';
+        friendsMode.style.display = 'none';
+    } else {
+        friendsBtn.style.border = '1px solid rgba(200,170,110,0.3)';
+        friendsBtn.style.background = 'rgba(200,170,110,0.12)';
+        friendsBtn.style.color = '#C8AA6E';
+        searchBtn.style.border = '1px solid rgba(255,255,255,0.06)';
+        searchBtn.style.background = 'rgba(255,255,255,0.03)';
+        searchBtn.style.color = '#5A6577';
+        searchMode.style.display = 'none';
+        friendsMode.style.display = '';
+        loadFriendsForOpponent();
+    }
+}
+
+// ============================================================
+// LOAD FRIENDS LIST FOR OPPONENT PICKER
+// ============================================================
+async function loadFriendsForOpponent() {
+    const container = document.getElementById('friendsListForOpponent');
+    if (!container) return;
+    if (!myTelegramId) {
+        container.innerHTML = '<div style="text-align:center;color:#ef4444;font-size:0.7rem;padding:16px">\u26a0\ufe0f ID \u043d\u0435 \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0451\u043d</div>';
+        return;
+    }
+
+    container.innerHTML = '<div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px"><div class="search-loading__spinner" style="margin:0 auto 8px"></div>\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u0434\u0440\u0443\u0437\u0435\u0439...</div>';
+
+    try {
+        const resp = await fetch(`${BOT_API_URL}/api/friends?telegram_id=${myTelegramId}`);
+        const data = await resp.json();
+        const friends = data.friends || [];
+
+        if (friends.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px">
+                <div style="font-size:1.5rem;margin-bottom:8px">\ud83d\udc65</div>
+                <div style="font-size:0.75rem;color:#5A6577">\u0414\u0440\u0443\u0437\u0435\u0439 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442</div>
+                <div style="font-size:0.6rem;color:#5A6577;margin-top:4px">\u0414\u043e\u0431\u0430\u0432\u044c \u0434\u0440\u0443\u0437\u0435\u0439 \u0447\u0435\u0440\u0435\u0437 \u043f\u043e\u0438\u0441\u043a \u0438\u043b\u0438 \u0432\u043a\u043b\u0430\u0434\u043a\u0443 \u0414\u0440\u0443\u0437\u044c\u044f</div>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = friends.map((f, i) => {
+            const nick = f.wot_nickname || f.nickname || `ID:${f.telegram_id}`;
+            const safeNick = nick.replace(/'/g, "\\'");
+            const isMe = f.telegram_id === myTelegramId;
+            if (isMe) return '';
+
+            return `<div class="player-card" style="animation:fadeInUp 0.3s ease;animation-delay:${i * 0.04}s;animation-fill-mode:both;cursor:pointer" onclick="selectOpponent('${safeNick}', ${f.telegram_id}, ${f.account_id || 0})">
+                <div class="player-card__avatar" style="background:linear-gradient(135deg,rgba(74,222,128,0.15),rgba(34,197,94,0.05));border-color:rgba(74,222,128,0.3)">\ud83d\udc65</div>
+                <div class="player-card__info" style="flex:1">
+                    <div class="player-card__nick">${nick}</div>
+                    <div class="player-card__stats-row"><span class="player-card__stat" style="color:#4ade80">\u2705 \u0414\u0440\u0443\u0433</span></div>
+                </div>
+                <div style="color:#C8AA6E;font-size:0.7rem;font-weight:700">\u2694\ufe0f</div>
+            </div>`;
+        }).filter(Boolean).join('');
+
+        if (!container.innerHTML.trim()) {
+            container.innerHTML = '<div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">\u041d\u0435\u0442 \u0434\u0440\u0443\u0437\u0435\u0439 \u0434\u043b\u044f \u0432\u044b\u0437\u043e\u0432\u0430</div>';
+        }
+    } catch (e) {
+        console.error('loadFriendsForOpponent error:', e);
+        container.innerHTML = '<div style="text-align:center;color:#ef4444;font-size:0.7rem;padding:16px">\u2716 \u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438</div>';
+    }
+}
 window.addSelfCheese = addSelfCheese;
 window.closeGiftModal = closeGiftModal;
 window.loadMyPvpChallenges = loadMyPvpChallenges;
