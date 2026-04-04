@@ -523,6 +523,24 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_daily_tg ON daily_rewards(telegram_id);
         """)
 
+        # ===== ЗАБЛОКИРОВАННЫЕ ПОЛЬЗОВАТЕЛИ =====
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS blocked_users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                telegram_id INTEGER UNIQUE NOT NULL,
+                reason TEXT,
+                blocked_by INTEGER,
+                blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_blocked_tg ON blocked_users(telegram_id);
+        """)
+
+        # Миграция: is_blocked
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN is_blocked INTEGER DEFAULT 0")
+        except Exception:
+            pass
+
         logger.info("База данных инициализирована")
 
 
