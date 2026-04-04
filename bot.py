@@ -3588,7 +3588,7 @@ async def api_admin_users(request):
         with get_db() as conn:
             users = conn.execute("""
                 SELECT u.telegram_id, u.first_name, u.username, u.wot_nickname, u.wot_account_id,
-                       u.coins, u.joined_at
+                       u.coins, u.joined_at, COALESCE(u.is_blocked, 0) as is_blocked
                 FROM users u
                 ORDER BY u.joined_at DESC
             """).fetchall()
@@ -3637,12 +3637,101 @@ async def api_admin_users(request):
                 } if sub else None,
                 "is_admin": u["telegram_id"] in admins,
                 "is_super_admin": ADMIN_ID and u["telegram_id"] == ADMIN_ID,
+                "is_blocked": bool(u["is_blocked"]),
             })
 
         return cors_response({"users": result, "total": len(result)})
     except Exception as e:
         logger.error(f"API admin_users error: {e}")
         return cors_response({"error": str(e)}, 500)
+
+
+async def api_admin_delete_user(request):
+    """POST /api/admin/delete-user {admin_telegram_id, target_telegram_id}
+    Удалить пользователя из БД. Он сможет заново зайти и зарегистрироваться."""
+    try:
+        data = await request.json()
+        admin_tg = data.get("admin_telegram_id")
+        target_tg = int(data.get("target_telegram_id", 0))
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        if target_tg == ADMIN_ID:
+            return cors_response({"error": "Нельзя удалить главного админа"}, 400)
+
+        from database import get_db
+        with get_db() as conn:
+            user = conn.execute("SELECT id, wot_nickname, first_name FROM users WHERE telegram_id = ?", (target_tg,)).fetchone()
+            if not user:
+                return cors_response({"error": "Пользователь не найден"}, 404)
+
+            name = user["wot_nickname"] or user["first_name"] or str(target_tg)
+
+            # Удаляем связанные данные
+            conn.execute("DELETE FROM friends WHERE user_telegram_id = ? OR friend_telegram_id = ?", (target_tg, target_tg))
+            conn.execute("DELETE FROM messages WHERE sender_telegram_id = ? OR receiver_telegram_id = ?", (target_tg, target_tg))
+            conn.execute("DELETE FROM daily_rewards WHERE telegram_id = ?", (target_tg,))
+            conn.execute("DELETE FROM admin_users WHERE telegram_id = ?", (target_tg,))
+            conn.execute("DELETE FROM subscriptions WHERE user_id = ?", (user["id"],))
+            conn.execute("DELETE FROM transactions WHERE user_id = ?", (user["id"],))
+            conn.execute("DELETE FROM users WHERE telegram_id = ?", (target_tg,))
+
+        logger.info(f"Admin {admin_tg} deleted user {target_tg} ({name})")
+        return cors_response({"success": True, "message": f"🗑 Пользователь {name} удалён. Он может заново зарегистрироваться."})
+    except Exception as e:
+        logger.error(f"API delete_user error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+async def api_admin_block_user(request):
+    """POST /api/admin/block-user {admin_telegram_id, target_telegram_id, action: 'block'|'unblock', reason}
+    Заблокировать/разблокировать пользователя."""
+    try:
+        data = await request.json()
+        admin_tg = data.get("admin_telegram_id")
+        target_tg = int(data.get("target_telegram_id", 0))
+        action = data.get("action", "block")
+        reason = data.get("reason", "Нарушение правил")
+
+        if not is_admin_user(admin_tg):
+            return cors_response({"error": "Нет доступа"}, 403)
+
+        if target_tg == ADMIN_ID:
+            return cors_response({"error": "Нельзя заблокировать главного админа"}, 400)
+
+        from database import get_db
+        with get_db() as conn:
+            user = conn.execute("SELECT wot_nickname, first_name FROM users WHERE telegram_id = ?", (target_tg,)).fetchone()
+            name = (user["wot_nickname"] or user["first_name"] or str(target_tg)) if user else str(target_tg)
+
+            if action == "block":
+                conn.execute("""
+                    INSERT INTO blocked_users (telegram_id, reason, blocked_by) VALUES (?, ?, ?)
+                    ON CONFLICT(telegram_id) DO UPDATE SET reason = ?, blocked_by = ?, blocked_at = datetime('now')
+                """, (target_tg, reason, admin_tg, reason, admin_tg))
+                conn.execute("UPDATE users SET is_blocked = 1 WHERE telegram_id = ?", (target_tg,))
+
+                logger.info(f"Admin {admin_tg} BLOCKED user {target_tg} ({name}): {reason}")
+                return cors_response({"success": True, "message": f"🚫 {name} заблокирован. Причина: {reason}"})
+            else:
+                conn.execute("DELETE FROM blocked_users WHERE telegram_id = ?", (target_tg,))
+                conn.execute("UPDATE users SET is_blocked = 0 WHERE telegram_id = ?", (target_tg,))
+
+                logger.info(f"Admin {admin_tg} UNBLOCKED user {target_tg} ({name})")
+                return cors_response({"success": True, "message": f"✅ {name} разблокирован"})
+    except Exception as e:
+        logger.error(f"API block_user error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+def is_user_blocked(telegram_id):
+    """Check if user is blocked"""
+    try:
+        from database import get_db
+        with get_db() as conn:
+            row = conn.execute("SELECT 1 FROM blocked_users WHERE telegram_id = ?", (telegram_id,)).fetchone()
+            return bool(row)
+    except:
+        return False
 
 
 async def api_admin_toggle_admin(request):
@@ -7063,6 +7152,9 @@ async def api_profile_save(request):
             return cors_response({"error": "telegram_id required"}, 400)
 
         telegram_id = int(telegram_id)
+        
+        if is_user_blocked(telegram_id):
+            return cors_response({"error": "🚫 Ваш аккаунт заблокирован. Вы не можете менять профиль."}, 403)
 
         from database import get_db
         with get_db() as conn:
@@ -10405,6 +10497,8 @@ def create_api_app():
     app.router.add_post("/api/admin/toggle-admin", api_admin_toggle_admin)
     app.router.add_post("/api/admin/cancel-challenge", api_admin_cancel_challenge)
     app.router.add_post("/api/admin/gift-cheese", api_admin_gift_cheese)
+    app.router.add_post("/api/admin/delete-user", api_admin_delete_user)
+    app.router.add_post("/api/admin/block-user", api_admin_block_user)
 
     # Profile API
     app.router.add_post("/api/profile/save", api_profile_save)

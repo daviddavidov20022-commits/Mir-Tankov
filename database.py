@@ -523,6 +523,22 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_daily_tg ON daily_rewards(telegram_id);
         """)
 
+        # Add is_blocked to users if not exists
+        try:
+            conn.execute("SELECT is_blocked FROM users LIMIT 1")
+        except sqlite3.OperationalError:
+            conn.execute("ALTER TABLE users ADD COLUMN is_blocked BOOLEAN DEFAULT 0")
+
+        # Create blocked_users table
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS blocked_users (
+                telegram_id BIGINT PRIMARY KEY,
+                reason TEXT,
+                blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                blocked_by BIGINT
+            );
+        """)
+
         logger.info("База данных инициализирована")
 
 
