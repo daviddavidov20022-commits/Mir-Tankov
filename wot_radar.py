@@ -87,9 +87,8 @@ def main():
     if replays_dir:
         print(Fore.GREEN + f"Автоматически найдена папка реплеев: {replays_dir}")
         ans = input("Использовать эту папку? (Д/Н) [Д]: ").strip().upper()
-        if ans == 'Н' or ans == 'N' or ans == 'Y' or ans == 'НЕТ':
-            if ans != 'Y':
-                replays_dir = input("Введите путь к папке replays вручную:\n> ").strip()
+        if ans in ('Н', 'N', 'НЕТ', 'NO'):
+            replays_dir = input("Введите путь к папке replays вручную:\n> ").strip()
     else:
         replays_dir = input(Fore.CYAN + "Введите путь к папке replays (например C:\\Games\\Lesta\\Мир танков\\replays):\n> ").strip()
     

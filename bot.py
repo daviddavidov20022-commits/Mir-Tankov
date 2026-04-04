@@ -5286,9 +5286,10 @@ def _internal_finish_challenge(conn, challenge_id):
     """Внутренняя логика завершения челленджа: выбор победителя, выдача награды, смена статуса."""
     try:
         # Проверяем prize_mode
-        ch_data = conn.execute("SELECT * FROM global_challenges WHERE id = ?", (challenge_id,)).fetchone()
-        if not ch_data:
+        ch_row = conn.execute("SELECT * FROM global_challenges WHERE id = ?", (challenge_id,)).fetchone()
+        if not ch_row:
             return False
+        ch_data = dict(ch_row)  # sqlite3.Row → dict (для .get())
         
         is_prize_mode = ch_data.get("prize_mode", 0) == 1
 
@@ -7168,6 +7169,16 @@ async def api_top_players(request):
         return cors_response({"players": players, "total": len(players)})
     except Exception as e:
         logger.error(f"API top_players error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stats_total_users(request):
+    """GET /api/stats/total_users — количество зарегистрированных пользователей"""
+    try:
+        total = get_total_users()
+        return cors_response({"total": total})
+    except Exception as e:
+        logger.error(f"API stats_total_users error: {e}")
         return cors_response({"error": str(e)}, 500)
 
 
@@ -10293,6 +10304,9 @@ def create_api_app():
 
     # Top Players API
     app.router.add_get("/api/top/players", api_top_players)
+
+    # Stats API
+    app.router.add_get("/api/stats/total_users", api_stats_total_users)
 
     # Streams API
     app.router.add_get("/api/streams/status", api_streams_status)
