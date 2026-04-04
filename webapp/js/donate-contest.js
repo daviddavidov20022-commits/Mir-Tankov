@@ -257,6 +257,14 @@ async function dcLoadEntries() {
                     🏆 ЗАВЕРШИТЬ КОНКУРС
                 </button>`;
         }
+        
+        // Admin: delete button
+        if (isAdmin) {
+            html += `
+                <button onclick="dcDeleteContest()" style="width:100%;padding:12px;border:none;border-radius:14px;background:rgba(239,68,68,0.1);color:#ef4444;font-family:'Russo One',sans-serif;font-size:0.85rem;cursor:pointer;margin-top:12px;border:1px solid rgba(239,68,68,0.3)">
+                    🗑 УДАЛИТЬ ${isActive ? "КОНКУРС" : "ИСТОРИЮ"}
+                </button>`;
+        }
 
         // Widget link (admin)
         if (isAdmin) {
@@ -345,6 +353,26 @@ async function dcFinishContest() {
         if (data.success) {
             dcShowToast(`🏆 Конкурс завершён! Победитель: ${data.winner?.nickname || '—'}`);
             await dcLoadEntries();
+        } else {
+            dcShowToast(`❌ ${data.error}`);
+        }
+    } catch (e) { dcShowToast('❌ Нет подключения'); }
+}
+
+// ============================================================
+// DELETE CONTEST (admin)
+// ============================================================
+async function dcDeleteContest() {
+    if (!confirm('ВЫ УВЕРЕНЫ? Это навсегда удалит конкурс, всех участников и все голоса!')) return;
+    try {
+        const resp = await fetch(`${DC_API}/api/donate-contest/delete`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegram_id: myTgId, contest_id: dcContestId })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            dcShowToast(`🗑 Успешно удалено`);
+            dcBackToList();
         } else {
             dcShowToast(`❌ ${data.error}`);
         }

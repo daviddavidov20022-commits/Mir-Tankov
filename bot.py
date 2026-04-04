@@ -10198,6 +10198,32 @@ async def api_donate_contest_finish(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_donate_contest_delete(request):
+    """POST /api/donate-contest/delete — админ удаляет конкурс и его историю"""
+    try:
+        data = await request.json()
+        telegram_id = int(data.get("telegram_id", 0))
+        contest_id = int(data.get("contest_id", 0))
+
+        if telegram_id != ADMIN_ID:
+            return cors_response({"error": "Только администратор"}, 403)
+
+        from database import get_db
+        with get_db() as conn:
+            contest = conn.execute("SELECT * FROM donate_contests WHERE id = ?", (contest_id,)).fetchone()
+            if not contest:
+                return cors_response({"error": "Конкурс не найден"}, 404)
+
+            conn.execute("DELETE FROM donate_contest_votes WHERE contest_id = ?", (contest_id,))
+            conn.execute("DELETE FROM donate_contest_entries WHERE contest_id = ?", (contest_id,))
+            conn.execute("DELETE FROM donate_contests WHERE id = ?", (contest_id,))
+
+        return cors_response({"success": True})
+    except Exception as e:
+        logger.error(f"Donate contest delete error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 async def api_donate_contest_widget(request):
     """GET /api/donate-contest/widget?contest_id=X — данные для OBS виджета"""
     try:
@@ -10576,6 +10602,7 @@ def create_api_app():
     app.router.add_post("/api/donate-contest/submit", api_donate_contest_submit)
     app.router.add_post("/api/donate-contest/vote", api_donate_contest_vote)
     app.router.add_post("/api/donate-contest/finish", api_donate_contest_finish)
+    app.router.add_post("/api/donate-contest/delete", api_donate_contest_delete)
     app.router.add_get("/api/donate-contest/widget", api_donate_contest_widget)
 
     # Finance / Accounting (admin only)
