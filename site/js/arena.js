@@ -1866,7 +1866,7 @@ function renderAdminUsers(users) {
             </button>`;
 
         return `
-            <div class="duel-card" style="margin-bottom:8px;${cardBorder}">
+            <div class="duel-card" style="margin-bottom:8px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start">
                     <div style="flex:1;min-width:0">
                         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -1874,7 +1874,6 @@ function renderAdminUsers(users) {
                                 ${u.wot_nickname || u.first_name || 'Без имени'}
                             </span>
                             ${adminBadge}
-                            ${blockedBadge}
                         </div>
                         <div style="font-size:0.6rem;color:#5A6577;margin-top:3px">
                             TG: ${u.username ? '@' + u.username : '—'} · ID: ${u.telegram_id}
@@ -1886,8 +1885,6 @@ function renderAdminUsers(users) {
                     <div style="flex-shrink:0;margin-left:8px;display:flex;flex-direction:column;align-items:flex-end">
                         ${toggleBtn}
                         ${giftBtn}
-                        ${blockBtn}
-                        ${deleteBtn}
                     </div>
                 </div>
             </div>`;
@@ -1908,57 +1905,6 @@ function filterAdminUsers() {
     );
     renderAdminUsers(filtered);
 }
-
-async function adminDeleteUser(targetTgId, name) {
-    if (!confirm(`Удалить пользователя ${name}? Все данные будут стёрты, но он сможет заново зарегистрироваться.`)) return;
-    try {
-        const resp = await fetch(`${BOT_API_URL}/api/admin/delete-user`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ admin_telegram_id: myTelegramId, target_telegram_id: targetTgId })
-        });
-        const data = await resp.json();
-        if (data.success) {
-            showToast(data.message, 'success');
-            loadAdminUsers();
-        } else {
-            showToast(`❌ ${data.error}`, 'error');
-        }
-    } catch (e) {
-        showToast('❌ Нет подключения', 'error');
-    }
-}
-
-async function adminBlockUser(targetTgId, name, doBlock) {
-    const action = doBlock ? 'block' : 'unblock';
-    const msg = doBlock
-        ? `Заблокировать ${name}? Он больше не сможет пользоваться ботом.`
-        : `Разблокировать ${name}?`;
-    if (!confirm(msg)) return;
-
-    let reason = '';
-    if (doBlock) {
-        reason = prompt('Причина блокировки:', 'Нарушение правил') || 'Нарушение правил';
-    }
-
-    try {
-        const resp = await fetch(`${BOT_API_URL}/api/admin/block-user`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ admin_telegram_id: myTelegramId, target_telegram_id: targetTgId, action, reason })
-        });
-        const data = await resp.json();
-        if (data.success) {
-            showToast(data.message, 'success');
-            loadAdminUsers();
-        } else {
-            showToast(`❌ ${data.error}`, 'error');
-        }
-    } catch (e) {
-        showToast('❌ Нет подключения', 'error');
-    }
-}
-window.adminDeleteUser = adminDeleteUser;
-window.adminBlockUser = adminBlockUser;
-
 
 async function toggleAdmin(targetTgId) {
     try {
