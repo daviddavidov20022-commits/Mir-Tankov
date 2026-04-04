@@ -4095,6 +4095,13 @@ async def fetch_player_stats(user, ch):
             async with session.get(url) as resp:
                 data = await resp.json()
 
+            # Also fetch account/info for damage_assisted (not available in tanks/stats)
+            acc_url = (f"https://api.tanki.su/wot/account/info/"
+                       f"?application_id={get_lesta_app_id()}&account_id={account_id}"
+                       f"&fields=statistics.all.avg_damage_assisted,statistics.all.battles")
+            async with session.get(acc_url) as acc_resp:
+                acc_data = await acc_resp.json()
+
         if data.get("status") != "ok":
             return None
 
@@ -4102,11 +4109,21 @@ async def fetch_player_stats(user, ch):
         if not tank_stats_list:
             return None
 
+        # Get damage_assisted from account/info (total = avg * battles)
+        damage_assisted = 0
+        if acc_data.get("status") == "ok":
+            acc_info = (acc_data.get("data") or {}).get(str(account_id))
+            if acc_info:
+                acc_stats = acc_info.get("statistics", {}).get("all", {})
+                acc_battles = acc_stats.get("battles", 0) or 0
+                avg_assisted = acc_stats.get("avg_damage_assisted", 0) or 0
+                damage_assisted = int(avg_assisted * acc_battles)
+
         # Filter tanks by challenge criteria
         totals = {
             "battles": 0, "damage_dealt": 0, "spotted": 0, "frags": 0,
             "xp": 0, "wins": 0, "damage_received": 0, "damage_blocked": 0, "shots": 0,
-            "hits": 0, "survived_battles": 0
+            "hits": 0, "survived_battles": 0, "damage_assisted": damage_assisted
         }
 
         for ts in tank_stats_list:
@@ -4231,7 +4248,7 @@ async def api_check_challenge_results(request):
         condition = ch["condition"]
 
         STAT_KEY = {
-            "damage": "damage_dealt", "spotting": "spotted", "blocked": "damage_blocked",
+            "damage": "damage_dealt", "spotting": "damage_assisted", "blocked": "damage_blocked",
             "frags": "frags", "xp": "xp", "wins": "wins"
         }
         stat_key = STAT_KEY.get(condition, "damage_dealt")
@@ -4256,10 +4273,10 @@ async def api_check_challenge_results(request):
                     "nickname": from_start.get("nickname", "Игрок 1"),
                     "battle_num": len([b for b in battle_history if b["player"] == "from"]) + 1,
                     "damage": round((from_current["damage_dealt"] - from_last["damage_dealt"]) / from_new_battles) if from_new_battles else 0,
-                    "spotted": round((from_current["spotted"] - from_last["spotted"]) / from_new_battles) if from_new_battles else 0,
+                    "spotting": round((from_current.get("damage_assisted", 0) - from_last.get("damage_assisted", 0)) / from_new_battles) if from_new_battles else 0,
                     "frags": round((from_current["frags"] - from_last["frags"]) / from_new_battles, 1) if from_new_battles else 0,
                     "xp": round((from_current["xp"] - from_last["xp"]) / from_new_battles) if from_new_battles else 0,
-                    "blocked": round((from_current["damage_received"] - from_last["damage_received"]) / from_new_battles) if from_new_battles else 0,
+                    "blocked": round((from_current.get("damage_blocked", 0) - from_last.get("damage_blocked", 0)) / from_new_battles) if from_new_battles else 0,
                     "won": True if (from_current["wins"] - from_last["wins"]) > 0 else False,
                 }
                 battle_history.append(battle_entry)
@@ -4273,10 +4290,10 @@ async def api_check_challenge_results(request):
                     "nickname": to_start.get("nickname", "Игрок 2"),
                     "battle_num": len([b for b in battle_history if b["player"] == "to"]) + 1,
                     "damage": round((to_current["damage_dealt"] - to_last["damage_dealt"]) / to_new_battles) if to_new_battles else 0,
-                    "spotted": round((to_current["spotted"] - to_last["spotted"]) / to_new_battles) if to_new_battles else 0,
+                    "spotting": round((to_current.get("damage_assisted", 0) - to_last.get("damage_assisted", 0)) / to_new_battles) if to_new_battles else 0,
                     "frags": round((to_current["frags"] - to_last["frags"]) / to_new_battles, 1) if to_new_battles else 0,
                     "xp": round((to_current["xp"] - to_last["xp"]) / to_new_battles) if to_new_battles else 0,
-                    "blocked": round((to_current["damage_received"] - to_last["damage_received"]) / to_new_battles) if to_new_battles else 0,
+                    "blocked": round((to_current.get("damage_blocked", 0) - to_last.get("damage_blocked", 0)) / to_new_battles) if to_new_battles else 0,
                     "won": True if (to_current["wins"] - to_last["wins"]) > 0 else False,
                 }
                 battle_history.append(battle_entry)
@@ -4325,6 +4342,7 @@ async def api_check_challenge_results(request):
                 "battles_played": battles_capped,
                 "battles_total": battles_total,
                 "damage": final["damage_dealt"] - start["damage_dealt"],
+                "spotting": final.get("damage_assisted", 0) - start.get("damage_assisted", 0),
                 "spotted": final["spotted"] - start["spotted"],
                 "frags": final["frags"] - start["frags"],
                 "xp": final["xp"] - start["xp"],
@@ -4335,7 +4353,7 @@ async def api_check_challenge_results(request):
             }
             bp = max(battles_capped, 1)
             d["avg_damage"] = round(d["damage"] / bp)
-            d["avg_spotted"] = round(d["spotted"] / bp)
+            d["avg_spotting"] = round(d["spotting"] / bp)
             d["avg_frags"] = round(d["frags"] / bp, 1)
             d["avg_xp"] = round(d["xp"] / bp)
             d["winrate"] = round(d["wins"] / bp * 100, 1)
@@ -4367,7 +4385,7 @@ async def api_check_challenge_results(request):
         # If both ready, determine winner and complete
         if both_ready:
             DELTA_KEY = {
-                "damage": "damage", "spotting": "spotted",
+                "damage": "damage", "spotting": "spotting",
                 "blocked": "blocked", "frags": "frags",
                 "xp": "xp", "wins": "wins"
             }

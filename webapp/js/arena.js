@@ -35,12 +35,12 @@ const challenge = {
 };
 
 const CONDITION_LABELS = {
-    damage: { icon: '💥', name: 'Урон', desc: 'Средний урон' },
-    spotting: { icon: '👁', name: 'Засвет', desc: 'Средний засвет' },
-    blocked: { icon: '🛡️', name: 'Блок', desc: 'Заблокированный' },
-    frags: { icon: '🎯', name: 'Фраги', desc: 'Среднее убийств' },
-    xp: { icon: '⭐', name: 'Опыт', desc: 'Средний опыт' },
-    wins: { icon: '🏆', name: 'Победы', desc: '% побед' },
+    damage: { icon: '💥', name: 'Урон', desc: 'Суммарный урон' },
+    spotting: { icon: '👁', name: 'Засвет', desc: 'Урон по засвету' },
+    blocked: { icon: '🛡️', name: 'Блок', desc: 'Заблокированный урон' },
+    frags: { icon: '🎯', name: 'Фраги', desc: 'Суммарные фраги' },
+    xp: { icon: '⭐', name: 'Опыт', desc: 'Суммарный опыт' },
+    wins: { icon: '🏆', name: 'Победы', desc: 'Кол-во побед' },
 };
 
 const TYPE_LABELS = {
@@ -307,7 +307,7 @@ async function loadChallenges() {
 
 const COND_DISPLAY = {
     damage: { icon: '💥', name: 'Урон', key: 'damage', unit: '' },
-    spotting: { icon: '👁', name: 'Засвет', key: 'spotted', unit: '' },
+    spotting: { icon: '👁', name: 'Засвет', key: 'spotting', unit: '' },
     blocked: { icon: '🛡', name: 'Заблокировано', key: 'blocked', unit: '' },
     frags: { icon: '🎯', name: 'Фраги', key: 'frags', unit: '' },
     xp: { icon: '⭐', name: 'Опыт', key: 'xp', unit: '' },
@@ -548,7 +548,7 @@ function showChallengeDetail(id) {
             const name1 = c.is_incoming ? c.opponent_name : 'Я';
             const name2 = c.is_incoming ? 'Я' : c.opponent_name;
             const fmt = (n) => typeof n === 'number' ? n.toLocaleString('ru') : (n || '—');
-            const rows = [['💥 Урон',fd.damage,td.damage],['🎯 Фраги',fd.frags,td.frags],['👁 Засвет',fd.spotted,td.spotted],
+            const rows = [['💥 Урон',fd.damage,td.damage],['🎯 Фраги',fd.frags,td.frags],['👁 Засвет',fd.spotting,td.spotting],
                 ['🛡 Заблок.',fd.blocked,td.blocked],['⭐ Опыт',fd.xp,td.xp],['🏆 Победы',fd.wins,td.wins],['⚔️ Боёв',fd.battles_played,td.battles_played]];
             statsHtml = `<table style="width:100%;border-collapse:collapse;margin-top:12px">
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.08)"><th style="text-align:left;padding:6px;font-size:0.6rem;color:#5A6577"></th>
