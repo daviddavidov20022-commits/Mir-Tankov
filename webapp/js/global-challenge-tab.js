@@ -1,4 +1,4 @@
-﻿/**
+/**
 
  * Global Challenge Tab JS — встроенный в challenges.html
 
@@ -282,15 +282,19 @@ async function gcLoadChallenge(forceRefresh) {
 
         console.error('GC load error:', e);
 
-        if (_gcIsFirstLoad) {
         _gcIsFirstLoad = false;
-        const ldr = document.getElementById("gcLoading");
-        if (ldr) ldr.style.display = "none";
+
+        const ldr = document.getElementById('gcLoading');
+
+        if (ldr) ldr.style.display = 'none';
+
         gcShowEmpty();
 
         // Даже при ошибке — показываем admin panel
 
-        if (isAdminNow) {
+        const isAdminInCatch = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
+
+        if (isAdminInCatch) {
 
             const adminPanel = document.getElementById('gcAdminPanel');
 
