@@ -236,6 +236,16 @@
             font-size: .75rem
         }
 
+        .w-lb-battles {
+            font-size: .42rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 8px;
+            letter-spacing: .5px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
         /* ═══════════════════════════════════
            LAYOUT 2: COMPACT (Горизонтальный)
            ═══════════════════════════════════ */
@@ -926,12 +936,13 @@
                         <div class="w-ms"><div class="w-msv" style="color:${T.tc};text-shadow:0 0 10px ${AC}44">${formatCondValue(me, ch)}</div><div class="w-msu">${cond.unit}</div></div>
                     </div>`: ''}
                     ${!isEnroll && showTop ? `<div class="w-lbt">Top ${topCount} Leaderboard</div>${top3.map((p, i) => {
-                const n = p.nickname || 'Танкист'; const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesInfo = showBattles && maxB > 0 ? ` <span style="font-size:.6em;opacity:.6">${p.battles_played || 0}/${maxB}</span>` : ''; return `<div class="w-li" style="background:${AC}${['14', '08', '06'][i] || '04'};border:1px solid ${AC}${['22', '11', '0a'][i] || '08'}">
+                const n = p.nickname || 'Танкист'; const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesTag = showBattles && maxB > 0 ? `<div class="w-lb-battles" style="background:${AC}18;color:${AC}">${p.battles_played || 0}/${maxB}</div>` : ''; return `<div class="w-li" style="background:${AC}${['14', '08', '06'][i] || '04'};border:1px solid ${AC}${['22', '11', '0a'][i] || '08'}">
                         <div class="w-lr" style="color:${T.tc}">${i + 1}</div>
                         <div class="w-la" style="background:linear-gradient(135deg,${AC},${T.acD})">${n.substring(0, 2).toUpperCase()}</div>
-                        <div class="w-ln">${isMe ? '⭐ ' : ''}${n}${battlesInfo}</div>
+                        <div class="w-ln">${isMe ? '⭐ ' : ''}${n}</div>
+                        ${battlesTag}
                         <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
-                    </div>`}).join('')}` : ''}}
+                    </div>`}).join('')}` : ''}
                 </div></div>`;
         }
 
@@ -980,9 +991,10 @@
             const isEnroll = currentPhase === 'enrollment';
             const ctaText = ch.prize_cta || '';
             const all = !isEnroll ? top3.map((p, i) => {
-                const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesInfo = showBattles && maxB > 0 ? ` <span style="font-size:.65em;opacity:.5">${p.battles_played || 0}/${maxB}</span>` : ''; return `<div class="w-li${isMe ? ' w-li--me' : ''}" style="${isMe ? `background:${AC}12;border-left:3px solid ${AC}` : ''}">
+                const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesTag = showBattles && maxB > 0 ? `<div class="w-lb-battles" style="background:${AC}18;color:${AC}">${p.battles_played || 0}/${maxB}</div>` : ''; return `<div class="w-li${isMe ? ' w-li--me' : ''}" style="${isMe ? `background:${AC}12;border-left:3px solid ${AC}` : ''}">
                 <div class="w-lr" style="color:${['#ffd700', '#c0c0c0', '#cd7f32'][i] || T.tc}">${i + 1}</div>
-                <div class="w-ln">${isMe ? '⭐ ' : ''}${p.nickname || 'Танкист'}${battlesInfo}</div>
+                <div class="w-ln">${isMe ? '⭐ ' : ''}${p.nickname || 'Танкист'}</div>
+                ${battlesTag}
                 <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
             </div>`}).join('') : '';
             return `<div class="L4" style="border:1px solid ${AC}33">
@@ -1044,7 +1056,7 @@
                         s: data.status,
                         id: data.challenge.id,
                         pc: data.challenge.participants_count,
-                        lb: (data.challenge.leaderboard || []).map(p => `${p.telegram_id}:${p.current_value}`)
+                        lb: (data.challenge.leaderboard || []).map(p => `${p.telegram_id}:${p.current_value}:${p.battles_played||0}`)
                     });
                     
                     const phaseChanged = currentPhase !== data.status;

@@ -4166,6 +4166,34 @@ async def api_check_challenge_results(request):
         if ch["status"] not in ("active", "finished"):
             return cors_response({"error": "Челлендж не активен"}, 400)
 
+        if ch["status"] == "finished":
+            # If already finished, from_end_stats and to_end_stats are already stored as deltas!
+            from_start = json.loads(ch["from_start_stats"]) if ch.get("from_start_stats") else {}
+            to_start = json.loads(ch["to_start_stats"]) if ch.get("to_start_stats") else {}
+            battle_history = json.loads(ch.get("battle_history") or "[]")
+            
+            winner_tg = ch.get("winner_telegram_id")
+            winner_name = None
+            if winner_tg:
+                winner_name = from_start.get("nickname", "Игрок 1") if winner_tg == ch["from_telegram_id"] else to_start.get("nickname", "Игрок 2")
+
+            return cors_response({
+                "challenge": ch,
+                "from_player": {
+                    "nickname": from_start.get("nickname", "Игрок 1"),
+                    "delta": json.loads(ch.get("from_end_stats") or "{}"),
+                    "ready": True,
+                },
+                "to_player": {
+                    "nickname": to_start.get("nickname", "Игрок 2"),
+                    "delta": json.loads(ch.get("to_end_stats") or "{}"),
+                    "ready": True,
+                },
+                "battle_history": battle_history,
+                "both_ready": True,
+                "winner": {"telegram_id": winner_tg, "nickname": winner_name} if winner_tg else None,
+            })
+
         # Fetch current stats for both players
         from_user = get_user_by_telegram_id(ch["from_telegram_id"])
         to_user = get_user_by_telegram_id(ch["to_telegram_id"])

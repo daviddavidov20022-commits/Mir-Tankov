@@ -149,10 +149,20 @@
         }
         .player-score.updated { animation: scorePop 0.5s ease; }
         .player-battles {
-            font-size: calc(0.6rem * var(--font-scale));
-            color: var(--text-muted); margin-top: 2px;
+            font-size: calc(0.65rem * var(--font-scale));
+            color: var(--text-dim); margin-top: 8px;
+            display: inline-block; padding: 4px 12px;
+            background: rgba(0,0,0,0.3); border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
         }
         .player-battles .done { color: var(--lead-color); font-weight: 700; }
+        .player-battles.battles-completed {
+            border-color: rgba(34,197,94,0.3);
+            background: rgba(34,197,94,0.1);
+            color: #4ade80;
+        }
 
         /* VS divider */
         .vs-divider {
@@ -480,10 +490,10 @@
                             <div class="player-score ${v1Changed ? 'updated' : ''}" style="color:${p1Color}">
                                 ${typeof v1 === 'number' ? v1.toLocaleString('ru') : v1}${cond.unit}
                             </div>
-                            <div class="player-battles">
+                            <div class="player-battles ${p1Battles >= reqBattles ? 'battles-completed' : ''}">
                                 ${p1Battles >= reqBattles
-                                    ? `<span class="done">✅ ${p1Battles}/${reqBattles}</span>`
-                                    : `${p1Battles}/${reqBattles} боёв`
+                                    ? `<span class="done">✅ ${p1Battles}/${reqBattles} боёв</span>`
+                                    : `⚔️ ${p1Battles}/${reqBattles} боёв`
                                 }
                             </div>
                         </div>
@@ -499,10 +509,10 @@
                             <div class="player-score ${v2Changed ? 'updated' : ''}" style="color:${p2Color}">
                                 ${typeof v2 === 'number' ? v2.toLocaleString('ru') : v2}${cond.unit}
                             </div>
-                            <div class="player-battles">
+                            <div class="player-battles ${p2Battles >= reqBattles ? 'battles-completed' : ''}">
                                 ${p2Battles >= reqBattles
-                                    ? `<span class="done">✅ ${p2Battles}/${reqBattles}</span>`
-                                    : `${p2Battles}/${reqBattles} боёв`
+                                    ? `<span class="done">✅ ${p2Battles}/${reqBattles} боёв</span>`
+                                    : `⚔️ ${p2Battles}/${reqBattles} боёв`
                                 }
                             </div>
                         </div>
