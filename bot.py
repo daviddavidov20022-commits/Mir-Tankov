@@ -10483,13 +10483,70 @@ async def challenge_monitor_loop():
             await asyncio.sleep(60)
 
 
+import hmac
+import hashlib
+from urllib.parse import parse_qsl
+
+def verify_telegram_webapp_init_data(init_data: str, bot_token: str) -> dict | None:
+    try:
+        parsed_data = dict(parse_qsl(init_data))
+        if "hash" not in parsed_data:
+            return None
+        hash_val = parsed_data.pop("hash")
+        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed_data.items()))
+        secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
+        calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        if calculated_hash == hash_val:
+            return parsed_data
+    except Exception:
+        pass
+    return None
+
+@web.middleware
+async def tma_auth_middleware(request: web.Request, handler):
+    if request.method == "OPTIONS":
+        return await handler(request)
+
+    path = request.path
+    if path.startswith("/api/") and request.method == "POST":
+        init_data = request.headers.get("X-Telegram-Init-Data")
+        verified_tg_id = None
+        if init_data:
+            parsed = verify_telegram_webapp_init_data(init_data, BOT_TOKEN)
+            if parsed and "user" in parsed:
+                try:
+                    import json
+                    user_obj = json.loads(parsed["user"])
+                    verified_tg_id = user_obj.get("id")
+                except:
+                    pass
+
+        if request.can_read_body:
+            body = await request.read()
+            if body:
+                try:
+                    import json
+                    data = json.loads(body)
+                    claimed_id = data.get("telegram_id") or data.get("admin_telegram_id")
+                    
+                    if claimed_id:
+                        if verified_tg_id is None:
+                            return web.json_response({"error": "Требуется авторизация Telegram", "success": False}, status=401, headers={"Access-Control-Allow-Origin": "*"})
+                        
+                        if int(claimed_id) != int(verified_tg_id):
+                            return web.json_response({"error": "Ошибка безопасности: Попытка подмены ID 🚫", "success": False}, status=403, headers={"Access-Control-Allow-Origin": "*"})
+                except Exception:
+                    pass
+
+    return await handler(request)
+
 # ==========================================
 # ЗАПУСК
 # ==========================================
 
 def create_api_app():
     """Создать aiohttp приложение с API маршрутами"""
-    app = web.Application(client_max_size=10 * 1024 * 1024)  # 10MB для медиа загрузок
+    app = web.Application(client_max_size=10 * 1024 * 1024, middlewares=[tma_auth_middleware])  # 10MB для медиа загрузок
 
     # CORS preflight
     app.router.add_route("OPTIONS", "/{path:.*}", handle_options)
