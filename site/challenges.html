@@ -7,8 +7,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>РђСЂРµРЅР° вЂ” РњРёСЂ РўР°РЅРєРѕРІ</title>
-    <meta name="description" content="PvP РђСЂРµРЅР° вЂ” РІС‹Р·РѕРІРё РЅР° Р±РѕР№!">
+    <title>Арена — Мир Танков</title>
+    <meta name="description" content="PvP Арена — вызови на бой!">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
@@ -24,16 +24,16 @@
     <div class="bg-particles" id="bgParticles"></div>
 
     <div class="arena-page">
-        <a href="index.html" class="back-btn">в†ђ РќР°Р·Р°Рґ</a>
+        <a href="index.html" class="back-btn">← Назад</a>
 
         <!-- Arena Header -->
         <div class="arena-hero">
-            <div class="arena-hero__icon">вљ”пёЏ</div>
-            <h1 class="arena-hero__title">РђР Р•РќРђ</h1>
-            <p class="arena-hero__subtitle">Р’С‹Р·РѕРІРё СЃРѕРїРµСЂРЅРёРєР° РЅР° РґСѓСЌР»СЊ!</p>
+            <div class="arena-hero__icon">⚔️</div>
+            <h1 class="arena-hero__title">АРЕНА</h1>
+            <p class="arena-hero__subtitle">Вызови соперника на дуэль!</p>
             <div class="account-badge" id="accountBadge"
                 style="margin-top:8px;padding:4px 12px;background:rgba(200,170,110,0.15);border-radius:8px;display:inline-block;font-size:0.7rem;color:#C8AA6E;font-weight:700">
-                рџ‘¤ Р—Р°РіСЂСѓР·РєР°...
+                👤 Загрузка...
             </div>
         </div>
 
@@ -41,20 +41,20 @@
         <div class="arena-info" onclick="this.classList.toggle('arena-info--open')"
             style="margin-bottom:10px;padding:10px 14px;background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.1);border-radius:12px;cursor:pointer">
             <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">вќ“ РљР°Рє СЂР°Р±РѕС‚Р°СЋС‚ С‡РµР»Р»РµРЅРґР¶Рё?</span>
-                <span style="font-size:0.6rem;color:#5A6577">в–ј</span>
+                <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">❓ Как работают челленджи?</span>
+                <span style="font-size:0.6rem;color:#5A6577">▼</span>
             </div>
             <div class="arena-info__body"
                 style="display:none;margin-top:10px;font-size:0.65rem;color:#8a94a6;line-height:1.6">
-                <b style="color:#E8E6E3">1.</b> Р’С‹Р±РµСЂРё СЃРѕРїРµСЂРЅРёРєР°, С‚РµС…РЅРёРєСѓ Рё СѓСЃР»РѕРІРёРµ<br>
-                <b style="color:#E8E6E3">2.</b> РџРѕСЃС‚Р°РІСЊ рџ§Ђ РЎС‹СЂ вЂ” СЃС‚Р°РІРєР° Р·Р°РјРѕСЂР°Р¶РёРІР°РµС‚СЃСЏ<br>
-                <b style="color:#E8E6E3">3.</b> РЎРѕРїРµСЂРЅРёРє РїРѕР»СѓС‡Р°РµС‚ РІС‹Р·РѕРІ Рё РјРѕР¶РµС‚ РїСЂРёРЅСЏС‚СЊ РёР»Рё РѕС‚РєР»РѕРЅРёС‚СЊ<br>
-                <b style="color:#E8E6E3">4.</b> РџСЂРё РїСЂРёРЅСЏС‚РёРё вЂ” РµРіРѕ СЃС‚Р°РІРєР° С‚РѕР¶Рµ Р·Р°РјРѕСЂР°Р¶РёРІР°РµС‚СЃСЏ<br>
-                <b style="color:#E8E6E3">5.</b> РћР±Р° РёРіСЂР°СЋС‚ РЅСѓР¶РЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ Р±РѕС‘РІ РЅР° РІС‹Р±СЂР°РЅРЅРѕР№ С‚РµС…РЅРёРєРµ<br>
-                <b style="color:#E8E6E3">6.</b> РџРѕР±РµР¶РґР°РµС‚ С‚РѕС‚, Сѓ РєРѕРіРѕ Р»СѓС‡С€Рµ СЂРµР·СѓР»СЊС‚Р°С‚ РїРѕ СѓСЃР»РѕРІРёСЋ<br>
-                <b style="color:#E8E6E3">7.</b> РџРѕР±РµРґРёС‚РµР»СЊ Р·Р°Р±РёСЂР°РµС‚ рџ§Ђ РѕР±Рµ СЃС‚Р°РІРєРё!<br>
-                <span style="color:#ef4444;margin-top:4px;display:inline-block">вљ пёЏ РџСЂРё РѕС‚РєР»РѕРЅРµРЅРёРё СЃС‚Р°РІРєР° РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ
-                    СЃРѕР·РґР°С‚РµР»СЋ</span>
+                <b style="color:#E8E6E3">1.</b> Выбери соперника, технику и условие<br>
+                <b style="color:#E8E6E3">2.</b> Поставь 🧀 Сыр — ставка замораживается<br>
+                <b style="color:#E8E6E3">3.</b> Соперник получает вызов и может принять или отклонить<br>
+                <b style="color:#E8E6E3">4.</b> При принятии — его ставка тоже замораживается<br>
+                <b style="color:#E8E6E3">5.</b> Оба играют нужное количество боёв на выбранной технике<br>
+                <b style="color:#E8E6E3">6.</b> Побеждает тот, у кого лучше результат по условию<br>
+                <b style="color:#E8E6E3">7.</b> Победитель забирает 🧀 обе ставки!<br>
+                <span style="color:#ef4444;margin-top:4px;display:inline-block">⚠️ При отклонении ставка возвращается
+                    создателю</span>
             </div>
         </div>
         <script>
@@ -67,25 +67,25 @@
         <!-- Balance -->
         <div class="cheese-bar">
             <div class="cheese-bar__left">
-                <div class="cheese-bar__icon">рџ§Ђ</div>
+                <div class="cheese-bar__icon">🧀</div>
                 <div>
-                    <div class="cheese-bar__label">Р‘Р°Р»Р°РЅСЃ РЎР«Р </div>
+                    <div class="cheese-bar__label">Баланс СЫР</div>
                     <div class="cheese-bar__amount" id="cheeseBalance">0</div>
                 </div>
             </div>
-            <button class="cheese-bar__buy" onclick="buyCheese()">+ РљСѓРїРёС‚СЊ</button>
+            <button class="cheese-bar__buy" onclick="buyCheese()">+ Купить</button>
         </div>
 
         <!-- Tabs -->
         <div class="arena-tabs">
-            <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">вљ”пёЏ 1x1(PVP)</button>
-            <button class="arena-tab" onclick="switchTab('global', this)">рџ”Ґ РћР±С‰РёР№</button>
-            <button class="arena-tab" onclick="switchTab('teams', this)">рџ‘Ґ РљРѕРјР°РЅРґС‹</button>
-            <button class="arena-tab" onclick="switchTab('active', this)">рџ“‹ РњРѕРё <span class="arena-badge"
+            <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">⚔️ 1x1(PVP)</button>
+            <button class="arena-tab" onclick="switchTab('global', this)">🔥 Общий</button>
+            <button class="arena-tab" onclick="switchTab('teams', this)">👥 Команды</button>
+            <button class="arena-tab" onclick="switchTab('active', this)">📋 Мои <span class="arena-badge"
                     id="activeBadge" style="display:none">0</span></button>
-            <button class="arena-tab" onclick="switchTab('history', this)">рџ“њ РСЃС‚РѕСЂРёСЏ</button>
-            <button class="arena-tab" onclick="switchTab('admin', this)" id="adminTab" style="display:none">рџ›Ў
-                РђРґРјРёРЅ</button>
+            <button class="arena-tab" onclick="switchTab('history', this)">📜 История</button>
+            <button class="arena-tab" onclick="switchTab('admin', this)" id="adminTab" style="display:none">🛡
+                Админ</button>
         </div>
 
         <!-- ============================== -->
@@ -97,12 +97,12 @@
             <div class="create-step" id="step-opponent">
                 <div class="step-header">
                     <div class="step-number">1</div>
-                    <div class="step-title">Р’С‹Р±РµСЂРё СЃРѕРїРµСЂРЅРёРєР°</div>
+                    <div class="step-title">Выбери соперника</div>
                 </div>
                 <div class="search-box">
-                    <input type="text" class="search-box__input" id="opponentSearch" placeholder="Р’РІРµРґРё РЅРёРє РёРіСЂРѕРєР°..."
+                    <input type="text" class="search-box__input" id="opponentSearch" placeholder="Введи ник игрока..."
                         onkeydown="if(event.key==='Enter')searchOpponent()">
-                    <button class="search-box__btn" onclick="searchOpponent()">рџ”Ќ</button>
+                    <button class="search-box__btn" onclick="searchOpponent()">🔍</button>
                 </div>
                 <div id="opponentResults"></div>
                 <div class="selected-opponent" id="selectedOpponent" style="display:none">
@@ -110,7 +110,7 @@
                         <div class="selected-opponent__name" id="selectedOpponentName"></div>
                         <div class="selected-opponent__status" id="selectedOpponentStatus"></div>
                     </div>
-                    <button class="selected-opponent__change" onclick="changeOpponent()">вњЏпёЏ РР·РјРµРЅРёС‚СЊ</button>
+                    <button class="selected-opponent__change" onclick="changeOpponent()">✏️ Изменить</button>
                 </div>
             </div>
 
@@ -118,35 +118,35 @@
             <div class="create-step create-step--locked" id="step-tank">
                 <div class="step-header">
                     <div class="step-number">2</div>
-                    <div class="step-title">РўРµС…РЅРёРєР°</div>
+                    <div class="step-title">Техника</div>
                 </div>
 
                 <!-- Mode toggle -->
                 <div class="tank-mode-toggle">
-                    <button class="mode-btn mode-btn--active" id="modeClass" onclick="setTankMode('class')">рџ“‹ РљР»Р°СЃСЃ +
-                        РЈСЂРѕРІРµРЅСЊ</button>
-                    <button class="mode-btn" id="modeSpecific" onclick="setTankMode('specific')">рџЄ– РљРѕРЅРєСЂРµС‚РЅС‹Р№
-                        С‚Р°РЅРє</button>
+                    <button class="mode-btn mode-btn--active" id="modeClass" onclick="setTankMode('class')">📋 Класс +
+                        Уровень</button>
+                    <button class="mode-btn" id="modeSpecific" onclick="setTankMode('specific')">🪖 Конкретный
+                        танк</button>
                 </div>
 
                 <!-- Mode: Class + Tier -->
                 <div id="tankModeClass">
                     <div class="tank-filters">
-                        <label class="form-label">РљР»Р°СЃСЃ С‚РµС…РЅРёРєРё</label>
+                        <label class="form-label">Класс техники</label>
                         <div class="tank-class-filter">
                             <button class="class-btn class-btn--active" data-type="any"
-                                onclick="selectClass('any', this)">рџ”„ Р›СЋР±РѕР№</button>
-                            <button class="class-btn" data-type="heavyTank" onclick="selectClass('heavyTank', this)">рџ›ЎпёЏ
-                                РўРў</button>
+                                onclick="selectClass('any', this)">🔄 Любой</button>
+                            <button class="class-btn" data-type="heavyTank" onclick="selectClass('heavyTank', this)">🛡️
+                                ТТ</button>
                             <button class="class-btn" data-type="mediumTank"
-                                onclick="selectClass('mediumTank', this)">вљ™пёЏ РЎРў</button>
-                            <button class="class-btn" data-type="lightTank" onclick="selectClass('lightTank', this)">рџЏЋпёЏ
-                                Р›Рў</button>
-                            <button class="class-btn" data-type="AT-SPG" onclick="selectClass('AT-SPG', this)">рџЋЇ
-                                РџРў</button>
-                            <button class="class-btn" data-type="SPG" onclick="selectClass('SPG', this)">рџ’Ј РЎРђРЈ</button>
+                                onclick="selectClass('mediumTank', this)">⚙️ СТ</button>
+                            <button class="class-btn" data-type="lightTank" onclick="selectClass('lightTank', this)">🏎️
+                                ЛТ</button>
+                            <button class="class-btn" data-type="AT-SPG" onclick="selectClass('AT-SPG', this)">🎯
+                                ПТ</button>
+                            <button class="class-btn" data-type="SPG" onclick="selectClass('SPG', this)">💣 САУ</button>
                         </div>
-                        <label class="form-label" style="margin-top:12px">РЈСЂРѕРІРµРЅСЊ</label>
+                        <label class="form-label" style="margin-top:12px">Уровень</label>
                         <div class="tank-tier-filter">
                             <button class="tier-btn" data-tier="6" onclick="selectTier(6, this)">VI</button>
                             <button class="tier-btn" data-tier="7" onclick="selectTier(7, this)">VII</button>
@@ -157,7 +157,7 @@
                         </div>
                         <div class="selected-tank-summary" id="selectedTankSummary"
                             style="margin-top:12px;text-align:center;font-size:0.8rem;color:#C8AA6E;font-family:'Russo One',sans-serif">
-                            рџ”„ Р›СЋР±РѕР№ С‚Р°РЅРє В· X СѓСЂРѕРІРµРЅСЊ
+                            🔄 Любой танк · X уровень
                         </div>
                     </div>
                 </div>
@@ -167,17 +167,17 @@
                     <div class="tank-filters">
                         <div class="tank-class-filter">
                             <button class="class-btn2 class-btn2--active" data-type="all"
-                                onclick="filterTanks('all', this)">рџ”„ Р’СЃРµ</button>
+                                onclick="filterTanks('all', this)">🔄 Все</button>
                             <button class="class-btn2" data-type="heavyTank"
-                                onclick="filterTanks('heavyTank', this)">рџ›ЎпёЏ РўРў</button>
+                                onclick="filterTanks('heavyTank', this)">🛡️ ТТ</button>
                             <button class="class-btn2" data-type="mediumTank"
-                                onclick="filterTanks('mediumTank', this)">вљ™пёЏ РЎРў</button>
+                                onclick="filterTanks('mediumTank', this)">⚙️ СТ</button>
                             <button class="class-btn2" data-type="lightTank"
-                                onclick="filterTanks('lightTank', this)">рџЏЋпёЏ Р›Рў</button>
-                            <button class="class-btn2" data-type="AT-SPG" onclick="filterTanks('AT-SPG', this)">рџЋЇ
-                                РџРў</button>
-                            <button class="class-btn2" data-type="SPG" onclick="filterTanks('SPG', this)">рџ’Ј
-                                РЎРђРЈ</button>
+                                onclick="filterTanks('lightTank', this)">🏎️ ЛТ</button>
+                            <button class="class-btn2" data-type="AT-SPG" onclick="filterTanks('AT-SPG', this)">🎯
+                                ПТ</button>
+                            <button class="class-btn2" data-type="SPG" onclick="filterTanks('SPG', this)">💣
+                                САУ</button>
                         </div>
                         <div class="tank-tier-filter">
                             <button class="tier-btn2" data-tier="6" onclick="filterTier(6, this)">VI</button>
@@ -188,15 +188,15 @@
                                 onclick="filterTier(10, this)">X</button>
                         </div>
                         <input type="text" class="tank-search-input" id="tankSearchInput"
-                            placeholder="рџ”Ќ РџРѕРёСЃРє С‚Р°РЅРєР°..." oninput="filterTanksByName(this.value)">
+                            placeholder="🔍 Поиск танка..." oninput="filterTanksByName(this.value)">
                     </div>
                     <div class="tank-list" id="tankList">
-                        <div class="tank-loading" id="tankLoading">Р—Р°РіСЂСѓР¶Р°РµРј С‚Р°РЅРєРё...</div>
+                        <div class="tank-loading" id="tankLoading">Загружаем танки...</div>
                     </div>
                     <div class="selected-tank" id="selectedTank" style="display:none">
                         <img id="selectedTankIcon" src="" alt="" class="selected-tank__icon">
                         <div class="selected-tank__name" id="selectedTankName"></div>
-                        <button class="selected-tank__change" onclick="changeTank()">вњЏпёЏ</button>
+                        <button class="selected-tank__change" onclick="changeTank()">✏️</button>
                     </div>
                 </div>
             </div>
@@ -205,38 +205,38 @@
             <div class="create-step create-step--locked" id="step-condition">
                 <div class="step-header">
                     <div class="step-number">3</div>
-                    <div class="step-title">РЈСЃР»РѕРІРёРµ</div>
+                    <div class="step-title">Условие</div>
                 </div>
                 <div class="condition-grid" id="conditionGrid">
                     <button class="condition-card" data-cond="damage" onclick="selectCondition('damage', this)">
-                        <div class="condition-card__icon">рџ’Ґ</div>
-                        <div class="condition-card__name">РЈСЂРѕРЅ</div>
-                        <div class="condition-card__desc">РЎСЂРµРґРЅРёР№ СѓСЂРѕРЅ Р·Р° СЃРµСЂРёСЋ</div>
+                        <div class="condition-card__icon">💥</div>
+                        <div class="condition-card__name">Урон</div>
+                        <div class="condition-card__desc">Средний урон за серию</div>
                     </button>
                     <button class="condition-card" data-cond="spotting" onclick="selectCondition('spotting', this)">
-                        <div class="condition-card__icon">рџ‘Ѓ</div>
-                        <div class="condition-card__name">Р—Р°СЃРІРµС‚</div>
-                        <div class="condition-card__desc">РЎСЂРµРґРЅРёР№ Р·Р°СЃРІРµС‚ Р·Р° СЃРµСЂРёСЋ</div>
+                        <div class="condition-card__icon">👁</div>
+                        <div class="condition-card__name">Засвет</div>
+                        <div class="condition-card__desc">Средний засвет за серию</div>
                     </button>
                     <button class="condition-card" data-cond="blocked" onclick="selectCondition('blocked', this)">
-                        <div class="condition-card__icon">рџ›ЎпёЏ</div>
-                        <div class="condition-card__name">Р‘Р»РѕРє</div>
-                        <div class="condition-card__desc">РЎСЂРµРґРЅРёР№ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРЅС‹Р№</div>
+                        <div class="condition-card__icon">🛡️</div>
+                        <div class="condition-card__name">Блок</div>
+                        <div class="condition-card__desc">Средний заблокированный</div>
                     </button>
                     <button class="condition-card" data-cond="frags" onclick="selectCondition('frags', this)">
-                        <div class="condition-card__icon">рџЋЇ</div>
-                        <div class="condition-card__name">Р¤СЂР°РіРё</div>
-                        <div class="condition-card__desc">РЎСЂРµРґРЅРµРµ СѓР±РёР№СЃС‚РІ</div>
+                        <div class="condition-card__icon">🎯</div>
+                        <div class="condition-card__name">Фраги</div>
+                        <div class="condition-card__desc">Среднее убийств</div>
                     </button>
                     <button class="condition-card" data-cond="xp" onclick="selectCondition('xp', this)">
-                        <div class="condition-card__icon">в­ђ</div>
-                        <div class="condition-card__name">РћРїС‹С‚</div>
-                        <div class="condition-card__desc">РЎСЂРµРґРЅРёР№ РѕРїС‹С‚ Р·Р° Р±РѕР№</div>
+                        <div class="condition-card__icon">⭐</div>
+                        <div class="condition-card__name">Опыт</div>
+                        <div class="condition-card__desc">Средний опыт за бой</div>
                     </button>
                     <button class="condition-card" data-cond="wins" onclick="selectCondition('wins', this)">
-                        <div class="condition-card__icon">рџЏ†</div>
-                        <div class="condition-card__name">РџРѕР±РµРґС‹</div>
-                        <div class="condition-card__desc">РџСЂРѕС†РµРЅС‚ РїРѕР±РµРґ Р·Р° СЃРµСЂРёСЋ</div>
+                        <div class="condition-card__icon">🏆</div>
+                        <div class="condition-card__name">Победы</div>
+                        <div class="condition-card__desc">Процент побед за серию</div>
                     </button>
                 </div>
             </div>
@@ -245,7 +245,7 @@
             <div class="create-step create-step--locked" id="step-battles">
                 <div class="step-header">
                     <div class="step-number">4</div>
-                    <div class="step-title">РљРѕР»РёС‡РµСЃС‚РІРѕ Р±РѕС‘РІ</div>
+                    <div class="step-title">Количество боёв</div>
                 </div>
                 <div class="battles-selector" id="battlesSelector">
                     <button class="battles-btn" data-val="1" onclick="selectBattles(1, this)">1</button>
@@ -261,10 +261,10 @@
             <div class="create-step create-step--locked" id="step-wager">
                 <div class="step-header">
                     <div class="step-number">5</div>
-                    <div class="step-title">РЎС‚Р°РІРєР° рџ§Ђ</div>
+                    <div class="step-title">Ставка 🧀</div>
                 </div>
                 <div class="wager-input-wrap">
-                    <div class="wager-currency">рџ§Ђ</div>
+                    <div class="wager-currency">🧀</div>
                     <input type="number" class="form-input" id="wagerAmount" value="100" min="100" max="10000">
                 </div>
                 <div class="wager-presets">
@@ -278,44 +278,44 @@
 
             <!-- Summary & Send -->
             <div class="challenge-summary-full" id="challengeSummaryFull" style="display:none">
-                <div class="summary-title">рџ“‹ РЎРІРѕРґРєР°</div>
+                <div class="summary-title">📋 Сводка</div>
                 <div class="summary-row">
-                    <span class="summary-key">РЎРѕРїРµСЂРЅРёРє</span>
+                    <span class="summary-key">Соперник</span>
                     <span class="summary-val" id="sumOpponent">-</span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-key">РўР°РЅРє</span>
+                    <span class="summary-key">Танк</span>
                     <span class="summary-val" id="sumTank">-</span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-key">РЈСЃР»РѕРІРёРµ</span>
+                    <span class="summary-key">Условие</span>
                     <span class="summary-val" id="sumCondition">-</span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-key">Р‘РѕС‘РІ</span>
+                    <span class="summary-key">Боёв</span>
                     <span class="summary-val" id="sumBattles">5</span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-key">РЎС‚Р°РІРєР°</span>
-                    <span class="summary-val" id="sumWager">рџ§Ђ 100</span>
+                    <span class="summary-key">Ставка</span>
+                    <span class="summary-val" id="sumWager">🧀 100</span>
                 </div>
                 <div class="summary-row summary-row--prize">
-                    <span class="summary-key">РџСЂРёР· РїРѕР±РµРґРёС‚РµР»СЋ</span>
-                    <span class="summary-val" id="sumPrize" style="color:#4ade80">рџ§Ђ 200</span>
+                    <span class="summary-key">Приз победителю</span>
+                    <span class="summary-val" id="sumPrize" style="color:#4ade80">🧀 200</span>
                 </div>
                 <button class="challenge-send-btn" id="sendChallengeBtn" onclick="sendChallenge()">
-                    вљ”пёЏ РћРўРџР РђР’РРўР¬ Р’Р«Р—РћР’
+                    ⚔️ ОТПРАВИТЬ ВЫЗОВ
                 </button>
             </div>
 
             <!-- MY PVP CHALLENGES (inline) -->
             <div class="my-pvp-section" id="myPvpSection" style="margin-top:24px">
                 <div class="section-lbl" style="display:flex;justify-content:space-between;align-items:center">
-                    <span>рџ“‹ РњРѕРё РІС‹Р·РѕРІС‹</span>
-                    <button onclick="loadMyPvpChallenges()" style="background:none;border:none;color:#C8AA6E;font-size:0.7rem;cursor:pointer;padding:4px 8px">рџ”„</button>
+                    <span>📋 Мои вызовы</span>
+                    <button onclick="loadMyPvpChallenges()" style="background:none;border:none;color:#C8AA6E;font-size:0.7rem;cursor:pointer;padding:4px 8px">🔄</button>
                 </div>
                 <div id="myPvpList">
-                    <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">вЏі Р—Р°РіСЂСѓР·РєР°...</div>
+                    <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">⏳ Загрузка...</div>
                 </div>
             </div>
 
@@ -324,44 +324,44 @@
             <!-- PVP WIDGET CONSTRUCTOR -->
             <div class="my-pvp-section" id="pvpWidgetConstructor" style="margin-top:24px">
                 <div class="section-lbl" style="display:flex;justify-content:space-between;align-items:center">
-                    <span>рџЋЁ РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РІРёРґР¶РµС‚Р° OBS</span>
-                    <button onclick="toggleWidgetConstructor()" id="wcToggleBtn" style="background:none;border:none;color:#C8AA6E;font-size:0.7rem;cursor:pointer;padding:4px 8px">в–ј</button>
+                    <span>🎨 Конструктор виджета OBS</span>
+                    <button onclick="toggleWidgetConstructor()" id="wcToggleBtn" style="background:none;border:none;color:#C8AA6E;font-size:0.7rem;cursor:pointer;padding:4px 8px">▼</button>
                 </div>
                 <div id="wcBody" style="display:none">
                     <!-- Preview -->
                     <div style="margin-bottom:16px;border-radius:14px;overflow:hidden;background:rgba(0,0,0,0.4);padding:12px;border:1px solid rgba(255,255,255,0.05)">
-                        <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px;text-align:center">рџ‘Ѓ РџСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ</div>
+                        <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px;text-align:center">👁 Предпросмотр</div>
                         <div id="wcPreview" style="transform:scale(0.65);transform-origin:top center;margin-bottom:-80px"></div>
                     </div>
 
                     <!-- Theme -->
                     <div class="wc-group">
-                        <div class="wc-label">рџЋЁ РўРµРјР°</div>
+                        <div class="wc-label">🎨 Тема</div>
                         <div class="wc-theme-row" id="wcThemes">
-                            <button class="wc-theme-btn wc-theme-active" data-theme="gold" style="--tc:#C8AA6E" onclick="wcSelectTheme('gold',this)">Р—РѕР»РѕС‚Рѕ</button>
-                            <button class="wc-theme-btn" data-theme="neon" style="--tc:#a855f7" onclick="wcSelectTheme('neon',this)">РќРµРѕРЅ</button>
-                            <button class="wc-theme-btn" data-theme="fire" style="--tc:#f97316" onclick="wcSelectTheme('fire',this)">РћРіРѕРЅСЊ</button>
-                            <button class="wc-theme-btn" data-theme="ice" style="--tc:#38bdf8" onclick="wcSelectTheme('ice',this)">Р›С‘Рґ</button>
-                            <button class="wc-theme-btn" data-theme="blood" style="--tc:#dc2626" onclick="wcSelectTheme('blood',this)">РљСЂРѕРІСЊ</button>
-                            <button class="wc-theme-btn" data-theme="cyber" style="--tc:#22d3ee" onclick="wcSelectTheme('cyber',this)">РљРёР±РµСЂ</button>
-                            <button class="wc-theme-btn" data-theme="military" style="--tc:#6b8a3d" onclick="wcSelectTheme('military',this)">РњРёР»РёС‚Р°СЂРё</button>
+                            <button class="wc-theme-btn wc-theme-active" data-theme="gold" style="--tc:#C8AA6E" onclick="wcSelectTheme('gold',this)">Золото</button>
+                            <button class="wc-theme-btn" data-theme="neon" style="--tc:#a855f7" onclick="wcSelectTheme('neon',this)">Неон</button>
+                            <button class="wc-theme-btn" data-theme="fire" style="--tc:#f97316" onclick="wcSelectTheme('fire',this)">Огонь</button>
+                            <button class="wc-theme-btn" data-theme="ice" style="--tc:#38bdf8" onclick="wcSelectTheme('ice',this)">Лёд</button>
+                            <button class="wc-theme-btn" data-theme="blood" style="--tc:#dc2626" onclick="wcSelectTheme('blood',this)">Кровь</button>
+                            <button class="wc-theme-btn" data-theme="cyber" style="--tc:#22d3ee" onclick="wcSelectTheme('cyber',this)">Кибер</button>
+                            <button class="wc-theme-btn" data-theme="military" style="--tc:#6b8a3d" onclick="wcSelectTheme('military',this)">Милитари</button>
                         </div>
                     </div>
 
                     <!-- Layout -->
                     <div class="wc-group">
-                        <div class="wc-label">рџ“ђ РњР°РєРµС‚</div>
+                        <div class="wc-label">📐 Макет</div>
                         <div class="wc-theme-row" id="wcLayouts">
-                            <button class="wc-layout-btn wc-theme-active" onclick="wcSelectLayout('full',this)">рџ–ј РџРѕР»РЅС‹Р№</button>
-                            <button class="wc-layout-btn" onclick="wcSelectLayout('compact',this)">рџ“¦ РљРѕРјРїР°РєС‚</button>
-                            <button class="wc-layout-btn" onclick="wcSelectLayout('minimal',this)">вњЁ РњРёРЅРё</button>
-                            <button class="wc-layout-btn" onclick="wcSelectLayout('horizontal',this)">в†” РЁРёСЂРѕРєРёР№</button>
+                            <button class="wc-layout-btn wc-theme-active" onclick="wcSelectLayout('full',this)">🖼 Полный</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('compact',this)">📦 Компакт</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('minimal',this)">✨ Мини</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('horizontal',this)">↔ Широкий</button>
                         </div>
                     </div>
 
                     <!-- Font -->
                     <div class="wc-group">
-                        <div class="wc-label">рџ”¤ РЁСЂРёС„С‚ СЃС‡С‘С‚Р°</div>
+                        <div class="wc-label">🔤 Шрифт счёта</div>
                         <div class="wc-theme-row">
                             <button class="wc-layout-btn wc-theme-active" onclick="wcSelectFont('russo',this)">Russo One</button>
                             <button class="wc-layout-btn" onclick="wcSelectFont('orbitron',this)">Orbitron</button>
@@ -370,57 +370,57 @@
 
                     <!-- Scale slider -->
                     <div class="wc-group">
-                        <div class="wc-label">рџ”Ќ РњР°СЃС€С‚Р°Р±: <span id="wcScaleVal">1.0</span></div>
+                        <div class="wc-label">🔍 Масштаб: <span id="wcScaleVal">1.0</span></div>
                         <input type="range" class="wc-slider" id="wcScale" min="0.6" max="1.6" step="0.05" value="1" oninput="wcUpdateSlider()">
                     </div>
 
                     <!-- BG Opacity slider -->
                     <div class="wc-group">
-                        <div class="wc-label">рџЊ… РџСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ С„РѕРЅР°: <span id="wcBgVal">94%</span></div>
+                        <div class="wc-label">🌅 Прозрачность фона: <span id="wcBgVal">94%</span></div>
                         <input type="range" class="wc-slider" id="wcBgOp" min="0" max="100" step="2" value="94" oninput="wcUpdateSlider()">
                     </div>
 
                     <!-- Border radius slider -->
                     <div class="wc-group">
-                        <div class="wc-label">в­• РЎРєСЂСѓРіР»РµРЅРёРµ: <span id="wcRadiusVal">18px</span></div>
+                        <div class="wc-label">⭕ Скругление: <span id="wcRadiusVal">18px</span></div>
                         <input type="range" class="wc-slider" id="wcRadius" min="0" max="32" step="2" value="18" oninput="wcUpdateSlider()">
                     </div>
 
                     <!-- Toggles -->
                     <div class="wc-group">
-                        <div class="wc-label">вљ™ Р­Р»РµРјРµРЅС‚С‹</div>
+                        <div class="wc-label">⚙ Элементы</div>
                         <div class="wc-toggles">
-                            <label class="wc-toggle"><input type="checkbox" id="wcHeader" checked onchange="wcUpdatePreview()"><span>рџЏ· Р—Р°РіРѕР»РѕРІРѕРє</span></label>
-                            <label class="wc-toggle"><input type="checkbox" id="wcInfo" checked onchange="wcUpdatePreview()"><span>рџ“‹ РРЅС„Рѕ-С‚РµРіРё</span></label>
-                            <label class="wc-toggle"><input type="checkbox" id="wcProgress" checked onchange="wcUpdatePreview()"><span>рџ“Љ РџСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂ</span></label>
-                            <label class="wc-toggle"><input type="checkbox" id="wcHistory" checked onchange="wcUpdatePreview()"><span>рџ“– Р‘РѕРё</span></label>
-                            <label class="wc-toggle"><input type="checkbox" id="wcFooter" checked onchange="wcUpdatePreview()"><span>рџ§Ђ РЎС‚Р°РІРєР°/РїСЂРёР·</span></label>
-                            <label class="wc-toggle"><input type="checkbox" id="wcBrand" checked onchange="wcUpdatePreview()"><span>вњЁ Р‘СЂРµРЅРґ</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcHeader" checked onchange="wcUpdatePreview()"><span>🏷 Заголовок</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcInfo" checked onchange="wcUpdatePreview()"><span>📋 Инфо-теги</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcProgress" checked onchange="wcUpdatePreview()"><span>📊 Прогресс-бар</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcHistory" checked onchange="wcUpdatePreview()"><span>📖 Бои</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcFooter" checked onchange="wcUpdatePreview()"><span>🧀 Ставка/приз</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcBrand" checked onchange="wcUpdatePreview()"><span>✨ Бренд</span></label>
                         </div>
                     </div>
 
                     <!-- Effects -->
                     <div class="wc-group">
-                        <div class="wc-label">вњЁ Р­С„С„РµРєС‚С‹</div>
+                        <div class="wc-label">✨ Эффекты</div>
                         <div class="wc-toggles">
-                            <label class="wc-toggle"><input type="checkbox" id="wcAnim" checked onchange="wcUpdatePreview()"><span>рџЋ¬ РђРЅРёРјР°С†РёРё</span></label>
-                            <label class="wc-toggle"><input type="checkbox" id="wcGlow" onchange="wcUpdatePreview()"><span>рџ’Ў РЎРІРµС‡РµРЅРёРµ СЂР°РјРєРё</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcAnim" checked onchange="wcUpdatePreview()"><span>🎬 Анимации</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcGlow" onchange="wcUpdatePreview()"><span>💡 Свечение рамки</span></label>
                         </div>
                     </div>
 
                     <!-- Custom accent color -->
                     <div class="wc-group">
-                        <div class="wc-label">рџЊ€ РЎРІРѕР№ Р°РєС†РµРЅС‚</div>
+                        <div class="wc-label">🌈 Свой акцент</div>
                         <div style="display:flex;gap:8px;align-items:center">
                             <input type="color" id="wcAccent" value="#C8AA6E" style="width:36px;height:28px;border:none;background:none;cursor:pointer">
-                            <label class="wc-toggle" style="margin:0"><input type="checkbox" id="wcAccentOn" onchange="wcUpdatePreview()"><span>РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ</span></label>
+                            <label class="wc-toggle" style="margin:0"><input type="checkbox" id="wcAccentOn" onchange="wcUpdatePreview()"><span>Использовать</span></label>
                         </div>
                     </div>
 
                     <!-- Copy button -->
                     <div style="margin-top:14px;display:flex;gap:8px">
-                        <button onclick="wcCopyLink()" class="wc-copy-btn">рџ“‹ РЎРєРѕРїРёСЂРѕРІР°С‚СЊ OBS СЃСЃС‹Р»РєСѓ</button>
-                        <button onclick="wcResetDefaults()" class="wc-reset-btn">рџ”„ РЎР±СЂРѕСЃ</button>
+                        <button onclick="wcCopyLink()" class="wc-copy-btn">📋 Скопировать OBS ссылку</button>
+                        <button onclick="wcResetDefaults()" class="wc-reset-btn">🔄 Сброс</button>
                     </div>
                     <div id="wcLinkPreview" style="display:none;margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,0.3);font-size:0.5rem;color:#5A6577;word-break:break-all;font-family:monospace"></div>
                 </div>
@@ -432,14 +432,14 @@
         <!-- TAB: ACTIVE / INCOMING          -->
         <!-- ============================== -->
         <div class="tab-content" id="tab-active">
-            <div class="section-lbl">рџ“© Р’С…РѕРґСЏС‰РёРµ РІС‹Р·РѕРІС‹</div>
+            <div class="section-lbl">📩 Входящие вызовы</div>
             <div id="incomingDuels"></div>
             <div id="outgoingDuels"></div>
-            <div class="section-lbl" style="margin-top:20px">рџ”Ґ РђРєС‚РёРІРЅС‹Рµ С‡РµР»Р»РµРЅРґР¶Рё</div>
+            <div class="section-lbl" style="margin-top:20px">🔥 Активные челленджи</div>
             <div id="activeDuels"></div>
             <div class="empty-state" id="noActiveDuels">
-                <div class="empty-state__icon">вљ”пёЏ</div>
-                <div class="empty-state__text">РќРµС‚ Р°РєС‚РёРІРЅС‹С… РґСѓСЌР»РµР№.<br>РЎРѕР·РґР°Р№ С‡РµР»Р»РµРЅРґР¶!</div>
+                <div class="empty-state__icon">⚔️</div>
+                <div class="empty-state__text">Нет активных дуэлей.<br>Создай челлендж!</div>
             </div>
         </div>
 
@@ -448,24 +448,24 @@
         <!-- ============================== -->
         <div class="tab-content" id="tab-history">
             <!-- Global Challenge History -->
-            <div class="section-lbl">рџЏ† Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ С‡РµР»Р»РµРЅРґР¶Рё</div>
+            <div class="section-lbl">🏆 Глобальные челленджи</div>
             <div id="gcHistoryList">
-                <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">вЏі Р—Р°РіСЂСѓР·РєР°...</div>
+                <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">⏳ Загрузка...</div>
             </div>
 
             <!-- PvP Duels History -->
-            <div class="section-lbl" style="margin-top:20px">вљ”пёЏ Р”СѓСЌР»Рё PvP</div>
+            <div class="section-lbl" style="margin-top:20px">⚔️ Дуэли PvP</div>
             <div id="historyList">
                 <div class="empty-state">
-                    <div class="empty-state__icon">рџ“њ</div>
-                    <div class="empty-state__text">Р”СѓСЌР»Рё РїРѕРєР° РЅРµ Р·Р°РІРµСЂС€РµРЅС‹</div>
+                    <div class="empty-state__icon">📜</div>
+                    <div class="empty-state__text">Дуэли пока не завершены</div>
                 </div>
             </div>
 
             <!-- Team Battle History -->
-            <div class="section-lbl" style="margin-top:20px">рџ‘Ґ РљРѕРјР°РЅРґРЅС‹Рµ Р±РѕРё</div>
+            <div class="section-lbl" style="margin-top:20px">👥 Командные бои</div>
             <div id="tbHistoryMainList">
-                <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">вЏі Р—Р°РіСЂСѓР·РєР°...</div>
+                <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">⏳ Загрузка...</div>
             </div>
         </div>
 
@@ -473,14 +473,14 @@
         <!-- TAB: ADMIN PANEL               -->
         <!-- ============================== -->
         <div class="tab-content" id="tab-admin">
-            <div class="section-lbl">рџ›Ў РџР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ</div>
+            <div class="section-lbl">🛡 Панель управления</div>
             <div style="margin-bottom:12px">
-                <input type="text" id="adminSearchInput" placeholder="рџ”Ќ РџРѕРёСЃРє РїРѕ РЅРёРєСѓ, ID РёР»Рё РёРјРµРЅРё..."
+                <input type="text" id="adminSearchInput" placeholder="🔍 Поиск по нику, ID или имени..."
                     oninput="filterAdminUsers()" style="width:100%;padding:10px 14px;border-radius:10px;
                     background:rgba(255,255,255,0.04);border:1px solid rgba(200,170,110,0.15);
                     color:#E8E6E3;font-size:0.75rem;outline:none">
             </div>
-            <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px" id="adminUserCount">Р—Р°РіСЂСѓР·РєР°...</div>
+            <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px" id="adminUserCount">Загрузка...</div>
             <div id="adminUsersList"></div>
         </div>
 
@@ -494,25 +494,25 @@
                 <!-- Loading state -->
                 <div class="gc-loading" id="gcLoading">
                     <div class="gc-loading__spinner"></div>
-                    <div class="gc-loading__text">Р—Р°РіСЂСѓР·РєР° С‡РµР»Р»РµРЅРґР¶Р°...</div>
+                    <div class="gc-loading__text">Загрузка челленджа...</div>
                 </div>
 
                 <!-- No challenge state -->
                 <div class="gc-empty" id="gcEmpty" style="display:none">
-                    <div class="gc-empty__icon">вљ”пёЏ</div>
-                    <div class="gc-empty__title">РќРµС‚ Р°РєС‚РёРІРЅС‹С… С‡РµР»Р»РµРЅРґР¶РµР№</div>
-                    <div class="gc-empty__desc">РђРґРјРёРЅ РїРѕРєР° РЅРµ Р·Р°РїСѓСЃС‚РёР» РѕР±С‰РёР№ С‡РµР»Р»РµРЅРґР¶.<br>РЎР»РµРґРё Р·Р° РѕР±РЅРѕРІР»РµРЅРёСЏРјРё!</div>
+                    <div class="gc-empty__icon">⚔️</div>
+                    <div class="gc-empty__title">Нет активных челленджей</div>
+                    <div class="gc-empty__desc">Админ пока не запустил общий челлендж.<br>Следи за обновлениями!</div>
                 </div>
 
                 <!-- Active challenge -->
                 <div class="gc-active" id="gcActive" style="display:none">
                     <div class="gc-header">
-                        <div class="gc-header__icon" id="gcIcon">рџ”Ґ</div>
+                        <div class="gc-header__icon" id="gcIcon">🔥</div>
                         <div class="gc-header__info">
-                            <h1 class="gc-header__title" id="gcTitle">Р§РµР»Р»РµРЅРґР¶</h1>
-                            <p class="gc-header__desc" id="gcDesc">РћРїРёСЃР°РЅРёРµ С‡РµР»Р»РµРЅРґР¶Р°</p>
+                            <h1 class="gc-header__title" id="gcTitle">Челлендж</h1>
+                            <p class="gc-header__desc" id="gcDesc">Описание челленджа</p>
                         </div>
-                        <div class="gc-header__condition" id="gcCondition">рџ’Ґ</div>
+                        <div class="gc-header__condition" id="gcCondition">💥</div>
                     </div>
 
                     <div class="gc-timer-section" id="gcTimerContainer">
@@ -523,7 +523,7 @@
                             </svg>
                             <div class="gc-timer-inner">
                                 <div class="gc-timer-value" id="gcTimerValue">59:59</div>
-                                <div class="gc-timer-label" id="gcTimerLabel">РѕСЃС‚Р°Р»РѕСЃСЊ</div>
+                                <div class="gc-timer-label" id="gcTimerLabel">осталось</div>
                             </div>
                         </div>
                     </div>
@@ -531,15 +531,15 @@
                     <div class="gc-stats">
                         <div class="gc-stat">
                             <div class="gc-stat__value" id="gcParticipants">0</div>
-                            <div class="gc-stat__label">РЈС‡Р°СЃС‚РЅРёРєРѕРІ</div>
+                            <div class="gc-stat__label">Участников</div>
                         </div>
                         <div class="gc-stat gc-stat--reward">
-                            <div class="gc-stat__value" id="gcReward">рџ§Ђ 500</div>
-                            <div class="gc-stat__label">РџСЂРёР·</div>
+                            <div class="gc-stat__value" id="gcReward">🧀 500</div>
+                            <div class="gc-stat__label">Приз</div>
                         </div>
                         <div class="gc-stat">
-                            <div class="gc-stat__value" id="gcCondLabel">РЈСЂРѕРЅ</div>
-                            <div class="gc-stat__label">РЈСЃР»РѕРІРёРµ</div>
+                            <div class="gc-stat__value" id="gcCondLabel">Урон</div>
+                            <div class="gc-stat__label">Условие</div>
                         </div>
                     </div>
                     <!-- Vehicle filter badges -->
@@ -556,39 +556,39 @@
                     </div>
 
                     <button class="gc-join-btn" id="gcJoinBtn" onclick="gcJoinChallenge()">
-                        вљ”пёЏ Р’РЎРўРЈРџРРўР¬ Р’ Р§Р•Р›Р›Р•РќР”Р–
+                        ⚔️ ВСТУПИТЬ В ЧЕЛЛЕНДЖ
                     </button>
 
                     <div class="gc-leaderboard" id="gcLeaderboard">
-                        <div class="gc-lb-title">рџЏ† РўРћРџ Р›РР”Р•Р Р«</div>
+                        <div class="gc-lb-title">🏆 ТОП ЛИДЕРЫ</div>
                         <div class="gc-lb-list" id="gcLbList">
-                            <div class="gc-lb-empty">РџРѕРєР° РЅРµС‚ СѓС‡Р°СЃС‚РЅРёРєРѕРІ</div>
+                            <div class="gc-lb-empty">Пока нет участников</div>
                         </div>
                     </div>
 
                     <!-- Widget link -->
                     <div class="gc-widget-link" id="gcWidgetLink" style="display:none">
                         <button class="gc-widget-link__btn" onclick="gcCopyWidgetLink()">
-                            рџ”— РЎРєРѕРїРёСЂРѕРІР°С‚СЊ СЃСЃС‹Р»РєСѓ РЅР° С‡РµР»Р»РµРЅРґР¶
+                            🔗 Скопировать ссылку на челлендж
                         </button>
                     </div>
 
                     <div class="gc-auto-info">
-                        <div class="gc-auto-info__icon">рџ¤–</div>
-                        <div class="gc-auto-info__text">РЎС‚Р°С‚РёСЃС‚РёРєР° РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё С‡РµСЂРµР· API РњРёСЂ РўР°РЅРєРѕРІ РєР°Р¶РґС‹Рµ
-                            15 СЃРµРє</div>
+                        <div class="gc-auto-info__icon">🤖</div>
+                        <div class="gc-auto-info__text">Статистика обновляется автоматически через API Мир Танков каждые
+                            15 сек</div>
                     </div>
                 </div>
 
                 <!-- Finished state -->
                 <div class="gc-finished" id="gcFinished" style="display:none">
-                    <div class="gc-winner-crown">рџ‘‘</div>
-                    <div class="gc-winner-title">РџРћР‘Р•Р”РРўР•Р›Р¬ Р’Р«РЇР’Р›Р•Рќ!</div>
+                    <div class="gc-winner-crown">👑</div>
+                    <div class="gc-winner-title">ПОБЕДИТЕЛЬ ВЫЯВЛЕН!</div>
                     <div class="gc-winner-card" id="gcWinnerCard">
-                        <div class="gc-winner-medal">рџҐ‡</div>
-                        <div class="gc-winner-name" id="gcWinnerName">вЂ”</div>
+                        <div class="gc-winner-medal">🥇</div>
+                        <div class="gc-winner-name" id="gcWinnerName">—</div>
                         <div class="gc-winner-value" id="gcWinnerValue">0</div>
-                        <div class="gc-winner-label" id="gcWinnerLabel">СѓСЂРѕРЅР°</div>
+                        <div class="gc-winner-label" id="gcWinnerLabel">урона</div>
                     </div>
                     <div class="gc-final-lb" id="gcFinalLb"></div>
                 </div>
@@ -596,7 +596,7 @@
 
             <!-- HISTORY LIST -->
             <div class="gc-history-section" id="gcHistorySection" style="margin-top:20px;display:none">
-                <div class="section-lbl">рџ“њ РСЃС‚РѕСЂРёСЏ С‡РµР»Р»РµРЅРґР¶РµР№</div>
+                <div class="section-lbl">📜 История челленджей</div>
                 <div id="gcHistoryList" style="display:flex;flex-direction:column;gap:10px"></div>
             </div>
 
@@ -605,84 +605,84 @@
                 <div class="gc-modal__backdrop" onclick="gcCloseModal()"></div>
                 <div class="gc-modal__content">
                     <div class="gc-modal__header">
-                        <div class="gc-modal__title" id="gcModalTitle">Р РµР·СѓР»СЊС‚Р°С‚С‹ РёРіСЂРѕРєР°</div>
-                        <button class="gc-modal__close" onclick="gcCloseModal()">Г—</button>
+                        <div class="gc-modal__title" id="gcModalTitle">Результаты игрока</div>
+                        <button class="gc-modal__close" onclick="gcCloseModal()">×</button>
                     </div>
                     <div class="gc-modal__summary" id="gcModalSummary"></div>
                     <div class="gc-modal__body" id="gcModalBody">
-                        <div class="gc-loading-mini">вЏі Р—Р°РіСЂСѓР·РєР° Р±РѕС‘РІ...</div>
+                        <div class="gc-loading-mini">⏳ Загрузка боёв...</div>
                     </div>
                 </div>
             </div>
 
             <!-- Admin Panel for Global Challenge -->
             <div class="gc-admin" id="gcAdminPanel" style="display:none">
-                <div class="gc-admin__title">рџ›Ў РЈРїСЂР°РІР»РµРЅРёРµ Р§РµР»Р»РµРЅРґР¶РµРј</div>
+                <div class="gc-admin__title">🛡 Управление Челленджем</div>
 
                 <div class="gc-subs">
                     <div class="gc-subs__header">
-                        <div class="gc-subs__title">рџ‘Ґ РџРѕРґРїРёСЃС‡РёРєРё <span class="gc-subs__count" id="subsCount">0</span>
+                        <div class="gc-subs__title">👥 Подписчики <span class="gc-subs__count" id="subsCount">0</span>
                         </div>
-                        <button class="gc-subs__refresh" onclick="gcLoadSubscribers()">рџ”„</button>
+                        <button class="gc-subs__refresh" onclick="gcLoadSubscribers()">🔄</button>
                     </div>
                     <div class="gc-subs__search">
-                        <input type="text" class="gc-admin__input" id="subsSearch" placeholder="рџ”Ќ РџРѕРёСЃРє РїРѕ РЅРёРєСѓ..."
+                        <input type="text" class="gc-admin__input" id="subsSearch" placeholder="🔍 Поиск по нику..."
                             oninput="gcFilterSubscribers()">
                     </div>
                     <div class="gc-subs__list" id="subsList">
-                        <div class="gc-subs__loading">вЏі Р—Р°РіСЂСѓР·РєР° РїРѕРґРїРёСЃС‡РёРєРѕРІ...</div>
+                        <div class="gc-subs__loading">⏳ Загрузка подписчиков...</div>
                     </div>
                 </div>
 
                 <div class="gc-admin__divider"></div>
 
                 <div class="gc-admin__form">
-                    <div class="gc-admin__form-title">вљ™пёЏ РќР°СЃС‚СЂРѕР№РєРё С‡РµР»Р»РµРЅРґР¶Р°</div>
+                    <div class="gc-admin__form-title">⚙️ Настройки челленджа</div>
 
-                    <label class="gc-admin__label">РќР°Р·РІР°РЅРёРµ</label>
-                    <input type="text" class="gc-admin__input" id="adminGcTitle" value="РљС‚Рѕ РЅР°РЅРµСЃС‘С‚ Р±РѕР»СЊС€Рµ СѓСЂРѕРЅР°?"
-                        placeholder="РќР°Р·РІР°РЅРёРµ">
+                    <label class="gc-admin__label">Название</label>
+                    <input type="text" class="gc-admin__input" id="adminGcTitle" value="Кто нанесёт больше урона?"
+                        placeholder="Название">
 
-                    <label class="gc-admin__label">РћРїРёСЃР°РЅРёРµ</label>
+                    <label class="gc-admin__label">Описание</label>
                     <input type="text" class="gc-admin__input" id="adminGcDesc"
-                        value="РќР°РЅРµСЃРё РјР°РєСЃРёРјСѓРј СѓСЂРѕРЅР° Р·Р° РѕРґРёРЅ Р±РѕР№!" placeholder="РћРїРёСЃР°РЅРёРµ">
+                        value="Нанеси максимум урона за один бой!" placeholder="Описание">
 
-                    <label class="gc-admin__label">РЈСЃР»РѕРІРёРµ <span style="font-size:0.55rem;color:#5A6577;font-weight:400">(РІС‹Р±РµСЂРё 1-3)</span></label>
+                    <label class="gc-admin__label">Условие <span style="font-size:0.55rem;color:#5A6577;font-weight:400">(выбери 1-3)</span></label>
                     <div class="gc-admin__conditions" id="gcCondButtons">
                         <button class="gc-cond-btn gc-cond-btn--active" data-cond="damage"
-                            onclick="gcToggleCond('damage', this)"><img src="img/military/cond_damage.png?v=2"> РЈСЂРѕРЅ</button>
+                            onclick="gcToggleCond('damage', this)"><img src="img/military/cond_damage.png?v=2"> Урон</button>
                         <button class="gc-cond-btn" data-cond="frags" onclick="gcToggleCond('frags', this)"><img src="img/military/cond_frags.png?v=2">
-                            Р¤СЂР°РіРё</button>
-                        <button class="gc-cond-btn" data-cond="xp" onclick="gcToggleCond('xp', this)"><img src="img/military/cond_xp.png?v=2"> РћРїС‹С‚</button>
+                            Фраги</button>
+                        <button class="gc-cond-btn" data-cond="xp" onclick="gcToggleCond('xp', this)"><img src="img/military/cond_xp.png?v=2"> Опыт</button>
                         <button class="gc-cond-btn" data-cond="spotting" onclick="gcToggleCond('spotting', this)"><img src="img/military/cond_spotting.png?v=2">
-                            Р—Р°СЃРІРµС‚</button>
-                        <button class="gc-cond-btn" data-cond="spotting_damage" onclick="gcToggleCond('spotting_damage', this)">рџ”­
-                            РЈСЂРѕРЅ РїРѕ Р·Р°СЃРІРµС‚Сѓ</button>
+                            Засвет</button>
+                        <button class="gc-cond-btn" data-cond="spotting_damage" onclick="gcToggleCond('spotting_damage', this)">🔭
+                            Урон по засвету</button>
                         <button class="gc-cond-btn" data-cond="blocked" onclick="gcToggleCond('blocked', this)"><img src="img/military/cond_blocked.png?v=2">
-                            Р‘Р»РѕРє</button>
-                        <button class="gc-cond-btn" data-cond="combined" onclick="gcToggleCond('combined', this)" title="РЈСЂРѕРЅ + РЈСЂРѕРЅ РїРѕ Р·Р°СЃРІРµС‚Сѓ"><img src="img/military/cond_combined.png?v=2"> РЎСѓРјРјР°СЂРєР°</button>
+                            Блок</button>
+                        <button class="gc-cond-btn" data-cond="combined" onclick="gcToggleCond('combined', this)" title="Урон + Урон по засвету"><img src="img/military/cond_combined.png?v=2"> Суммарка</button>
                     </div>
                     <div id="gcCondSelected" style="margin-top:6px;font-size:0.6rem;color:#C8AA6E;display:flex;flex-wrap:wrap;gap:4px"></div>
 
-                    <!-- Р¤РёР»СЊС‚СЂ С‚РµС…РЅРёРєРё -->
-                    <label class="gc-admin__label" style="margin-top:12px">рџЄ– РўРµС…РЅРёРєР° <span style="font-size:0.55rem;color:#5A6577;font-weight:400">(РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)</span></label>
+                    <!-- Фильтр техники -->
+                    <label class="gc-admin__label" style="margin-top:12px">🪖 Техника <span style="font-size:0.55rem;color:#5A6577;font-weight:400">(опционально)</span></label>
                     <div class="gc-admin__row" style="gap:6px">
                         <div style="flex:1">
-                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">рџЊЌ РќР°С†РёСЏ</label>
+                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">🌍 Нация</label>
                             <select class="gc-admin__input" id="adminGcTankNation" onchange="gcOnNationChange()" style="font-size:0.65rem">
-                                <option value="">рџЊЌ Р›СЋР±Р°СЏ</option>
+                                <option value="">🌍 Любая</option>
                             </select>
                         </div>
                         <div style="flex:1">
-                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">РљР»Р°СЃСЃ</label>
+                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">Класс</label>
                             <select class="gc-admin__input" id="adminGcTankClass" onchange="gcOnTankClassChange()" style="font-size:0.65rem">
-                                <option value="">Р›СЋР±РѕР№</option>
+                                <option value="">Любой</option>
                             </select>
                         </div>
                         <div style="flex:1">
-                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">РЈСЂРѕРІРµРЅСЊ</label>
+                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">Уровень</label>
                             <select class="gc-admin__input" id="adminGcTankTier" onchange="gcOnTankTierChange()" style="font-size:0.65rem">
-                                <option value="0">Р›СЋР±РѕР№</option>
+                                <option value="0">Любой</option>
                             </select>
                         </div>
                     </div>
@@ -690,30 +690,30 @@
                     <div id="adminGcTankSelected" style="margin-top:6px;font-size:0.6rem;color:#4ade80"></div>
 
 
-                    <!-- Р‘РµР· РїСЂРёР·РѕРІРѕРіРѕ СЂРµР¶РёРјР°: С‚Р°Р№РјРµСЂ = РїСЂРѕРґРѕР»Р¶РёС‚РµР»СЊРЅРѕСЃС‚СЊ, РїСЂРёР· = РјРѕРЅРµС‚С‹ -->
+                    <!-- Без призового режима: таймер = продолжительность, приз = монеты -->
                     <div id="normalModeFields">
                         <div class="gc-admin__row">
                             <div>
-                                <label class="gc-admin__label">вЏ± Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ (РјРёРЅ)</label>
+                                <label class="gc-admin__label">⏱ Длительность (мин)</label>
                                 <input type="number" class="gc-admin__input" id="adminGcDuration" value="60" min="5" max="1440">
                             </div>
                             <div>
-                                <label class="gc-admin__label">рџ§Ђ РќР°РіСЂР°РґР° (СЃС‹СЂ)</label>
+                                <label class="gc-admin__label">🧀 Награда (сыр)</label>
                                 <input type="number" class="gc-admin__input" id="adminGcReward" value="500" min="0">
                             </div>
                         </div>
                         <div class="gc-admin__presets">
-                            <button class="gc-preset-btn" onclick="gcSetDuration(15)">15 РјРёРЅ</button>
-                            <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 РјРёРЅ</button>
-                            <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 С‡Р°СЃ</button>
-                            <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 С‡Р°СЃР°</button>
+                            <button class="gc-preset-btn" onclick="gcSetDuration(15)">15 мин</button>
+                            <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 мин</button>
+                            <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 час</button>
+                            <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 часа</button>
                         </div>
                     </div>
 
                     <div class="gc-admin__row" style="margin-top:12px">
                         <div>
-                            <label class="gc-admin__label">рџЋЇ РљРѕР»-РІРѕ Р±РѕС‘РІ <span style="font-size:0.5rem;color:#5A6577">(0 = Р±РµР· Р»РёРјРёС‚Р°)</span></label>
-                            <input type="number" class="gc-admin__input" id="adminGcMaxBattles" value="0" min="0" max="100" placeholder="0 = Р±РµР· Р»РёРјРёС‚Р°">
+                            <label class="gc-admin__label">🎯 Кол-во боёв <span style="font-size:0.5rem;color:#5A6577">(0 = без лимита)</span></label>
+                            <input type="number" class="gc-admin__input" id="adminGcMaxBattles" value="0" min="0" max="100" placeholder="0 = без лимита">
                         </div>
                     </div>
 
@@ -728,30 +728,30 @@
                                      position:absolute;top:1px;left:1px;transition:all 0.3s"></div>
                             </div>
                             <div>
-                                <div style="font-family:'Russo One',sans-serif;font-size:0.72rem;color:#C8AA6E">рџЏ† РџСЂРёР·РѕРІРѕР№ СЂРµР¶РёРј</div>
-                                <div style="font-size:0.55rem;color:#5A6577;margin-top:2px">РљРѕР»РµСЃРѕ С„РѕСЂС‚СѓРЅС‹ РґР»СЏ РѕРїСЂРµРґРµР»РµРЅРёСЏ РїРѕР±РµРґРёС‚РµР»СЏ</div>
+                                <div style="font-family:'Russo One',sans-serif;font-size:0.72rem;color:#C8AA6E">🏆 Призовой режим</div>
+                                <div style="font-size:0.55rem;color:#5A6577;margin-top:2px">Колесо фортуны для определения победителя</div>
                             </div>
                         </label>
 
                         <div id="prizeModeFields" style="display:none;margin-top:14px">
 
-                            <!-- Р’СЂРµРјСЏ РЅР°Р±РѕСЂР° -->
-                            <label class="gc-admin__label">вЏ± Р’СЂРµРјСЏ РЅР°Р±РѕСЂР° (РјРёРЅ)</label>
+                            <!-- Время набора -->
+                            <label class="gc-admin__label">⏱ Время набора (мин)</label>
                             <input type="number" class="gc-admin__input" id="adminGcEnrollDuration" value="60" min="1" max="1440" style="margin-bottom:4px">
                             <div class="gc-admin__presets" style="margin-bottom:14px">
-                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(15)">15 РјРёРЅ</button>
-                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(30)">30 РјРёРЅ</button>
-                                <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetEnrollDuration(60)">1 С‡Р°СЃ</button>
-                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(120)">2 С‡Р°СЃР°</button>
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(15)">15 мин</button>
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(30)">30 мин</button>
+                                <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetEnrollDuration(60)">1 час</button>
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(120)">2 часа</button>
                             </div>
 
-                            <!-- РћРїРёСЃР°РЅРёРµ РїСЂРёР·Р° -->
-                            <label class="gc-admin__label">рџЋЃ Р§С‚Рѕ СЂР°Р·С‹РіСЂС‹РІР°РµС‚СЃСЏ</label>
+                            <!-- Описание приза -->
+                            <label class="gc-admin__label">🎁 Что разыгрывается</label>
                             <input type="text" class="gc-admin__input" id="adminGcPrizeDesc"
-                                   placeholder="РќР°РїСЂРёРјРµСЂ: iPhone 16 Pro" style="margin-bottom:10px">
+                                   placeholder="Например: iPhone 16 Pro" style="margin-bottom:10px">
 
-                            <!-- РљР°СЂС‚РёРЅРєР° РїСЂРёР·Р° -->
-                            <label class="gc-admin__label">рџ–ј РљР°СЂС‚РёРЅРєР° РїСЂРёР·Р°</label>
+                            <!-- Картинка приза -->
+                            <label class="gc-admin__label">🖼 Картинка приза</label>
                             <input type="file" id="adminGcPrizeFile" accept="image/*" 
                                    style="display:none" onchange="gcUploadPrizeImage(this)">
                             <div style="display:flex;gap:8px;margin-bottom:6px">
@@ -762,30 +762,30 @@
                                            transition:all 0.3s"
                                     onmouseover="this.style.background='rgba(200,170,110,0.12)'"
                                     onmouseout="this.style.background='rgba(200,170,110,0.06)'">
-                                    рџ“¤ Р—Р°РіСЂСѓР·РёС‚СЊ СЃ РєРѕРјРїСЊСЋС‚РµСЂР°
+                                    📤 Загрузить с компьютера
                                 </button>
                             </div>
                             <input type="text" class="gc-admin__input" id="adminGcPrizeImage"
-                                   placeholder="РёР»Рё РІСЃС‚Р°РІРёС‚СЊ РїСЂСЏРјСѓСЋ СЃСЃС‹Р»РєСѓ https://..." style="margin-bottom:6px;font-size:0.55rem"
+                                   placeholder="или вставить прямую ссылку https://..." style="margin-bottom:6px;font-size:0.55rem"
                                    oninput="gcPreviewPrizeImage(this.value)">
                             <div id="prizeImagePreview" style="display:none;margin-bottom:10px;text-align:center">
-                                <img id="prizeImagePreviewImg" src="" alt="РџСЂРёР·" 
+                                <img id="prizeImagePreviewImg" src="" alt="Приз" 
                                      style="max-width:100%;max-height:120px;border-radius:10px;
                                             border:1px solid rgba(245,190,11,0.3);object-fit:contain">
                                 <div id="prizeImageStatus" style="font-size:0.5rem;color:#4ade80;margin-top:4px"></div>
                             </div>
 
-                            <!-- CTA С‚РµРєСЃС‚ РґР»СЏ РІРёРґР¶РµС‚Р° -->
-                            <label class="gc-admin__label">рџ“ў РўРµРєСЃС‚ РґР»СЏ РІРёРґР¶РµС‚Р° <span style="font-size:0.5rem;color:#5A6577">(РѕС‚РѕР±СЂР°Р¶Р°РµС‚СЃСЏ РїРѕРґ РїСЂРёР·РѕРј)</span></label>
+                            <!-- CTA текст для виджета -->
+                            <label class="gc-admin__label">📢 Текст для виджета <span style="font-size:0.5rem;color:#5A6577">(отображается под призом)</span></label>
                             <input type="text" class="gc-admin__input" id="adminGcPrizeCta"
-                                   placeholder="Р’СЃС‚СѓРїР°Р№ РІ РЅР°С€ С‚Рі. РєР°РЅР°Р» Рё РїСЂРёРјРё СѓС‡Р°СЃС‚РёРµ!" style="margin-bottom:10px">
+                                   placeholder="Вступай в наш тг. канал и прими участие!" style="margin-bottom:10px">
 
                             <div style="padding:8px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);
                                  border-radius:10px;font-size:0.55rem;color:#4ade80;line-height:1.6">
-                                вЏ± <strong>РўР°Р№РјРµСЂ РЅР°Р±РѕСЂР°</strong> в†’ СѓС‡Р°СЃС‚РЅРёРєРё Р·Р°РїРёСЃС‹РІР°СЋС‚СЃСЏ<br>
-                                вљ”пёЏ <strong>Р‘РѕРµРІР°СЏ С„Р°Р·Р°</strong> РЅР°С‡РЅС‘С‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РїРѕСЃР»Рµ РЅР°Р±РѕСЂР°<br>
-                                рџЋЇ РЈС‡Р°СЃС‚РЅРёРєРё РёРіСЂР°СЋС‚ Р·Р°РґР°РЅРЅРѕРµ <strong>РєРѕР»-РІРѕ Р±РѕС‘РІ</strong> (СЃРј. РІС‹С€Рµ)<br>
-                                рџЋЎ <strong>РљРѕР»РµСЃРѕ</strong> Р·Р°РїСѓСЃС‚РёС‚СЃСЏ РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ Р±РѕС‘РІ
+                                ⏱ <strong>Таймер набора</strong> → участники записываются<br>
+                                ⚔️ <strong>Боевая фаза</strong> начнётся автоматически после набора<br>
+                                🎯 Участники играют заданное <strong>кол-во боёв</strong> (см. выше)<br>
+                                🎡 <strong>Колесо</strong> запустится после завершения боёв
                             </div>
                         </div>
                     </div>
@@ -793,13 +793,13 @@
                     <!-- ====== WIDGET CONSTRUCTOR ====== -->
                     <div class="wc-section">
                         <div class="wc-section__header" onclick="gcToggleWidgetConstructor()">
-                            <span>рџЋЁ РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РІРёРґР¶РµС‚Р°</span>
-                            <span class="wc-section__arrow" id="wcArrow">в–ј</span>
+                            <span>🎨 Конструктор виджета</span>
+                            <span class="wc-section__arrow" id="wcArrow">▼</span>
                         </div>
 
                         <div class="wc-body" id="wcBody" style="display:none">
                             <!-- Layout presets -->
-                            <div class="wc-label">рџ“ђ РњР°РєРµС‚ СЂР°СЃСЃС‚Р°РЅРѕРІРєРё</div>
+                            <div class="wc-label">📐 Макет расстановки</div>
                             <div class="wc-themes">
                                 <div class="wc-theme wc-theme--active" id="wcLayout-1" onclick="gcSelectLayout(1)">
                                     <div class="wc-theme__preview wc-theme__preview--gold">
@@ -814,7 +814,7 @@
                                             <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
                                         </div>
                                     </div>
-                                    <div class="wc-theme__name">рџ“± РљР»Р°СЃСЃРёРєР°</div>
+                                    <div class="wc-theme__name">📱 Классика</div>
                                 </div>
                                 <div class="wc-theme" id="wcLayout-2" onclick="gcSelectLayout(2)">
                                     <div class="wc-theme__preview wc-theme__preview--neon">
@@ -834,7 +834,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="wc-theme__name">рџ“Љ РљРѕРјРїР°РєС‚</div>
+                                    <div class="wc-theme__name">📊 Компакт</div>
                                 </div>
                                 <div class="wc-theme" id="wcLayout-3" onclick="gcSelectLayout(3)">
                                     <div class="wc-theme__preview wc-theme__preview--military">
@@ -847,7 +847,7 @@
                                             <div class="wc-lp__r" style="width:20px;height:3px"></div>
                                         </div>
                                     </div>
-                                    <div class="wc-theme__name">рџ“Џ РџРѕР»РѕСЃРєР°</div>
+                                    <div class="wc-theme__name">📏 Полоска</div>
                                 </div>
                                 <div class="wc-theme" id="wcLayout-4" onclick="gcSelectLayout(4)">
                                     <div class="wc-theme__preview wc-theme__preview--fire">
@@ -860,7 +860,7 @@
                                             <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
                                         </div>
                                     </div>
-                                    <div class="wc-theme__name">рџЏ† РўР°Р±Р»Рѕ</div>
+                                    <div class="wc-theme__name">🏆 Табло</div>
                                 </div>
                                 <div class="wc-theme" id="wcLayout-5" onclick="gcSelectLayout(5)">
                                     <div class="wc-theme__preview wc-theme__preview--ice">
@@ -880,53 +880,53 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="wc-theme__name">рџЋ® HUD</div>
+                                    <div class="wc-theme__name">🎮 HUD</div>
                                 </div>
                             </div>
 
                             <!-- Color Theme -->
-                            <div class="wc-label">рџЋЁ Р¦РІРµС‚РѕРІР°СЏ С‚РµРјР°</div>
+                            <div class="wc-label">🎨 Цветовая тема</div>
                             <div class="wc-themes">
                                 <div class="wc-theme wc-theme--active" id="wcTheme-gold"
                                     onclick="gcSelectTheme('gold')">
                                     <div class="wc-theme__preview wc-theme__preview--gold" style="height:36px">
                                         <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
-                                    <div class="wc-theme__name">вљњпёЏ Р—РѕР»РѕС‚Рѕ</div>
+                                    <div class="wc-theme__name">⚜️ Золото</div>
                                 </div>
                                 <div class="wc-theme" id="wcTheme-neon" onclick="gcSelectTheme('neon')">
                                     <div class="wc-theme__preview wc-theme__preview--neon" style="height:36px">
                                         <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
-                                    <div class="wc-theme__name">рџ’њ РќРµРѕРЅ</div>
+                                    <div class="wc-theme__name">💜 Неон</div>
                                 </div>
                                 <div class="wc-theme" id="wcTheme-military" onclick="gcSelectTheme('military')">
                                     <div class="wc-theme__preview wc-theme__preview--military" style="height:36px">
                                         <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
-                                    <div class="wc-theme__name">рџЄ– Р’РѕРµРЅРЅС‹Р№</div>
+                                    <div class="wc-theme__name">🪖 Военный</div>
                                 </div>
                                 <div class="wc-theme" id="wcTheme-fire" onclick="gcSelectTheme('fire')">
                                     <div class="wc-theme__preview wc-theme__preview--fire" style="height:36px">
                                         <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
-                                    <div class="wc-theme__name">рџ”Ґ РРЅС„РµСЂРЅРѕ</div>
+                                    <div class="wc-theme__name">🔥 Инферно</div>
                                 </div>
                                 <div class="wc-theme" id="wcTheme-ice" onclick="gcSelectTheme('ice')">
                                     <div class="wc-theme__preview wc-theme__preview--ice" style="height:36px">
                                         <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
                                     </div>
-                                    <div class="wc-theme__name">вќ„пёЏ РђСЂРєС‚РёРєР°</div>
+                                    <div class="wc-theme__name">❄️ Арктика</div>
                                 </div>
                             </div>
 
                             <!-- Custom settings -->
                             <div class="wc-settings">
-                                <div class="wc-label">РќР°СЃС‚СЂРѕР№РєРё</div>
+                                <div class="wc-label">Настройки</div>
 
                                 <!-- Accent color -->
                                 <div class="wc-row">
-                                    <span class="wc-row__label">рџЋЁ РђРєС†РµРЅС‚</span>
+                                    <span class="wc-row__label">🎨 Акцент</span>
                                     <div class="wc-colors" id="wcColors">
                                         <div class="wc-color wc-color--active" data-color="#f5d36e"
                                             style="background:#f5d36e" onclick="gcSetAccent(this)"></div>
@@ -949,7 +949,7 @@
 
                                 <!-- Background opacity -->
                                 <div class="wc-row">
-                                    <span class="wc-row__label">рџЊ‘ Р¤РѕРЅ</span>
+                                    <span class="wc-row__label">🌑 Фон</span>
                                     <input type="range" class="wc-slider" id="wcBgOpacity" min="50" max="100" value="90"
                                         oninput="gcUpdatePreview()">
                                     <span class="wc-row__val" id="wcBgVal">90%</span>
@@ -957,7 +957,7 @@
 
                                 <!-- Font size -->
                                 <div class="wc-row">
-                                    <span class="wc-row__label">рџ”¤ Р Р°Р·РјРµСЂ</span>
+                                    <span class="wc-row__label">🔤 Размер</span>
                                     <input type="range" class="wc-slider" id="wcFontSize" min="80" max="130" value="100"
                                         oninput="gcUpdatePreview()">
                                     <span class="wc-row__val" id="wcFontVal">100%</span>
@@ -965,42 +965,42 @@
 
                                 <!-- Border style -->
                                 <div class="wc-row">
-                                    <span class="wc-row__label">рџ–ј Р Р°РјРєР°</span>
+                                    <span class="wc-row__label">🖼 Рамка</span>
                                     <div class="wc-toggles">
                                         <button class="wc-toggle wc-toggle--active" data-border="gold"
-                                            onclick="gcSetBorder(this)">Р—РѕР»РѕС‚Рѕ</button>
+                                            onclick="gcSetBorder(this)">Золото</button>
                                         <button class="wc-toggle" data-border="glow"
-                                            onclick="gcSetBorder(this)">РЎРІРµС‡РµРЅРёРµ</button>
+                                            onclick="gcSetBorder(this)">Свечение</button>
                                         <button class="wc-toggle" data-border="minimal"
-                                            onclick="gcSetBorder(this)">РњРёРЅРёРјСѓРј</button>
+                                            onclick="gcSetBorder(this)">Минимум</button>
                                         <button class="wc-toggle" data-border="none"
-                                            onclick="gcSetBorder(this)">РќРµС‚</button>
+                                            onclick="gcSetBorder(this)">Нет</button>
                                     </div>
                                 </div>
 
                                 <!-- Show/hide toggles -->
                                 <div class="wc-row">
-                                    <span class="wc-row__label">рџ‘Ѓ Р­Р»РµРјРµРЅС‚С‹</span>
+                                    <span class="wc-row__label">👁 Элементы</span>
                                     <div class="wc-checks">
                                         <label class="wc-check">
                                             <input type="checkbox" checked id="wcShowTimer"
                                                 onchange="gcUpdatePreview()">
-                                            <span>РўР°Р№РјРµСЂ</span>
+                                            <span>Таймер</span>
                                         </label>
                                         <label class="wc-check">
                                             <input type="checkbox" checked id="wcShowMyStats"
                                                 onchange="gcUpdatePreview()">
-                                            <span>РњРѕР№ СЃС‡С‘С‚</span>
+                                            <span>Мой счёт</span>
                                         </label>
                                         <label class="wc-check">
                                             <select id="wcTopCount" onchange="gcUpdatePreview()" 
                                                 style="background:#131a24;color:#C8AA6E;border:1px solid rgba(200,170,110,0.2);
                                                        border-radius:6px;padding:2px 6px;font-size:0.55rem;cursor:pointer;
                                                        font-family:'Inter',sans-serif">
-                                                <option value="3" selected>РўРѕРї 3</option>
-                                                <option value="5">РўРѕРї 5</option>
-                                                <option value="10">РўРѕРї 10</option>
-                                                <option value="0">РЎРєСЂС‹С‚СЊ</option>
+                                                <option value="3" selected>Топ 3</option>
+                                                <option value="5">Топ 5</option>
+                                                <option value="10">Топ 10</option>
+                                                <option value="0">Скрыть</option>
                                             </select>
                                         </label>
                                         <label class="wc-check">
@@ -1009,14 +1009,14 @@
                                         </label>
                                         <label class="wc-check">
                                             <input type="checkbox" checked id="wcShowBattles" onchange="gcUpdatePreview()">
-                                            <span>Р‘РѕРё</span>
+                                            <span>Бои</span>
                                         </label>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- LIVE PREVIEW -->
-                            <div class="wc-label" style="margin-top:12px">рџ‘Ђ РџСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ</div>
+                            <div class="wc-label" style="margin-top:12px">👀 Предпросмотр</div>
                             <div class="wc-preview-wrap">
                                 <div id="wcPreview"
                                     style="display:flex;justify-content:center;align-items:center;min-height:120px">
@@ -1026,7 +1026,7 @@
 
                             <!-- Copy widget link -->
                             <button class="wc-copy-link" onclick="gcCopyCustomWidgetLink()">
-                                рџ”— РЎРєРѕРїРёСЂРѕРІР°С‚СЊ СЃСЃС‹Р»РєСѓ РЅР° РІРёРґР¶РµС‚
+                                🔗 Скопировать ссылку на виджет
                             </button>
                         </div>
                     </div>
@@ -1035,7 +1035,7 @@
                     <div class="gc-obs-section" id="gcObsSection" style="display:none; margin-top:16px">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
                             <div style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#C8AA6E">
-                                рџ“є РЎСЃС‹Р»РєР° РґР»СЏ OBS
+                                📺 Ссылка для OBS
                             </div>
                             <div style="font-size:0.5rem;color:#4ade80;font-weight:700;display:flex;align-items:center;gap:4px">
                                 <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink 1.2s infinite"></span>
@@ -1043,37 +1043,37 @@
                             </div>
                         </div>
                         <div style="background:#0a0e14;border:1px solid rgba(200,170,110,0.12);border-radius:10px;padding:10px 14px;font-size:0.6rem;color:#8a94a6;word-break:break-all;line-height:1.6;margin-bottom:8px" id="gcObsUrl">
-                            Р—Р°РіСЂСѓР·РєР°...
+                            Загрузка...
                         </div>
                         <div style="display:flex;gap:6px">
                             <button onclick="gcCopyObsLink()" style="flex:1;padding:10px;border-radius:10px;border:1px dashed rgba(200,170,110,0.2);background:rgba(200,170,110,0.04);color:#C8AA6E;font-size:0.7rem;font-weight:700;cursor:pointer;transition:all 0.2s">
-                                рџ“‹ РЎРєРѕРїРёСЂРѕРІР°С‚СЊ СЃСЃС‹Р»РєСѓ OBS
+                                📋 Скопировать ссылку OBS
                             </button>
                             <button onclick="gcCopyObsLinkWithConfig()" style="flex:1;padding:10px;border-radius:10px;border:1px dashed rgba(168,85,247,0.2);background:rgba(168,85,247,0.04);color:#a855f7;font-size:0.7rem;font-weight:700;cursor:pointer;transition:all 0.2s">
-                                рџЋЁ РЎ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂРѕРј
+                                🎨 С конструктором
                             </button>
                         </div>
                         <div style="margin-top:8px;font-size:0.55rem;color:#5A6577;line-height:1.5;padding:0 4px">
-                            рџ’Ў <b>РљР°Рє РґРѕР±Р°РІРёС‚СЊ:</b> OBS в†’ РСЃС‚РѕС‡РЅРёРєРё в†’ Р‘СЂР°СѓР·РµСЂ (Browser) в†’ РќРѕРІС‹Р№ в†’ Р’СЃС‚Р°РІСЊС‚Рµ URL<br>
-                            рџ“ђ <b>Р Р°Р·РјРµСЂС‹:</b> РЁ: 400 Г— Р’: 500 (РљР»Р°СЃСЃРёРєР°) РёР»Рё 560Г—80 (РџРѕР»РѕСЃРєР°)
+                            💡 <b>Как добавить:</b> OBS → Источники → Браузер (Browser) → Новый → Вставьте URL<br>
+                            📐 <b>Размеры:</b> Ш: 400 × В: 500 (Классика) или 560×80 (Полоска)
                         </div>
                     </div>
 
                     <div class="gc-admin__hint">
-                        рџ’Ў РџРѕРґРїРёСЃС‡РёРєРё СѓРІРёРґСЏС‚ С‡РµР»Р»РµРЅРґР¶ Рё СЃР°РјРё РІСЃС‚СѓРїСЏС‚ вЂ” РІС‹Р±РёСЂР°С‚СЊ РЅРёРєРѕРіРѕ РЅРµ РЅСѓР¶РЅРѕ!
+                        💡 Подписчики увидят челлендж и сами вступят — выбирать никого не нужно!
                     </div>
 
                     <button class="gc-admin__launch" id="adminGcLaunchBtn" onclick="gcLaunchChallenge()">
-                        рџљЂ Р—РђРџРЈРЎРўРРўР¬ Р§Р•Р›Р›Р•РќР”Р–
+                        🚀 ЗАПУСТИТЬ ЧЕЛЛЕНДЖ
                     </button>
 
                     <button class="gc-admin__stop" id="adminGcStopBtn" onclick="gcStopChallenge()" style="display:none">
-                        в›” Р—РђР’Р•Р РЁРРўР¬ Р”РћРЎР РћР§РќРћ
+                        ⛔ ЗАВЕРШИТЬ ДОСРОЧНО
                     </button>
 
                     <button class="gc-admin__delete" id="adminGcDeleteBtn" onclick="gcDeleteChallenge()"
                         style="display:none">
-                        рџ—‘ РЈР”РђР›РРўР¬ Р§Р•Р›Р›Р•РќР”Р–
+                        🗑 УДАЛИТЬ ЧЕЛЛЕНДЖ
                     </button>
                 </div>
             </div>
@@ -1086,33 +1086,33 @@
         <div class="tab-content" id="tab-teams">
             <!-- Sub-tabs: Browse / Create / My -->
             <div class="tb-subtabs">
-                <button class="tb-subtab active" data-tab="browse" onclick="tbSwitchSubTab('browse')">рџ”Ґ РђРєС‚РёРІРЅС‹Рµ</button>
-                <button class="tb-subtab" data-tab="create" onclick="tbSwitchSubTab('create')">вћ• РЎРѕР·РґР°С‚СЊ</button>
-                <button class="tb-subtab" data-tab="my" onclick="tbSwitchSubTab('my')">рџ“‹ РњРѕРё</button>
-                <button class="tb-subtab" data-tab="history" onclick="tbSwitchSubTab('history')">рџ“њ РСЃС‚РѕСЂРёСЏ</button>
+                <button class="tb-subtab active" data-tab="browse" onclick="tbSwitchSubTab('browse')">🔥 Активные</button>
+                <button class="tb-subtab" data-tab="create" onclick="tbSwitchSubTab('create')">➕ Создать</button>
+                <button class="tb-subtab" data-tab="my" onclick="tbSwitchSubTab('my')">📋 Мои</button>
+                <button class="tb-subtab" data-tab="history" onclick="tbSwitchSubTab('history')">📜 История</button>
             </div>
 
             <!-- How it works -->
             <div onclick="this.querySelector('.tb-howto-body').style.display = this.querySelector('.tb-howto-body').style.display === 'none' ? 'block' : 'none'"
                 style="margin-bottom:12px;padding:10px 14px;background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.1);border-radius:12px;cursor:pointer">
                 <div style="display:flex;justify-content:space-between;align-items:center">
-                    <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">вќ“ РљР°Рє СЂР°Р±РѕС‚Р°СЋС‚ РєРѕРјР°РЅРґРЅС‹Рµ Р±РѕРё?</span>
-                    <span style="font-size:0.6rem;color:#5A6577">в–ј</span>
+                    <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">❓ Как работают командные бои?</span>
+                    <span style="font-size:0.6rem;color:#5A6577">▼</span>
                 </div>
                 <div class="tb-howto-body" style="display:none;margin-top:10px;font-size:0.65rem;color:#8a94a6;line-height:1.6">
-                    <b style="color:#E8E6E3">1.</b> РЎРѕР·РґР°Р№ С‡РµР»Р»РµРЅРґР¶: РІС‹Р±РµСЂРё СѓСЃР»РѕРІРёРµ, СЂР°Р·РјРµСЂ РєРѕРјР°РЅРґ Рё СЃС‚Р°РІРєСѓ рџ§Ђ<br>
-                    <b style="color:#E8E6E3">2.</b> Р”РІР° РѕС‚СЂСЏРґР°: рџ”µ РђР›Р¬Р¤Рђ Рё рџ”ґ Р‘Р РђР’Рћ вЂ” Р»СЋР±РѕР№ РјРѕР¶РµС‚ РІСЃС‚СѓРїРёС‚СЊ<br>
-                    <b style="color:#E8E6E3">3.</b> РљРѕРіРґР° РѕР±Рµ РєРѕРјР°РЅРґС‹ Р·Р°РїРѕР»РЅРµРЅС‹ вЂ” Р±РѕР№ РЅР°С‡РёРЅР°РµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё<br>
-                    <b style="color:#E8E6E3">4.</b> РљР°Р¶РґС‹Р№ РёРіСЂР°РµС‚ Р·Р°РґР°РЅРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ Р±РѕС‘РІ, СѓСЂРѕРЅ СЃСѓРјРјРёСЂСѓРµС‚СЃСЏ<br>
-                    <b style="color:#E8E6E3">5.</b> РљРѕРјР°РЅРґР° СЃ Р±РѕР»СЊС€РёРј СЃСѓРјРјР°СЂРЅС‹Рј СЂРµР·СѓР»СЊС‚Р°С‚РѕРј вЂ” РїРѕР±РµР¶РґР°РµС‚!<br>
-                    <b style="color:#E8E6E3">6.</b> РџРѕР±РµРґРёС‚РµР»Рё РґРµР»СЏС‚ РІРµСЃСЊ Р±Р°РЅРє РјРµР¶РґСѓ СЃРѕР±РѕР№ рџЏ†<br>
-                    <span style="color:#f5d36e;margin-top:4px;display:inline-block">рџ’Ў РњРёРЅРёРјР°Р»СЊРЅР°СЏ СЃС‚Р°РІРєР° вЂ” 50 рџ§Ђ. Р Р°Р·РјРµСЂ: РѕС‚ 2Г—2 РґРѕ 50Г—50</span>
+                    <b style="color:#E8E6E3">1.</b> Создай челлендж: выбери условие, размер команд и ставку 🧀<br>
+                    <b style="color:#E8E6E3">2.</b> Два отряда: 🔵 АЛЬФА и 🔴 БРАВО — любой может вступить<br>
+                    <b style="color:#E8E6E3">3.</b> Когда обе команды заполнены — бой начинается автоматически<br>
+                    <b style="color:#E8E6E3">4.</b> Каждый играет заданное количество боёв, урон суммируется<br>
+                    <b style="color:#E8E6E3">5.</b> Команда с большим суммарным результатом — побеждает!<br>
+                    <b style="color:#E8E6E3">6.</b> Победители делят весь банк между собой 🏆<br>
+                    <span style="color:#f5d36e;margin-top:4px;display:inline-block">💡 Минимальная ставка — 50 🧀. Размер: от 2×2 до 50×50</span>
                 </div>
             </div>
 
             <!-- BROWSE panel -->
             <div id="tb-panel-browse">
-                <div class="tb-section-label">рџ”Ґ РђРєС‚РёРІРЅС‹Рµ РєРѕРјР°РЅРґРЅС‹Рµ Р±РѕРё</div>
+                <div class="tb-section-label">🔥 Активные командные бои</div>
                 <div class="tb-list" id="tb-browse-list">
                     <div class="tb-skeleton">
                         <div class="tb-skeleton__card"></div>
@@ -1128,7 +1128,7 @@
 
             <!-- MY panel -->
             <div id="tb-panel-my" style="display:none">
-                <div class="tb-section-label">рџ“‹ РњРѕРё РєРѕРјР°РЅРґРЅС‹Рµ Р±РѕРё</div>
+                <div class="tb-section-label">📋 Мои командные бои</div>
                 <div class="tb-list" id="tb-my-list">
                     <div class="tb-skeleton">
                         <div class="tb-skeleton__card"></div>
@@ -1138,7 +1138,7 @@
 
             <!-- HISTORY panel -->
             <div id="tb-panel-history" style="display:none">
-                <div class="tb-section-label">рџ“њ РСЃС‚РѕСЂРёСЏ РєРѕРјР°РЅРґРЅС‹С… Р±РѕС‘РІ</div>
+                <div class="tb-section-label">📜 История командных боёв</div>
                 <div class="tb-list" id="tb-history-list">
                     <div class="tb-skeleton">
                         <div class="tb-skeleton__card"></div>
@@ -1153,20 +1153,20 @@
     <!-- Bottom nav -->
     <nav class="bottom-nav">
         <div class="nav-item" onclick="location.href='index.html'">
-            <span class="nav-icon">рџЏ </span>
-            <span class="nav-label">Р“Р»Р°РІРЅР°СЏ</span>
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
         </div>
         <div class="nav-item nav-item--active">
-            <span class="nav-icon">вљ”пёЏ</span>
-            <span class="nav-label">РђСЂРµРЅР°</span>
+            <span class="nav-icon">⚔️</span>
+            <span class="nav-label">Арена</span>
         </div>
         <div class="nav-item" onclick="location.href='friends.html'">
-            <span class="nav-icon">рџ‘Ґ</span>
-            <span class="nav-label">Р”СЂСѓР·СЊСЏ</span>
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Друзья</span>
         </div>
         <div class="nav-item" onclick="location.href='profile.html'">
-            <span class="nav-icon">рџ‘¤</span>
-            <span class="nav-label">РџСЂРѕС„РёР»СЊ</span>
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
         </div>
     </nav>
 
