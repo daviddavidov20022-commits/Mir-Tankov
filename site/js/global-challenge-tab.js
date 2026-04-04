@@ -1,12 +1,12 @@
 /**
 
- * Global Challenge Tab JS — встроенный в challenges.html
+ * Global Challenge Tab JS вЂ” РІСЃС‚СЂРѕРµРЅРЅС‹Р№ РІ challenges.html
 
- * Все функции имеют префикс gc чтобы не конфликтовать с arena.js
+ * Р’СЃРµ С„СѓРЅРєС†РёРё РёРјРµСЋС‚ РїСЂРµС„РёРєСЃ gc С‡С‚РѕР±С‹ РЅРµ РєРѕРЅС„Р»РёРєС‚РѕРІР°С‚СЊ СЃ arena.js
 
  * 
 
- * Автоматическое отслеживание статистики через Lesta API
+ * РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРµ РѕС‚СЃР»РµР¶РёРІР°РЅРёРµ СЃС‚Р°С‚РёСЃС‚РёРєРё С‡РµСЂРµР· Lesta API
 
  */
 
@@ -14,21 +14,21 @@
 
 const GC_CONDITION_MAP = {
 
-    damage: { icon: '<img src="img/military/cond_damage.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Урон', unit: 'урона' },
+    damage: { icon: '<img src="img/military/cond_damage.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'РЈСЂРѕРЅ', unit: 'СѓСЂРѕРЅР°' },
 
-    frags: { icon: '<img src="img/military/cond_frags.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Фраги', unit: 'фрагов' },
+    frags: { icon: '<img src="img/military/cond_frags.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Р¤СЂР°РіРё', unit: 'С„СЂР°РіРѕРІ' },
 
-    xp: { icon: '<img src="img/military/cond_xp.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Опыт', unit: 'опыта' },
+    xp: { icon: '<img src="img/military/cond_xp.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'РћРїС‹С‚', unit: 'РѕРїС‹С‚Р°' },
 
-    spotting: { icon: '<img src="img/military/cond_spotting.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Засвет', unit: 'засвета' },
+    spotting: { icon: '<img src="img/military/cond_spotting.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Р—Р°СЃРІРµС‚', unit: 'Р·Р°СЃРІРµС‚Р°' },
 
-    spotting_damage: { icon: '', name: 'Урон по засвету', unit: 'урона по засвету' },
+    spotting_damage: { icon: '', name: 'РЈСЂРѕРЅ РїРѕ Р·Р°СЃРІРµС‚Сѓ', unit: 'СѓСЂРѕРЅР° РїРѕ Р·Р°СЃРІРµС‚Сѓ' },
 
-    blocked: { icon: '<img src="img/military/cond_blocked.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Блок', unit: 'блока' },
+    blocked: { icon: '<img src="img/military/cond_blocked.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Р‘Р»РѕРє', unit: 'Р±Р»РѕРєР°' },
 
-    wins: { icon: '<img src="img/military/cond_wins.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Победы', unit: 'побед' },
+    wins: { icon: '<img src="img/military/cond_wins.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'РџРѕР±РµРґС‹', unit: 'РїРѕР±РµРґ' },
 
-    combined: { icon: '<img src="img/military/cond_combined.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'Суммарка', unit: 'суммарки' },
+    combined: { icon: '<img src="img/military/cond_combined.png?v=2" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', name: 'РЎСѓРјРјР°СЂРєР°', unit: 'СЃСѓРјРјР°СЂРєРё' },
 
 };
 
@@ -70,7 +70,7 @@ let _gcLastRefreshTime = 0; // throttle refresh-stats
 
 async function gcLoadChallenge(forceRefresh) {
 
-    // Предотвращаем параллельные запросы
+    // РџСЂРµРґРѕС‚РІСЂР°С‰Р°РµРј РїР°СЂР°Р»Р»РµР»СЊРЅС‹Рµ Р·Р°РїСЂРѕСЃС‹
 
     if (_gcLoadInProgress) return;
 
@@ -78,7 +78,7 @@ async function gcLoadChallenge(forceRefresh) {
 
 
 
-    // Убеждаемся, что используем глобальные переменные (для синхронизации с arena.js)
+    // РЈР±РµР¶РґР°РµРјСЃСЏ, С‡С‚Рѕ РёСЃРїРѕР»СЊР·СѓРµРј РіР»РѕР±Р°Р»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ (РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃ arena.js)
 
     if (typeof window.isAdmin !== 'undefined' && !window.isAdmin && (window.myTelegramId || localStorage.getItem('my_telegram_id'))) {
 
@@ -110,7 +110,7 @@ async function gcLoadChallenge(forceRefresh) {
 
         
 
-        // Показываем админ-панель СРАЗУ если админ
+        // РџРѕРєР°Р·С‹РІР°РµРј Р°РґРјРёРЅ-РїР°РЅРµР»СЊ РЎР РђР—РЈ РµСЃР»Рё Р°РґРјРёРЅ
 
         if (isAdminNow) {
 
@@ -120,7 +120,7 @@ async function gcLoadChallenge(forceRefresh) {
 
                 adminPanel.style.display = '';
 
-                // Принудительно убираем display:none если оно там застряло
+                // РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ СѓР±РёСЂР°РµРј display:none РµСЃР»Рё РѕРЅРѕ С‚Р°Рј Р·Р°СЃС‚СЂСЏР»Рѕ
 
                 adminPanel.classList.remove('hidden'); 
 
@@ -132,7 +132,7 @@ async function gcLoadChallenge(forceRefresh) {
 
 
 
-        // Обновляем статистику в фоне НЕ ЧАЩЕ раз в 30 секунд
+        // РћР±РЅРѕРІР»СЏРµРј СЃС‚Р°С‚РёСЃС‚РёРєСѓ РІ С„РѕРЅРµ РќР• Р§РђР©Р• СЂР°Р· РІ 30 СЃРµРєСѓРЅРґ
 
         const now = Date.now();
 
@@ -162,7 +162,7 @@ async function gcLoadChallenge(forceRefresh) {
 
 
 
-        // Anti-flicker: проверяем изменились ли данные
+        // Anti-flicker: РїСЂРѕРІРµСЂСЏРµРј РёР·РјРµРЅРёР»РёСЃСЊ Р»Рё РґР°РЅРЅС‹Рµ
 
         const dataHash = JSON.stringify({
 
@@ -184,7 +184,7 @@ async function gcLoadChallenge(forceRefresh) {
 
 
 
-        // Скрываем загрузку при первом рендере
+        // РЎРєСЂС‹РІР°РµРј Р·Р°РіСЂСѓР·РєСѓ РїСЂРё РїРµСЂРІРѕРј СЂРµРЅРґРµСЂРµ
 
         if (isFirstLoad) {
 
@@ -194,11 +194,11 @@ async function gcLoadChallenge(forceRefresh) {
 
 
 
-        // Если данные НЕ изменились — обновляем только таймер, лидерборд не трогаем
+        // Р•СЃР»Рё РґР°РЅРЅС‹Рµ РќР• РёР·РјРµРЅРёР»РёСЃСЊ вЂ” РѕР±РЅРѕРІР»СЏРµРј С‚РѕР»СЊРєРѕ С‚Р°Р№РјРµСЂ, Р»РёРґРµСЂР±РѕСЂРґ РЅРµ С‚СЂРѕРіР°РµРј
 
         if (!isFirstLoad && !forceRefresh && _gcLastDataHash === dataHash) {
 
-            // Данные не изменились — ничего не перерисовываем 
+            // Р”Р°РЅРЅС‹Рµ РЅРµ РёР·РјРµРЅРёР»РёСЃСЊ вЂ” РЅРёС‡РµРіРѕ РЅРµ РїРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј 
 
         } else {
 
@@ -222,13 +222,13 @@ async function gcLoadChallenge(forceRefresh) {
 
             } else if (data.status === 'enrollment' && data.challenge) {
 
-                // Auto-start if enrollment timer expired — uses public endpoint (no admin required)
+                // Auto-start if enrollment timer expired вЂ” uses public endpoint (no admin required)
 
                 const enrollEnd = data.challenge.enrollment_ends_at || data.challenge.ends_at;
 
                 if (enrollEnd && new Date(enrollEnd) <= new Date()) {
 
-                    // Call public auto-start endpoint — no admin check needed
+                    // Call public auto-start endpoint вЂ” no admin check needed
 
                     fetch(`${BOT_API_URL}/api/global-challenge/auto-start`, {
 
@@ -260,7 +260,7 @@ async function gcLoadChallenge(forceRefresh) {
 
             
 
-            // Загружаем историю параллельно
+            // Р—Р°РіСЂСѓР¶Р°РµРј РёСЃС‚РѕСЂРёСЋ РїР°СЂР°Р»Р»РµР»СЊРЅРѕ
 
             gcLoadHistory();
 
@@ -268,7 +268,7 @@ async function gcLoadChallenge(forceRefresh) {
 
 
 
-        // Повторно убеждаемся что админ-панель показана
+        // РџРѕРІС‚РѕСЂРЅРѕ СѓР±РµР¶РґР°РµРјСЃСЏ С‡С‚Рѕ Р°РґРјРёРЅ-РїР°РЅРµР»СЊ РїРѕРєР°Р·Р°РЅР°
 
         if (isAdminNow) {
 
@@ -410,7 +410,7 @@ function gcShowActive(ch) {
 
     if (conditions.length > 1) {
 
-        document.getElementById('gcCondLabel').textContent = conditions.length + ' условия';
+        document.getElementById('gcCondLabel').textContent = conditions.length + ' СѓСЃР»РѕРІРёСЏ';
 
         // Show condition badges
 
@@ -464,7 +464,7 @@ function gcShowActive(ch) {
 
             let parts = [];
 
-            const classNames = { heavyTank: ' ТТ', mediumTank: ' СТ', lightTank: ' ЛТ', 'AT-SPG': ' ПТ', SPG: ' САУ' };
+            const classNames = { heavyTank: ' РўРў', mediumTank: ' РЎРў', lightTank: ' Р›Рў', 'AT-SPG': ' РџРў', SPG: ' РЎРђРЈ' };
 
             if (ch.tank_name_filter) parts.push(` ${ch.tank_name_filter}`);
 
@@ -474,7 +474,7 @@ function gcShowActive(ch) {
 
                 const tierLabels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
-                parts.push(`${tierLabels[ch.tank_tier_filter] || ch.tank_tier_filter} ур.`);
+                parts.push(`${tierLabels[ch.tank_tier_filter] || ch.tank_tier_filter} СѓСЂ.`);
 
             }
 
@@ -516,7 +516,7 @@ function gcShowActive(ch) {
 
                     onerror="this.style.display='none'"></div>` : ''}
 
-                 ПРИЗ: <strong style="color:#f5be0b;font-size:0.85rem">${prizeDesc}</strong>
+                 РџР РР—: <strong style="color:#f5be0b;font-size:0.85rem">${prizeDesc}</strong>
 
             `;
 
@@ -586,13 +586,13 @@ function gcShowActive(ch) {
 
         joinBtn.disabled = true;
 
-        joinBtn.textContent = ' ВЫ УЧАСТВУЕТЕ — статистика обновляется автоматически';
+        joinBtn.textContent = ' Р’Р« РЈР§РђРЎРўР’РЈР•РўР• вЂ” СЃС‚Р°С‚РёСЃС‚РёРєР° РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё';
 
     } else {
 
         joinBtn.disabled = false;
 
-        joinBtn.textContent = ' ВСТУПИТЬ В ЧЕЛЛЕНДЖ';
+        joinBtn.textContent = ' Р’РЎРўРЈРџРРўР¬ Р’ Р§Р•Р›Р›Р•РќР”Р–';
 
     }
 
@@ -646,7 +646,7 @@ function gcShowActive(ch) {
 
             if (obsUrl) {
 
-                // Строим URL корректно для любой страницы (challenges.html или global-challenge.html)
+                // РЎС‚СЂРѕРёРј URL РєРѕСЂСЂРµРєС‚РЅРѕ РґР»СЏ Р»СЋР±РѕР№ СЃС‚СЂР°РЅРёС†С‹ (challenges.html РёР»Рё global-challenge.html)
 
                 const pathParts = window.location.pathname.split('/');
 
@@ -698,7 +698,7 @@ function gcShowActive(ch) {
 
                     <div style="text-align:center;margin-bottom:8px;font-size:0.7rem;color:#4ade80">
 
-                         Все ${totalPlayers} участников отыграли ${ch.max_battles} боёв!
+                         Р’СЃРµ ${totalPlayers} СѓС‡Р°СЃС‚РЅРёРєРѕРІ РѕС‚С‹РіСЂР°Р»Рё ${ch.max_battles} Р±РѕС‘РІ!
 
                     </div>
 
@@ -712,11 +712,11 @@ function gcShowActive(ch) {
 
                         letter-spacing:1px;box-shadow:0 6px 24px rgba(245,190,11,0.3)">
 
-                         ЗАВЕРШИТЬ И ЗАПУСТИТЬ РУЛЕТКУ
+                         Р—РђР’Р•Р РЁРРўР¬ Р Р—РђРџРЈРЎРўРРўР¬ Р РЈР›Р•РўРљРЈ
 
                     </button>` : `<div style="text-align:center;font-size:0.65rem;color:#5A6577">
 
-                         Ожидание завершения администратором...
+                         РћР¶РёРґР°РЅРёРµ Р·Р°РІРµСЂС€РµРЅРёСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРј...
 
                     </div>`}
 
@@ -732,7 +732,7 @@ function gcShowActive(ch) {
 
                 progressDiv.style.cssText = 'text-align:center;padding:8px 0;font-size:0.65rem;color:#5A6577';
 
-                progressDiv.textContent = ` Боёв сыграно: ${donePlayers}/${totalPlayers} участников (нужно ${ch.max_battles} боёв)`;
+                progressDiv.textContent = ` Р‘РѕС‘РІ СЃС‹РіСЂР°РЅРѕ: ${donePlayers}/${totalPlayers} СѓС‡Р°СЃС‚РЅРёРєРѕРІ (РЅСѓР¶РЅРѕ ${ch.max_battles} Р±РѕС‘РІ)`;
 
                 joinBtn.parentElement.insertBefore(progressDiv, joinBtn.nextSibling);
 
@@ -750,7 +750,7 @@ function gcShowActive(ch) {
 
 // ============================================================
 
-// ENROLLMENT (набор участников)
+// ENROLLMENT (РЅР°Р±РѕСЂ СѓС‡Р°СЃС‚РЅРёРєРѕРІ)
 
 // ============================================================
 
@@ -790,7 +790,7 @@ function gcShowEnrollment(ch) {
 
     if (iconEl) iconEl.textContent = isPrize ? '' : (ch.icon || '');
 
-    if (titleEl) titleEl.innerHTML = ch.title || 'Челлендж';
+    if (titleEl) titleEl.innerHTML = ch.title || 'Р§РµР»Р»РµРЅРґР¶';
 
     if (descEl) descEl.innerHTML = ch.description || '';
 
@@ -820,7 +820,7 @@ function gcShowEnrollment(ch) {
 
                     onerror="this.style.display='none'"></div>` : ''}
 
-                 ПРИЗ: <strong style="color:#f5be0b;font-size:0.85rem">${prizeDesc}</strong>
+                 РџР РР—: <strong style="color:#f5be0b;font-size:0.85rem">${prizeDesc}</strong>
 
             `;
 
@@ -858,7 +858,7 @@ function gcShowEnrollment(ch) {
 
     if (participantsEl) participantsEl.textContent = ch.participants_count || 0;
 
-    if (battlesEl) battlesEl.textContent = maxBattles > 0 ? `${maxBattles} боёв` : '';
+    if (battlesEl) battlesEl.textContent = maxBattles > 0 ? `${maxBattles} Р±РѕС‘РІ` : '';
 
     if (rewardEl) {
 
@@ -868,7 +868,7 @@ function gcShowEnrollment(ch) {
 
 
 
-    // Join button — always active during enrollment
+    // Join button вЂ” always active during enrollment
 
     const joinBtn = document.getElementById('gcJoinBtn');
 
@@ -882,13 +882,13 @@ function gcShowEnrollment(ch) {
 
         joinBtn.disabled = true;
 
-        joinBtn.textContent = ' ВЫ ЗАПИСАНЫ';
+        joinBtn.textContent = ' Р’Р« Р—РђРџРРЎРђРќР«';
 
     } else {
 
         joinBtn.disabled = false;
 
-        joinBtn.textContent = ' ЗАПИСАТЬСЯ В ЧЕЛЛЕНДЖ';
+        joinBtn.textContent = ' Р—РђРџРРЎРђРўР¬РЎРЇ Р’ Р§Р•Р›Р›Р•РќР”Р–';
 
     }
 
@@ -918,13 +918,13 @@ function gcRenderEnrollmentList(participants) {
 
     const titleEl = container.querySelector('.gc-lb-title');
 
-    if (titleEl) titleEl.innerHTML = ` Участники (${participants.length})`;
+    if (titleEl) titleEl.innerHTML = ` РЈС‡Р°СЃС‚РЅРёРєРё (${participants.length})`;
 
 
 
     const items = participants.map((p, i) => {
 
-        const nick = p.nickname || 'Танкист';
+        const nick = p.nickname || 'РўР°РЅРєРёСЃС‚';
 
         const myTgId = myTelegramId || localStorage.getItem('my_telegram_id');
 
@@ -942,13 +942,13 @@ function gcRenderEnrollmentList(participants) {
 
                 <div class="gc-lb-info">
 
-                    <div class="gc-lb-name">${nick} ${isMe ? '(вы)' : ''}</div>
+                    <div class="gc-lb-name">${nick} ${isMe ? '(РІС‹)' : ''}</div>
 
-                    <div class="gc-lb-battles" style="color:#4ade80"> Записан</div>
+                    <div class="gc-lb-battles" style="color:#4ade80"> Р—Р°РїРёСЃР°РЅ</div>
 
                 </div>
 
-                <div class="gc-lb-value" style="font-size:0.65rem;color:#5A6577">Ожидание старта</div>
+                <div class="gc-lb-value" style="font-size:0.65rem;color:#5A6577">РћР¶РёРґР°РЅРёРµ СЃС‚Р°СЂС‚Р°</div>
 
             </div>`;
 
@@ -980,7 +980,7 @@ function gcRenderEnrollmentList(participants) {
 
 
 
-    listDiv.innerHTML = items || '<div class="gc-lb-empty">Пока никто не записался</div>';
+    listDiv.innerHTML = items || '<div class="gc-lb-empty">РџРѕРєР° РЅРёРєС‚Рѕ РЅРµ Р·Р°РїРёСЃР°Р»СЃСЏ</div>';
 
 }
 
@@ -988,7 +988,7 @@ function gcRenderEnrollmentList(participants) {
 
 // ============================================================
 
-// WHEEL PENDING (колесо фортуны)
+// WHEEL PENDING (РєРѕР»РµСЃРѕ С„РѕСЂС‚СѓРЅС‹)
 
 // ============================================================
 
@@ -1022,7 +1022,7 @@ function gcShowWheelPending(ch) {
 
     const condInfo = GC_CONDITION_MAP[ch.condition?.split(',')[0]] || GC_CONDITION_MAP.damage;
 
-    const prizeDesc = ch.prize_description || 'ПРИЗ';
+    const prizeDesc = ch.prize_description || 'РџР РР—';
 
     const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
 
@@ -1048,9 +1048,9 @@ function gcShowWheelPending(ch) {
 
                      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 
-                     margin:12px 0 4px;letter-spacing:2px">КОЛЕСО ФОРТУНЫ</div>
+                     margin:12px 0 4px;letter-spacing:2px">РљРћР›Р•РЎРћ Р¤РћР РўРЈРќР«</div>
 
-                <div style="font-size:0.72rem;color:#5A6577">Соревнование завершено — время розыгрыша!</div>
+                <div style="font-size:0.72rem;color:#5A6577">РЎРѕСЂРµРІРЅРѕРІР°РЅРёРµ Р·Р°РІРµСЂС€РµРЅРѕ вЂ” РІСЂРµРјСЏ СЂРѕР·С‹РіСЂС‹С€Р°!</div>
 
             </div>
 
@@ -1068,7 +1068,7 @@ function gcShowWheelPending(ch) {
 
                 <div style="font-family:'Russo One',sans-serif;font-size:1rem;color:#f5be0b">${prizeDesc}</div>
 
-                <div style="font-size:0.6rem;color:#5A6577;margin-top:4px;letter-spacing:1px">ГЛАВНЫЙ ПРИЗ</div>
+                <div style="font-size:0.6rem;color:#5A6577;margin-top:4px;letter-spacing:1px">Р“Р›РђР’РќР«Р™ РџР РР—</div>
 
             </div>
 
@@ -1080,7 +1080,7 @@ function gcShowWheelPending(ch) {
 
                 <div style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#C8AA6E;margin-bottom:8px">
 
-                     ФИНАЛЬНАЯ ТАБЛИЦА
+                     Р¤РРќРђР›Р¬РќРђРЇ РўРђР‘Р›РР¦Рђ
 
                 </div>
 
@@ -1108,7 +1108,7 @@ function gcShowWheelPending(ch) {
 
                         box-shadow:0 8px 32px rgba(245,190,11,0.3)">
 
-                         ЗАПУСТИТЬ КОЛЕСО ЭЛИМИНАЦИИ
+                         Р—РђРџРЈРЎРўРРўР¬ РљРћР›Р•РЎРћ Р­Р›РРњРРќРђР¦РР
 
                     </button>
 
@@ -1120,7 +1120,7 @@ function gcShowWheelPending(ch) {
 
                         font-size:0.7rem;cursor:pointer;font-family:'Russo One',sans-serif">
 
-                         УДАЛИТЬ ЧЕЛЛЕНДЖ
+                         РЈР”РђР›РРўР¬ Р§Р•Р›Р›Р•РќР”Р–
 
                     </button>
 
@@ -1130,7 +1130,7 @@ function gcShowWheelPending(ch) {
 
                 <div style="text-align:center;padding:16px 20px 24px;font-size:0.72rem;color:#5A6577">
 
-                     Ожидание запуска колеса фортуны администратором...
+                     РћР¶РёРґР°РЅРёРµ Р·Р°РїСѓСЃРєР° РєРѕР»РµСЃР° С„РѕСЂС‚СѓРЅС‹ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРј...
 
                 </div>
 
@@ -1144,7 +1144,7 @@ function gcShowWheelPending(ch) {
 
 // ============================================================
 
-// WHEEL COMPLETED — winner was determined
+// WHEEL COMPLETED вЂ” winner was determined
 
 // ============================================================
 
@@ -1166,9 +1166,9 @@ function gcShowWheelCompleted(ch) {
 
     const condInfo = GC_CONDITION_MAP[ch.condition?.split(',')[0]] || GC_CONDITION_MAP.damage;
 
-    const prizeDesc = ch.prize_description || 'ПРИЗ';
+    const prizeDesc = ch.prize_description || 'РџР РР—';
 
-    const winnerNick = ch.wheel_winner_nickname || 'Победитель';
+    const winnerNick = ch.wheel_winner_nickname || 'РџРѕР±РµРґРёС‚РµР»СЊ';
 
     const isAdminNow = window.isAdmin || (typeof isAdmin !== 'undefined' && isAdmin);
 
@@ -1190,9 +1190,9 @@ function gcShowWheelCompleted(ch) {
 
                      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 
-                     margin:12px 0 4px;letter-spacing:2px">КОЛЕСО ЗАВЕРШЕНО</div>
+                     margin:12px 0 4px;letter-spacing:2px">РљРћР›Р•РЎРћ Р—РђР’Р•Р РЁР•РќРћ</div>
 
-                <div style="font-size:0.72rem;color:#5A6577">Победитель определён!</div>
+                <div style="font-size:0.72rem;color:#5A6577">РџРѕР±РµРґРёС‚РµР»СЊ РѕРїСЂРµРґРµР»С‘РЅ!</div>
 
             </div>
 
@@ -1212,7 +1212,7 @@ function gcShowWheelCompleted(ch) {
 
                 <div style="font-size:0.65rem;color:#C8AA6E;margin-top:6px;letter-spacing:2px;text-transform:uppercase">
 
-                    Победитель рулетки
+                    РџРѕР±РµРґРёС‚РµР»СЊ СЂСѓР»РµС‚РєРё
 
                 </div>
 
@@ -1238,7 +1238,7 @@ function gcShowWheelCompleted(ch) {
 
                 <div style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#C8AA6E;margin-bottom:8px">
 
-                     ФИНАЛЬНАЯ ТАБЛИЦА
+                     Р¤РРќРђР›Р¬РќРђРЇ РўРђР‘Р›РР¦Рђ
 
                 </div>
 
@@ -1258,7 +1258,7 @@ function gcShowWheelCompleted(ch) {
 
                      border-radius:50px;font-size:0.7rem;color:#22c55e;font-weight:600">
 
-                     Челлендж завершён
+                     Р§РµР»Р»РµРЅРґР¶ Р·Р°РІРµСЂС€С‘РЅ
 
                 </div>
 
@@ -1278,7 +1278,7 @@ function gcShowWheelCompleted(ch) {
 
                         font-size:0.7rem;cursor:pointer;font-family:'Russo One',sans-serif">
 
-                         УДАЛИТЬ ЧЕЛЛЕНДЖ
+                         РЈР”РђР›РРўР¬ Р§Р•Р›Р›Р•РќР”Р–
 
                     </button>
 
@@ -1294,7 +1294,7 @@ function gcShowWheelCompleted(ch) {
 
 function gcRenderWheelLeaderboard(leaderboard, topCount, condInfo) {
 
-    if (!leaderboard.length) return '<div style="color:#3E4A5C;font-size:0.72rem;text-align:center;padding:12px">Нет участников</div>';
+    if (!leaderboard.length) return '<div style="color:#3E4A5C;font-size:0.72rem;text-align:center;padding:12px">РќРµС‚ СѓС‡Р°СЃС‚РЅРёРєРѕРІ</div>';
 
 
 
@@ -1310,7 +1310,7 @@ function gcRenderWheelLeaderboard(leaderboard, topCount, condInfo) {
 
     return leaderboard.slice(0, 15).map((p, i) => {
 
-        const nick = p.nickname || 'Танкист';
+        const nick = p.nickname || 'РўР°РЅРєРёСЃС‚';
 
         const value = (p.current_value || 0).toLocaleString('ru-RU');
 
@@ -1340,7 +1340,7 @@ function gcRenderWheelLeaderboard(leaderboard, topCount, condInfo) {
 
                     <div class="gc-lb-name">${nick}</div>
 
-                    <div class="gc-lb-battles">${value} ${condInfo.unit} • ${p.battles_played || 0} боёв</div>
+                    <div class="gc-lb-battles">${value} ${condInfo.unit} вЂў ${p.battles_played || 0} Р±РѕС‘РІ</div>
 
                 </div>
 
@@ -1378,13 +1378,13 @@ async function gcForceFinishAndWheel(challengeId) {
 
         btn.disabled = true;
 
-        btn.textContent = ' Открываю рулетку...';
+        btn.textContent = ' РћС‚РєСЂС‹РІР°СЋ СЂСѓР»РµС‚РєСѓ...';
 
     }
 
 
 
-    // Open wheel page IMMEDIATELY — don't wait for server
+    // Open wheel page IMMEDIATELY вЂ” don't wait for server
 
     window.location.href = `wheel-elimination.html?challenge_id=${challengeId}`;
 
@@ -1436,7 +1436,7 @@ function gcUpdateAdminButtons(ch, phase) {
 
             stopBtn.setAttribute('data-id', ch.id);
 
-            stopBtn.textContent = ' НАЧАТЬ ЧЕЛЛЕНДЖ СЕЙЧАС';
+            stopBtn.textContent = ' РќРђР§РђРўР¬ Р§Р•Р›Р›Р•РќР”Р– РЎР•Р™Р§РђРЎ';
 
             stopBtn.onclick = function() { gcStartChallengeNow(ch.id); };
 
@@ -1462,7 +1462,7 @@ function gcUpdateAdminButtons(ch, phase) {
 
 async function gcStartChallengeNow(challengeId) {
 
-    if (!confirm('Начать челлендж прямо сейчас? Статистика всех участников будет зафиксирована.')) return;
+    if (!confirm('РќР°С‡Р°С‚СЊ С‡РµР»Р»РµРЅРґР¶ РїСЂСЏРјРѕ СЃРµР№С‡Р°СЃ? РЎС‚Р°С‚РёСЃС‚РёРєР° РІСЃРµС… СѓС‡Р°СЃС‚РЅРёРєРѕРІ Р±СѓРґРµС‚ Р·Р°С„РёРєСЃРёСЂРѕРІР°РЅР°.')) return;
 
     
 
@@ -1488,7 +1488,7 @@ async function gcStartChallengeNow(challengeId) {
 
         if (data.success) {
 
-            showToast(` Челлендж начался! ${data.participants_count} участников`);
+            showToast(` Р§РµР»Р»РµРЅРґР¶ РЅР°С‡Р°Р»СЃСЏ! ${data.participants_count} СѓС‡Р°СЃС‚РЅРёРєРѕРІ`);
 
             gcLoadChallenge(true);
 
@@ -1500,7 +1500,7 @@ async function gcStartChallengeNow(challengeId) {
 
     } catch (e) {
 
-        showToast(' Нет подключения');
+        showToast(' РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ');
 
     }
 
@@ -1528,7 +1528,7 @@ function gcShowFinished(ch) {
 
 
 
-    document.getElementById('gcWinnerName').textContent = ch.winner_nickname || 'Нет участников';
+    document.getElementById('gcWinnerName').textContent = ch.winner_nickname || 'РќРµС‚ СѓС‡Р°СЃС‚РЅРёРєРѕРІ';
 
     document.getElementById('gcWinnerValue').innerHTML = gcFormatLbValue({
 
@@ -1538,7 +1538,7 @@ function gcShowFinished(ch) {
 
     }, ch);
 
-    document.getElementById('gcWinnerLabel').textContent = conditions.length > 1 ? 'результат' : firstCond.unit;
+    document.getElementById('gcWinnerLabel').textContent = conditions.length > 1 ? 'СЂРµР·СѓР»СЊС‚Р°С‚' : firstCond.unit;
 
 
 
@@ -1560,7 +1560,7 @@ function gcShowFinished(ch) {
 
             rewardHtml = `<div class="gc-winner-reward" style="margin-top:10px; font-weight:800; color:#f5d36e; font-size:0.9rem">
 
-                 ВЫИГРЫШ:  ${ch.reward_coins.toLocaleString('ru')}
+                 Р’Р«РР“Р Р«РЁ:  ${ch.reward_coins.toLocaleString('ru')}
 
             </div>`;
 
@@ -1588,7 +1588,7 @@ function gcShowFinished(ch) {
 
     if (lb.length > 0) {
 
-        html += '<div class="gc-lb-title" style="margin-top:20px;justify-content:center"> ИТОГОВАЯ ТАБЛИЦА</div>';
+        html += '<div class="gc-lb-title" style="margin-top:20px;justify-content:center"> РРўРћР“РћР’РђРЇ РўРђР‘Р›РР¦Рђ</div>';
 
         html += '<div class="gc-lb-list">';
 
@@ -1606,15 +1606,15 @@ function gcShowFinished(ch) {
 
             html += `
 
-                                <div class="gc-lb-item ${cls}" style="cursor:pointer; position:relative; align-items:center" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || '').replace(/'/g, \"\'\")}', true, ${ch.id})">
+                                <div class="gc-lb-item ${cls}" style="cursor:pointer; position:relative; align-items:center" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || '').replace(/'/g, "\'")}', true, ${ch.id})">
                     <div class="gc-lb-rank ${rankCls}">${medal}</div>
                     <div class="gc-lb-info" style="flex:1">
                         <div class="gc-lb-name">${p.nickname}</div>
-                        <div style="font-size:0.5rem; opacity:0.6; margin-top:2px"> подробно</div>
+                        <div style="font-size:0.5rem; opacity:0.6; margin-top:2px"> РїРѕРґСЂРѕР±РЅРѕ</div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px">
                         <div class="gc-lb-value" style="text-align:right">${gcFormatLbValue(p, ch)}</div>
-                        <div style="font-size:0.6rem; color:#8a94a6; background:rgba(0,0,0,0.3); padding:3px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06)"> ${p.battles_played || 0} боёв</div>
+                        <div style="font-size:0.6rem; color:#8a94a6; background:rgba(0,0,0,0.3); padding:3px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06)"> ${p.battles_played || 0} Р±РѕС‘РІ</div>
                     </div>
                 </div>`;
 
@@ -1642,7 +1642,7 @@ function gcShowFinished(ch) {
 
                     transition:all 0.3s;letter-spacing:0.5px">
 
-                     ЗАПУСТИТЬ НОВЫЙ ЧЕЛЛЕНДЖ
+                     Р—РђРџРЈРЎРўРРўР¬ РќРћР’Р«Р™ Р§Р•Р›Р›Р•РќР”Р–
 
                 </button>
 
@@ -1654,7 +1654,7 @@ function gcShowFinished(ch) {
 
                     font-weight:700;transition:all 0.2s">
 
-                     Удалить этот челлендж из истории
+                     РЈРґР°Р»РёС‚СЊ СЌС‚РѕС‚ С‡РµР»Р»РµРЅРґР¶ РёР· РёСЃС‚РѕСЂРёРё
 
                 </button>
 
@@ -1758,7 +1758,7 @@ function gcStartTimer(endsAtStr, durationMinutes, isEnrollment) {
 
     if (labelEl) {
 
-        labelEl.textContent = isEnrollment ? 'ДО СТАРТА' : 'ОСТАЛОСЬ';
+        labelEl.textContent = isEnrollment ? 'Р”Рћ РЎРўРђР РўРђ' : 'РћРЎРўРђР›РћРЎР¬';
 
     }
 
@@ -1794,7 +1794,7 @@ function gcStartTimer(endsAtStr, durationMinutes, isEnrollment) {
 
                 valueEl.textContent = '';
 
-                if (labelEl) labelEl.textContent = 'СТАРТУЕМ!';
+                if (labelEl) labelEl.textContent = 'РЎРўРђР РўРЈР•Рњ!';
 
             }
 
@@ -1930,7 +1930,7 @@ function gcRenderLeaderboard(leaders) {
 
     if (!leaders || leaders.length === 0) {
 
-        list.innerHTML = '<div class="gc-lb-empty">Пока нет участников</div>';
+        list.innerHTML = '<div class="gc-lb-empty">РџРѕРєР° РЅРµС‚ СѓС‡Р°СЃС‚РЅРёРєРѕРІ</div>';
 
         return;
 
@@ -1970,21 +1970,21 @@ function gcRenderLeaderboard(leaders) {
 
         const battlesText = maxBattles > 0 
 
-            ? `${p.battles_played || 0}/${maxBattles} боёв` 
+            ? `${p.battles_played || 0}/${maxBattles} Р±РѕС‘РІ` 
 
-            : `${p.battles_played || 0} боёв`;
+            : `${p.battles_played || 0} Р±РѕС‘РІ`;
 
 
 
         return `
 
-            <div class="gc-lb-item ${cls}" style="animation-delay:${i * 0.06}s; cursor:pointer" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || 'Танкист').replace(/'/g, "\\'")}')">
+            <div class="gc-lb-item ${cls}" style="animation-delay:${i * 0.06}s; cursor:pointer" onclick="gcShowPlayerDetail(${p.telegram_id}, '${(p.nickname || 'РўР°РЅРєРёСЃС‚').replace(/'/g, "\\'")}')">
 
                 <div class="gc-lb-rank ${rankCls}">${medal}</div>
 
                 <div class="gc-lb-info">
 
-                    <div class="gc-lb-name">${isMe ? ' ' : ''}${p.nickname || 'Танкист'}</div>
+                    <div class="gc-lb-name">${isMe ? ' ' : ''}${p.nickname || 'РўР°РЅРєРёСЃС‚'}</div>
 
                     <div class="gc-lb-battles">${battlesText}</div>
 
@@ -1998,7 +1998,7 @@ function gcRenderLeaderboard(leaders) {
 
 
 
-    // Кнопка подробной таблицы
+    // РљРЅРѕРїРєР° РїРѕРґСЂРѕР±РЅРѕР№ С‚Р°Р±Р»РёС†С‹
 
     list.innerHTML += `
 
@@ -2006,7 +2006,7 @@ function gcRenderLeaderboard(leaders) {
 
             <span style="background:rgba(255,255,255,0.1); padding:8px 20px; border-radius:12px; font-size:14px; display:inline-block">
 
-                 Подробная таблица
+                 РџРѕРґСЂРѕР±РЅР°СЏ С‚Р°Р±Р»РёС†Р°
 
             </span>
 
@@ -2018,7 +2018,7 @@ function gcRenderLeaderboard(leaders) {
 
 // ============================================================
 
-// DETAIL: Модалка деталей игрока (побоевая разбивка)
+// DETAIL: РњРѕРґР°Р»РєР° РґРµС‚Р°Р»РµР№ РёРіСЂРѕРєР° (РїРѕР±РѕРµРІР°СЏ СЂР°Р·Р±РёРІРєР°)
 
 // ============================================================
 
@@ -2028,7 +2028,7 @@ async function gcShowPlayerDetail(telegramId, nickname) {
 
 
 
-    // Создаём модалку если нет
+    // РЎРѕР·РґР°С‘Рј РјРѕРґР°Р»РєСѓ РµСЃР»Рё РЅРµС‚
 
     let modal = document.getElementById('gcDetailModal');
 
@@ -2070,7 +2070,7 @@ async function gcShowPlayerDetail(telegramId, nickname) {
 
             <div class="gc-modal__body" id="gcDetailBody">
 
-                <div style="text-align:center; padding:20px; color:#aaa"> Загрузка боёв...</div>
+                <div style="text-align:center; padding:20px; color:#aaa"> Р—Р°РіСЂСѓР·РєР° Р±РѕС‘РІ...</div>
 
             </div>
 
@@ -2110,7 +2110,7 @@ async function gcShowPlayerDetail(telegramId, nickname) {
 
                     let condHtml = '<div style="padding:12px">';
 
-                    condHtml += '<div style="text-align:center;color:#aaa;margin-bottom:12px">Побоевая разбивка недоступна для мульти-условий</div>';
+                    condHtml += '<div style="text-align:center;color:#aaa;margin-bottom:12px">РџРѕР±РѕРµРІР°СЏ СЂР°Р·Р±РёРІРєР° РЅРµРґРѕСЃС‚СѓРїРЅР° РґР»СЏ РјСѓР»СЊС‚Рё-СѓСЃР»РѕРІРёР№</div>';
 
                     condHtml += '<div style="display:flex;flex-direction:column;gap:8px">';
 
@@ -2134,7 +2134,7 @@ async function gcShowPlayerDetail(telegramId, nickname) {
 
                     const total = (player.current_value || 0).toLocaleString('ru');
 
-                    condHtml += `<div class="gc-battles-total">Сумма: <b>${total}</b> за <b>${player.battles_played || 0}</b> боёв</div>`;
+                    condHtml += `<div class="gc-battles-total">РЎСѓРјРјР°: <b>${total}</b> Р·Р° <b>${player.battles_played || 0}</b> Р±РѕС‘РІ</div>`;
 
                     condHtml += '</div>';
 
@@ -2146,7 +2146,7 @@ async function gcShowPlayerDetail(telegramId, nickname) {
 
             }
 
-            body.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa">Боёв пока не обнаружено. Данные обновляются каждые 15 сек.</div>';
+            body.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa">Р‘РѕС‘РІ РїРѕРєР° РЅРµ РѕР±РЅР°СЂСѓР¶РµРЅРѕ. Р”Р°РЅРЅС‹Рµ РѕР±РЅРѕРІР»СЏСЋС‚СЃСЏ РєР°Р¶РґС‹Рµ 15 СЃРµРє.</div>';
 
             return;
 
@@ -2226,9 +2226,9 @@ async function gcShowPlayerDetail(telegramId, nickname) {
 
         const totalLabel = isMulti
 
-            ? `Сумма: <b>${(player?.current_value || totalDmg).toLocaleString('ru')}</b> за <b>${data.battles.length}</b> боёв`
+            ? `РЎСѓРјРјР°: <b>${(player?.current_value || totalDmg).toLocaleString('ru')}</b> Р·Р° <b>${data.battles.length}</b> Р±РѕС‘РІ`
 
-            : `Итого: <b>${totalDmg.toLocaleString('ru')}</b> ${firstCond.unit} за <b>${data.battles.length}</b> боёв`;
+            : `РС‚РѕРіРѕ: <b>${totalDmg.toLocaleString('ru')}</b> ${firstCond.unit} Р·Р° <b>${data.battles.length}</b> Р±РѕС‘РІ`;
 
         html += `<div class="gc-battles-total">${totalLabel}</div>`;
 
@@ -2236,7 +2236,7 @@ async function gcShowPlayerDetail(telegramId, nickname) {
 
     } catch (e) {
 
-        document.getElementById('gcDetailBody').innerHTML = '<div style="color:red; padding:20px"> Ошибка загрузки</div>';
+        document.getElementById('gcDetailBody').innerHTML = '<div style="color:red; padding:20px"> РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё</div>';
 
     }
 
@@ -2246,7 +2246,7 @@ async function gcShowPlayerDetail(telegramId, nickname) {
 
 // ============================================================
 
-// FULL TABLE: Полная таблица всех участников с раскрываемыми деталями
+// FULL TABLE: РџРѕР»РЅР°СЏ С‚Р°Р±Р»РёС†Р° РІСЃРµС… СѓС‡Р°СЃС‚РЅРёРєРѕРІ СЃ СЂР°СЃРєСЂС‹РІР°РµРјС‹РјРё РґРµС‚Р°Р»СЏРјРё
 
 // ============================================================
 
@@ -2306,7 +2306,7 @@ async function gcShowFullTable() {
 
             <div class="gc-modal__header">
 
-                <span> Турнирная таблица</span>
+                <span> РўСѓСЂРЅРёСЂРЅР°СЏ С‚Р°Р±Р»РёС†Р°</span>
 
                 <button class="gc-modal__close" onclick="document.getElementById('gcDetailModal').style.display='none'"></button>
 
@@ -2322,9 +2322,9 @@ async function gcShowFullTable() {
 
                             <th>#</th>
 
-                            <th>Игрок</th>
+                            <th>РРіСЂРѕРє</th>
 
-                            <th>Боёв</th>
+                            <th>Р‘РѕС‘РІ</th>
 
                             ${condHeaders}
 
@@ -2382,7 +2382,7 @@ async function gcShowFullTable() {
 
                 <td class="gc-table__rank">${i + 1}</td>
 
-                <td class="gc-table__name">${p.nickname || 'Танкист'} <span style="font-size:0.5rem;opacity:0.4;margin-left:4px"></span></td>
+                <td class="gc-table__name">${p.nickname || 'РўР°РЅРєРёСЃС‚'} <span style="font-size:0.5rem;opacity:0.4;margin-left:4px"></span></td>
 
                 <td class="gc-table__battles">${battlesText}</td>
 
@@ -2406,7 +2406,7 @@ async function gcShowFullTable() {
 
 // ============================================================
 
-// INLINE BATTLE BREAKDOWN: Разбивка по боям прямо в таблице
+// INLINE BATTLE BREAKDOWN: Р Р°Р·Р±РёРІРєР° РїРѕ Р±РѕСЏРј РїСЂСЏРјРѕ РІ С‚Р°Р±Р»РёС†Рµ
 
 // ============================================================
 
@@ -2458,7 +2458,7 @@ async function gcTogglePlayerBattles(row, telegramId, nickname, challengeId, col
 
     td.colSpan = colCount;
 
-    td.innerHTML = `<div class="gc-inline-battles"><div style="text-align:center;padding:12px;color:#5A6577;font-size:0.7rem"> Загрузка боёв...</div></div>`;
+    td.innerHTML = `<div class="gc-inline-battles"><div style="text-align:center;padding:12px;color:#5A6577;font-size:0.7rem"> Р—Р°РіСЂСѓР·РєР° Р±РѕС‘РІ...</div></div>`;
 
     detailRow.appendChild(td);
 
@@ -2476,7 +2476,7 @@ async function gcTogglePlayerBattles(row, telegramId, nickname, challengeId, col
 
         if (!data.battles || data.battles.length === 0) {
 
-            td.innerHTML = `<div class="gc-inline-battles"><div style="text-align:center;padding:12px;color:#5A6577;font-size:0.7rem">Боёв не найдено</div></div>`;
+            td.innerHTML = `<div class="gc-inline-battles"><div style="text-align:center;padding:12px;color:#5A6577;font-size:0.7rem">Р‘РѕС‘РІ РЅРµ РЅР°Р№РґРµРЅРѕ</div></div>`;
             return;
         }
 
@@ -2497,7 +2497,7 @@ async function gcTogglePlayerBattles(row, telegramId, nickname, challengeId, col
                     <div style="display:flex;align-items:center;gap:8px;flex:1">
                         <span style="font-size:0.6rem;color:#5A6577;width:20px">#${b.battle_num}</span>
                         <span style="font-size:0.55rem;color:#8a94a6;min-width:20px">${tierStr}</span>
-                        <span style="font-size:0.7rem;color:#ccc">${b.tank_name || 'Неизвестно'}</span>
+                        <span style="font-size:0.7rem;color:#ccc">${b.tank_name || 'РќРµРёР·РІРµСЃС‚РЅРѕ'}</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:4px">
                         ${condValues}
@@ -2509,7 +2509,7 @@ async function gcTogglePlayerBattles(row, telegramId, nickname, challengeId, col
         td.innerHTML = html;
 
     } catch(e) {
-        td.innerHTML = `<div class="gc-inline-battles"><div style="text-align:center;padding:12px;color:#ef4444;font-size:0.7rem">Ошибка загрузки</div></div>`;
+        td.innerHTML = `<div class="gc-inline-battles"><div style="text-align:center;padding:12px;color:#ef4444;font-size:0.7rem">РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё</div></div>`;
     }
 }
 
@@ -2518,7 +2518,7 @@ async function gcTogglePlayerBattles(row, telegramId, nickname, challengeId, col
 
 // ============================================================
 
-// JOIN — вступление + сообщение
+// JOIN вЂ” РІСЃС‚СѓРїР»РµРЅРёРµ + СЃРѕРѕР±С‰РµРЅРёРµ
 
 // ============================================================
 
@@ -2526,7 +2526,7 @@ async function gcJoinChallenge() {
 
     if (!myTelegramId) {
 
-        showToast(' Откройте через Telegram-бот');
+        showToast(' РћС‚РєСЂРѕР№С‚Рµ С‡РµСЂРµР· Telegram-Р±РѕС‚');
 
         return;
 
@@ -2540,11 +2540,11 @@ async function gcJoinChallenge() {
 
     btn.disabled = true;
 
-    btn.textContent = ' Вступаем...';
+    btn.textContent = ' Р’СЃС‚СѓРїР°РµРј...';
 
 
 
-    // Передаём WoT данные из localStorage чтобы сервер мог обновить БД
+    // РџРµСЂРµРґР°С‘Рј WoT РґР°РЅРЅС‹Рµ РёР· localStorage С‡С‚РѕР±С‹ СЃРµСЂРІРµСЂ РјРѕРі РѕР±РЅРѕРІРёС‚СЊ Р‘Р”
 
     const joinData = {
 
@@ -2560,7 +2560,7 @@ async function gcJoinChallenge() {
 
 
 
-    // Имя из Telegram
+    // РРјСЏ РёР· Telegram
 
     const tg = window.Telegram?.WebApp;
 
@@ -2592,11 +2592,11 @@ async function gcJoinChallenge() {
 
         if (data.success) {
 
-            showToast(data.message || ` Вы вступили! Условия приняты — вперёд!`);
+            showToast(data.message || ` Р’С‹ РІСЃС‚СѓРїРёР»Рё! РЈСЃР»РѕРІРёСЏ РїСЂРёРЅСЏС‚С‹ вЂ” РІРїРµСЂС‘Рґ!`);
 
             btn.disabled = true;
 
-            btn.textContent = ' ВЫ УЧАСТВУЕТЕ';
+            btn.textContent = ' Р’Р« РЈР§РђРЎРўР’РЈР•РўР•';
 
             btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
 
@@ -2604,17 +2604,17 @@ async function gcJoinChallenge() {
 
         } else {
 
-            // If "already joined" — show as enrolled, not an error
+            // If "already joined" вЂ” show as enrolled, not an error
 
-            if (data.error && (data.error.includes('уже участвуете') || data.error.includes('уже записан'))) {
+            if (data.error && (data.error.includes('СѓР¶Рµ СѓС‡Р°СЃС‚РІСѓРµС‚Рµ') || data.error.includes('СѓР¶Рµ Р·Р°РїРёСЃР°РЅ'))) {
 
                 btn.disabled = true;
 
-                btn.textContent = ' ВЫ УЖЕ ЗАПИСАНЫ';
+                btn.textContent = ' Р’Р« РЈР–Р• Р—РђРџРРЎРђРќР«';
 
                 btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
 
-                showToast(' Вы уже участвуете в челлендже!');
+                showToast(' Р’С‹ СѓР¶Рµ СѓС‡Р°СЃС‚РІСѓРµС‚Рµ РІ С‡РµР»Р»РµРЅРґР¶Рµ!');
 
                 setTimeout(() => gcLoadChallenge(true), 700);
 
@@ -2624,7 +2624,7 @@ async function gcJoinChallenge() {
 
                 btn.disabled = false;
 
-                btn.textContent = ' ВСТУПИТЬ В ЧЕЛЛЕНДЖ';
+                btn.textContent = ' Р’РЎРўРЈРџРРўР¬ Р’ Р§Р•Р›Р›Р•РќР”Р–';
 
             }
 
@@ -2632,11 +2632,11 @@ async function gcJoinChallenge() {
 
     } catch (e) {
 
-        showToast(' Нет подключения');
+        showToast(' РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ');
 
         btn.disabled = false;
 
-        btn.textContent = ' ВСТУПИТЬ В ЧЕЛЛЕНДЖ';
+        btn.textContent = ' Р’РЎРўРЈРџРРўР¬ Р’ Р§Р•Р›Р›Р•РќР”Р–';
 
     }
 
@@ -2646,7 +2646,7 @@ async function gcJoinChallenge() {
 
 // ============================================================
 
-// WIDGET LINK — копирование ссылки
+// WIDGET LINK вЂ” РєРѕРїРёСЂРѕРІР°РЅРёРµ СЃСЃС‹Р»РєРё
 
 // ============================================================
 
@@ -2658,7 +2658,7 @@ function gcCopyWidgetLink() {
 
     navigator.clipboard.writeText(url).then(() => {
 
-        showToast(' Ссылка на виджет скопирована!');
+        showToast(' РЎСЃС‹Р»РєР° РЅР° РІРёРґР¶РµС‚ СЃРєРѕРїРёСЂРѕРІР°РЅР°!');
 
     }).catch(() => {
 
@@ -2674,7 +2674,7 @@ function gcCopyWidgetLink() {
 
         document.body.removeChild(input);
 
-        showToast(' Ссылка на виджет скопирована!');
+        showToast(' РЎСЃС‹Р»РєР° РЅР° РІРёРґР¶РµС‚ СЃРєРѕРїРёСЂРѕРІР°РЅР°!');
 
     });
 
@@ -2692,7 +2692,7 @@ async function gcLoadSubscribers() {
 
     const list = document.getElementById('subsList');
 
-    list.innerHTML = '<div class="gc-subs__loading"> Загрузка подписчиков...</div>';
+    list.innerHTML = '<div class="gc-subs__loading"> Р—Р°РіСЂСѓР·РєР° РїРѕРґРїРёСЃС‡РёРєРѕРІ...</div>';
 
 
 
@@ -2706,7 +2706,7 @@ async function gcLoadSubscribers() {
 
         if (!data.users) {
 
-            list.innerHTML = '<div class="gc-subs__loading"> Ошибка загрузки</div>';
+            list.innerHTML = '<div class="gc-subs__loading"> РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё</div>';
 
             return;
 
@@ -2724,7 +2724,7 @@ async function gcLoadSubscribers() {
 
         console.error('Load subscribers error:', e);
 
-        list.innerHTML = '<div class="gc-subs__loading"> Нет подключения к API</div>';
+        list.innerHTML = '<div class="gc-subs__loading"> РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє API</div>';
 
     }
 
@@ -2740,7 +2740,7 @@ function gcRenderSubscribers(subs) {
 
     if (!subs || subs.length === 0) {
 
-        list.innerHTML = '<div class="gc-subs__loading">Нет подписчиков</div>';
+        list.innerHTML = '<div class="gc-subs__loading">РќРµС‚ РїРѕРґРїРёСЃС‡РёРєРѕРІ</div>';
 
         return;
 
@@ -2750,7 +2750,7 @@ function gcRenderSubscribers(subs) {
 
     list.innerHTML = subs.map((u, i) => {
 
-        const nick = u.wot_nickname || u.first_name || u.username || 'Танкист';
+        const nick = u.wot_nickname || u.first_name || u.username || 'РўР°РЅРєРёСЃС‚';
 
         const initials = nick.substring(0, 2).toUpperCase();
 
@@ -2762,9 +2762,9 @@ function gcRenderSubscribers(subs) {
 
         const badgeCls = isActive ? 'gc-sub-card__badge--active' : 'gc-sub-card__badge--expired';
 
-        const badgeText = isActive ? `${daysLeft} дн.` : 'Истёк';
+        const badgeText = isActive ? `${daysLeft} РґРЅ.` : 'РСЃС‚С‘Рє';
 
-        const meta = u.wot_nickname ? `@${u.username || '—'}` : `TG: ${u.telegram_id}`;
+        const meta = u.wot_nickname ? `@${u.username || 'вЂ”'}` : `TG: ${u.telegram_id}`;
 
 
 
@@ -2830,11 +2830,11 @@ function gcToggleCond(cond, btn) {
 
     if (idx >= 0) {
 
-        // Deselect — but don't allow empty
+        // Deselect вЂ” but don't allow empty
 
         if (gcAdminConditions.length <= 1) {
 
-            showToast(' Нужно хотя бы 1 условие');
+            showToast(' РќСѓР¶РЅРѕ С…РѕС‚СЏ Р±С‹ 1 СѓСЃР»РѕРІРёРµ');
 
             return;
 
@@ -2846,7 +2846,7 @@ function gcToggleCond(cond, btn) {
 
     } else {
 
-        // Combined is exclusive — deselect all others
+        // Combined is exclusive вЂ” deselect all others
 
         if (cond === 'combined') {
 
@@ -2872,11 +2872,11 @@ function gcToggleCond(cond, btn) {
 
             }
 
-            // Select — limit to 3
+            // Select вЂ” limit to 3
 
             if (gcAdminConditions.length >= 3) {
 
-                showToast(' Максимум 3 условия');
+                showToast(' РњР°РєСЃРёРјСѓРј 3 СѓСЃР»РѕРІРёСЏ');
 
                 return;
 
@@ -2926,7 +2926,7 @@ function gcUpdateCondSelectedBadges() {
 
 // === Vehicle filter admin functions ===
 
-// Cascading selectors: Нация  Класс  Уровень  Танк
+// Cascading selectors: РќР°С†РёСЏ  РљР»Р°СЃСЃ  РЈСЂРѕРІРµРЅСЊ  РўР°РЅРє
 
 let _gcNationsLoaded = false;
 
@@ -2942,9 +2942,9 @@ async function gcLoadNations() {
 
     
 
-    // Индикация загрузки
+    // РРЅРґРёРєР°С†РёСЏ Р·Р°РіСЂСѓР·РєРё
 
-    sel.innerHTML = '<option value=""> Загрузка наций...</option>';
+    sel.innerHTML = '<option value=""> Р—Р°РіСЂСѓР·РєР° РЅР°С†РёР№...</option>';
 
     
 
@@ -2960,7 +2960,7 @@ async function gcLoadNations() {
 
             console.error('API Error:', data.error);
 
-            showToast('', 'Ошибка API: ' + data.error);
+            showToast('', 'РћС€РёР±РєР° API: ' + data.error);
 
             sel.innerHTML = '<option value=""> ' + data.error + '</option>';
 
@@ -2972,7 +2972,7 @@ async function gcLoadNations() {
 
         if (!data.nations) {
 
-            sel.innerHTML = '<option value=""> Нации не найдены</option>';
+            sel.innerHTML = '<option value=""> РќР°С†РёРё РЅРµ РЅР°Р№РґРµРЅС‹</option>';
 
             return;
 
@@ -2980,7 +2980,7 @@ async function gcLoadNations() {
 
         
 
-        sel.innerHTML = '<option value=""> Любая</option>';
+        sel.innerHTML = '<option value=""> Р›СЋР±Р°СЏ</option>';
 
         data.nations.forEach(n => {
 
@@ -2994,9 +2994,9 @@ async function gcLoadNations() {
 
         console.error('Failed to load nations', e);
 
-        showToast('', 'Ошибка сети при загрузке наций');
+        showToast('', 'РћС€РёР±РєР° СЃРµС‚Рё РїСЂРё Р·Р°РіСЂСѓР·РєРµ РЅР°С†РёР№');
 
-        sel.innerHTML = '<option value=""> Ошибка сети</option>';
+        sel.innerHTML = '<option value=""> РћС€РёР±РєР° СЃРµС‚Рё</option>';
 
     }
 
@@ -3014,9 +3014,9 @@ async function gcOnNationChange() {
 
     const tankEl = document.getElementById('adminGcTankPicker');
 
-    if (classEl) classEl.innerHTML = '<option value="">Любой</option>';
+    if (classEl) classEl.innerHTML = '<option value="">Р›СЋР±РѕР№</option>';
 
-    if (tierEl) tierEl.innerHTML = '<option value="0">Любой</option>';
+    if (tierEl) tierEl.innerHTML = '<option value="0">Р›СЋР±РѕР№</option>';
 
     if (tankEl) { tankEl.innerHTML = ''; tankEl.style.display = 'none'; }
 
@@ -3038,7 +3038,7 @@ async function gcOnNationChange() {
 
         if (data.error) {
 
-            showToast('', 'Ошибка типов: ' + data.error);
+            showToast('', 'РћС€РёР±РєР° С‚РёРїРѕРІ: ' + data.error);
 
             classEl.innerHTML = '<option value=""> ' + data.error + '</option>';
 
@@ -3050,7 +3050,7 @@ async function gcOnNationChange() {
 
         if (!data.types || !classEl) return;
 
-        classEl.innerHTML = '<option value="">Любой</option>';
+        classEl.innerHTML = '<option value="">Р›СЋР±РѕР№</option>';
 
         data.types.forEach(t => {
 
@@ -3062,7 +3062,7 @@ async function gcOnNationChange() {
 
         console.error('Failed to load types', e);
 
-        showToast('', 'Ошибка сети при загрузке типов');
+        showToast('', 'РћС€РёР±РєР° СЃРµС‚Рё РїСЂРё Р·Р°РіСЂСѓР·РєРµ С‚РёРїРѕРІ');
 
     }
 
@@ -3082,7 +3082,7 @@ async function gcOnTankClassChange() {
 
     const tankEl = document.getElementById('adminGcTankPicker');
 
-    if (tierEl) tierEl.innerHTML = '<option value="0">Любой</option>';
+    if (tierEl) tierEl.innerHTML = '<option value="0">Р›СЋР±РѕР№</option>';
 
     if (tankEl) { tankEl.innerHTML = ''; tankEl.style.display = 'none'; }
 
@@ -3102,7 +3102,7 @@ async function gcOnTankClassChange() {
 
         if (data.error) {
 
-            showToast('', 'Ошибка уровней: ' + data.error);
+            showToast('', 'РћС€РёР±РєР° СѓСЂРѕРІРЅРµР№: ' + data.error);
 
             tierEl.innerHTML = '<option value="0"> ' + data.error + '</option>';
 
@@ -3114,7 +3114,7 @@ async function gcOnTankClassChange() {
 
         if (!data.tiers || !tierEl) return;
 
-        tierEl.innerHTML = '<option value="0">Любой</option>';
+        tierEl.innerHTML = '<option value="0">Р›СЋР±РѕР№</option>';
 
         data.tiers.forEach(t => {
 
@@ -3126,7 +3126,7 @@ async function gcOnTankClassChange() {
 
         console.error('Failed to load tiers', e);
 
-        showToast('', 'Ошибка сети при загрузке уровней');
+        showToast('', 'РћС€РёР±РєР° СЃРµС‚Рё РїСЂРё Р·Р°РіСЂСѓР·РєРµ СѓСЂРѕРІРЅРµР№');
 
     }
 
@@ -3158,7 +3158,7 @@ async function gcOnTankTierChange() {
 
             tankEl.style.display = '';
 
-            tankEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:6px;text-align:center"> Загрузка...</div>';
+            tankEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:6px;text-align:center"> Р—Р°РіСЂСѓР·РєР°...</div>';
 
         }
 
@@ -3170,7 +3170,7 @@ async function gcOnTankTierChange() {
 
         if (!data.tanks.length) {
 
-            tankEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:6px;text-align:center">Нет танков</div>';
+            tankEl.innerHTML = '<div style="font-size:0.55rem;color:#5A6577;padding:6px;text-align:center">РќРµС‚ С‚Р°РЅРєРѕРІ</div>';
 
             return;
 
@@ -3196,7 +3196,7 @@ async function gcOnTankTierChange() {
 
     } catch (e) {
 
-        if (tankEl) tankEl.innerHTML = '<div style="font-size:0.55rem;color:#ff6b6b;padding:6px;text-align:center"> Ошибка</div>';
+        if (tankEl) tankEl.innerHTML = '<div style="font-size:0.55rem;color:#ff6b6b;padding:6px;text-align:center"> РћС€РёР±РєР°</div>';
 
     }
 
@@ -3216,7 +3216,7 @@ function gcSelectTank(tankId, name, type, tier) {
 
     if (tankEl) tankEl.style.display = 'none';
 
-    const classNames = { heavyTank: 'ТТ', mediumTank: 'СТ', lightTank: 'ЛТ', 'AT-SPG': 'ПТ', SPG: 'САУ' };
+    const classNames = { heavyTank: 'РўРў', mediumTank: 'РЎРў', lightTank: 'Р›Рў', 'AT-SPG': 'РџРў', SPG: 'РЎРђРЈ' };
 
     const tierLabels = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
@@ -3240,7 +3240,7 @@ function gcSelectTank(tankId, name, type, tier) {
 
     }
 
-    showToast(` Выбран: ${name}`);
+    showToast(` Р’С‹Р±СЂР°РЅ: ${name}`);
 
 }
 
@@ -3296,7 +3296,7 @@ function gcTogglePrizeMode() {
 
         if (fields) fields.style.display = '';
 
-        if (normalFields) normalFields.style.display = 'none'; // Прячем обычные поля таймера/награды
+        if (normalFields) normalFields.style.display = 'none'; // РџСЂСЏС‡РµРј РѕР±С‹С‡РЅС‹Рµ РїРѕР»СЏ С‚Р°Р№РјРµСЂР°/РЅР°РіСЂР°РґС‹
 
     } else {
 
@@ -3308,7 +3308,7 @@ function gcTogglePrizeMode() {
 
         if (fields) fields.style.display = 'none';
 
-        if (normalFields) normalFields.style.display = ''; // Показываем обычные поля
+        if (normalFields) normalFields.style.display = ''; // РџРѕРєР°Р·С‹РІР°РµРј РѕР±С‹С‡РЅС‹Рµ РїРѕР»СЏ
 
     }
 
@@ -3326,7 +3326,7 @@ function gcSetEnrollDuration(mins) {
 
     document.querySelectorAll('#prizeModeFields .gc-preset-btn').forEach(btn => {
 
-        btn.classList.toggle('gc-preset-btn--active', btn.textContent.includes(mins >= 60 ? (mins/60)+' ч' : mins+' м'));
+        btn.classList.toggle('gc-preset-btn--active', btn.textContent.includes(mins >= 60 ? (mins/60)+' С‡' : mins+' Рј'));
 
     });
 
@@ -3378,7 +3378,7 @@ async function gcUploadPrizeImage(input) {
 
     if (file.size > 5 * 1024 * 1024) {
 
-        showToast(' Файл слишком большой (макс 5 МБ)');
+        showToast(' Р¤Р°Р№Р» СЃР»РёС€РєРѕРј Р±РѕР»СЊС€РѕР№ (РјР°РєСЃ 5 РњР‘)');
 
         return;
 
@@ -3388,7 +3388,7 @@ async function gcUploadPrizeImage(input) {
 
     const status = document.getElementById('prizeImageStatus');
 
-    if (status) status.textContent = ' Загрузка...';
+    if (status) status.textContent = ' Р—Р°РіСЂСѓР·РєР°...';
 
     
 
@@ -3440,25 +3440,25 @@ async function gcUploadPrizeImage(input) {
 
                     if (status) {
 
-                        status.textContent = ' Картинка загружена!';
+                        status.textContent = ' РљР°СЂС‚РёРЅРєР° Р·Р°РіСЂСѓР¶РµРЅР°!';
 
                         status.style.color = '#4ade80';
 
                     }
 
-                    showToast(' Картинка приза загружена!');
+                    showToast(' РљР°СЂС‚РёРЅРєР° РїСЂРёР·Р° Р·Р°РіСЂСѓР¶РµРЅР°!');
 
                 } else {
 
                     if (status) {
 
-                        status.textContent = ' Ошибка загрузки';
+                        status.textContent = ' РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё';
 
                         status.style.color = '#ef4444';
 
                     }
 
-                    showToast(' Ошибка: ' + (data.error || 'unknown'));
+                    showToast(' РћС€РёР±РєР°: ' + (data.error || 'unknown'));
 
                 }
 
@@ -3466,13 +3466,13 @@ async function gcUploadPrizeImage(input) {
 
                 if (status) {
 
-                    status.textContent = ' Ошибка сети';
+                    status.textContent = ' РћС€РёР±РєР° СЃРµС‚Рё';
 
                     status.style.color = '#ef4444';
 
                 }
 
-                showToast(' Ошибка сети при загрузке');
+                showToast(' РћС€РёР±РєР° СЃРµС‚Рё РїСЂРё Р·Р°РіСЂСѓР·РєРµ');
 
             }
 
@@ -3482,7 +3482,7 @@ async function gcUploadPrizeImage(input) {
 
     } catch (err) {
 
-        showToast(' Ошибка чтения файла');
+        showToast(' РћС€РёР±РєР° С‡С‚РµРЅРёСЏ С„Р°Р№Р»Р°');
 
     }
 
@@ -3492,11 +3492,11 @@ async function gcUploadPrizeImage(input) {
 
 async function gcLaunchChallenge() {
 
-    if (!myTelegramId) { showToast(' Нет Telegram ID'); return; }
+    if (!myTelegramId) { showToast(' РќРµС‚ Telegram ID'); return; }
 
 
 
-    const title = document.getElementById('adminGcTitle').value || 'Общий Челлендж';
+    const title = document.getElementById('adminGcTitle').value || 'РћР±С‰РёР№ Р§РµР»Р»РµРЅРґР¶';
 
     const desc = document.getElementById('adminGcDesc').value || '';
 
@@ -3506,7 +3506,7 @@ async function gcLaunchChallenge() {
 
 
 
-    // В призовом режиме читаем время набора из отдельного поля, в обычном — длительность челленджа
+    // Р’ РїСЂРёР·РѕРІРѕРј СЂРµР¶РёРјРµ С‡РёС‚Р°РµРј РІСЂРµРјСЏ РЅР°Р±РѕСЂР° РёР· РѕС‚РґРµР»СЊРЅРѕРіРѕ РїРѕР»СЏ, РІ РѕР±С‹С‡РЅРѕРј вЂ” РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ С‡РµР»Р»РµРЅРґР¶Р°
 
     const duration = gcPrizeModeEnabled
 
@@ -3530,7 +3530,7 @@ async function gcLaunchChallenge() {
 
     btn.disabled = true;
 
-    btn.textContent = ' Запускаем...';
+    btn.textContent = ' Р—Р°РїСѓСЃРєР°РµРј...';
 
 
 
@@ -3560,7 +3560,7 @@ async function gcLaunchChallenge() {
 
                 reward_coins: gcPrizeModeEnabled ? 0 : reward,
 
-                reward_description: gcPrizeModeEnabled ? (prizeDesc || ' Приз') : `${reward} `,
+                reward_description: gcPrizeModeEnabled ? (prizeDesc || ' РџСЂРёР·') : `${reward} `,
 
                 wot_nickname: localStorage.getItem('wot_nickname') || '',
 
@@ -3598,9 +3598,9 @@ async function gcLaunchChallenge() {
 
             showToast(gcPrizeModeEnabled
 
-                ? ` Призовой челлендж запущен! Набор ${duration} мин.`
+                ? ` РџСЂРёР·РѕРІРѕР№ С‡РµР»Р»РµРЅРґР¶ Р·Р°РїСѓС‰РµРЅ! РќР°Р±РѕСЂ ${duration} РјРёРЅ.`
 
-                : ' Челлендж запущен!');
+                : ' Р§РµР»Р»РµРЅРґР¶ Р·Р°РїСѓС‰РµРЅ!');
 
             gcLoadChallenge();
 
@@ -3612,7 +3612,7 @@ async function gcLaunchChallenge() {
 
     } catch (e) {
 
-        showToast(' Нет подключения');
+        showToast(' РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ');
 
     }
 
@@ -3620,7 +3620,7 @@ async function gcLaunchChallenge() {
 
     btn.disabled = false;
 
-    btn.textContent = ' ЗАПУСТИТЬ ЧЕЛЛЕНДЖ';
+    btn.textContent = ' Р—РђРџРЈРЎРўРРўР¬ Р§Р•Р›Р›Р•РќР”Р–';
 
 }
 
@@ -3738,15 +3738,15 @@ async function gcStopChallenge() {
 
 
 
-    if (!challengeId) { showToast(' Не найден ID челленджа'); return; }
+    if (!challengeId) { showToast(' РќРµ РЅР°Р№РґРµРЅ ID С‡РµР»Р»РµРЅРґР¶Р°'); return; }
 
 
 
-    // During enrollment — act as "Start Now"
+    // During enrollment вЂ” act as "Start Now"
 
     if (gcCurrentChallenge && gcCurrentChallenge.status === 'enrollment') {
 
-        if (!confirm(' Начать челлендж прямо сейчас? Набор участников завершится.')) return;
+        if (!confirm(' РќР°С‡Р°С‚СЊ С‡РµР»Р»РµРЅРґР¶ РїСЂСЏРјРѕ СЃРµР№С‡Р°СЃ? РќР°Р±РѕСЂ СѓС‡Р°СЃС‚РЅРёРєРѕРІ Р·Р°РІРµСЂС€РёС‚СЃСЏ.')) return;
 
         try {
 
@@ -3764,7 +3764,7 @@ async function gcStopChallenge() {
 
             if (data.success) {
 
-                showToast(` Челлендж начался!`);
+                showToast(` Р§РµР»Р»РµРЅРґР¶ РЅР°С‡Р°Р»СЃСЏ!`);
 
                 gcLoadChallenge(true);
 
@@ -3774,7 +3774,7 @@ async function gcStopChallenge() {
 
             }
 
-        } catch (e) { showToast(' Нет подключения'); }
+        } catch (e) { showToast(' РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ'); }
 
         return;
 
@@ -3782,9 +3782,9 @@ async function gcStopChallenge() {
 
 
 
-    // During active — finish
+    // During active вЂ” finish
 
-    if (!confirm('Завершить челлендж досрочно? Победитель будет определён по текущим результатам.')) return;
+    if (!confirm('Р—Р°РІРµСЂС€РёС‚СЊ С‡РµР»Р»РµРЅРґР¶ РґРѕСЃСЂРѕС‡РЅРѕ? РџРѕР±РµРґРёС‚РµР»СЊ Р±СѓРґРµС‚ РѕРїСЂРµРґРµР»С‘РЅ РїРѕ С‚РµРєСѓС‰РёРј СЂРµР·СѓР»СЊС‚Р°С‚Р°Рј.')) return;
 
     try {
 
@@ -3802,7 +3802,7 @@ async function gcStopChallenge() {
 
         if (data.success) {
 
-            showToast(' Челлендж завершён!');
+            showToast(' Р§РµР»Р»РµРЅРґР¶ Р·Р°РІРµСЂС€С‘РЅ!');
 
             gcLoadChallenge();
 
@@ -3812,7 +3812,7 @@ async function gcStopChallenge() {
 
         }
 
-    } catch (e) { showToast(' Нет подключения'); }
+    } catch (e) { showToast(' РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ'); }
 
 }
 
@@ -3820,7 +3820,7 @@ async function gcStopChallenge() {
 
 async function gcDeleteChallenge() {
 
-    if (!confirm(' Удалить челлендж полностью? Все результаты будут утеряны!')) return;
+    if (!confirm(' РЈРґР°Р»РёС‚СЊ С‡РµР»Р»РµРЅРґР¶ РїРѕР»РЅРѕСЃС‚СЊСЋ? Р’СЃРµ СЂРµР·СѓР»СЊС‚Р°С‚С‹ Р±СѓРґСѓС‚ СѓС‚РµСЂСЏРЅС‹!')) return;
 
 
 
@@ -3836,7 +3836,7 @@ async function gcDeleteChallenge() {
 
     if (!challengeId) {
 
-        showToast(' Не найден ID челленджа');
+        showToast(' РќРµ РЅР°Р№РґРµРЅ ID С‡РµР»Р»РµРЅРґР¶Р°');
 
         return;
 
@@ -3868,7 +3868,7 @@ async function gcDeleteChallenge() {
 
         if (data.success) {
 
-            showToast(' Челлендж удалён');
+            showToast(' Р§РµР»Р»РµРЅРґР¶ СѓРґР°Р»С‘РЅ');
 
             gcLoadChallenge();
 
@@ -3880,7 +3880,7 @@ async function gcDeleteChallenge() {
 
     } catch (e) {
 
-        showToast(' Нет подключения');
+        showToast(' РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ');
 
     }
 
@@ -4022,15 +4022,15 @@ function gcLaunchConfetti() {
 
 
 
-// Auto-refresh данных каждые 15 секунд (без мерцания)
+// Auto-refresh РґР°РЅРЅС‹С… РєР°Р¶РґС‹Рµ 15 СЃРµРєСѓРЅРґ (Р±РµР· РјРµСЂС†Р°РЅРёСЏ)
 
-// Работает и на challenges.html (вкладка global) и на standalone global-challenge.html
+// Р Р°Р±РѕС‚Р°РµС‚ Рё РЅР° challenges.html (РІРєР»Р°РґРєР° global) Рё РЅР° standalone global-challenge.html
 
 setInterval(() => {
 
     const globalTab = document.getElementById('tab-global');
 
-    // Если вкладка global активна ИЛИ мы на standalone странице (нет tab-global)
+    // Р•СЃР»Рё РІРєР»Р°РґРєР° global Р°РєС‚РёРІРЅР° РР›Р РјС‹ РЅР° standalone СЃС‚СЂР°РЅРёС†Рµ (РЅРµС‚ tab-global)
 
     const isGlobalTabActive = globalTab ? globalTab.classList.contains('tab-content--active') : true;
 
@@ -4044,7 +4044,7 @@ setInterval(() => {
 
 
 
-// Данные обновляются внутри gcLoadChallenge — отдельный refresh убран (был дублирующим)
+// Р”Р°РЅРЅС‹Рµ РѕР±РЅРѕРІР»СЏСЋС‚СЃСЏ РІРЅСѓС‚СЂРё gcLoadChallenge вЂ” РѕС‚РґРµР»СЊРЅС‹Р№ refresh СѓР±СЂР°РЅ (Р±С‹Р» РґСѓР±Р»РёСЂСѓСЋС‰РёРј)
 
 
 
@@ -4404,35 +4404,35 @@ function gcUpdatePreview() {
 
     const fakeMultiMeVal = isMulti 
 
-        ? selConds.map(c => { const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage; return `${ci.icon}${Math.floor(Math.random()*5000+8000).toLocaleString('ru')}`; }).join(' · ')
+        ? selConds.map(c => { const ci = GC_CONDITION_MAP[c] || GC_CONDITION_MAP.damage; return `${ci.icon}${Math.floor(Math.random()*5000+8000).toLocaleString('ru')}`; }).join(' В· ')
 
         : '15,230';
 
     const fakeMultiP1 = isMulti
 
-        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+12000).toLocaleString('ru')}`).join(' · ')
+        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+12000).toLocaleString('ru')}`).join(' В· ')
 
         : '18,500';
 
     const fakeMultiP2 = isMulti
 
-        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+8000).toLocaleString('ru')}`).join(' · ')
+        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+8000).toLocaleString('ru')}`).join(' В· ')
 
         : '15,230';
 
     const fakeMultiP3 = isMulti
 
-        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+5000).toLocaleString('ru')}`).join(' · ')
+        ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}${Math.floor(Math.random()*5000+5000).toLocaleString('ru')}`).join(' В· ')
 
         : '12,100';
 
     // Short versions for compact layouts
 
-    const fakeShortP1 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}18k`).join('·') : '18k';
+    const fakeShortP1 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}18k`).join('В·') : '18k';
 
-    const fakeShortP2 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}15k`).join('·') : '15k';
+    const fakeShortP2 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}15k`).join('В·') : '15k';
 
-    const fakeShortP3 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}12k`).join('·') : '12k';
+    const fakeShortP3 = isMulti ? selConds.map(c => `${(GC_CONDITION_MAP[c]||GC_CONDITION_MAP.damage).icon}12k`).join('В·') : '12k';
 
 
 
@@ -4492,7 +4492,7 @@ function gcUpdatePreview() {
 
     const isPrizeModeOn = typeof gcPrizeModeEnabled !== 'undefined' && gcPrizeModeEnabled;
 
-    const prizeImgHtml = (isPrizeModeOn && prizeImgUrl) ? `<div style="text-align:center;margin:4px 0"><img src="${prizeImgUrl}" alt="Приз" style="max-width:60px;max-height:40px;border-radius:6px;border:1px solid ${ac}33;object-fit:contain" onerror="this.style.display='none'"></div>` : '';
+    const prizeImgHtml = (isPrizeModeOn && prizeImgUrl) ? `<div style="text-align:center;margin:4px 0"><img src="${prizeImgUrl}" alt="РџСЂРёР·" style="max-width:60px;max-height:40px;border-radius:6px;border:1px solid ${ac}33;object-fit:contain" onerror="this.style.display='none'"></div>` : '';
 
 
 
@@ -4504,9 +4504,9 @@ function gcUpdatePreview() {
 
     const previewInfoLine = isPrizeModeOn && prizeDesc 
 
-        ? ` 3 ·  ${prizeDesc.substring(0, 20)}`
+        ? ` 3 В·  ${prizeDesc.substring(0, 20)}`
 
-        : ` 3 ·  ${rewardVal}`;
+        : ` 3 В·  ${rewardVal}`;
 
 
 
@@ -4538,7 +4538,7 @@ function gcUpdatePreview() {
 
                 ${live}
 
-                <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${tc};margin-bottom:4px">${condIcons} Челлендж</div>
+                <div style="font-family:'Russo One',sans-serif;font-size:.45rem;color:${tc};margin-bottom:4px">${condIcons} Р§РµР»Р»РµРЅРґР¶</div>
 
                 ${timerHtml}
 
@@ -4566,9 +4566,9 @@ function gcUpdatePreview() {
 
                 <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
 
-                    <div style="text-align:center">${timerHtml}<div style="font-size:.2rem;color:${ac};opacity:.5">ОСТАЛОСЬ</div></div>
+                    <div style="text-align:center">${timerHtml}<div style="font-size:.2rem;color:${ac};opacity:.5">РћРЎРўРђР›РћРЎР¬</div></div>
 
-                    <div style="flex:1"><div style="font-family:'Russo One',sans-serif;font-size:.4rem;color:${tc};margin-bottom:3px">${condIcons} Челлендж</div>${condBadgeHtml}${meHtml}</div>
+                    <div style="flex:1"><div style="font-family:'Russo One',sans-serif;font-size:.4rem;color:${tc};margin-bottom:3px">${condIcons} Р§РµР»Р»РµРЅРґР¶</div>${condBadgeHtml}${meHtml}</div>
 
                 </div>
 
@@ -4596,7 +4596,7 @@ function gcUpdatePreview() {
 
                 <div style="width:1px;height:14px;background:${ac};opacity:.15"></div>
 
-                <div style="font-family:'Russo One',sans-serif;font-size:.35rem;color:${tc}">${condIcons} Челлендж</div>
+                <div style="font-family:'Russo One',sans-serif;font-size:.35rem;color:${tc}">${condIcons} Р§РµР»Р»РµРЅРґР¶</div>
 
                 <div style="width:1px;height:14px;background:${ac};opacity:.15"></div>
 
@@ -4618,7 +4618,7 @@ function gcUpdatePreview() {
 
                 <div style="padding:6px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)">
 
-                    <div style="font-size:.3rem;color:${ac};letter-spacing:1px;opacity:.5">ЧЕЛЛЕНДЖ</div>
+                    <div style="font-size:.3rem;color:${ac};letter-spacing:1px;opacity:.5">Р§Р•Р›Р›Р•РќР”Р–</div>
 
                     ${timerHtml}
 
@@ -4626,7 +4626,7 @@ function gcUpdatePreview() {
 
                 </div>
 
-                <div style="padding:2px 4px;font-size:.2rem;opacity:.3;display:flex;border-bottom:1px solid rgba(255,255,255,.04)"><span style="width:14px">#</span><span style="flex:1">Игрок</span><span>${condLabel}</span></div>
+                <div style="padding:2px 4px;font-size:.2rem;opacity:.3;display:flex;border-bottom:1px solid rgba(255,255,255,.04)"><span style="width:14px">#</span><span style="flex:1">РРіСЂРѕРє</span><span>${condLabel}</span></div>
 
                 ${showTop ? `
 
@@ -4654,11 +4654,11 @@ function gcUpdatePreview() {
 
                     <div style="${baseStyle};flex:1;padding:6px;text-align:center;border-radius:5px">
 
-                        <div style="font-size:.2rem;color:${ac};letter-spacing:1px;opacity:.5"> ОСТАЛОСЬ</div>
+                        <div style="font-size:.2rem;color:${ac};letter-spacing:1px;opacity:.5"> РћРЎРўРђР›РћРЎР¬</div>
 
                         ${timerHtml}
 
-                        <div style="font-size:.25rem;color:${ac};margin-top:1px">${condIcons} Челлендж</div>
+                        <div style="font-size:.25rem;color:${ac};margin-top:1px">${condIcons} Р§РµР»Р»РµРЅРґР¶</div>
 
                     </div>
 
@@ -4776,7 +4776,7 @@ function gcCopyCustomWidgetLink() {
 
     navigator.clipboard.writeText(url).then(() => {
 
-        showToast(' Ссылка на виджет скопирована!');
+        showToast(' РЎСЃС‹Р»РєР° РЅР° РІРёРґР¶РµС‚ СЃРєРѕРїРёСЂРѕРІР°РЅР°!');
 
     }).catch(() => {
 
@@ -4792,7 +4792,7 @@ function gcCopyCustomWidgetLink() {
 
         document.body.removeChild(input);
 
-        showToast(' Ссылка на виджет скопирована!');
+        showToast(' РЎСЃС‹Р»РєР° РЅР° РІРёРґР¶РµС‚ СЃРєРѕРїРёСЂРѕРІР°РЅР°!');
 
     });
 
@@ -4800,7 +4800,7 @@ function gcCopyCustomWidgetLink() {
 
 // ============================================================
 
-// HISTORY: Загрузка завершенных челленджей
+// HISTORY: Р—Р°РіСЂСѓР·РєР° Р·Р°РІРµСЂС€РµРЅРЅС‹С… С‡РµР»Р»РµРЅРґР¶РµР№
 
 // ============================================================
 
@@ -4854,7 +4854,7 @@ async function gcLoadHistory() {
 
 
 
-                // Топ-3 участников
+                // РўРѕРї-3 СѓС‡Р°СЃС‚РЅРёРєРѕРІ
 
                 const top3html = (ch.leaderboard_top3 || []).map((p, i) => `
 
@@ -4870,7 +4870,7 @@ async function gcLoadHistory() {
 
 
 
-                // Личный результат
+                // Р›РёС‡РЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚
 
                 let myHtml = '';
 
@@ -4880,9 +4880,9 @@ async function gcLoadHistory() {
 
                     myHtml = `<div class="gc-hist-my-result">
 
-                        <span> Мой результат: ${pEmoji} место</span>
+                        <span> РњРѕР№ СЂРµР·СѓР»СЊС‚Р°С‚: ${pEmoji} РјРµСЃС‚Рѕ</span>
 
-                        <span>${(ch.my_result.value||0).toLocaleString('ru')} · ${ch.my_result.battles} боёв</span>
+                        <span>${(ch.my_result.value||0).toLocaleString('ru')} В· ${ch.my_result.battles} Р±РѕС‘РІ</span>
 
                     </div>`;
 
@@ -4908,11 +4908,11 @@ async function gcLoadHistory() {
 
                         <div class="gc-hist-footer">
 
-                            <span> ${ch.participants_count} участников</span>
+                            <span> ${ch.participants_count} СѓС‡Р°СЃС‚РЅРёРєРѕРІ</span>
 
-                            <span> Приз: ${ch.reward_coins}</span>
+                            <span> РџСЂРёР·: ${ch.reward_coins}</span>
 
-                            <span style="color:#C8AA6E;font-weight:600">Подробнее </span>
+                            <span style="color:#C8AA6E;font-weight:600">РџРѕРґСЂРѕР±РЅРµРµ </span>
 
                         </div>
 
@@ -4950,7 +4950,7 @@ async function gcShowHistoryChallenge(id) {
 
         if (data.challenge) {
 
-            // Устанавливаем как текущий, чтобы "Подробно" работало для исторических боёв
+            // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РєР°Рє С‚РµРєСѓС‰РёР№, С‡С‚РѕР±С‹ "РџРѕРґСЂРѕР±РЅРѕ" СЂР°Р±РѕС‚Р°Р»Рѕ РґР»СЏ РёСЃС‚РѕСЂРёС‡РµСЃРєРёС… Р±РѕС‘РІ
 
             gcCurrentChallenge = data.challenge;
 
@@ -4960,13 +4960,13 @@ async function gcShowHistoryChallenge(id) {
 
         } else {
 
-            showToast(' Данные этого челленджа недоступны');
+            showToast(' Р”Р°РЅРЅС‹Рµ СЌС‚РѕРіРѕ С‡РµР»Р»РµРЅРґР¶Р° РЅРµРґРѕСЃС‚СѓРїРЅС‹');
 
         }
 
     } catch(e) {
 
-        showToast(' Ошибка загрузки деталей');
+        showToast(' РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РґРµС‚Р°Р»РµР№');
 
     }
 
@@ -5004,11 +5004,11 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
     
 
-    title.textContent = `Результаты: ${nickname}`;
+    title.textContent = `Р РµР·СѓР»СЊС‚Р°С‚С‹: ${nickname}`;
 
-    summary.innerHTML = `<div class="gc-modal-stat__label">Загрузка информации...</div>`;
+    summary.innerHTML = `<div class="gc-modal-stat__label">Р—Р°РіСЂСѓР·РєР° РёРЅС„РѕСЂРјР°С†РёРё...</div>`;
 
-    body.innerHTML = `<div style="text-align:center;padding:40px;color:#5A6577"> Загрузка боёв...</div>`;
+    body.innerHTML = `<div style="text-align:center;padding:40px;color:#5A6577"> Р—Р°РіСЂСѓР·РєР° Р±РѕС‘РІ...</div>`;
 
     modal.style.display = 'flex';
 
@@ -5018,7 +5018,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
     if (!chId) {
 
-        body.innerHTML = 'Ошибка: ID челленджа не найден';
+        body.innerHTML = 'РћС€РёР±РєР°: ID С‡РµР»Р»РµРЅРґР¶Р° РЅРµ РЅР°Р№РґРµРЅ';
 
         return;
 
@@ -5036,7 +5036,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
         if (!data.battles || data.battles.length === 0) {
 
-            body.innerHTML = `<div style="text-align:center;padding:40px;color:#5A6577">Данных по боям пока нет.<br><span style="font-size:0.7rem">Убедитесь, что игрок сыграл хотя бы один бой после вступления.</span></div>`;
+            body.innerHTML = `<div style="text-align:center;padding:40px;color:#5A6577">Р”Р°РЅРЅС‹С… РїРѕ Р±РѕСЏРј РїРѕРєР° РЅРµС‚.<br><span style="font-size:0.7rem">РЈР±РµРґРёС‚РµСЃСЊ, С‡С‚Рѕ РёРіСЂРѕРє СЃС‹РіСЂР°Р» С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ Р±РѕР№ РїРѕСЃР»Рµ РІСЃС‚СѓРїР»РµРЅРёСЏ.</span></div>`;
 
             summary.innerHTML = '';
 
@@ -5052,7 +5052,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
         
 
-        // Рендерим бои
+        // Р РµРЅРґРµСЂРёРј Р±РѕРё
 
         let html = '<div class="gc-battles-list">';
 
@@ -5062,7 +5062,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
             const winCls = b.wins ? 'gc-battle-stat--win' : 'gc-battle-stat--loss';
 
-            const winText = b.wins ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ';
+            const winText = b.wins ? 'РџРћР‘Р•Р”Рђ' : 'РџРћР РђР–Р•РќРР•';
 
             
 
@@ -5136,7 +5136,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
                     <div class="gc-modal-stat__val">${data.battles.length}</div>
 
-                    <div class="gc-modal-stat__label">Боёв</div>
+                    <div class="gc-modal-stat__label">Р‘РѕС‘РІ</div>
 
                 </div>
 
@@ -5144,7 +5144,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
                     <div class="gc-modal-stat__val">${wr}%</div>
 
-                    <div class="gc-modal-stat__label">Побед</div>
+                    <div class="gc-modal-stat__label">РџРѕР±РµРґ</div>
 
                 </div>
 
@@ -5152,7 +5152,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
                     <div class="gc-modal-stat__val"> ${totalDmg.toLocaleString('ru')}</div>
 
-                    <div class="gc-modal-stat__label">Всего урона</div>
+                    <div class="gc-modal-stat__label">Р’СЃРµРіРѕ СѓСЂРѕРЅР°</div>
 
                 </div>
 
@@ -5160,7 +5160,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
                     <div class="gc-modal-stat__val"> ${data.battles.reduce((a,b)=>a+(b.frags||0),0)}</div>
 
-                    <div class="gc-modal-stat__label">Фрагов</div>
+                    <div class="gc-modal-stat__label">Р¤СЂР°РіРѕРІ</div>
 
                 </div>
 
@@ -5172,7 +5172,7 @@ async function gcShowPlayerDetail(tgId, nickname, isFinished = false, challengeI
 
     } catch(e) {
 
-        body.innerHTML = `<div style="color:#ef4444;text-align:center;padding:20px">Ошибка загрузки данных</div>`;
+        body.innerHTML = `<div style="color:#ef4444;text-align:center;padding:20px">РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С…</div>`;
 
     }
 
