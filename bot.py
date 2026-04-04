@@ -4997,22 +4997,28 @@ async def gc_fetch_batch_stats(account_ids, conditions_str, tank_class=None, tan
             return None
     
     import asyncio
-    CONCURRENT = 10
+    # Масштабируем параллелизм по количеству API ключей (10 req/sec на ключ)
+    CONCURRENT = max(10, len(LESTA_APP_IDS) * 10)  # 4 ключа = 40 параллельных
+    semaphore = asyncio.Semaphore(CONCURRENT)
     timeout = aiohttp.ClientTimeout(total=20)
     
-    for i in range(0, len(account_ids), CONCURRENT):
-        batch = account_ids[i:i + CONCURRENT]
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            tasks = [fetch_one(session, aid) for aid in batch]
-            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            for res in batch_results:
-                if isinstance(res, Exception):
-                    logger.warning(f"GC batch task exception: {res}")
-                    continue
-                if res is not None:
-                    aid, data = res
-                    results[aid] = data
+    async def fetch_one_limited(session, aid):
+        async with semaphore:
+            return await fetch_one(session, aid)
+    
+    # Одна сессия для всех запросов (экономим TLS handshake)
+    connector = aiohttp.TCPConnector(limit=CONCURRENT, limit_per_host=CONCURRENT)
+    async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
+        tasks = [fetch_one_limited(session, aid) for aid in account_ids]
+        all_results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for res in all_results:
+            if isinstance(res, Exception):
+                logger.warning(f"GC batch task exception: {res}")
+                continue
+            if res is not None:
+                aid, data = res
+                results[aid] = data
     
     # 2) account/info — для spotting_damage и combined (батчем)
     if account_conditions:
@@ -5782,7 +5788,7 @@ async def api_global_challenge_join(request):
 _gc_refresh_lock = None  # Создадим лениво (asyncio.Lock нельзя создавать до event loop)
 _gc_last_refresh_time = 0
 _gc_last_refresh_data = None  # Кэшируем данные, не Response
-GC_REFRESH_COOLDOWN = 30  # секунд между обновлениями
+GC_REFRESH_COOLDOWN = 45  # секунд между обновлениями (для 3000+ участников)
 
 async def api_global_challenge_refresh_stats(request):
     """POST /api/global-challenge/refresh-stats — обновить стату всех участников через Lesta API"""
@@ -5804,7 +5810,7 @@ async def api_global_challenge_refresh_stats(request):
     
     async with _gc_refresh_lock:
         try:
-            result = await asyncio.wait_for(_do_refresh_stats(), timeout=55)
+            result = await asyncio.wait_for(_do_refresh_stats(), timeout=180)  # 3 мин для 3000+ игроков
             _gc_last_refresh_time = time.time()
             # Сохраняем данные ответа, а не сам Response (его нельзя переиспользовать)
             try:
@@ -5813,7 +5819,7 @@ async def api_global_challenge_refresh_stats(request):
                 _gc_last_refresh_data = {"success": True}
             return result
         except asyncio.TimeoutError:
-            logger.error("GC refresh-stats: TIMEOUT (55s)")
+            logger.error("GC refresh-stats: TIMEOUT (180s)")
             return cors_response({"error": "Timeout", "updated": 0})
         except Exception as e:
             logger.error(f"API global_challenge_refresh error: {e}")
@@ -5870,6 +5876,10 @@ async def _do_refresh_stats():
 
         # === STEP 3: Обновляем каждого участника из кэша ===
         updated = 0
+        update_batch = []  # Собираем все обновления для batch-записи
+        # Пропускаем тяжёлую по-танковую детекцию при >100 участниках (экономим API запросы)
+        skip_battle_detection = len(participant_data) > 100
+        
         for p, account_id in participant_data:
             multi_stat = batch_stats.get(account_id)
             if not multi_stat:
@@ -5907,10 +5917,11 @@ async def _do_refresh_stats():
                 new_battles = max_battles
 
             # --- Фоновое обнаружение боёв для детализации (не влияет на очки) ---
-            try:
-                await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles, max_battles)
-            except Exception as e:
-                logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
+            if not skip_battle_detection:
+                try:
+                    await _detect_new_battles(ch["id"], p["telegram_id"], account_id, stat_field, new_battles, max_battles)
+                except Exception as e:
+                    logger.warning(f"GC battle detection error for {p['nickname']}: {e}")
 
             # --- Если есть лимит боёв И есть записи в battle_log — пересчитываем из лога ---
             if max_battles > 0:
@@ -5948,14 +5959,18 @@ async def _do_refresh_stats():
                 except Exception as e:
                     logger.warning(f"GC battle-log recalc error for {p['nickname']}: {e}")
 
-            # Update participant record
+            # Собираем в batch
+            update_batch.append((new_value, new_battles, datetime.now(), condition_values_json, ch["id"], p["telegram_id"]))
+            updated += 1
+
+        # Batch-запись всех обновлений в одной транзакции
+        if update_batch:
             with get_db() as conn_up:
-                conn_up.execute("""
+                conn_up.executemany("""
                     UPDATE global_challenge_participants 
                     SET current_value = ?, battles_played = ?, last_updated = ?, condition_values = ?
                     WHERE challenge_id = ? AND telegram_id = ?
-                """, (new_value, new_battles, datetime.now(), condition_values_json, ch["id"], p["telegram_id"]))
-                updated += 1
+                """, update_batch)
 
         # === STEP 4: Проверка завершения челленджа (по времени или по боям) ===
         try:
