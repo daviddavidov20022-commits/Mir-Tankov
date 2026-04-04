@@ -9342,9 +9342,10 @@ async def _tb_start_battle(battle_id):
 
 
 async def _tb_refresh_battle_stats(battle_id, condition, battles_count):
-    """Обновить статистику: per-tank tracking + антиЧит (only battles after start)"""
+    """Обновить статистику: per-tank tracking + антиЧит (only battles after start)
+    Оптимизировано для 50v50: параллельные API запросы + batch DB writes."""
     from database import get_db
-    import json
+    import json, asyncio, aiohttp
 
     STAT_FIELD_MAP = {
         'damage': 'damage_dealt', 'frags': 'frags', 'xp': 'xp',
@@ -9367,95 +9368,141 @@ async def _tb_refresh_battle_stats(battle_id, condition, battles_count):
         except (ValueError, TypeError):
             started_ts = 0
 
-    # Get tank names for display
-    all_tank_ids = set()
-
+    # === STEP 1: Параллельная загрузка стат всех игроков ===
+    participant_list = []
     for p in participants:
         p_dict = dict(p)
         aid = p_dict.get("wot_account_id")
-        if not aid:
+        if aid:
+            participant_list.append((p_dict, aid))
+
+    if not participant_list:
+        return
+
+    # Параллельный запрос tanks/stats для всех участников
+    CONCURRENT = max(10, len(LESTA_APP_IDS) * 10)
+    semaphore = asyncio.Semaphore(CONCURRENT)
+    
+    async def fetch_tank_stats(session, aid):
+        async with semaphore:
+            try:
+                url = (f"https://api.tanki.su/wot/tanks/stats/"
+                       f"?application_id={get_lesta_app_id()}&account_id={aid}"
+                       f"&fields=tank_id,all.battles,all.damage_dealt,all.frags,all.spotted,"
+                       f"all.damage_received,all.xp,all.wins,all.avg_damage_blocked,updated_at")
+                async with session.get(url) as resp:
+                    data = await resp.json()
+                if data.get("status") != "ok":
+                    return (aid, None)
+                return (aid, data["data"].get(str(aid)) or [])
+            except Exception as e:
+                logger.warning(f"TB fetch tank stats error for {aid}: {e}")
+                return (aid, None)
+
+    timeout = aiohttp.ClientTimeout(total=20)
+    connector = aiohttp.TCPConnector(limit=CONCURRENT, limit_per_host=CONCURRENT)
+    
+    tanks_by_aid = {}
+    async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
+        tasks = [fetch_tank_stats(session, aid) for _, aid in participant_list]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for res in results:
+            if isinstance(res, Exception):
+                logger.warning(f"TB batch fetch exception: {res}")
+                continue
+            aid, tanks = res
+            if tanks is not None:
+                tanks_by_aid[aid] = tanks
+
+    # === STEP 2: Вычисляем прогресс каждого игрока ===
+    all_tank_ids = set()
+    update_batch = []  # (current_value, battles_played, battle_id, telegram_id)
+    tank_log_batch = []  # Все записи для tank_logs
+
+    for p_dict, aid in participant_list:
+        tanks = tanks_by_aid.get(aid)
+        if not tanks:
             continue
 
+        # Load baseline
+        baseline = {}
+        if p_dict.get("baseline_tank_json"):
+            try:
+                baseline = json.loads(p_dict["baseline_tank_json"])
+            except Exception:
+                pass
+
+        total_progress = 0
+        total_new_battles = 0
+        tank_deltas = {}
+
+        for t in tanks:
+            tid = t["tank_id"]
+            all_stats = t.get("all", {})
+            cur_val = all_stats.get(stat_field, 0)
+            cur_bat = all_stats.get("battles", 0)
+
+            bl = baseline.get(str(tid), {"v": 0, "b": 0})
+            val_diff = cur_val - bl["v"]
+            bat_diff = cur_bat - bl["b"]
+
+            if bat_diff > 0 and val_diff > 0:
+                updated_at = t.get("updated_at", 0)
+                if started_ts > 0 and updated_at > 0 and updated_at < started_ts:
+                    continue
+
+                total_progress += val_diff
+                total_new_battles += bat_diff
+                tank_deltas[tid] = {"value": val_diff, "battles": bat_diff}
+                all_tank_ids.add(tid)
+
+        if battles_count > 0 and total_new_battles > battles_count:
+            total_new_battles = battles_count
+
+        update_batch.append((max(0, total_progress), total_new_battles, battle_id, p_dict["telegram_id"]))
+        
+        for tid, delta in tank_deltas.items():
+            tank_log_batch.append((battle_id, p_dict["telegram_id"], tid, delta["value"], delta["battles"]))
+
+    # === STEP 3: Batch-запись обновлений ===
+    if update_batch:
+        with get_db() as conn:
+            conn.executemany("""
+                UPDATE team_battle_participants
+                SET current_value = ?, battles_played = ?
+                WHERE battle_id = ? AND telegram_id = ?
+            """, update_batch)
+
+    # === STEP 4: Batch-запись tank logs ===
+    if tank_log_batch:
+        # Получить имена танков один раз для всех
         try:
-            tanks = await gc_fetch_tank_stats(aid)
-            if not tanks:
-                continue
+            tank_info = await gc_get_tank_names(list(all_tank_ids))
+        except Exception:
+            tank_info = {}
 
-            # Load baseline
-            baseline = {}
-            if p_dict.get("baseline_tank_json"):
-                try:
-                    baseline = json.loads(p_dict["baseline_tank_json"])
-                except Exception:
-                    pass
+        log_rows = []
+        for battle_id_val, tg_id, tid, stat_val, bat_count in tank_log_batch:
+            info = tank_info.get(tid, {})
+            log_rows.append((
+                battle_id_val, tg_id, tid,
+                info.get("name", f"Tank #{tid}"),
+                info.get("tier", 0),
+                info.get("type", ""),
+                stat_val, bat_count
+            ))
 
-            total_progress = 0
-            total_new_battles = 0
-            tank_deltas = {}  # {tank_id: {value, battles, name?, tier?, type?}}
+        with get_db() as conn:
+            conn.executemany("""
+                INSERT INTO team_battle_tank_logs
+                (battle_id, telegram_id, tank_id, tank_name, tank_tier, tank_type, stat_value, battles_count)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(battle_id, telegram_id, tank_id) DO UPDATE SET
+                stat_value = excluded.stat_value,
+                battles_count = excluded.battles_count
+            """, log_rows)
 
-            for t in tanks:
-                tid = t["tank_id"]
-                all_stats = t.get("all", {})
-                cur_val = all_stats.get(stat_field, 0)
-                cur_bat = all_stats.get("battles", 0)
-
-                # Get baseline for this tank
-                bl = baseline.get(str(tid), {"v": 0, "b": 0})
-                val_diff = cur_val - bl["v"]
-                bat_diff = cur_bat - bl["b"]
-
-                # Only count tanks where new battles happened
-                if bat_diff > 0 and val_diff > 0:
-                    # Anti-cheat: check updated_at > started_at
-                    updated_at = t.get("updated_at", 0)
-                    if started_ts > 0 and updated_at > 0 and updated_at < started_ts:
-                        # This tank was last played BEFORE challenge start — skip
-                        continue
-
-                    total_progress += val_diff
-                    total_new_battles += bat_diff
-                    tank_deltas[tid] = {"value": val_diff, "battles": bat_diff}
-                    all_tank_ids.add(tid)
-
-            # Cap battles
-            if battles_count > 0 and total_new_battles > battles_count:
-                total_new_battles = battles_count
-
-            # Update participant totals
-            with get_db() as conn:
-                conn.execute("""
-                    UPDATE team_battle_participants
-                    SET current_value = ?, battles_played = ?
-                    WHERE battle_id = ? AND telegram_id = ?
-                """, (max(0, total_progress), total_new_battles,
-                      battle_id, p_dict["telegram_id"]))
-
-            # Update per-tank logs
-            if tank_deltas:
-                # Fetch tank names
-                try:
-                    tank_info = await gc_get_tank_names(list(tank_deltas.keys()))
-                except Exception:
-                    tank_info = {}
-
-                with get_db() as conn:
-                    for tid, delta in tank_deltas.items():
-                        info = tank_info.get(tid, {})
-                        conn.execute("""
-                            INSERT INTO team_battle_tank_logs
-                            (battle_id, telegram_id, tank_id, tank_name, tank_tier, tank_type, stat_value, battles_count)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                            ON CONFLICT(battle_id, telegram_id, tank_id) DO UPDATE SET
-                            stat_value = excluded.stat_value,
-                            battles_count = excluded.battles_count
-                        """, (battle_id, p_dict["telegram_id"], tid,
-                              info.get("name", f"Tank #{tid}"),
-                              info.get("tier", 0),
-                              info.get("type", ""),
-                              delta["value"], delta["battles"]))
-
-        except Exception as e:
-            logger.warning(f"TB stat refresh failed for {p_dict['telegram_id']}: {e}")
+    logger.info(f"TB refresh battle {battle_id}: updated {len(update_batch)} participants, {len(tank_log_batch)} tank logs")
 
 
 def _tb_finish_battle(conn, battle_id):
