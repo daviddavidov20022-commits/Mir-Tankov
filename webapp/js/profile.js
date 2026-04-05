@@ -770,10 +770,10 @@ async function loadProgress() {
         }
 
         // Победы / Поражения
-        setText('progWinLoss', `${b.wins || 0}W / ${b.losses || 0}L`);
-        setText('pvpWinLoss', `${b.pvp?.wins || 0}W / ${b.pvp?.losses || 0}L`);
-        setText('gcWinLoss', `${b.global?.wins || 0}W / ${b.global?.losses || 0}L`);
-        setText('teamWinLoss', `${b.team?.wins || 0}W / ${b.team?.losses || 0}L`);
+        setText('progWinLoss', `${b.wins || 0} побед / ${b.losses || 0} пор.`);
+        setText('pvpWinLoss', `${b.pvp?.wins || 0} / ${b.pvp?.losses || 0}`);
+        setText('gcWinLoss', `${b.global?.wins || 0} / ${b.global?.losses || 0}`);
+        setText('teamWinLoss', `${b.team?.wins || 0} / ${b.team?.losses || 0}`);
 
         // Winrate bar
         if (b.total > 0) {

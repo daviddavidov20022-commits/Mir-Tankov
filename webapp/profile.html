@@ -372,7 +372,10 @@
                         setEl('pvpCount', (b.pvp && b.pvp.total) || 0);
                         setEl('gcCount', (b.global && b.global.total) || 0);
                         setEl('teamCount', (b.team && b.team.total) || 0);
-                        setEl('progWinLoss', (b.wins || 0) + 'W / ' + (b.losses || 0) + 'L');
+                        setEl('progWinLoss', (b.wins || 0) + ' побед / ' + (b.losses || 0) + ' пор.');
+                        setEl('pvpWinLoss', ((b.pvp && b.pvp.wins) || 0) + ' / ' + ((b.pvp && b.pvp.losses) || 0));
+                        setEl('gcWinLoss', ((b.global && b.global.wins) || 0) + ' / ' + ((b.global && b.global.losses) || 0));
+                        setEl('teamWinLoss', ((b.team && b.team.wins) || 0) + ' / ' + ((b.team && b.team.losses) || 0));
                     }
                 }
             } catch(e2) {
