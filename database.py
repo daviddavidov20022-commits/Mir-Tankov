@@ -444,6 +444,7 @@ def init_db():
             ("baseline_battles", "INTEGER DEFAULT 0"),
             ("baseline_values", "TEXT"),  # JSON: per-condition baselines
             ("condition_values", "TEXT"),  # JSON: per-condition current values
+            ("baseline_locked", "INTEGER DEFAULT 1"),  # 0 = ждём первый бой для античита, 1 = baseline подтверждён
         ]:
             try:
                 conn.execute(f"ALTER TABLE global_challenge_participants ADD COLUMN {col} {default}")
@@ -643,6 +644,63 @@ def get_total_users() -> int:
     with get_db() as conn:
         result = conn.execute("SELECT COUNT(*) FROM users").fetchone()
         return result[0]
+
+# ============================================================
+# ПРОВЕРКА АКТИВНОГО ЧЕЛЛЕНДЖА (АНТИЧИТ)
+# ============================================================
+
+def has_active_challenge(telegram_id: int) -> dict | None:
+    """Проверить, участвует ли игрок в каком-либо активном челлендже.
+    Возвращает dict с инфой или None если свободен."""
+    with get_db_read() as conn:
+        # 1. PvP 1v1 арена
+        pvp = conn.execute("""
+            SELECT id, tank_name, condition FROM arena_challenges
+            WHERE (from_telegram_id = ? OR to_telegram_id = ?)
+              AND status = 'active'
+            LIMIT 1
+        """, (telegram_id, telegram_id)).fetchone()
+        if pvp:
+            return {
+                "type": "pvp",
+                "id": pvp["id"],
+                "name": f"1v1: {pvp['tank_name'] or 'PvP Дуэль'}",
+            }
+
+        # 2. Общий челлендж (Global Challenge)
+        gc = conn.execute("""
+            SELECT gcp.challenge_id, gc.title 
+            FROM global_challenge_participants gcp
+            JOIN global_challenges gc ON gc.id = gcp.challenge_id
+            WHERE gcp.telegram_id = ? AND gc.status = 'active'
+            LIMIT 1
+        """, (telegram_id,)).fetchone()
+        if gc:
+            return {
+                "type": "global",
+                "id": gc["challenge_id"],
+                "name": gc["title"] or "Общий челлендж",
+            }
+
+        # 3. Командный бой (Team Battle)
+        try:
+            tb = conn.execute("""
+                SELECT tbp.battle_id, tb.condition 
+                FROM team_battle_participants tbp
+                JOIN team_battles tb ON tb.id = tbp.battle_id
+                WHERE tbp.telegram_id = ? AND tb.status IN ('waiting', 'active')
+                LIMIT 1
+            """, (telegram_id,)).fetchone()
+            if tb:
+                return {
+                    "type": "team",
+                    "id": tb["battle_id"],
+                    "name": f"Командный бой #{tb['battle_id']}",
+                }
+        except Exception:
+            pass  # Таблица может не существовать
+
+    return None
 
 
 # ============================================================

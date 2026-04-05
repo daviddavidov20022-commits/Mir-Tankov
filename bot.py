@@ -4568,6 +4568,16 @@ async def api_create_challenge(request):
         if balance < wager:
             return cors_response({"error": f"Недостаточно сыра! Баланс: {balance} 🧀. Пополните через профиль."}, 400)
 
+        # Проверяем: нет ли активного челленджа у создателя
+        from database import has_active_challenge
+        active = has_active_challenge(from_tg_id)
+        if active:
+            return cors_response({"error": f"Вы уже участвуете в челлендже: {active['name']}. Завершите его прежде чем создавать новый!", "active_challenge": active}, 400)
+        # Проверяем: нет ли активного челленджа у соперника
+        opp_active = has_active_challenge(to_tg_id)
+        if opp_active:
+            return cors_response({"error": f"Соперник уже участвует в челлендже: {opp_active['name']}. Дождитесь завершения!", "active_challenge": opp_active}, 400)
+
         # Списываем ставку у создателя
         spend_cheese(from_tg_id, wager, f"🎯 Ставка на челлендж: {tank_name}")
 
@@ -4662,6 +4672,12 @@ async def api_accept_challenge(request):
                 return cors_response({"error": "Челлендж уже обработан"}, 400)
             if ch["to_telegram_id"] != tg_id:
                 return cors_response({"error": "Это не ваш вызов"}, 403)
+
+            # Проверяем: нет ли уже активного челленджа
+            from database import has_active_challenge
+            active = has_active_challenge(tg_id)
+            if active:
+                return cors_response({"error": f"Вы уже участвуете в челлендже: {active['name']}. Завершите его прежде чем принять новый!", "active_challenge": active}, 400)
 
             # Deduct wager from acceptor
             wager = ch["wager"]
@@ -5769,6 +5785,12 @@ async def api_global_challenge_join(request):
         if not tg_id or not challenge_id:
             return cors_response({"error": "Не указаны параметры"}, 400)
 
+        # Проверяем: нет ли уже активного челленджа в другой категории
+        from database import has_active_challenge
+        active = has_active_challenge(tg_id)
+        if active:
+            return cors_response({"error": f"Вы уже участвуете в челлендже: {active['name']}. Завершите его прежде чем вступить в новый!", "active_challenge": active}, 400)
+
         user = get_user_by_telegram_id(tg_id)
         if not user:
             # Автоматически создаём пользователя с данными от клиента
@@ -5896,8 +5918,8 @@ async def api_global_challenge_join(request):
             try:
                 conn.execute("""
                     INSERT INTO global_challenge_participants 
-                    (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, baseline_values, current_value, battles_played)
-                    VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+                    (challenge_id, telegram_id, nickname, baseline_value, baseline_battles, baseline_values, current_value, battles_played, baseline_locked)
+                    VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0)
                 """, (challenge_id, tg_id, nickname, baseline_value, baseline_battles, baseline_values_json))
             except sqlite3.IntegrityError:
                 return cors_response({"error": "Вы уже участвуете!"}, 400)
@@ -6023,6 +6045,57 @@ async def _do_refresh_stats():
 
             # --- Расчёт очков из batch_stats (дельта от baseline) ---
             new_battles = max(0, multi_stat["battles"] - p["baseline_battles"])
+
+            # === АНТИЧИТ: Grace Period для новых участников ===
+            if not p.get("baseline_locked", 1) and new_battles >= 1:
+                # Первый бой завершён — проверяем, не был ли он начат ДО вступления
+                from datetime import datetime, timedelta
+                join_time_str = p.get("joined_at")
+                grace_seconds = 180  # 3 минуты — минимальное время для нового боя
+                reset_baseline = False
+
+                if join_time_str:
+                    try:
+                        join_time = datetime.fromisoformat(str(join_time_str).replace("Z", "+00:00").replace("+00:00", ""))
+                    except Exception:
+                        try:
+                            join_time = datetime.strptime(str(join_time_str), "%Y-%m-%d %H:%M:%S")
+                        except Exception:
+                            join_time = None
+
+                    if join_time:
+                        elapsed = (datetime.now() - join_time).total_seconds()
+                        if elapsed < grace_seconds:
+                            reset_baseline = True
+                            logger.warning(f"🛡 ANTICHEAT: {p['nickname']} — бой завершён через {elapsed:.0f}с после вступления (< {grace_seconds}с). Сбрасываем baseline!")
+
+                if reset_baseline:
+                    # Сбрасываем baseline на текущие значения — бой не засчитывается
+                    new_baseline_values = json.dumps(multi_stat.get("per_condition", {}))
+                    with get_db() as conn_ac:
+                        conn_ac.execute("""
+                            UPDATE global_challenge_participants 
+                            SET baseline_value = ?, baseline_battles = ?, baseline_values = ?,
+                                current_value = 0, battles_played = 0, baseline_locked = 1
+                            WHERE challenge_id = ? AND telegram_id = ?
+                        """, (multi_stat["value"], multi_stat["battles"], new_baseline_values,
+                              ch["id"], p["telegram_id"]))
+                    # Обновляем tank baselines тоже
+                    try:
+                        await gc_save_tank_baselines(ch["id"], p["telegram_id"], account_id)
+                    except Exception:
+                        pass
+                    logger.info(f"🛡 ANTICHEAT: {p['nickname']} — baseline обновлён, бой пропущен")
+                    updated += 1
+                    continue  # Пропускаем остальной расчёт
+                else:
+                    # Бой легитимный — блокируем baseline
+                    with get_db() as conn_lock:
+                        conn_lock.execute(
+                            "UPDATE global_challenge_participants SET baseline_locked = 1 WHERE challenge_id = ? AND telegram_id = ?",
+                            (ch["id"], p["telegram_id"])
+                        )
+                    logger.info(f"✅ ANTICHEAT: {p['nickname']} — первый бой легитимный, baseline заблокирован")
 
             # Compute per-condition deltas
             baseline_vals = {}
@@ -9256,6 +9329,12 @@ async def api_team_battle_join(request):
             return cors_response({"error": "battle_id и telegram_id обязательны"}, 400)
         if team not in ("alpha", "bravo"):
             return cors_response({"error": "Команда: alpha или bravo"}, 400)
+
+        # Проверяем: нет ли уже активного челленджа
+        from database import has_active_challenge
+        active = has_active_challenge(telegram_id)
+        if active:
+            return cors_response({"error": f"Вы уже участвуете в челлендже: {active['name']}. Завершите его прежде чем вступить в новый!", "active_challenge": active}, 400)
 
         # Get nickname
         user = get_user_by_telegram_id(telegram_id)
