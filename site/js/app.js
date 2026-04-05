@@ -611,3 +611,35 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(checkAllStreams, 1500);
     setInterval(checkAllStreams, STREAM_CONFIG.REFRESH_INTERVAL);
 });
+
+// ==========================================
+// НАВИГАЦИЯ С ПЕРЕДАЧЕЙ telegram_id
+// ==========================================
+function _getMyTelegramId() {
+    // 1. Telegram SDK
+    const tg = window.Telegram?.WebApp;
+    if (tg?.initDataUnsafe?.user?.id) {
+        const id = String(tg.initDataUnsafe.user.id);
+        localStorage.setItem('my_telegram_id', id);
+        return id;
+    }
+    // 2. URL параметры
+    const urlId = new URLSearchParams(window.location.search).get('telegram_id');
+    if (urlId) {
+        localStorage.setItem('my_telegram_id', urlId);
+        return urlId;
+    }
+    // 3. localStorage (несколько ключей)
+    return localStorage.getItem('my_telegram_id') ||
+           localStorage.getItem('tg_user_id') ||
+           localStorage.getItem('site_telegram_id') ||
+           null;
+}
+
+function goToProfile() {
+    const tgId = _getMyTelegramId();
+    const url = tgId ? `profile.html?telegram_id=${tgId}&_t=${Date.now()}` : `profile.html?_t=${Date.now()}`;
+    window.location.href = url;
+}
+
+window.goToProfile = goToProfile;

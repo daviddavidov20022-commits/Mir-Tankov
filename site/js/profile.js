@@ -93,14 +93,30 @@ function saveToCloud(nickname, accountId) {
 // СОХРАНЕНИЕ НА СЕРВЕР (критично для Топ Игроков!)
 // ============================================================
 function getTelegramId() {
+    // 1. Telegram SDK (самый надёжный)
     const tg = window.Telegram?.WebApp;
-    if (tg?.initDataUnsafe?.user?.id) return tg.initDataUnsafe.user.id;
-    // Из URL
+    if (tg?.initDataUnsafe?.user?.id) {
+        const id = tg.initDataUnsafe.user.id;
+        // Сохраняем в localStorage при каждом вызове
+        localStorage.setItem('my_telegram_id', String(id));
+        localStorage.setItem('tg_user_id', String(id));
+        return id;
+    }
+    // 2. Из URL (?telegram_id=xxx)
     const params = new URLSearchParams(window.location.search);
     const urlId = params.get('telegram_id');
-    if (urlId) return parseInt(urlId);
-    // Из localStorage
-    return localStorage.getItem('my_telegram_id');
+    if (urlId) {
+        localStorage.setItem('my_telegram_id', urlId);
+        localStorage.setItem('tg_user_id', urlId);
+        return parseInt(urlId);
+    }
+    // 3. Из localStorage (когда перешли без URL параметров)
+    return (
+        localStorage.getItem('my_telegram_id') ||
+        localStorage.getItem('tg_user_id') ||
+        localStorage.getItem('site_telegram_id') ||
+        null
+    );
 }
 
 function getFirstName() {

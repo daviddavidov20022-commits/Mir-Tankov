@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Обменник СЫР — Мир Танков</title>
-    <meta name="description" content="Обменяй рубли на внутреннюю валюту СЫР 🧀">
+    <title>РћР±РјРµРЅРЅРёРє РЎР«Р  вЂ” РњРёСЂ РўР°РЅРєРѕРІ</title>
+    <meta name="description" content="РћР±РјРµРЅСЏР№ СЂСѓР±Р»Рё РЅР° РІРЅСѓС‚СЂРµРЅРЅСЋСЋ РІР°Р»СЋС‚Сѓ РЎР«Р  рџ§Ђ">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
@@ -292,7 +292,7 @@
         }
 
         .cheese-pkg--popular::after {
-            content: 'ТОП';
+            content: 'РўРћРџ';
             position: absolute;
             top: -8px;
             left: 50%;
@@ -537,115 +537,115 @@
                     <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
             </button>
-            <div class="cheese-header__title">🧀 Обменник</div>
+            <div class="cheese-header__title">рџ§Ђ РћР±РјРµРЅРЅРёРє</div>
             <div class="cheese-header__balance">
-                <span>🧀</span>
+                <span>рџ§Ђ</span>
                 <span id="balanceDisplay">0</span>
             </div>
         </div>
 
         <!-- Hero -->
         <div class="cheese-hero">
-            <div class="cheese-hero__icon">🧀</div>
-            <div class="cheese-hero__title">Купить СЫР</div>
-            <div class="cheese-hero__rate">1 ₽ = 1 🧀</div>
+            <div class="cheese-hero__icon">рџ§Ђ</div>
+            <div class="cheese-hero__title">РљСѓРїРёС‚СЊ РЎР«Р </div>
+            <div class="cheese-hero__rate">1 в‚Ѕ = 1 рџ§Ђ</div>
             <div class="cheese-hero__desc">
-                Внутренняя валюта для донатов, заказа музыки,
-                Колеса Фортуны и Арены PvP!
+                Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РІР°Р»СЋС‚Р° РґР»СЏ РґРѕРЅР°С‚РѕРІ, Р·Р°РєР°Р·Р° РјСѓР·С‹РєРё,
+                РљРѕР»РµСЃР° Р¤РѕСЂС‚СѓРЅС‹ Рё РђСЂРµРЅС‹ PvP!
             </div>
         </div>
 
         <!-- Balance -->
         <div class="cheese-balance">
             <div class="cheese-balance__info">
-                <div class="cheese-balance__label">Твой баланс</div>
+                <div class="cheese-balance__label">РўРІРѕР№ Р±Р°Р»Р°РЅСЃ</div>
                 <div class="cheese-balance__amount">
-                    <span>🧀</span>
+                    <span>рџ§Ђ</span>
                     <span id="balanceLarge">0</span>
                 </div>
-                <div class="cheese-balance__rub">≈ <span id="balanceRub">0</span> ₽</div>
+                <div class="cheese-balance__rub">в‰€ <span id="balanceRub">0</span> в‚Ѕ</div>
             </div>
         </div>
 
         <!-- Packages -->
-        <div class="section-label">Выбери пакет</div>
+        <div class="section-label">Р’С‹Р±РµСЂРё РїР°РєРµС‚</div>
         <div class="cheese-packages" id="cheesePackages">
             <div class="cheese-pkg" data-amount="50" onclick="selectPackage(this)">
-                <div class="cheese-pkg__emoji">🧀</div>
+                <div class="cheese-pkg__emoji">рџ§Ђ</div>
                 <div class="cheese-pkg__amount">50</div>
-                <div class="cheese-pkg__price">50 ₽</div>
+                <div class="cheese-pkg__price">50 в‚Ѕ</div>
             </div>
             <div class="cheese-pkg cheese-pkg--selected cheese-pkg--popular" data-amount="100"
                 onclick="selectPackage(this)">
-                <div class="cheese-pkg__emoji">🧀🧀</div>
+                <div class="cheese-pkg__emoji">рџ§Ђрџ§Ђ</div>
                 <div class="cheese-pkg__amount">100</div>
-                <div class="cheese-pkg__price">100 ₽</div>
+                <div class="cheese-pkg__price">100 в‚Ѕ</div>
             </div>
             <div class="cheese-pkg" data-amount="250" onclick="selectPackage(this)">
-                <div class="cheese-pkg__emoji">🧀🧀🧀</div>
+                <div class="cheese-pkg__emoji">рџ§Ђрџ§Ђрџ§Ђ</div>
                 <div class="cheese-pkg__amount">250</div>
-                <div class="cheese-pkg__price">250 ₽</div>
+                <div class="cheese-pkg__price">250 в‚Ѕ</div>
             </div>
             <div class="cheese-pkg" data-amount="500" onclick="selectPackage(this)">
-                <div class="cheese-pkg__bonus">🔥 Выгодно</div>
-                <div class="cheese-pkg__emoji">🏆</div>
+                <div class="cheese-pkg__bonus">рџ”Ґ Р’С‹РіРѕРґРЅРѕ</div>
+                <div class="cheese-pkg__emoji">рџЏ†</div>
                 <div class="cheese-pkg__amount">500</div>
-                <div class="cheese-pkg__price">500 ₽</div>
+                <div class="cheese-pkg__price">500 в‚Ѕ</div>
             </div>
             <div class="cheese-pkg" data-amount="1000" onclick="selectPackage(this)">
-                <div class="cheese-pkg__bonus">💎 Лучшее</div>
-                <div class="cheese-pkg__emoji">👑</div>
+                <div class="cheese-pkg__bonus">рџ’Ћ Р›СѓС‡С€РµРµ</div>
+                <div class="cheese-pkg__emoji">рџ‘‘</div>
                 <div class="cheese-pkg__amount">1 000</div>
-                <div class="cheese-pkg__price">1 000 ₽</div>
+                <div class="cheese-pkg__price">1 000 в‚Ѕ</div>
             </div>
             <div class="cheese-pkg" data-amount="2500" onclick="selectPackage(this)">
-                <div class="cheese-pkg__bonus">🚀 МАКС</div>
-                <div class="cheese-pkg__emoji">💰</div>
+                <div class="cheese-pkg__bonus">рџљЂ РњРђРљРЎ</div>
+                <div class="cheese-pkg__emoji">рџ’°</div>
                 <div class="cheese-pkg__amount">2 500</div>
-                <div class="cheese-pkg__price">2 500 ₽</div>
+                <div class="cheese-pkg__price">2 500 в‚Ѕ</div>
             </div>
         </div>
 
         <!-- Custom -->
         <div class="cheese-custom">
-            <input type="number" class="cheese-custom__input" id="customAmount" placeholder="Своя сумма (₽ = 🧀)"
+            <input type="number" class="cheese-custom__input" id="customAmount" placeholder="РЎРІРѕСЏ СЃСѓРјРјР° (в‚Ѕ = рџ§Ђ)"
                 min="10" max="50000" oninput="handleCustom(this)">
         </div>
 
         <!-- CTA -->
         <div class="cheese-cta">
             <button class="cheese-cta__btn" id="buyBtn" onclick="buyCheese()">
-                🧀 Купить 100 СЫР — 100 ₽
+                рџ§Ђ РљСѓРїРёС‚СЊ 100 РЎР«Р  вЂ” 100 в‚Ѕ
             </button>
-            <div class="cheese-cta__hint">Оплата через Telegram Stars ⭐ или через бот</div>
+            <div class="cheese-cta__hint">РћРїР»Р°С‚Р° С‡РµСЂРµР· Telegram Stars в­ђ РёР»Рё С‡РµСЂРµР· Р±РѕС‚</div>
         </div>
 
         <!-- How it works -->
         <div class="cheese-how">
-            <div class="cheese-how__title">📋 Как это работает?</div>
+            <div class="cheese-how__title">рџ“‹ РљР°Рє СЌС‚Рѕ СЂР°Р±РѕС‚Р°РµС‚?</div>
             <div class="cheese-how__steps">
                 <div class="cheese-step">
                     <div class="cheese-step__num">1</div>
                     <div class="cheese-step__text">
-                        Выбери <strong>сколько СЫР</strong> хочешь купить
+                        Р’С‹Р±РµСЂРё <strong>СЃРєРѕР»СЊРєРѕ РЎР«Р </strong> С…РѕС‡РµС€СЊ РєСѓРїРёС‚СЊ
                     </div>
                 </div>
                 <div class="cheese-step">
                     <div class="cheese-step__num">2</div>
                     <div class="cheese-step__text">
-                        <strong>Оплати</strong> через Telegram Stars или переведи на карту
+                        <strong>РћРїР»Р°С‚Рё</strong> С‡РµСЂРµР· Telegram Stars РёР»Рё РїРµСЂРµРІРµРґРё РЅР° РєР°СЂС‚Сѓ
                     </div>
                 </div>
                 <div class="cheese-step">
                     <div class="cheese-step__num">3</div>
                     <div class="cheese-step__text">
-                        <strong>СЫР зачислится</strong> мгновенно на твой баланс!
+                        <strong>РЎР«Р  Р·Р°С‡РёСЃР»РёС‚СЃСЏ</strong> РјРіРЅРѕРІРµРЅРЅРѕ РЅР° С‚РІРѕР№ Р±Р°Р»Р°РЅСЃ!
                     </div>
                 </div>
                 <div class="cheese-step">
                     <div class="cheese-step__num">4</div>
                     <div class="cheese-step__text">
-                        <strong>Трать</strong> на Колесо, Арену, подписки и любые фишки!
+                        <strong>РўСЂР°С‚СЊ</strong> РЅР° РљРѕР»РµСЃРѕ, РђСЂРµРЅСѓ, РїРѕРґРїРёСЃРєРё Рё Р»СЋР±С‹Рµ С„РёС€РєРё!
                     </div>
                 </div>
             </div>
@@ -653,34 +653,34 @@
 
         <!-- Where to spend -->
         <div class="cheese-spend">
-            <div class="section-label">На что потратить?</div>
+            <div class="section-label">РќР° С‡С‚Рѕ РїРѕС‚СЂР°С‚РёС‚СЊ?</div>
             <div class="spend-grid">
                 <div class="spend-item" onclick="location.href='wheel.html'">
-                    <div class="spend-item__icon">🎰</div>
+                    <div class="spend-item__icon">рџЋ°</div>
                     <div class="spend-item__info">
-                        <div class="spend-item__name">Колесо Фортуны</div>
-                        <div class="spend-item__cost">50 🧀 / вращение</div>
+                        <div class="spend-item__name">РљРѕР»РµСЃРѕ Р¤РѕСЂС‚СѓРЅС‹</div>
+                        <div class="spend-item__cost">50 рџ§Ђ / РІСЂР°С‰РµРЅРёРµ</div>
                     </div>
                 </div>
                 <div class="spend-item" onclick="location.href='challenges.html?v=50'">
-                    <div class="spend-item__icon">⚔️</div>
+                    <div class="spend-item__icon">вљ”пёЏ</div>
                     <div class="spend-item__info">
-                        <div class="spend-item__name">Арена PvP</div>
-                        <div class="spend-item__cost">от 10 🧀 ставка</div>
+                        <div class="spend-item__name">РђСЂРµРЅР° PvP</div>
+                        <div class="spend-item__cost">РѕС‚ 10 рџ§Ђ СЃС‚Р°РІРєР°</div>
                     </div>
                 </div>
                 <div class="spend-item" onclick="location.href='player.html'">
-                    <div class="spend-item__icon">🧀</div>
+                    <div class="spend-item__icon">рџ§Ђ</div>
                     <div class="spend-item__info">
-                        <div class="spend-item__name">Донат на стрим</div>
-                        <div class="spend-item__cost">от 200 🧀</div>
+                        <div class="spend-item__name">Р”РѕРЅР°С‚ РЅР° СЃС‚СЂРёРј</div>
+                        <div class="spend-item__cost">РѕС‚ 200 рџ§Ђ</div>
                     </div>
                 </div>
                 <div class="spend-item" onclick="location.href='player.html'">
-                    <div class="spend-item__icon">🎵</div>
+                    <div class="spend-item__icon">рџЋµ</div>
                     <div class="spend-item__info">
-                        <div class="spend-item__name">Заказ музыки</div>
-                        <div class="spend-item__cost">250 🧀</div>
+                        <div class="spend-item__name">Р—Р°РєР°Р· РјСѓР·С‹РєРё</div>
+                        <div class="spend-item__cost">250 рџ§Ђ</div>
                     </div>
                 </div>
             </div>
@@ -690,20 +690,20 @@
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
         <div class="nav-item" onclick="location.href='index.html'">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-label">Главная</span>
+            <span class="nav-icon">рџЏ </span>
+            <span class="nav-label">Р“Р»Р°РІРЅР°СЏ</span>
         </div>
         <div class="nav-item" onclick="location.href='challenges.html?v=50'">
-            <span class="nav-icon">⚔️</span>
-            <span class="nav-label">Арена</span>
+            <span class="nav-icon">вљ”пёЏ</span>
+            <span class="nav-label">РђСЂРµРЅР°</span>
         </div>
         <div class="nav-item nav-item--active">
-            <span class="nav-icon">🧀</span>
-            <span class="nav-label">Обменник</span>
+            <span class="nav-icon">рџ§Ђ</span>
+            <span class="nav-label">РћР±РјРµРЅРЅРёРє</span>
         </div>
-        <div class="nav-item" onclick="location.href='profile.html'">
-            <span class="nav-icon">👤</span>
-            <span class="nav-label">Профиль</span>
+        <div class="nav-item" onclick="goToProfile()">
+            <span class="nav-icon">рџ‘¤</span>
+            <span class="nav-label">РџСЂРѕС„РёР»СЊ</span>
         </div>
     </nav>
 
@@ -752,7 +752,7 @@
         // Update buy button
         function updateButton() {
             const btn = document.getElementById('buyBtn');
-            btn.textContent = `🧀 Купить ${selectedAmount.toLocaleString()} СЫР — ${selectedAmount.toLocaleString()} ₽`;
+            btn.textContent = `рџ§Ђ РљСѓРїРёС‚СЊ ${selectedAmount.toLocaleString()} РЎР«Р  вЂ” ${selectedAmount.toLocaleString()} в‚Ѕ`;
         }
 
         // Buy cheese
@@ -783,10 +783,10 @@
 
             // Fallback: show instructions
             alert(
-                `🧀 Покупка: ${amount.toLocaleString()} СЫР\n\n` +
-                `Отправьте команду в бот:\n` +
+                `рџ§Ђ РџРѕРєСѓРїРєР°: ${amount.toLocaleString()} РЎР«Р \n\n` +
+                `РћС‚РїСЂР°РІСЊС‚Рµ РєРѕРјР°РЅРґСѓ РІ Р±РѕС‚:\n` +
                 `/cheese ${amount}\n\n` +
-                `Курс: 1 ₽ = 1 🧀`
+                `РљСѓСЂСЃ: 1 в‚Ѕ = 1 рџ§Ђ`
             );
         }
 
@@ -803,20 +803,20 @@
                 <div style="background: linear-gradient(145deg, #1a2332, #161d28);
                     border: 1px solid rgba(255,193,7,0.3); border-radius: 24px;
                     padding: 32px; text-align: center; max-width: 320px; width: 100%;">
-                    <div style="font-size: 4rem; margin-bottom: 12px; animation: cheeseBounce 1s ease-in-out infinite;">🧀</div>
+                    <div style="font-size: 4rem; margin-bottom: 12px; animation: cheeseBounce 1s ease-in-out infinite;">рџ§Ђ</div>
                     <div style="font-family: 'Russo One', sans-serif; font-size: 1.3rem;
                         color: #FFC107; margin-bottom: 8px;">
-                        +${amount.toLocaleString()} СЫР
+                        +${amount.toLocaleString()} РЎР«Р 
                     </div>
                     <div style="font-size: 0.85rem; color: #9AA4B5; margin-bottom: 20px;">
-                        Успешно зачислено на ваш баланс!
+                        РЈСЃРїРµС€РЅРѕ Р·Р°С‡РёСЃР»РµРЅРѕ РЅР° РІР°С€ Р±Р°Р»Р°РЅСЃ!
                     </div>
                     <button onclick="this.closest('div[style]').parentElement.remove()"
                         style="width: 100%; padding: 14px; border: none; border-radius: 14px;
                         font-family: 'Russo One', sans-serif; font-size: 0.9rem;
                         background: linear-gradient(135deg, #FFC107, #FF9800);
                         color: #1a1a1a; cursor: pointer;">
-                        Отлично! 🎉
+                        РћС‚Р»РёС‡РЅРѕ! рџЋ‰
                     </button>
                 </div>
             `;
