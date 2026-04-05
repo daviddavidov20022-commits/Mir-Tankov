@@ -10531,9 +10531,17 @@ async def tma_auth_middleware(request: web.Request, handler):
                     
                     if claimed_id:
                         if verified_tg_id is None:
-                            return web.json_response({"error": "Требуется авторизация Telegram", "success": False}, status=401, headers={"Access-Control-Allow-Origin": "*"})
+                            # Fallback: accept X-Site-Telegram-Id from GitHub Pages site
+                            site_tg_id = request.headers.get("X-Site-Telegram-Id")
+                            local_dev_tg_id = request.headers.get("X-Local-Dev-Tg-Id")
+                            if site_tg_id and int(site_tg_id) == int(claimed_id):
+                                pass  # Site auth — IDs match, allow
+                            elif local_dev_tg_id and int(local_dev_tg_id) == int(claimed_id):
+                                pass  # Local dev — IDs match, allow
+                            else:
+                                return web.json_response({"error": "Требуется авторизация Telegram", "success": False}, status=401, headers={"Access-Control-Allow-Origin": "*"})
                         
-                        if int(claimed_id) != int(verified_tg_id):
+                        if verified_tg_id is not None and int(claimed_id) != int(verified_tg_id):
                             return web.json_response({"error": "Ошибка безопасности: Попытка подмены ID 🚫", "success": False}, status=403, headers={"Access-Control-Allow-Origin": "*"})
                 except Exception:
                     pass
