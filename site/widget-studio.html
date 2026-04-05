@@ -33,18 +33,16 @@
 
         .studio-layout {
             display: flex; gap: 16px; padding: 16px; max-width: 1300px; margin: 0 auto;
-            min-height: calc(100vh - 60px);
+            align-items: flex-start;
         }
 
-        /* LEFT PANEL */
+        /* LEFT PANEL — no sticky, let page scroll */
         .panel {
             width: 340px; flex-shrink: 0;
             display: flex; flex-direction: column; gap: 10px;
-            overflow-y: auto;
-            position: sticky; top: 60px;
-            max-height: calc(100vh - 70px);
             padding-bottom: 20px;
         }
+        /* thin scrollbar on desktop — purely cosmetic */
         .panel::-webkit-scrollbar { width: 4px; }
         .panel::-webkit-scrollbar-thumb { background: rgba(200,170,110,0.2); border-radius: 4px; }
 
@@ -69,7 +67,7 @@
         /* CONTROL GROUP */
         .ctrl-group {
             background: var(--card); border: 1px solid var(--border);
-            border-radius: 14px; padding: 14px; overflow: hidden;
+            border-radius: 14px; padding: 14px; overflow: visible;
         }
         .ctrl-group__title {
             font-family: 'Russo One'; font-size: 0.68rem; color: var(--gold);
@@ -187,10 +185,24 @@
         }
         .toast-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+        /* MOBILE: controls stack first, then preview */
         @media (max-width: 800px) {
-            .studio-layout { flex-direction: column; padding: 10px; }
-            .panel { width: 100%; max-height: none; }
-            .preview-container { min-height: 350px; }
+            .studio-layout {
+                flex-direction: column;
+                padding: 10px;
+                gap: 12px;
+            }
+            .panel {
+                width: 100%;
+                order: 1; /* controls first */
+            }
+            .preview-area {
+                order: 2; /* preview below */
+                width: 100%;
+            }
+            .preview-container { min-height: 300px; }
+            /* type tabs 2x2 on narrow screens */
+            .type-tabs { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 <script src="js/auth-interceptor.js?v=52"></script>
