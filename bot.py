@@ -3170,7 +3170,7 @@ def cors_response(data, status=200):
         status=status,
         headers={
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Headers": "Content-Type, X-Telegram-Init-Data, X-Site-Telegram-Id, X-Local-Dev-Tg-Id",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         }
     )
@@ -3182,7 +3182,7 @@ async def handle_options(request):
         status=200,
         headers={
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Headers": "Content-Type, X-Telegram-Init-Data, X-Site-Telegram-Id, X-Local-Dev-Tg-Id",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         }
     )
