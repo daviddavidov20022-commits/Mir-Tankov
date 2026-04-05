@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>РџРѕРґРґРµСЂР¶Р°С‚СЊ РїСЂРѕРµРєС‚ вЂ” РњРёСЂ РўР°РЅРєРѕРІ</title>
-    <meta name="description" content="РџРѕРґРґРµСЂР¶РёС‚Рµ СЂР°Р·РІРёС‚РёРµ РєР°РЅР°Р»Р° РњРёСЂ РўР°РЅРєРѕРІ">
+    <title>Спасибо — Мир Танков</title>
+    <meta name="description" content="Поддержите развитие канала Мир Танков">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
@@ -198,29 +198,12 @@
             animation: fadeInUp 0.4s ease backwards;
         }
 
-        .donate-amt:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .donate-amt:nth-child(2) {
-            animation-delay: 0.15s;
-        }
-
-        .donate-amt:nth-child(3) {
-            animation-delay: 0.2s;
-        }
-
-        .donate-amt:nth-child(4) {
-            animation-delay: 0.25s;
-        }
-
-        .donate-amt:nth-child(5) {
-            animation-delay: 0.3s;
-        }
-
-        .donate-amt:nth-child(6) {
-            animation-delay: 0.35s;
-        }
+        .donate-amt:nth-child(1) { animation-delay: 0.1s; }
+        .donate-amt:nth-child(2) { animation-delay: 0.15s; }
+        .donate-amt:nth-child(3) { animation-delay: 0.2s; }
+        .donate-amt:nth-child(4) { animation-delay: 0.25s; }
+        .donate-amt:nth-child(5) { animation-delay: 0.3s; }
+        .donate-amt:nth-child(6) { animation-delay: 0.35s; }
 
         .donate-amt:hover {
             border-color: rgba(245, 158, 11, 0.3);
@@ -253,7 +236,7 @@
         }
 
         .donate-amt--popular::after {
-            content: 'РўРћРџ';
+            content: 'ТОП';
             position: absolute;
             top: -8px;
             left: 50%;
@@ -289,13 +272,8 @@
             text-align: center;
         }
 
-        .donate-custom__input::placeholder {
-            color: #5A6577;
-        }
-
-        .donate-custom__input:focus {
-            border-color: rgba(245, 158, 11, 0.4);
-        }
+        .donate-custom__input::placeholder { color: #5A6577; }
+        .donate-custom__input:focus { border-color: rgba(245, 158, 11, 0.4); }
 
         /* CTA */
         .donate-cta {
@@ -323,26 +301,15 @@
         .donate-cta__btn::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
             transition: left 0.5s ease;
         }
 
-        .donate-cta__btn:hover::before {
-            left: 100%;
-        }
-
-        .donate-cta__btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.3);
-        }
-
-        .donate-cta__btn:active {
-            transform: translateY(0) scale(0.98);
-        }
+        .donate-cta__btn:hover::before { left: 100%; }
+        .donate-cta__btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245, 158, 11, 0.3); }
+        .donate-cta__btn:active { transform: translateY(0) scale(0.98); }
 
         .donate-cta__hint {
             text-align: center;
@@ -357,11 +324,7 @@
             animation: fadeInUp 0.4s ease 0.5s backwards;
         }
 
-        .donors-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
+        .donors-list { display: flex; flex-direction: column; gap: 6px; }
 
         .donor-item {
             display: flex;
@@ -374,71 +337,34 @@
             transition: all 0.2s;
         }
 
-        .donor-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
+        .donor-item:hover { background: rgba(255, 255, 255, 0.04); }
 
-        .donor-item__rank {
-            font-size: 1rem;
-            width: 24px;
-            text-align: center;
-            flex-shrink: 0;
-        }
+        .donor-item__rank { font-size: 1rem; width: 24px; text-align: center; flex-shrink: 0; }
 
         .donor-item__avatar {
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: white;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 700; color: white; flex-shrink: 0;
         }
 
-        .donor-item:nth-child(1) .donor-item__avatar {
-            background: linear-gradient(135deg, #f59e0b, #ef4444);
-        }
+        .donor-item:nth-child(1) .donor-item__avatar { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .donor-item:nth-child(2) .donor-item__avatar { background: linear-gradient(135deg, #9CA3AF, #D1D5DB); color: #374151; }
+        .donor-item:nth-child(3) .donor-item__avatar { background: linear-gradient(135deg, #B45309, #D97706); }
+        .donor-item:nth-child(n+4) .donor-item__avatar { background: linear-gradient(135deg, #4B5563, #6B7280); }
 
-        .donor-item:nth-child(2) .donor-item__avatar {
-            background: linear-gradient(135deg, #9CA3AF, #D1D5DB);
-            color: #374151;
-        }
-
-        .donor-item:nth-child(3) .donor-item__avatar {
-            background: linear-gradient(135deg, #B45309, #D97706);
-        }
-
-        .donor-item:nth-child(n+4) .donor-item__avatar {
-            background: linear-gradient(135deg, #4B5563, #6B7280);
-        }
-
-        .donor-item__info {
-            flex: 1;
-            min-width: 0;
-        }
+        .donor-item__info { flex: 1; min-width: 0; }
 
         .donor-item__name {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #E8E6E3;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 0.78rem; font-weight: 600; color: #E8E6E3;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
 
-        .donor-item__date {
-            font-size: 0.55rem;
-            color: #5A6577;
-        }
+        .donor-item__date { font-size: 0.55rem; color: #5A6577; }
 
         .donor-item__amount {
             font-family: 'Russo One', sans-serif;
-            font-size: 0.8rem;
-            color: #f59e0b;
-            flex-shrink: 0;
+            font-size: 0.8rem; color: #f59e0b; flex-shrink: 0;
         }
 
         /* Perks */
@@ -451,25 +377,16 @@
         }
 
         .perk-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            display: flex; align-items: center; gap: 8px;
             padding: 10px 12px;
             background: rgba(245, 158, 11, 0.04);
             border-radius: 10px;
             border: 1px solid rgba(245, 158, 11, 0.08);
         }
 
-        .perk-item__icon {
-            font-size: 1.1rem;
-            flex-shrink: 0;
-        }
+        .perk-item__icon { font-size: 1.1rem; flex-shrink: 0; }
 
-        .perk-item__text {
-            font-size: 0.68rem;
-            color: #9AA4B5;
-            line-height: 1.3;
-        }
+        .perk-item__text { font-size: 0.68rem; color: #9AA4B5; line-height: 1.3; }
 
         /* Thank you note */
         .donate-thanks {
@@ -481,20 +398,11 @@
             animation: fadeInUp 0.4s ease 0.6s backwards;
         }
 
-        .donate-thanks__emoji {
-            font-size: 2rem;
-            margin-bottom: 8px;
-        }
+        .donate-thanks__emoji { font-size: 2rem; margin-bottom: 8px; }
 
-        .donate-thanks__text {
-            font-size: 0.75rem;
-            color: #9AA4B5;
-            line-height: 1.5;
-        }
+        .donate-thanks__text { font-size: 0.75rem; color: #9AA4B5; line-height: 1.5; }
 
-        .donate-thanks__text strong {
-            color: #f59e0b;
-        }
+        .donate-thanks__text strong { color: #f59e0b; }
     </style>
 <script src="js/auth-interceptor.js?v=52"></script>
 </head>
@@ -503,181 +411,180 @@
     <div class="bg-particles" id="bgParticles"></div>
 
     <div class="donate-page">
-        <a href="index.html" class="back-btn">в†ђ РќР°Р·Р°Рґ</a>
+        <a href="index.html" class="back-btn">← Назад</a>
 
         <!-- Hero -->
         <div class="donate-hero">
-            <div class="donate-hero__icon">рџ”Ґ</div>
-            <div class="donate-hero__title">РџРѕРґРґРµСЂР¶Р°С‚СЊ РїСЂРѕРµРєС‚</div>
+            <div class="donate-hero__icon">🔥</div>
+            <div class="donate-hero__title">Поддержать проект</div>
             <div class="donate-hero__desc">
-                РљР°Р¶РґР°СЏ Р·РІС‘Р·РґРѕС‡РєР° РїРѕРјРѕРіР°РµС‚ РЅР°Рј РґРµР»Р°С‚СЊ РєРѕРЅС‚РµРЅС‚ Р»СѓС‡С€Рµ,
-                РґРѕР±Р°РІР»СЏС‚СЊ РЅРѕРІС‹Рµ С„РёС€РєРё Рё РїСЂРѕРІРѕРґРёС‚СЊ РєСЂСѓС‚С‹Рµ РёРІРµРЅС‚С‹!
+                Каждая звёздочка помогает нам делать контент лучше,
+                добавлять новые фишки и проводить крутые ивенты!
             </div>
         </div>
 
         <!-- Current goal -->
         <div class="donate-goal">
             <div class="donate-goal__header">
-                <div class="donate-goal__title">рџЋЇ Р¦РµР»СЊ: РќРѕРІС‹Р№ РјРёРєСЂРѕС„РѕРЅ РґР»СЏ СЃС‚СЂРёРјРѕРІ</div>
+                <div class="donate-goal__title">🎯 Цель: Новый микрофон для стримов</div>
             </div>
             <div class="donate-goal__bar-bg">
                 <div class="donate-goal__bar" id="goalBar" style="width: 0%"></div>
             </div>
             <div class="donate-goal__header" style="margin-bottom:0">
-                <div class="donate-goal__desc">РЎРѕР±СЂР°РЅРѕ: <span id="goalCurrent" style="color:#f59e0b;font-weight:700">12
-                        450 в­ђ</span></div>
-                <div class="donate-goal__amount"><span>25 000 в­ђ</span></div>
+                <div class="donate-goal__desc">Собрано: <span id="goalCurrent" style="color:#f59e0b;font-weight:700">12 450 ⭐</span></div>
+                <div class="donate-goal__amount"><span>25 000 ⭐</span></div>
             </div>
         </div>
 
         <!-- Amount selection -->
-        <div class="section-label">Р’С‹Р±РµСЂРёС‚Рµ СЃСѓРјРјСѓ</div>
+        <div class="section-label">Выберите сумму</div>
         <div class="donate-amounts" id="donateAmounts">
             <div class="donate-amt" data-stars="10" onclick="selectAmount(this)">
-                <div class="donate-amt__emoji">в•</div>
-                <div class="donate-amt__stars">10 в­ђ</div>
-                <div class="donate-amt__label">РќР° РєРѕС„Рµ</div>
+                <div class="donate-amt__emoji">☕</div>
+                <div class="donate-amt__stars">10 ⭐</div>
+                <div class="donate-amt__label">На кофе</div>
             </div>
             <div class="donate-amt" data-stars="50" onclick="selectAmount(this)">
-                <div class="donate-amt__emoji">рџЌ•</div>
-                <div class="donate-amt__stars">50 в­ђ</div>
-                <div class="donate-amt__label">РќР° РїРёС†С†Сѓ</div>
+                <div class="donate-amt__emoji">🍕</div>
+                <div class="donate-amt__stars">50 ⭐</div>
+                <div class="donate-amt__label">На пиццу</div>
             </div>
             <div class="donate-amt donate-amt--selected donate-amt--popular" data-stars="100"
                 onclick="selectAmount(this)">
-                <div class="donate-amt__stars">100 в­ђ</div>
-                <div class="donate-amt__label">РџРѕРґРґРµСЂР¶РєР°</div>
+                <div class="donate-amt__stars">100 ⭐</div>
+                <div class="donate-amt__label">Поддержка</div>
             </div>
             <div class="donate-amt" data-stars="250" onclick="selectAmount(this)">
-                <div class="donate-amt__emoji">рџЋ®</div>
-                <div class="donate-amt__stars">250 в­ђ</div>
-                <div class="donate-amt__label">РќР° РёРіСЂС‹</div>
+                <div class="donate-amt__emoji">🎮</div>
+                <div class="donate-amt__stars">250 ⭐</div>
+                <div class="donate-amt__label">На игры</div>
             </div>
             <div class="donate-amt" data-stars="500" onclick="selectAmount(this)">
-                <div class="donate-amt__emoji">рџЋ§</div>
-                <div class="donate-amt__stars">500 в­ђ</div>
-                <div class="donate-amt__label">РќР° СЃС‚СЂРёРј</div>
+                <div class="donate-amt__emoji">🎧</div>
+                <div class="donate-amt__stars">500 ⭐</div>
+                <div class="donate-amt__label">На стрим</div>
             </div>
             <div class="donate-amt" data-stars="1000" onclick="selectAmount(this)">
-                <div class="donate-amt__emoji">рџ‘‘</div>
-                <div class="donate-amt__stars">1000 в­ђ</div>
-                <div class="donate-amt__label">РњРµС†РµРЅР°С‚</div>
+                <div class="donate-amt__emoji">💎</div>
+                <div class="donate-amt__stars">1000 ⭐</div>
+                <div class="donate-amt__label">Меценат</div>
             </div>
         </div>
 
         <!-- Custom -->
         <div class="donate-custom">
-            <input type="number" class="donate-custom__input" id="customAmount" placeholder="РЎРІРѕСЏ СЃСѓРјРјР° в­ђ" min="1"
+            <input type="number" class="donate-custom__input" id="customAmount" placeholder="Своя сумма ⭐" min="1"
                 max="10000" oninput="handleCustomAmount(this)">
         </div>
 
         <!-- CTA -->
         <div class="donate-cta">
             <button class="donate-cta__btn" id="donateBtn" onclick="handleDonate()">
-                РџРѕРґРґРµСЂР¶Р°С‚СЊ вЂ” 100 в­ђ
+                Поддержать — 100 ⭐
             </button>
-            <div class="donate-cta__hint">РћРїР»Р°С‚Р° С‡РµСЂРµР· Telegram Stars в­ђ</div>
+            <div class="donate-cta__hint">Оплата через Telegram Stars ⭐</div>
         </div>
 
         <!-- What you get -->
-        <div class="section-label">Р§С‚Рѕ РїРѕР»СѓС‡Р°РµС‚ СЃРїРѕРЅСЃРѕСЂ</div>
+        <div class="section-label">Что получает спонсор</div>
         <div class="perks-grid">
             <div class="perk-item">
-                <div class="perk-item__icon">рџЏ…</div>
-                <div class="perk-item__text">Р—РЅР°С‡РѕРє СЃРїРѕРЅСЃРѕСЂР° РІ РїСЂРѕС„РёР»Рµ</div>
+                <div class="perk-item__icon">🏅</div>
+                <div class="perk-item__text">Знак спонсора в профиле</div>
             </div>
             <div class="perk-item">
-                <div class="perk-item__icon">рџ“ў</div>
-                <div class="perk-item__text">РРјСЏ РЅР° РґРѕСЃРєРµ РїРѕС‡С‘С‚Р°</div>
+                <div class="perk-item__icon">📢</div>
+                <div class="perk-item__text">Имя на доске почёта</div>
             </div>
             <div class="perk-item">
-                <div class="perk-item__icon">рџЋЇ</div>
-                <div class="perk-item__text">Р”РѕСЃС‚СѓРї Рє Р·Р°РєСЂС‹С‚С‹Рј С‡РµР»Р»РµРЅРґР¶Р°Рј</div>
+                <div class="perk-item__icon">🎯</div>
+                <div class="perk-item__text">Доступ к закрытым челленджам</div>
             </div>
             <div class="perk-item">
-                <div class="perk-item__icon">вќ¤пёЏ</div>
-                <div class="perk-item__text">РќР°С€Р° РІРµС‡РЅР°СЏ Р±Р»Р°РіРѕРґР°СЂРЅРѕСЃС‚СЊ!</div>
+                <div class="perk-item__icon">❤️</div>
+                <div class="perk-item__text">Наша вечная благодарность!</div>
             </div>
         </div>
 
         <!-- Top donors -->
         <div class="donors-section">
-            <div class="section-label">рџЏ† РўРѕРї СЃРїРѕРЅСЃРѕСЂРѕРІ</div>
+            <div class="section-label">🏆 Топ спонсоров</div>
             <div class="donors-list" id="donorsList">
                 <div class="donor-item">
-                    <div class="donor-item__rank">рџҐ‡</div>
+                    <div class="donor-item__rank">🥇</div>
                     <div class="donor-item__avatar">PT</div>
                     <div class="donor-item__info">
                         <div class="donor-item__name">PRO_TANKER</div>
-                        <div class="donor-item__date">Р’СЃРµРіРѕ РґРѕРЅР°С‚РѕРІ: 5</div>
+                        <div class="donor-item__date">Всего донатов: 5</div>
                     </div>
-                    <div class="donor-item__amount">2 500 в­ђ</div>
+                    <div class="donor-item__amount">2 500 ⭐</div>
                 </div>
                 <div class="donor-item">
-                    <div class="donor-item__rank">рџҐ€</div>
+                    <div class="donor-item__rank">🥈</div>
                     <div class="donor-item__avatar">TM</div>
                     <div class="donor-item__info">
                         <div class="donor-item__name">Tank_Master_2026</div>
-                        <div class="donor-item__date">Р’СЃРµРіРѕ РґРѕРЅР°С‚РѕРІ: 8</div>
+                        <div class="donor-item__date">Всего донатов: 8</div>
                     </div>
-                    <div class="donor-item__amount">1 800 в­ђ</div>
+                    <div class="donor-item__amount">1 800 ⭐</div>
                 </div>
                 <div class="donor-item">
-                    <div class="donor-item__rank">рџҐ‰</div>
+                    <div class="donor-item__rank">🥉</div>
                     <div class="donor-item__avatar">F</div>
                     <div class="donor-item__info">
                         <div class="donor-item__name">Fors777_2016</div>
-                        <div class="donor-item__date">Р’СЃРµРіРѕ РґРѕРЅР°С‚РѕРІ: 12</div>
+                        <div class="donor-item__date">Всего донатов: 12</div>
                     </div>
-                    <div class="donor-item__amount">1 200 в­ђ</div>
+                    <div class="donor-item__amount">1 200 ⭐</div>
                 </div>
                 <div class="donor-item">
                     <div class="donor-item__rank">4</div>
                     <div class="donor-item__avatar">NK</div>
                     <div class="donor-item__info">
                         <div class="donor-item__name">NoOb_KiLLeR_99</div>
-                        <div class="donor-item__date">Р’СЃРµРіРѕ РґРѕРЅР°С‚РѕРІ: 3</div>
+                        <div class="donor-item__date">Всего донатов: 3</div>
                     </div>
-                    <div class="donor-item__amount">750 в­ђ</div>
+                    <div class="donor-item__amount">750 ⭐</div>
                 </div>
                 <div class="donor-item">
                     <div class="donor-item__rank">5</div>
                     <div class="donor-item__avatar">AS</div>
                     <div class="donor-item__info">
                         <div class="donor-item__name">ArtillerySniper</div>
-                        <div class="donor-item__date">Р’СЃРµРіРѕ РґРѕРЅР°С‚РѕРІ: 2</div>
+                        <div class="donor-item__date">Всего донатов: 2</div>
                     </div>
-                    <div class="donor-item__amount">500 в­ђ</div>
+                    <div class="donor-item__amount">500 ⭐</div>
                 </div>
             </div>
         </div>
 
         <!-- Thank you -->
         <div class="donate-thanks">
-            <div class="donate-thanks__emoji">рџЄ–вќ¤пёЏ</div>
+            <div class="donate-thanks__emoji">🪖❤️</div>
             <div class="donate-thanks__text">
-                <strong>РЎРїР°СЃРёР±Рѕ</strong> РєР°Р¶РґРѕРјСѓ, РєС‚Рѕ РїРѕРґРґРµСЂР¶РёРІР°РµС‚ РїСЂРѕРµРєС‚!<br>
-                Р’РјРµСЃС‚Рµ РјС‹ РґРµР»Р°РµРј РњРР  РўРђРќРљРћР’ Р»СѓС‡С€Рµ.
+                <strong>Спасибо</strong> каждому, кто поддерживает проект!<br>
+                Вместе мы делаем МИР ТАНКОВ лучше.
             </div>
         </div>
     </div>
 
     <nav class="bottom-nav">
         <div class="nav-item" onclick="location.href='index.html'">
-            <span class="nav-icon">рџЏ </span>
-            <span class="nav-label">Р“Р»Р°РІРЅР°СЏ</span>
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
         </div>
         <div class="nav-item" onclick="location.href='subscribe.html'">
-            <span class="nav-icon">рџ’Ћ</span>
-            <span class="nav-label">РџРѕРґРїРёСЃРєР°</span>
+            <span class="nav-icon">💎</span>
+            <span class="nav-label">Подписка</span>
         </div>
         <div class="nav-item nav-item--active">
-            <span class="nav-icon">рџ”Ґ</span>
-            <span class="nav-label">Р”РѕРЅР°С‚</span>
+            <span class="nav-icon">🔥</span>
+            <span class="nav-label">Донат</span>
         </div>
         <div class="nav-item" onclick="goToProfile()">
-            <span class="nav-icon">рџ‘¤</span>
-            <span class="nav-label">РџСЂРѕС„РёР»СЊ</span>
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
         </div>
     </nav>
 
@@ -703,11 +610,10 @@
 
         function updateButton() {
             const btn = document.getElementById('donateBtn');
-            btn.textContent = `РџРѕРґРґРµСЂР¶Р°С‚СЊ вЂ” ${selectedStars.toLocaleString()} в­ђ`;
+            btn.textContent = `Поддержать — ${selectedStars.toLocaleString()} ⭐`;
         }
 
         function handleDonate() {
-            // Try Telegram WebApp
             try {
                 if (window.Telegram && Telegram.WebApp) {
                     Telegram.WebApp.sendData(JSON.stringify({
@@ -719,9 +625,9 @@
             } catch (e) { }
 
             alert(
-                `Р”РѕРЅР°С‚: ${selectedStars.toLocaleString()} в­ђ\n\n` +
-                `РћС‚РїСЂР°РІСЊС‚Рµ /donate РІ Р±РѕС‚ РґР»СЏ РѕРїР»Р°С‚С‹!\n` +
-                `РЎРїР°СЃРёР±Рѕ Р·Р° РїРѕРґРґРµСЂР¶РєСѓ! вќ¤пёЏ`
+                `Донат: ${selectedStars.toLocaleString()} ⭐\n\n` +
+                `Отправьте /donate в бот для оплаты!\n` +
+                `Спасибо за поддержку! ❤️`
             );
         }
 
@@ -745,6 +651,7 @@
             }
         })();
     </script>
+
 </body>
 
 </html>

@@ -1371,7 +1371,7 @@ async function loadMyPvpChallenges() {
 async function cancelMyChallenge(id) {
     if (!confirm('Отменить вызов? Сыр вернётся вам.')) return;
     try {
-        const resp = await fetch(`${BOT_API_URL}/api/challenges/decline`, {
+        const resp = await fetch(`${BOT_API_URL}/api/challenges/delete`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ challenge_id: id, telegram_id: myTelegramId })
         });
@@ -1379,6 +1379,7 @@ async function cancelMyChallenge(id) {
         if (data.success) {
             showToast('✅ Вызов отменён, сыр возвращён', 'success');
             loadMyPvpChallenges();
+            loadChallenges();
         } else {
             showToast(`❌ ${data.error}`, 'error');
         }

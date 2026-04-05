@@ -25,6 +25,11 @@
         .controls {
             width: 360px; flex-shrink: 0;
             display: flex; flex-direction: column; gap: 12px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            position: sticky;
+            top: 20px;
+            padding-right: 4px;
         }
 
         .ctrl-header {
@@ -40,7 +45,7 @@
 
         .ctrl-group {
             background: var(--card); border: 1px solid var(--border);
-            border-radius: 14px; padding: 14px; overflow: hidden;
+            border-radius: 14px; padding: 14px; overflow: visible;
         }
         .ctrl-group__title {
             font-family: 'Russo One'; font-size: 0.7rem; color: var(--gold);
