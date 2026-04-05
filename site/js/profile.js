@@ -689,47 +689,115 @@ function viewMyStats() {
 }
 
 // ============================================================
-// ПРОГРЕСС
+// ПРОГРЕСС — загрузка с сервера
 // ============================================================
-function loadProgress() {
+async function loadProgress() {
     try {
         const data = JSON.parse(localStorage.getItem('wot_user_data') || '{}');
-
-        const coins = data.coins || 0;
         const xp = data.xp || 0;
-        const games = data.games || 0;
-        const wins = data.wins || 0;
-        const streak = data.dailyStreak || 0;
 
-        setText('progCoins', coins.toLocaleString());
-        setText('progXP', xp.toLocaleString());
-        setText('progGames', games.toLocaleString());
-        setText('progWins', wins.toLocaleString());
-        setText('progStreak', streak + ' дн.');
-
-        // XP Level
+        // XP Level (декоративно)
         const level = Math.floor(xp / 100) + 1;
         const xpInLevel = xp % 100;
-
+        setText('progXP', xp.toLocaleString());
         setText('xpProgress', `${xpInLevel} / 100 XP`);
         setText('xpLevel', `Уровень ${level}`);
 
-        // Аватар уровень
         const avatarLevel = document.getElementById('avatarLevel');
         if (avatarLevel) avatarLevel.textContent = level;
 
-        // Progress bar
         setTimeout(() => {
             const bar = document.getElementById('xpBar');
             if (bar) bar.style.width = xpInLevel + '%';
         }, 300);
 
-        // Tag
         updateTag(level);
+
+        // Загружаем реальную статистику с сервера
+        const telegramId = getTelegramId();
+        if (!telegramId) return;
+
+        const resp = await fetch(`${PROFILE_API_BASE}/api/profile/battle-stats?telegram_id=${telegramId}`);
+        if (!resp.ok) return;
+        const stats = await resp.json();
+
+        // Сыр
+        setText('progCoins', (stats.cheese_balance || 0).toLocaleString());
+
+        // Серия дней
+        const daily = stats.daily || {};
+        setText('progStreak', (daily.current_streak || 0) + ' дн.');
+
+        // Сражения
+        const b = stats.battles || {};
+        setText('progBattles', b.total || 0);
+        setText('pvpCount', b.pvp?.total || 0);
+        setText('gcCount', b.global?.total || 0);
+        setText('teamCount', b.team?.total || 0);
+
+        // Активные
+        if (b.active > 0) {
+            const activeRow = document.getElementById('activeRow');
+            if (activeRow) activeRow.style.display = 'flex';
+            setText('activeCount', b.active);
+        }
+
+        // Победы / Поражения
+        setText('progWinLoss', `${b.wins || 0}W / ${b.losses || 0}L`);
+        setText('pvpWinLoss', `${b.pvp?.wins || 0}W / ${b.pvp?.losses || 0}L`);
+        setText('gcWinLoss', `${b.global?.wins || 0}W / ${b.global?.losses || 0}L`);
+        setText('teamWinLoss', `${b.team?.wins || 0}W / ${b.team?.losses || 0}L`);
+
+        // Winrate bar
+        if (b.total > 0) {
+            const winrateWrap = document.getElementById('winrateBarWrap');
+            const winrateLabel = document.getElementById('winrateLabel');
+            if (winrateWrap) winrateWrap.style.display = 'flex';
+            if (winrateLabel) {
+                winrateLabel.style.display = 'flex';
+                winrateLabel.innerHTML = `<span style="color:#2ecc71">Побед: ${b.winrate}%</span><span style="color:#e74c3c">Поражений: ${(100 - b.winrate).toFixed(1)}%</span>`;
+            }
+            setTimeout(() => {
+                const winsBar = document.getElementById('winrateBarWins');
+                const lossBar = document.getElementById('winrateBarLosses');
+                if (winsBar) winsBar.style.width = b.winrate + '%';
+                if (lossBar) lossBar.style.width = (100 - b.winrate) + '%';
+            }, 400);
+        }
+
+        // Cheese P&L
+        const pnl = stats.cheese_pnl || {};
+        setText('cheeseWon', '+' + (pnl.won || 0).toLocaleString());
+        setText('cheeseLost', '-' + (pnl.lost || 0).toLocaleString());
+
+        const netEl = document.getElementById('cheeseNet');
+        if (netEl) {
+            const net = pnl.net || 0;
+            netEl.textContent = (net >= 0 ? '+' : '') + net.toLocaleString();
+            netEl.className = 'detail-value ' + (net >= 0 ? 'detail-value--green' : 'detail-value--red');
+        }
+
     } catch (e) {
         console.warn('Ошибка загрузки прогресса:', e);
     }
 }
+
+// Toggle expand/collapse
+function toggleBattleDetails(el) {
+    el.classList.toggle('progress-item--expanded');
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+}
+function toggleWinDetails(el) {
+    el.classList.toggle('progress-item--expanded');
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+}
+window.toggleBattleDetails = toggleBattleDetails;
+window.toggleWinDetails = toggleWinDetails;
+
 
 function updateLevel() {
     try {

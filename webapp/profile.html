@@ -137,18 +137,21 @@
     </section>
 
     <!-- Game Progress -->
-    <section class="section-card">
+    <section class="section-card" id="progressSection">
         <div class="section-card__header">
             <span class="section-card__icon">🏆</span>
             <h3>Прогресс в клубе</h3>
         </div>
         <div class="progress-list">
+            <!-- Сыр -->
             <div class="progress-item">
                 <div class="progress-item__info">
                     <span class="progress-item__label">🧀 СЫР</span>
                     <span class="progress-item__value" id="progCoins">0</span>
                 </div>
             </div>
+
+            <!-- XP -->
             <div class="progress-item">
                 <div class="progress-item__info">
                     <span class="progress-item__label">⭐ Опыт</span>
@@ -162,18 +165,83 @@
                     <span id="xpLevel">Уровень 1</span>
                 </div>
             </div>
-            <div class="progress-item">
+
+            <!-- Сыграно сражений -->
+            <div class="progress-item progress-item--expandable" onclick="toggleBattleDetails(this)">
                 <div class="progress-item__info">
-                    <span class="progress-item__label">🎮 Игр сыграно</span>
-                    <span class="progress-item__value" id="progGames">0</span>
+                    <span class="progress-item__label">⚔️ Сыграно сражений</span>
+                    <div class="progress-item__right">
+                        <span class="progress-item__value" id="progBattles">0</span>
+                        <span class="progress-item__chevron">▼</span>
+                    </div>
+                </div>
+                <div class="progress-item__details" id="battleDetails">
+                    <div class="detail-row">
+                        <span class="detail-label">🎯 1 на 1 (PvP)</span>
+                        <span class="detail-value" id="pvpCount">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">🔥 Общие</span>
+                        <span class="detail-value" id="gcCount">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">👥 Командные</span>
+                        <span class="detail-value" id="teamCount">0</span>
+                    </div>
+                    <div class="detail-row detail-row--active" id="activeRow" style="display:none;">
+                        <span class="detail-label">🟢 Активные сейчас</span>
+                        <span class="detail-value detail-value--active" id="activeCount">0</span>
+                    </div>
                 </div>
             </div>
-            <div class="progress-item">
+
+            <!-- Победы / Поражения -->
+            <div class="progress-item progress-item--expandable" onclick="toggleWinDetails(this)">
                 <div class="progress-item__info">
-                    <span class="progress-item__label">🏆 Побед</span>
-                    <span class="progress-item__value" id="progWins">0</span>
+                    <span class="progress-item__label">🏆 Победы / Поражения</span>
+                    <div class="progress-item__right">
+                        <span class="progress-item__value" id="progWinLoss">0 / 0</span>
+                        <span class="progress-item__chevron">▼</span>
+                    </div>
+                </div>
+                <!-- Winrate bar -->
+                <div class="winrate-bar" id="winrateBarWrap" style="display:none;">
+                    <div class="winrate-bar__fill winrate-bar__wins" id="winrateBarWins"></div>
+                    <div class="winrate-bar__fill winrate-bar__losses" id="winrateBarLosses"></div>
+                </div>
+                <div class="winrate-label" id="winrateLabel" style="display:none;"></div>
+                <div class="progress-item__details" id="winDetails">
+                    <!-- По типам -->
+                    <div class="detail-row">
+                        <span class="detail-label">🎯 1 на 1</span>
+                        <span class="detail-value" id="pvpWinLoss">0W / 0L</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">🔥 Общие</span>
+                        <span class="detail-value" id="gcWinLoss">0W / 0L</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">👥 Командные</span>
+                        <span class="detail-value" id="teamWinLoss">0W / 0L</span>
+                    </div>
+                    <div class="detail-divider"></div>
+                    <!-- Сыр P&L -->
+                    <div class="detail-row">
+                        <span class="detail-label">📈 Выиграно 🧀</span>
+                        <span class="detail-value detail-value--green" id="cheeseWon">+0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">📉 Проиграно 🧀</span>
+                        <span class="detail-value detail-value--red" id="cheeseLost">-0</span>
+                    </div>
+                    <div class="detail-row detail-row--total">
+                        <span class="detail-label">💰 Итого по сражениям</span>
+                        <span class="detail-value" id="cheeseNet">0</span>
+                    </div>
                 </div>
             </div>
+
+            <!-- Серия дней -->
             <div class="progress-item">
                 <div class="progress-item__info">
                     <span class="progress-item__label">🔥 Серия дней</span>

@@ -579,6 +579,113 @@ body {
     color: var(--text-secondary);
 }
 
+/* Expandable progress items */
+.progress-item--expandable {
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.progress-item--expandable:active {
+    transform: scale(0.98);
+}
+.progress-item__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.progress-item__chevron {
+    font-size: 0.55rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s;
+}
+.progress-item--expanded .progress-item__chevron {
+    transform: rotate(180deg);
+}
+.progress-item__details {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    animation: detailSlide 0.3s ease;
+}
+.progress-item--expanded .progress-item__details {
+    display: block;
+}
+@keyframes detailSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Detail rows */
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+.detail-label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+.detail-value {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.8rem;
+    color: #fff;
+}
+.detail-value--green { color: #2ecc71; }
+.detail-value--red { color: #e74c3c; }
+.detail-value--active { color: #3498db; }
+.detail-row--active {
+    padding-top: 8px;
+    margin-top: 4px;
+    border-top: 1px dashed rgba(255,255,255,0.05);
+}
+.detail-row--total {
+    padding-top: 8px;
+    margin-top: 4px;
+    border-top: 1px solid rgba(200,170,110,0.15);
+}
+.detail-row--total .detail-label {
+    font-weight: 700;
+    color: var(--text-gold);
+}
+.detail-row--total .detail-value {
+    font-size: 0.9rem;
+}
+.detail-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 6px 0;
+}
+
+/* Winrate bar */
+.winrate-bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+    background: rgba(255,255,255,0.04);
+}
+.winrate-bar__fill {
+    height: 100%;
+    transition: width 1s ease-out;
+}
+.winrate-bar__wins {
+    background: linear-gradient(90deg, #27ae60, #2ecc71);
+    width: 0%;
+}
+.winrate-bar__losses {
+    background: linear-gradient(90deg, #c0392b, #e74c3c);
+    width: 0%;
+}
+.winrate-label {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+}
+
 /* ==========================================
    ACHIEVEMENTS
    ========================================== */

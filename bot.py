@@ -7336,6 +7336,148 @@ async def api_profile_get(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_profile_battle_stats(request):
+    """GET /api/profile/battle-stats?telegram_id=123 — детальная статистика сражений"""
+    try:
+        telegram_id = request.query.get("telegram_id")
+        if not telegram_id:
+            return cors_response({"error": "telegram_id required"}, 400)
+        tg_id = int(telegram_id)
+
+        from database import get_db_read, get_cheese_balance
+        from database import get_daily_status
+
+        with get_db_read() as conn:
+            # ===== PvP 1v1 =====
+            pvp_rows = conn.execute("""
+                SELECT status, winner_telegram_id, wager, from_telegram_id, to_telegram_id
+                FROM arena_challenges
+                WHERE (from_telegram_id = ? OR to_telegram_id = ?)
+                  AND status IN ('finished', 'active')
+            """, (tg_id, tg_id)).fetchall()
+
+            pvp_total = 0
+            pvp_wins = 0
+            pvp_losses = 0
+            pvp_cheese_won = 0
+            pvp_cheese_lost = 0
+            pvp_active = 0
+
+            for r in pvp_rows:
+                if r["status"] == "active":
+                    pvp_active += 1
+                    continue
+                pvp_total += 1
+                wager = r["wager"] or 0
+                if r["winner_telegram_id"] == tg_id:
+                    pvp_wins += 1
+                    pvp_cheese_won += wager  # Выиграл ставку соперника
+                else:
+                    pvp_losses += 1
+                    pvp_cheese_lost += wager  # Проиграл свою ставку
+
+            # ===== Global Challenge =====
+            gc_rows = conn.execute("""
+                SELECT gc.id, gc.status, gc.winner_telegram_id, gc.reward_coins, gc.title,
+                       gcp.current_value
+                FROM global_challenge_participants gcp
+                JOIN global_challenges gc ON gc.id = gcp.challenge_id
+                WHERE gcp.telegram_id = ?
+            """, (tg_id,)).fetchall()
+
+            gc_total = 0
+            gc_wins = 0
+            gc_losses = 0
+            gc_cheese_won = 0
+            gc_active = 0
+
+            for r in gc_rows:
+                if r["status"] == "active":
+                    gc_active += 1
+                    continue
+                if r["status"] == "finished":
+                    gc_total += 1
+                    if r["winner_telegram_id"] == tg_id:
+                        gc_wins += 1
+                        gc_cheese_won += r["reward_coins"] or 0
+
+            gc_losses = gc_total - gc_wins
+
+            # ===== Team Battle =====
+            tb_total = 0
+            tb_wins = 0
+            tb_losses = 0
+            tb_cheese_won = 0
+            tb_cheese_lost = 0
+            tb_active = 0
+
+            try:
+                tb_rows = conn.execute("""
+                    SELECT tb.id, tb.status, tb.winner_team, tb.wager, tb.team_size,
+                           tbp.team
+                    FROM team_battle_participants tbp
+                    JOIN team_battles tb ON tb.id = tbp.battle_id
+                    WHERE tbp.telegram_id = ?
+                """, (tg_id,)).fetchall()
+
+                for r in tb_rows:
+                    if r["status"] in ("waiting", "active"):
+                        tb_active += 1
+                        continue
+                    if r["status"] == "finished":
+                        tb_total += 1
+                        wager = r["wager"] or 0
+                        if r["winner_team"] == r["team"]:
+                            tb_wins += 1
+                            tb_cheese_won += wager  # Возврат ставки + доля выигрыша
+                        else:
+                            tb_losses += 1
+                            tb_cheese_lost += wager
+            except Exception:
+                pass  # Таблица может не существовать
+
+            # ===== Daily reward =====
+            daily = get_daily_status(tg_id)
+
+            # ===== Cheese balance =====
+            cheese_balance = get_cheese_balance(tg_id)
+
+        # Итоги
+        total_battles = pvp_total + gc_total + tb_total
+        total_wins = pvp_wins + gc_wins + tb_wins
+        total_losses = pvp_losses + gc_losses + tb_losses
+        total_cheese_won = pvp_cheese_won + gc_cheese_won + tb_cheese_won
+        total_cheese_lost = pvp_cheese_lost + tb_cheese_lost
+        cheese_net = total_cheese_won - total_cheese_lost
+        winrate = round((total_wins / total_battles * 100), 1) if total_battles > 0 else 0
+
+        return cors_response({
+            "cheese_balance": cheese_balance,
+            "daily": daily,
+            "battles": {
+                "total": total_battles,
+                "wins": total_wins,
+                "losses": total_losses,
+                "winrate": winrate,
+                "active": pvp_active + gc_active + tb_active,
+                "pvp": {"total": pvp_total, "wins": pvp_wins, "losses": pvp_losses, "active": pvp_active,
+                        "cheese_won": pvp_cheese_won, "cheese_lost": pvp_cheese_lost},
+                "global": {"total": gc_total, "wins": gc_wins, "losses": gc_losses, "active": gc_active,
+                           "cheese_won": gc_cheese_won, "cheese_lost": 0},
+                "team": {"total": tb_total, "wins": tb_wins, "losses": tb_losses, "active": tb_active,
+                         "cheese_won": tb_cheese_won, "cheese_lost": tb_cheese_lost},
+            },
+            "cheese_pnl": {
+                "won": total_cheese_won,
+                "lost": total_cheese_lost,
+                "net": cheese_net,
+            },
+        })
+    except Exception as e:
+        logger.error(f"API profile_battle_stats error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 # --- DAILY REWARD API ---
 
 async def api_daily_status(request):
@@ -10673,6 +10815,7 @@ def create_api_app():
     # Profile API
     app.router.add_post("/api/profile/save", api_profile_save)
     app.router.add_get("/api/profile", api_profile_get)
+    app.router.add_get("/api/profile/battle-stats", api_profile_battle_stats)
 
     # Top Players API
     app.router.add_get("/api/top/players", api_top_players)
