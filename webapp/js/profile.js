@@ -10,17 +10,15 @@
 const LESTA_API_URL = 'https://api.tanki.su/wot';
 const LESTA_APP_ID = 'c984faa7dc529f4cb0139505d5e8043c';
 
-// API сервера бота
+// API сервера бота (единый источник — Railway, как и во всех остальных JS)
 const PROFILE_API_BASE = (() => {
     const params = new URLSearchParams(window.location.search);
-    const host = params.get('api') || localStorage.getItem('api_host');
+    const host = params.get('api') || localStorage.getItem('api_host') || localStorage.getItem('bot_api_url');
     if (host) return host;
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `http://${window.location.hostname}:8081`;
     }
-    const savedApi = localStorage.getItem('api_url');
-    if (savedApi) return savedApi;
-    return 'https://mir-tankov-api.onrender.com';
+    return 'https://mir-tankov-production.up.railway.app';
 })();
 
 // ============================================================
