@@ -631,9 +631,14 @@ function createParticles() {
     }
 }
 
-// Close modals
-document.getElementById('avatarModal')?.addEventListener('click', function (e) {
-    if (e.target === this) closeAvatarPicker();
+// Close modals — запускаем ПОСЛЕ загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarModal = document.getElementById('avatarModal');
+    if (avatarModal) {
+        avatarModal.addEventListener('click', function(e) {
+            if (e.target === this) closeAvatarPicker();
+        });
+    }
 });
 
 // Expose
