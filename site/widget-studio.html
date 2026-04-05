@@ -37,9 +37,17 @@
         }
 
         /* LEFT PANEL */
-        .panel { width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: calc(100vh - 80px); }
+        .panel {
+            width: 340px; flex-shrink: 0;
+            display: flex; flex-direction: column; gap: 10px;
+            overflow-y: auto;
+            position: sticky; top: 60px;
+            max-height: calc(100vh - 70px);
+            padding-bottom: 20px;
+        }
         .panel::-webkit-scrollbar { width: 4px; }
         .panel::-webkit-scrollbar-thumb { background: rgba(200,170,110,0.2); border-radius: 4px; }
+
 
         /* WIDGET TYPE TABS */
         .type-tabs {
