@@ -118,7 +118,18 @@
     </nav>
 
     <script src="js/app.js?v=57"></script>
-    <script src="js/friends.js"></script>
+    <script src="js/friends.js?v=3"></script>
+
+    <!-- Инлайн: вкладки работают даже если friends.js ещё кэшируется -->
+    <script>
+    window.switchFriendsTab = function(tabId, btn) {
+        document.querySelectorAll('.ftab-content').forEach(function(t) { t.classList.remove('ftab-content--active'); });
+        document.querySelectorAll('.friends-tab').forEach(function(t) { t.classList.remove('friends-tab--active'); });
+        var tab = document.getElementById('ftab-' + tabId);
+        if (tab) tab.classList.add('ftab-content--active');
+        if (btn) btn.classList.add('friends-tab--active');
+    };
+    </script>
 </body>
 
 </html>
