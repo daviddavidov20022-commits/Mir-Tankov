@@ -38,7 +38,7 @@ const QUICK_CHANNELS = [
     { name: 'ISERVERI', platform: 'youtube', url: 'https://www.youtube.com/@ISERVERI', icon: '🔴', desc: 'YouTube канал' },
 ];
 
-let currentPlatform = 'youtube';
+let currentPlatform = 'vk';
 let isPlaying = false;
 let history = JSON.parse(localStorage.getItem('player_history') || '[]');
 

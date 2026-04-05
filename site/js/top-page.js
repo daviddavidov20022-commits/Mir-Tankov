@@ -34,30 +34,6 @@ let currentCategory = 'all';
 let sortAscending = false;
 let filterText = '';
 let isLoading = false;
-let onlineOnly = false;
-
-// Онлайн-определение (надёжный метод):
-// - last_battle_time < 5 мин → активно играет (бой был только что)
-// - logout_at < 5 мин → только что был в клиенте
-// Lesta API обновляет logout_at при КАЖДОМ выходе, поэтому
-// logout_at < updated_at — НЕ показатель онлайна!
-function isPlayerOnline(accountId) {
-    const stats = playersStats[String(accountId)];
-    if (!stats) return false;
-    const now = Math.floor(Date.now() / 1000);
-    const THRESHOLD = 5 * 60; // 5 минут
-
-    const lastBattle = stats.last_battle_time || 0;
-    const logoutAt = stats.logout_at || 0;
-
-    // Был в бою менее 5 минут назад
-    if (lastBattle > 0 && (now - lastBattle) < THRESHOLD) return true;
-
-    // Вышел из клиента менее 5 минут назад
-    if (logoutAt > 0 && (now - logoutAt) < THRESHOLD) return true;
-
-    return false;
-}
 
 // Текущий пользователь
 function getMyTelegramId() {
@@ -126,7 +102,7 @@ const CATEGORIES = {
 // ============================================================
 // INITIALIZATION
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+function initTopPage() {
     // Try to load cached data first for instant display
     const cached = localStorage.getItem('top_players_cache');
     if (cached) {
@@ -137,14 +113,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (allPlayers.length > 0) {
                 renderTable();
                 document.getElementById('loadingFull').style.display = 'none';
-                document.getElementById('tableWrap').style.display = 'block';
+                const pl = document.getElementById('playersList');
+                if (pl) pl.style.display = 'block';
             }
         } catch (e) { /* ignore */ }
     }
 
     // Then refresh from API
     loadAllPlayers();
-});
+}
+
+// Скрипт загружается динамически — DOM уже готов к этому моменту
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTopPage);
+} else {
+    initTopPage();
+}
 
 // ============================================================
 // LOAD ALL PLAYERS FROM BOT API + LESTA STATS
@@ -315,31 +299,21 @@ function renderTable() {
         ? sorted.filter(p => p.wot_nickname.toLowerCase().includes(filterText))
         : sorted;
 
-    // Онлайн фильтр
-    if (onlineOnly) {
-        filtered = filtered.filter(p => isPlayerOnline(p.wot_account_id));
-    }
-
     // Обновляем счётчик
-    const onlineCount = sorted.filter(p => isPlayerOnline(p.wot_account_id)).length;
-    document.getElementById('totalCount').textContent = onlineOnly
-        ? `${filtered.length}`
-        : filtered.length;
+    document.getElementById('totalCount').textContent = filtered.length;
 
     // Подзаголовок
     const headerSub = document.getElementById('headerSub');
     if (headerSub) {
-        if (onlineOnly) {
-            headerSub.textContent = `🟢 Сейчас в игре`;
-        } else if (currentCategory === 'all') {
-            headerSub.textContent = `Все участники • ${onlineCount} онлайн`;
+        if (currentCategory === 'all') {
+            headerSub.textContent = `Подписчики канала`;
         } else {
             headerSub.textContent = `Рейтинг: ${cfg.label}`;
         }
     }
 
     if (filtered.length === 0) {
-        container.innerHTML = `<div class="no-results">🔍 Нет результатов ${onlineOnly ? '(никто не в игре)' : ''}</div>`;
+        container.innerHTML = `<div class="no-results">🔍 Нет результатов</div>`;
         return;
     }
 
@@ -378,7 +352,6 @@ function createCardHTML(player, stats, rank, cfg) {
     const wins = allS.wins || 0;
     const winrate = battles > 0 ? ((wins / battles) * 100).toFixed(1) : '—';
     const accountId = player.wot_account_id;
-    const online = isPlayerOnline(accountId);
     const tgName = player.first_name || player.username || '';
 
     // Main stat value
@@ -406,7 +379,6 @@ function createCardHTML(player, stats, rank, cfg) {
     if (rank === 1) cardClass += ' rank-1';
     else if (rank === 2) cardClass += ' rank-2';
     else if (rank === 3) cardClass += ' rank-3';
-    if (online) cardClass += ' player-card--online';
 
     // Avatar (first letter or emoji)
     const avatarContent = player.avatar && !player.avatar.startsWith('data:')
@@ -422,18 +394,24 @@ function createCardHTML(player, stats, rank, cfg) {
         else wrClass = 'wr-bad';
     }
 
-    // Online dot & subtitle
-    const onlineDot = online ? '<div class="player-avatar__online"></div>' : '';
-    const subLine = online
-        ? '<span class="player-online-text"><span class="dot"></span>В игре</span>'
-        : (tgName ? `<span class="player-tg-name">${tgName}</span>` : '');
+    // Subtitle — TG name or last battle time
+    let subLine = tgName ? `<span class="player-tg-name">${tgName}</span>` : '';
+    if (stats?.last_battle_time) {
+        const lastDate = new Date(stats.last_battle_time * 1000);
+        const daysAgo = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        let timeStr;
+        if (daysAgo === 0) timeStr = 'Сегодня';
+        else if (daysAgo === 1) timeStr = 'Вчера';
+        else if (daysAgo < 7) timeStr = `${daysAgo} дн. назад`;
+        else timeStr = lastDate.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        subLine = `<span class="player-tg-name">Посл. бой: ${timeStr}</span>`;
+    }
 
     return `
     <div class="${cardClass}" onclick="showPlayerModal(${accountId})">
         ${rankBadge}
         <div class="player-avatar">
             ${avatarContent}
-            ${onlineDot}
         </div>
         <div class="wn8-indicator ${wn8Color}"></div>
         <div class="player-info">
@@ -481,17 +459,6 @@ function toggleSortDir() {
 function filterTable() {
     filterText = document.getElementById('filterInput').value.trim().toLowerCase();
     renderTable();
-}
-
-function toggleOnlineFilter() {
-    onlineOnly = !onlineOnly;
-    const btn = document.getElementById('onlineToggle');
-    btn.classList.toggle('active', onlineOnly);
-    renderTable();
-
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.selectionChanged();
-    }
 }
 
 // ============================================================
@@ -678,7 +645,6 @@ async function sendChallenge(targetTgId, nickname) {
 window.switchCategory = switchCategory;
 window.toggleSortDir = toggleSortDir;
 window.filterTable = filterTable;
-window.toggleOnlineFilter = toggleOnlineFilter;
 window.showPlayerModal = showPlayerModal;
 window.openStatsPage = openStatsPage;
 window.loadAllPlayers = loadAllPlayers;

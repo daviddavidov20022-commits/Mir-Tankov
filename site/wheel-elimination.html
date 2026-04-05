@@ -659,7 +659,7 @@
         fetch(BOT_API_URL + '/api/global-challenge/wheel-eliminate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ challenge_id: parseInt(cid), telegram_id: p.telegram_id, admin_telegram_id: parseInt(myTelegramId) || 0 })
+            body: JSON.stringify({ challenge_id: cid, telegram_id: p.telegram_id })
         })
         .then(function(r) { return r.json(); })
         .then(function(d) {

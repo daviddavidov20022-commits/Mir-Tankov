@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>╨Р╤А╨╡╨╜╨░ тАФ ╨Ь╨╕╤А ╨в╨░╨╜╨║╨╛╨▓</title>
+    <meta name="description" content="PvP ╨Р╤А╨╡╨╜╨░ тАФ ╨▓╤Л╨╖╨╛╨▓╨╕ ╨╜╨░ ╨▒╨╛╨╣!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=50">
+    <link rel="stylesheet" href="css/arena.css?v=50">
+    <link rel="stylesheet" href="css/global-challenge.css?v=50">
+    <link rel="stylesheet" href="css/team-battle.css?v=50">
+<script src="js/auth-interceptor.js?v=52"></script>
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <div class="arena-page">
+        <a href="index.html" class="back-btn">тЖР ╨Э╨░╨╖╨░╨┤</a>
+
+        <!-- Arena Header -->
+        <div class="arena-hero">
+            <div class="arena-hero__icon">тЪФя╕П</div>
+            <h1 class="arena-hero__title">╨Р╨а╨Х╨Э╨Р</h1>
+            <p class="arena-hero__subtitle">╨Т╤Л╨╖╨╛╨▓╨╕ ╤Б╨╛╨┐╨╡╤А╨╜╨╕╨║╨░ ╨╜╨░ ╨┤╤Г╤Н╨╗╤М!</p>
+            <div class="account-badge" id="accountBadge"
+                style="margin-top:8px;padding:4px 12px;background:rgba(200,170,110,0.15);border-radius:8px;display:inline-block;font-size:0.7rem;color:#C8AA6E;font-weight:700">
+                ЁЯСд ╨Ч╨░╨│╤А╤Г╨╖╨║╨░...
+            </div>
+        </div>
+
+        <!-- How it works -->
+        <div class="arena-info" onclick="this.classList.toggle('arena-info--open')"
+            style="margin-bottom:10px;padding:10px 14px;background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.1);border-radius:12px;cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">тЭУ ╨Ъ╨░╨║ ╤А╨░╨▒╨╛╤В╨░╤О╤В ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨╕?</span>
+                <span style="font-size:0.6rem;color:#5A6577">тЦ╝</span>
+            </div>
+            <div class="arena-info__body"
+                style="display:none;margin-top:10px;font-size:0.65rem;color:#8a94a6;line-height:1.6">
+                <b style="color:#E8E6E3">1.</b> ╨Т╤Л╨▒╨╡╤А╨╕ ╤Б╨╛╨┐╨╡╤А╨╜╨╕╨║╨░, ╤В╨╡╤Е╨╜╨╕╨║╤Г ╨╕ ╤Г╤Б╨╗╨╛╨▓╨╕╨╡<br>
+                <b style="color:#E8E6E3">2.</b> ╨Я╨╛╤Б╤В╨░╨▓╤М ЁЯзА ╨б╤Л╤А тАФ ╤Б╤В╨░╨▓╨║╨░ ╨╖╨░╨╝╨╛╤А╨░╨╢╨╕╨▓╨░╨╡╤В╤Б╤П<br>
+                <b style="color:#E8E6E3">3.</b> ╨б╨╛╨┐╨╡╤А╨╜╨╕╨║ ╨┐╨╛╨╗╤Г╤З╨░╨╡╤В ╨▓╤Л╨╖╨╛╨▓ ╨╕ ╨╝╨╛╨╢╨╡╤В ╨┐╤А╨╕╨╜╤П╤В╤М ╨╕╨╗╨╕ ╨╛╤В╨║╨╗╨╛╨╜╨╕╤В╤М<br>
+                <b style="color:#E8E6E3">4.</b> ╨Я╤А╨╕ ╨┐╤А╨╕╨╜╤П╤В╨╕╨╕ тАФ ╨╡╨│╨╛ ╤Б╤В╨░╨▓╨║╨░ ╤В╨╛╨╢╨╡ ╨╖╨░╨╝╨╛╤А╨░╨╢╨╕╨▓╨░╨╡╤В╤Б╤П<br>
+                <b style="color:#E8E6E3">5.</b> ╨Ю╨▒╨░ ╨╕╨│╤А╨░╤О╤В ╨╜╤Г╨╢╨╜╨╛╨╡ ╨║╨╛╨╗╨╕╤З╨╡╤Б╤В╨▓╨╛ ╨▒╨╛╤С╨▓ ╨╜╨░ ╨▓╤Л╨▒╤А╨░╨╜╨╜╨╛╨╣ ╤В╨╡╤Е╨╜╨╕╨║╨╡<br>
+                <b style="color:#E8E6E3">6.</b> ╨Я╨╛╨▒╨╡╨╢╨┤╨░╨╡╤В ╤В╨╛╤В, ╤Г ╨║╨╛╨│╨╛ ╨╗╤Г╤З╤И╨╡ ╤А╨╡╨╖╤Г╨╗╤М╤В╨░╤В ╨┐╨╛ ╤Г╤Б╨╗╨╛╨▓╨╕╤О<br>
+                <b style="color:#E8E6E3">7.</b> ╨Я╨╛╨▒╨╡╨┤╨╕╤В╨╡╨╗╤М ╨╖╨░╨▒╨╕╤А╨░╨╡╤В ЁЯзА ╨╛╨▒╨╡ ╤Б╤В╨░╨▓╨║╨╕!<br>
+                <span style="color:#ef4444;margin-top:4px;display:inline-block">тЪая╕П ╨Я╤А╨╕ ╨╛╤В╨║╨╗╨╛╨╜╨╡╨╜╨╕╨╕ ╤Б╤В╨░╨▓╨║╨░ ╨▓╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В╤Б╤П
+                    ╤Б╨╛╨╖╨┤╨░╤В╨╡╨╗╤О</span>
+            </div>
+        </div>
+        <script>
+            document.querySelector('.arena-info').addEventListener('click', function () {
+                const body = this.querySelector('.arena-info__body');
+                body.style.display = body.style.display === 'none' ? 'block' : 'none';
+            });
+        </script>
+
+        <!-- Balance -->
+        <div class="cheese-bar">
+            <div class="cheese-bar__left">
+                <div class="cheese-bar__icon">ЁЯзА</div>
+                <div>
+                    <div class="cheese-bar__label">╨С╨░╨╗╨░╨╜╤Б ╨б╨л╨а</div>
+                    <div class="cheese-bar__amount" id="cheeseBalance">0</div>
+                </div>
+            </div>
+            <button class="cheese-bar__buy" onclick="buyCheese()">+ ╨Ъ╤Г╨┐╨╕╤В╤М</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="arena-tabs">
+            <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">тЪФя╕П 1x1(PVP)</button>
+            <button class="arena-tab" onclick="switchTab('global', this)">ЁЯФе ╨Ю╨▒╤Й╨╕╨╣</button>
+            <button class="arena-tab" onclick="switchTab('teams', this)">ЁЯСе ╨Ъ╨╛╨╝╨░╨╜╨┤╤Л</button>
+            <button class="arena-tab" onclick="switchTab('active', this)">ЁЯУЛ ╨Ь╨╛╨╕ <span class="arena-badge"
+                    id="activeBadge" style="display:none">0</span></button>
+            <button class="arena-tab" onclick="switchTab('history', this)">ЁЯУЬ ╨Ш╤Б╤В╨╛╤А╨╕╤П</button>
+            <button class="arena-tab" onclick="switchTab('admin', this)" id="adminTab" style="display:none">ЁЯЫб
+                ╨Р╨┤╨╝╨╕╨╜</button>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: CREATE CHALLENGE           -->
+        <!-- ============================== -->
+        <div class="tab-content tab-content--active" id="tab-create">
+
+            <!-- Step 1: Opponent -->
+            <div class="create-step" id="step-opponent">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">╨Т╤Л╨▒╨╡╤А╨╕ ╤Б╨╛╨┐╨╡╤А╨╜╨╕╨║╨░</div>
+                </div>
+                <div class="search-box">
+                    <input type="text" class="search-box__input" id="opponentSearch" placeholder="╨Т╨▓╨╡╨┤╨╕ ╨╜╨╕╨║ ╨╕╨│╤А╨╛╨║╨░..."
+                        onkeydown="if(event.key==='Enter')searchOpponent()">
+                    <button class="search-box__btn" onclick="searchOpponent()">ЁЯФН</button>
+                </div>
+                <div id="opponentResults"></div>
+                <div class="selected-opponent" id="selectedOpponent" style="display:none">
+                    <div class="selected-opponent__info">
+                        <div class="selected-opponent__name" id="selectedOpponentName"></div>
+                        <div class="selected-opponent__status" id="selectedOpponentStatus"></div>
+                    </div>
+                    <button class="selected-opponent__change" onclick="changeOpponent()">тЬПя╕П ╨Ш╨╖╨╝╨╡╨╜╨╕╤В╤М</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Tank -->
+            <div class="create-step create-step--locked" id="step-tank">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">╨в╨╡╤Е╨╜╨╕╨║╨░</div>
+                </div>
+
+                <!-- Mode toggle -->
+                <div class="tank-mode-toggle">
+                    <button class="mode-btn mode-btn--active" id="modeClass" onclick="setTankMode('class')">ЁЯУЛ ╨Ъ╨╗╨░╤Б╤Б +
+                        ╨г╤А╨╛╨▓╨╡╨╜╤М</button>
+                    <button class="mode-btn" id="modeSpecific" onclick="setTankMode('specific')">ЁЯкЦ ╨Ъ╨╛╨╜╨║╤А╨╡╤В╨╜╤Л╨╣
+                        ╤В╨░╨╜╨║</button>
+                </div>
+
+                <!-- Mode: Class + Tier -->
+                <div id="tankModeClass">
+                    <div class="tank-filters">
+                        <label class="form-label">╨Ъ╨╗╨░╤Б╤Б ╤В╨╡╤Е╨╜╨╕╨║╨╕</label>
+                        <div class="tank-class-filter">
+                            <button class="class-btn class-btn--active" data-type="any"
+                                onclick="selectClass('any', this)">ЁЯФД ╨Ы╤О╨▒╨╛╨╣</button>
+                            <button class="class-btn" data-type="heavyTank" onclick="selectClass('heavyTank', this)">ЁЯЫбя╕П
+                                ╨в╨в</button>
+                            <button class="class-btn" data-type="mediumTank"
+                                onclick="selectClass('mediumTank', this)">тЪЩя╕П ╨б╨в</button>
+                            <button class="class-btn" data-type="lightTank" onclick="selectClass('lightTank', this)">ЁЯПОя╕П
+                                ╨Ы╨в</button>
+                            <button class="class-btn" data-type="AT-SPG" onclick="selectClass('AT-SPG', this)">ЁЯОп
+                                ╨Я╨в</button>
+                            <button class="class-btn" data-type="SPG" onclick="selectClass('SPG', this)">ЁЯТг ╨б╨Р╨г</button>
+                        </div>
+                        <label class="form-label" style="margin-top:12px">╨г╤А╨╛╨▓╨╡╨╜╤М</label>
+                        <div class="tank-tier-filter">
+                            <button class="tier-btn" data-tier="6" onclick="selectTier(6, this)">VI</button>
+                            <button class="tier-btn" data-tier="7" onclick="selectTier(7, this)">VII</button>
+                            <button class="tier-btn" data-tier="8" onclick="selectTier(8, this)">VIII</button>
+                            <button class="tier-btn" data-tier="9" onclick="selectTier(9, this)">IX</button>
+                            <button class="tier-btn tier-btn--active" data-tier="10"
+                                onclick="selectTier(10, this)">X</button>
+                        </div>
+                        <div class="selected-tank-summary" id="selectedTankSummary"
+                            style="margin-top:12px;text-align:center;font-size:0.8rem;color:#C8AA6E;font-family:'Russo One',sans-serif">
+                            ЁЯФД ╨Ы╤О╨▒╨╛╨╣ ╤В╨░╨╜╨║ ┬╖ X ╤Г╤А╨╛╨▓╨╡╨╜╤М
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode: Specific tank -->
+                <div id="tankModeSpecific" style="display:none">
+                    <div class="tank-filters">
+                        <div class="tank-class-filter">
+                            <button class="class-btn2 class-btn2--active" data-type="all"
+                                onclick="filterTanks('all', this)">ЁЯФД ╨Т╤Б╨╡</button>
+                            <button class="class-btn2" data-type="heavyTank"
+                                onclick="filterTanks('heavyTank', this)">ЁЯЫбя╕П ╨в╨в</button>
+                            <button class="class-btn2" data-type="mediumTank"
+                                onclick="filterTanks('mediumTank', this)">тЪЩя╕П ╨б╨в</button>
+                            <button class="class-btn2" data-type="lightTank"
+                                onclick="filterTanks('lightTank', this)">ЁЯПОя╕П ╨Ы╨в</button>
+                            <button class="class-btn2" data-type="AT-SPG" onclick="filterTanks('AT-SPG', this)">ЁЯОп
+                                ╨Я╨в</button>
+                            <button class="class-btn2" data-type="SPG" onclick="filterTanks('SPG', this)">ЁЯТг
+                                ╨б╨Р╨г</button>
+                        </div>
+                        <div class="tank-tier-filter">
+                            <button class="tier-btn2" data-tier="6" onclick="filterTier(6, this)">VI</button>
+                            <button class="tier-btn2" data-tier="7" onclick="filterTier(7, this)">VII</button>
+                            <button class="tier-btn2" data-tier="8" onclick="filterTier(8, this)">VIII</button>
+                            <button class="tier-btn2" data-tier="9" onclick="filterTier(9, this)">IX</button>
+                            <button class="tier-btn2 tier-btn2--active" data-tier="10"
+                                onclick="filterTier(10, this)">X</button>
+                        </div>
+                        <input type="text" class="tank-search-input" id="tankSearchInput"
+                            placeholder="ЁЯФН ╨Я╨╛╨╕╤Б╨║ ╤В╨░╨╜╨║╨░..." oninput="filterTanksByName(this.value)">
+                    </div>
+                    <div class="tank-list" id="tankList">
+                        <div class="tank-loading" id="tankLoading">╨Ч╨░╨│╤А╤Г╨╢╨░╨╡╨╝ ╤В╨░╨╜╨║╨╕...</div>
+                    </div>
+                    <div class="selected-tank" id="selectedTank" style="display:none">
+                        <img id="selectedTankIcon" src="" alt="" class="selected-tank__icon">
+                        <div class="selected-tank__name" id="selectedTankName"></div>
+                        <button class="selected-tank__change" onclick="changeTank()">тЬПя╕П</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Condition -->
+            <div class="create-step create-step--locked" id="step-condition">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">╨г╤Б╨╗╨╛╨▓╨╕╨╡</div>
+                </div>
+                <div class="condition-grid" id="conditionGrid">
+                    <button class="condition-card" data-cond="damage" onclick="selectCondition('damage', this)">
+                        <div class="condition-card__icon">ЁЯТе</div>
+                        <div class="condition-card__name">╨г╤А╨╛╨╜</div>
+                        <div class="condition-card__desc">╨б╤А╨╡╨┤╨╜╨╕╨╣ ╤Г╤А╨╛╨╜ ╨╖╨░ ╤Б╨╡╤А╨╕╤О</div>
+                    </button>
+                    <button class="condition-card" data-cond="spotting" onclick="selectCondition('spotting', this)">
+                        <div class="condition-card__icon">ЁЯСБ</div>
+                        <div class="condition-card__name">╨Ч╨░╤Б╨▓╨╡╤В</div>
+                        <div class="condition-card__desc">╨б╤А╨╡╨┤╨╜╨╕╨╣ ╨╖╨░╤Б╨▓╨╡╤В ╨╖╨░ ╤Б╨╡╤А╨╕╤О</div>
+                    </button>
+                    <button class="condition-card" data-cond="blocked" onclick="selectCondition('blocked', this)">
+                        <div class="condition-card__icon">ЁЯЫбя╕П</div>
+                        <div class="condition-card__name">╨С╨╗╨╛╨║</div>
+                        <div class="condition-card__desc">╨б╤А╨╡╨┤╨╜╨╕╨╣ ╨╖╨░╨▒╨╗╨╛╨║╨╕╤А╨╛╨▓╨░╨╜╨╜╤Л╨╣</div>
+                    </button>
+                    <button class="condition-card" data-cond="frags" onclick="selectCondition('frags', this)">
+                        <div class="condition-card__icon">ЁЯОп</div>
+                        <div class="condition-card__name">╨д╤А╨░╨│╨╕</div>
+                        <div class="condition-card__desc">╨б╤А╨╡╨┤╨╜╨╡╨╡ ╤Г╨▒╨╕╨╣╤Б╤В╨▓</div>
+                    </button>
+                    <button class="condition-card" data-cond="xp" onclick="selectCondition('xp', this)">
+                        <div class="condition-card__icon">тнР</div>
+                        <div class="condition-card__name">╨Ю╨┐╤Л╤В</div>
+                        <div class="condition-card__desc">╨б╤А╨╡╨┤╨╜╨╕╨╣ ╨╛╨┐╤Л╤В ╨╖╨░ ╨▒╨╛╨╣</div>
+                    </button>
+                    <button class="condition-card" data-cond="wins" onclick="selectCondition('wins', this)">
+                        <div class="condition-card__icon">ЁЯПЖ</div>
+                        <div class="condition-card__name">╨Я╨╛╨▒╨╡╨┤╤Л</div>
+                        <div class="condition-card__desc">╨Я╤А╨╛╤Ж╨╡╨╜╤В ╨┐╨╛╨▒╨╡╨┤ ╨╖╨░ ╤Б╨╡╤А╨╕╤О</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Battles -->
+            <div class="create-step create-step--locked" id="step-battles">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-title">╨Ъ╨╛╨╗╨╕╤З╨╡╤Б╤В╨▓╨╛ ╨▒╨╛╤С╨▓</div>
+                </div>
+                <div class="battles-selector" id="battlesSelector">
+                    <button class="battles-btn" data-val="1" onclick="selectBattles(1, this)">1</button>
+                    <button class="battles-btn battles-btn--selected" data-val="5" onclick="selectBattles(5, this)">5
+                    </button>
+                    <button class="battles-btn" data-val="10" onclick="selectBattles(10, this)">10</button>
+                    <button class="battles-btn" data-val="15" onclick="selectBattles(15, this)">15</button>
+                    <button class="battles-btn" data-val="20" onclick="selectBattles(20, this)">20</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Wager -->
+            <div class="create-step create-step--locked" id="step-wager">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <div class="step-title">╨б╤В╨░╨▓╨║╨░ ЁЯзА</div>
+                </div>
+                <div class="wager-input-wrap">
+                    <div class="wager-currency">ЁЯзА</div>
+                    <input type="number" class="form-input" id="wagerAmount" value="100" min="100" max="10000">
+                </div>
+                <div class="wager-presets">
+                    <button class="wager-preset" onclick="setWager(100)">100</button>
+                    <button class="wager-preset" onclick="setWager(200)">200</button>
+                    <button class="wager-preset" onclick="setWager(250)">250</button>
+                    <button class="wager-preset" onclick="setWager(500)">500</button>
+                    <button class="wager-preset" onclick="setWager(1000)">1000</button>
+                </div>
+            </div>
+
+            <!-- Summary & Send -->
+            <div class="challenge-summary-full" id="challengeSummaryFull" style="display:none">
+                <div class="summary-title">ЁЯУЛ ╨б╨▓╨╛╨┤╨║╨░</div>
+                <div class="summary-row">
+                    <span class="summary-key">╨б╨╛╨┐╨╡╤А╨╜╨╕╨║</span>
+                    <span class="summary-val" id="sumOpponent">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">╨в╨░╨╜╨║</span>
+                    <span class="summary-val" id="sumTank">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">╨г╤Б╨╗╨╛╨▓╨╕╨╡</span>
+                    <span class="summary-val" id="sumCondition">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">╨С╨╛╤С╨▓</span>
+                    <span class="summary-val" id="sumBattles">5</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">╨б╤В╨░╨▓╨║╨░</span>
+                    <span class="summary-val" id="sumWager">ЁЯзА 100</span>
+                </div>
+                <div class="summary-row summary-row--prize">
+                    <span class="summary-key">╨Я╤А╨╕╨╖ ╨┐╨╛╨▒╨╡╨┤╨╕╤В╨╡╨╗╤О</span>
+                    <span class="summary-val" id="sumPrize" style="color:#4ade80">ЁЯзА 200</span>
+                </div>
+                <button class="challenge-send-btn" id="sendChallengeBtn" onclick="sendChallenge()">
+                    тЪФя╕П ╨Ю╨в╨Я╨а╨Р╨Т╨Ш╨в╨м ╨Т╨л╨Ч╨Ю╨Т
+                </button>
+            </div>
+
+            <!-- MY PVP CHALLENGES (inline) -->
+            <div class="my-pvp-section" id="myPvpSection" style="margin-top:24px">
+                <div class="section-lbl" style="display:flex;justify-content:space-between;align-items:center">
+                    <span>ЁЯУЛ ╨Ь╨╛╨╕ ╨▓╤Л╨╖╨╛╨▓╤Л</span>
+                    <button onclick="loadMyPvpChallenges()" style="background:none;border:none;color:#C8AA6E;font-size:0.7rem;cursor:pointer;padding:4px 8px">ЁЯФД</button>
+                </div>
+                <div id="myPvpList">
+                    <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">тП│ ╨Ч╨░╨│╤А╤Г╨╖╨║╨░...</div>
+                </div>
+            </div>
+
+            
+
+            <!-- PVP WIDGET CONSTRUCTOR -->
+            <div class="my-pvp-section" id="pvpWidgetConstructor" style="margin-top:24px">
+                <div class="section-lbl" style="display:flex;justify-content:space-between;align-items:center">
+                    <span>ЁЯОи ╨Ъ╨╛╨╜╤Б╤В╤А╤Г╨║╤В╨╛╤А ╨▓╨╕╨┤╨╢╨╡╤В╨░ OBS</span>
+                    <button onclick="toggleWidgetConstructor()" id="wcToggleBtn" style="background:none;border:none;color:#C8AA6E;font-size:0.7rem;cursor:pointer;padding:4px 8px">тЦ╝</button>
+                </div>
+                <div id="wcBody" style="display:none">
+                    <!-- Preview -->
+                    <div style="margin-bottom:16px;border-radius:14px;overflow:hidden;background:rgba(0,0,0,0.4);padding:12px;border:1px solid rgba(255,255,255,0.05)">
+                        <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px;text-align:center">ЁЯСБ ╨Я╤А╨╡╨┤╨┐╤А╨╛╤Б╨╝╨╛╤В╤А</div>
+                        <div id="wcPreview" style="transform:scale(0.65);transform-origin:top center;margin-bottom:-80px"></div>
+                    </div>
+
+                    <!-- Theme -->
+                    <div class="wc-group">
+                        <div class="wc-label">ЁЯОи ╨в╨╡╨╝╨░</div>
+                        <div class="wc-theme-row" id="wcThemes">
+                            <button class="wc-theme-btn wc-theme-active" data-theme="gold" style="--tc:#C8AA6E" onclick="wcSelectTheme('gold',this)">╨Ч╨╛╨╗╨╛╤В╨╛</button>
+                            <button class="wc-theme-btn" data-theme="neon" style="--tc:#a855f7" onclick="wcSelectTheme('neon',this)">╨Э╨╡╨╛╨╜</button>
+                            <button class="wc-theme-btn" data-theme="fire" style="--tc:#f97316" onclick="wcSelectTheme('fire',this)">╨Ю╨│╨╛╨╜╤М</button>
+                            <button class="wc-theme-btn" data-theme="ice" style="--tc:#38bdf8" onclick="wcSelectTheme('ice',this)">╨Ы╤С╨┤</button>
+                            <button class="wc-theme-btn" data-theme="blood" style="--tc:#dc2626" onclick="wcSelectTheme('blood',this)">╨Ъ╤А╨╛╨▓╤М</button>
+                            <button class="wc-theme-btn" data-theme="cyber" style="--tc:#22d3ee" onclick="wcSelectTheme('cyber',this)">╨Ъ╨╕╨▒╨╡╤А</button>
+                            <button class="wc-theme-btn" data-theme="military" style="--tc:#6b8a3d" onclick="wcSelectTheme('military',this)">╨Ь╨╕╨╗╨╕╤В╨░╤А╨╕</button>
+                        </div>
+                    </div>
+
+                    <!-- Layout -->
+                    <div class="wc-group">
+                        <div class="wc-label">ЁЯУР ╨Ь╨░╨║╨╡╤В</div>
+                        <div class="wc-theme-row" id="wcLayouts">
+                            <button class="wc-layout-btn wc-theme-active" onclick="wcSelectLayout('full',this)">ЁЯЦ╝ ╨Я╨╛╨╗╨╜╤Л╨╣</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('compact',this)">ЁЯУж ╨Ъ╨╛╨╝╨┐╨░╨║╤В</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('minimal',this)">тЬи ╨Ь╨╕╨╜╨╕</button>
+                            <button class="wc-layout-btn" onclick="wcSelectLayout('horizontal',this)">тЖФ ╨и╨╕╤А╨╛╨║╨╕╨╣</button>
+                        </div>
+                    </div>
+
+                    <!-- Font -->
+                    <div class="wc-group">
+                        <div class="wc-label">ЁЯФд ╨и╤А╨╕╤Д╤В ╤Б╤З╤С╤В╨░</div>
+                        <div class="wc-theme-row">
+                            <button class="wc-layout-btn wc-theme-active" onclick="wcSelectFont('russo',this)">Russo One</button>
+                            <button class="wc-layout-btn" onclick="wcSelectFont('orbitron',this)">Orbitron</button>
+                        </div>
+                    </div>
+
+                    <!-- Scale slider -->
+                    <div class="wc-group">
+                        <div class="wc-label">ЁЯФН ╨Ь╨░╤Б╤И╤В╨░╨▒: <span id="wcScaleVal">1.0</span></div>
+                        <input type="range" class="wc-slider" id="wcScale" min="0.6" max="1.6" step="0.05" value="1" oninput="wcUpdateSlider()">
+                    </div>
+
+                    <!-- BG Opacity slider -->
+                    <div class="wc-group">
+                        <div class="wc-label">ЁЯМЕ ╨Я╤А╨╛╨╖╤А╨░╤З╨╜╨╛╤Б╤В╤М ╤Д╨╛╨╜╨░: <span id="wcBgVal">94%</span></div>
+                        <input type="range" class="wc-slider" id="wcBgOp" min="0" max="100" step="2" value="94" oninput="wcUpdateSlider()">
+                    </div>
+
+                    <!-- Border radius slider -->
+                    <div class="wc-group">
+                        <div class="wc-label">тнХ ╨б╨║╤А╤Г╨│╨╗╨╡╨╜╨╕╨╡: <span id="wcRadiusVal">18px</span></div>
+                        <input type="range" class="wc-slider" id="wcRadius" min="0" max="32" step="2" value="18" oninput="wcUpdateSlider()">
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="wc-group">
+                        <div class="wc-label">тЪЩ ╨н╨╗╨╡╨╝╨╡╨╜╤В╤Л</div>
+                        <div class="wc-toggles">
+                            <label class="wc-toggle"><input type="checkbox" id="wcHeader" checked onchange="wcUpdatePreview()"><span>ЁЯП╖ ╨Ч╨░╨│╨╛╨╗╨╛╨▓╨╛╨║</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcInfo" checked onchange="wcUpdatePreview()"><span>ЁЯУЛ ╨Ш╨╜╤Д╨╛-╤В╨╡╨│╨╕</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcProgress" checked onchange="wcUpdatePreview()"><span>ЁЯУК ╨Я╤А╨╛╨│╤А╨╡╤Б╤Б-╨▒╨░╤А</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcHistory" checked onchange="wcUpdatePreview()"><span>ЁЯУЦ ╨С╨╛╨╕</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcFooter" checked onchange="wcUpdatePreview()"><span>ЁЯзА ╨б╤В╨░╨▓╨║╨░/╨┐╤А╨╕╨╖</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcBrand" checked onchange="wcUpdatePreview()"><span>тЬи ╨С╤А╨╡╨╜╨┤</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Effects -->
+                    <div class="wc-group">
+                        <div class="wc-label">тЬи ╨н╤Д╤Д╨╡╨║╤В╤Л</div>
+                        <div class="wc-toggles">
+                            <label class="wc-toggle"><input type="checkbox" id="wcAnim" checked onchange="wcUpdatePreview()"><span>ЁЯОм ╨Р╨╜╨╕╨╝╨░╤Ж╨╕╨╕</span></label>
+                            <label class="wc-toggle"><input type="checkbox" id="wcGlow" onchange="wcUpdatePreview()"><span>ЁЯТб ╨б╨▓╨╡╤З╨╡╨╜╨╕╨╡ ╤А╨░╨╝╨║╨╕</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Custom accent color -->
+                    <div class="wc-group">
+                        <div class="wc-label">ЁЯМИ ╨б╨▓╨╛╨╣ ╨░╨║╤Ж╨╡╨╜╤В</div>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <input type="color" id="wcAccent" value="#C8AA6E" style="width:36px;height:28px;border:none;background:none;cursor:pointer">
+                            <label class="wc-toggle" style="margin:0"><input type="checkbox" id="wcAccentOn" onchange="wcUpdatePreview()"><span>╨Ш╤Б╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╤М</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Copy button -->
+                    <div style="margin-top:14px;display:flex;gap:8px">
+                        <button onclick="wcCopyLink()" class="wc-copy-btn">ЁЯУЛ ╨б╨║╨╛╨┐╨╕╤А╨╛╨▓╨░╤В╤М OBS ╤Б╤Б╤Л╨╗╨║╤Г</button>
+                        <button onclick="wcResetDefaults()" class="wc-reset-btn">ЁЯФД ╨б╨▒╤А╨╛╤Б</button>
+                    </div>
+                    <div id="wcLinkPreview" style="display:none;margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,0.3);font-size:0.5rem;color:#5A6577;word-break:break-all;font-family:monospace"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: ACTIVE / INCOMING          -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-active">
+            <div class="section-lbl">ЁЯУй ╨Т╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨▓╤Л╨╖╨╛╨▓╤Л</div>
+            <div id="incomingDuels"></div>
+            <div id="outgoingDuels"></div>
+            <div class="section-lbl" style="margin-top:20px">ЁЯФе ╨Р╨║╤В╨╕╨▓╨╜╤Л╨╡ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨╕</div>
+            <div id="activeDuels"></div>
+            <div class="empty-state" id="noActiveDuels">
+                <div class="empty-state__icon">тЪФя╕П</div>
+                <div class="empty-state__text">╨Э╨╡╤В ╨░╨║╤В╨╕╨▓╨╜╤Л╤Е ╨┤╤Г╤Н╨╗╨╡╨╣.<br>╨б╨╛╨╖╨┤╨░╨╣ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢!</div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: HISTORY                    -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-history">
+            <!-- Global Challenge History -->
+            <div class="section-lbl">ЁЯПЖ ╨У╨╗╨╛╨▒╨░╨╗╤М╨╜╤Л╨╡ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨╕</div>
+            <div id="gcHistoryList">
+                <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">тП│ ╨Ч╨░╨│╤А╤Г╨╖╨║╨░...</div>
+            </div>
+
+            <!-- PvP Duels History -->
+            <div class="section-lbl" style="margin-top:20px">тЪФя╕П ╨Ф╤Г╤Н╨╗╨╕ PvP</div>
+            <div id="historyList">
+                <div class="empty-state">
+                    <div class="empty-state__icon">ЁЯУЬ</div>
+                    <div class="empty-state__text">╨Ф╤Г╤Н╨╗╨╕ ╨┐╨╛╨║╨░ ╨╜╨╡ ╨╖╨░╨▓╨╡╤А╤И╨╡╨╜╤Л</div>
+                </div>
+            </div>
+
+            <!-- Team Battle History -->
+            <div class="section-lbl" style="margin-top:20px">ЁЯСе ╨Ъ╨╛╨╝╨░╨╜╨┤╨╜╤Л╨╡ ╨▒╨╛╨╕</div>
+            <div id="tbHistoryMainList">
+                <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">тП│ ╨Ч╨░╨│╤А╤Г╨╖╨║╨░...</div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: ADMIN PANEL               -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-admin">
+            <div class="section-lbl">ЁЯЫб ╨Я╨░╨╜╨╡╨╗╤М ╤Г╨┐╤А╨░╨▓╨╗╨╡╨╜╨╕╤П</div>
+            <div style="margin-bottom:12px">
+                <input type="text" id="adminSearchInput" placeholder="ЁЯФН ╨Я╨╛╨╕╤Б╨║ ╨┐╨╛ ╨╜╨╕╨║╤Г, ID ╨╕╨╗╨╕ ╨╕╨╝╨╡╨╜╨╕..."
+                    oninput="filterAdminUsers()" style="width:100%;padding:10px 14px;border-radius:10px;
+                    background:rgba(255,255,255,0.04);border:1px solid rgba(200,170,110,0.15);
+                    color:#E8E6E3;font-size:0.75rem;outline:none">
+            </div>
+            <div style="font-size:0.6rem;color:#5A6577;margin-bottom:8px" id="adminUserCount">╨Ч╨░╨│╤А╤Г╨╖╨║╨░...</div>
+            <div id="adminUsersList"></div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: GLOBAL CHALLENGE          -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-global">
+
+            <!-- Main Widget -->
+            <div class="gc-widget" id="gcWidget">
+                <!-- Loading state -->
+                <div class="gc-loading" id="gcLoading">
+                    <div class="gc-loading__spinner"></div>
+                    <div class="gc-loading__text">╨Ч╨░╨│╤А╤Г╨╖╨║╨░ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨░...</div>
+                </div>
+
+                <!-- No challenge state -->
+                <div class="gc-empty" id="gcEmpty" style="display:none">
+                    <div class="gc-empty__icon">тЪФя╕П</div>
+                    <div class="gc-empty__title">╨Э╨╡╤В ╨░╨║╤В╨╕╨▓╨╜╤Л╤Е ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨╡╨╣</div>
+                    <div class="gc-empty__desc">╨Р╨┤╨╝╨╕╨╜ ╨┐╨╛╨║╨░ ╨╜╨╡ ╨╖╨░╨┐╤Г╤Б╤В╨╕╨╗ ╨╛╨▒╤Й╨╕╨╣ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢.<br>╨б╨╗╨╡╨┤╨╕ ╨╖╨░ ╨╛╨▒╨╜╨╛╨▓╨╗╨╡╨╜╨╕╤П╨╝╨╕!</div>
+                </div>
+
+                <!-- Active challenge -->
+                <div class="gc-active" id="gcActive" style="display:none">
+                    <div class="gc-header">
+                        <div class="gc-header__icon" id="gcIcon">ЁЯФе</div>
+                        <div class="gc-header__info">
+                            <h1 class="gc-header__title" id="gcTitle">╨з╨╡╨╗╨╗╨╡╨╜╨┤╨╢</h1>
+                            <p class="gc-header__desc" id="gcDesc">╨Ю╨┐╨╕╤Б╨░╨╜╨╕╨╡ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨░</p>
+                        </div>
+                        <div class="gc-header__condition" id="gcCondition">ЁЯТе</div>
+                    </div>
+
+                    <div class="gc-timer-section" id="gcTimerContainer">
+                        <div class="gc-timer-ring">
+                            <svg class="gc-timer-svg" viewBox="0 0 200 200">
+                                <circle class="gc-timer-track" cx="100" cy="100" r="90" />
+                                <circle class="gc-timer-progress" id="gcTimerProgress" cx="100" cy="100" r="90" />
+                            </svg>
+                            <div class="gc-timer-inner">
+                                <div class="gc-timer-value" id="gcTimerValue">59:59</div>
+                                <div class="gc-timer-label" id="gcTimerLabel">╨╛╤Б╤В╨░╨╗╨╛╤Б╤М</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gc-stats">
+                        <div class="gc-stat">
+                            <div class="gc-stat__value" id="gcParticipants">0</div>
+                            <div class="gc-stat__label">╨г╤З╨░╤Б╤В╨╜╨╕╨║╨╛╨▓</div>
+                        </div>
+                        <div class="gc-stat gc-stat--reward">
+                            <div class="gc-stat__value" id="gcReward">ЁЯзА 500</div>
+                            <div class="gc-stat__label">╨Я╤А╨╕╨╖</div>
+                        </div>
+                        <div class="gc-stat">
+                            <div class="gc-stat__value" id="gcCondLabel">╨г╤А╨╛╨╜</div>
+                            <div class="gc-stat__label">╨г╤Б╨╗╨╛╨▓╨╕╨╡</div>
+                        </div>
+                    </div>
+                    <!-- Vehicle filter badges -->
+                    <div id="gcVehicleFilter" style="display:none;text-align:center;margin-top:6px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap"></div>
+                    <!-- Multi-condition badges -->
+                    <div class="gc-cond-badges" id="gcCondBadges" style="display:none;margin:-4px 0 8px;text-align:center"></div>
+
+                    <!-- Prize badge (for prize_mode challenges) -->
+                    <div id="gcPrizeBadge" style="display:none;text-align:center;padding:8px 20px;margin:0 20px 12px;
+                         background:linear-gradient(145deg,rgba(245,190,11,0.08),rgba(200,170,110,0.03));
+                         border:1px solid rgba(245,190,11,0.15);border-radius:12px;
+                         font-size:0.72rem;color:#C8AA6E;font-weight:600;
+                         animation:winnerGlow 3s ease-in-out infinite">
+                    </div>
+
+                    <button class="gc-join-btn" id="gcJoinBtn" onclick="gcJoinChallenge()">
+                        тЪФя╕П ╨Т╨б╨в╨г╨Я╨Ш╨в╨м ╨Т ╨з╨Х╨Ы╨Ы╨Х╨Э╨Ф╨Ц
+                    </button>
+
+                    <div class="gc-leaderboard" id="gcLeaderboard">
+                        <div class="gc-lb-title">ЁЯПЖ ╨в╨Ю╨Я ╨Ы╨Ш╨Ф╨Х╨а╨л</div>
+                        <div class="gc-lb-list" id="gcLbList">
+                            <div class="gc-lb-empty">╨Я╨╛╨║╨░ ╨╜╨╡╤В ╤Г╤З╨░╤Б╤В╨╜╨╕╨║╨╛╨▓</div>
+                        </div>
+                    </div>
+
+                    <!-- Widget link -->
+                    <div class="gc-widget-link" id="gcWidgetLink" style="display:none">
+                        <button class="gc-widget-link__btn" onclick="gcCopyWidgetLink()">
+                            ЁЯФЧ ╨б╨║╨╛╨┐╨╕╤А╨╛╨▓╨░╤В╤М ╤Б╤Б╤Л╨╗╨║╤Г ╨╜╨░ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢
+                        </button>
+                    </div>
+
+                    <div class="gc-auto-info">
+                        <div class="gc-auto-info__icon">ЁЯдЦ</div>
+                        <div class="gc-auto-info__text">╨б╤В╨░╤В╨╕╤Б╤В╨╕╨║╨░ ╨╛╨▒╨╜╨╛╨▓╨╗╤П╨╡╤В╤Б╤П ╨░╨▓╤В╨╛╨╝╨░╤В╨╕╤З╨╡╤Б╨║╨╕ ╤З╨╡╤А╨╡╨╖ API ╨Ь╨╕╤А ╨в╨░╨╜╨║╨╛╨▓ ╨║╨░╨╢╨┤╤Л╨╡
+                            15 ╤Б╨╡╨║</div>
+                    </div>
+                </div>
+
+                <!-- Finished state -->
+                <div class="gc-finished" id="gcFinished" style="display:none">
+                    <div class="gc-winner-crown">ЁЯСС</div>
+                    <div class="gc-winner-title">╨Я╨Ю╨С╨Х╨Ф╨Ш╨в╨Х╨Ы╨м ╨Т╨л╨п╨Т╨Ы╨Х╨Э!</div>
+                    <div class="gc-winner-card" id="gcWinnerCard">
+                        <div class="gc-winner-medal">ЁЯеЗ</div>
+                        <div class="gc-winner-name" id="gcWinnerName">тАФ</div>
+                        <div class="gc-winner-value" id="gcWinnerValue">0</div>
+                        <div class="gc-winner-label" id="gcWinnerLabel">╤Г╤А╨╛╨╜╨░</div>
+                    </div>
+                    <div class="gc-final-lb" id="gcFinalLb"></div>
+                </div>
+            </div>
+
+            <!-- HISTORY LIST -->
+            <div class="gc-history-section" id="gcHistorySection" style="margin-top:20px;display:none">
+                <div class="section-lbl">ЁЯУЬ ╨Ш╤Б╤В╨╛╤А╨╕╤П ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨╡╨╣</div>
+                <div id="gcHistoryList" style="display:flex;flex-direction:column;gap:10px"></div>
+            </div>
+
+            <!-- MODAL FOR BATTLE LOGS -->
+            <div class="gc-modal" id="gcModal" style="display:none">
+                <div class="gc-modal__backdrop" onclick="gcCloseModal()"></div>
+                <div class="gc-modal__content">
+                    <div class="gc-modal__header">
+                        <div class="gc-modal__title" id="gcModalTitle">╨а╨╡╨╖╤Г╨╗╤М╤В╨░╤В╤Л ╨╕╨│╤А╨╛╨║╨░</div>
+                        <button class="gc-modal__close" onclick="gcCloseModal()">├Ч</button>
+                    </div>
+                    <div class="gc-modal__summary" id="gcModalSummary"></div>
+                    <div class="gc-modal__body" id="gcModalBody">
+                        <div class="gc-loading-mini">тП│ ╨Ч╨░╨│╤А╤Г╨╖╨║╨░ ╨▒╨╛╤С╨▓...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel for Global Challenge -->
+            <div class="gc-admin" id="gcAdminPanel" style="display:none">
+                <div class="gc-admin__title">ЁЯЫб ╨г╨┐╤А╨░╨▓╨╗╨╡╨╜╨╕╨╡ ╨з╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨╡╨╝</div>
+
+                <div class="gc-subs">
+                    <div class="gc-subs__header">
+                        <div class="gc-subs__title">ЁЯСе ╨Я╨╛╨┤╨┐╨╕╤Б╤З╨╕╨║╨╕ <span class="gc-subs__count" id="subsCount">0</span>
+                        </div>
+                        <button class="gc-subs__refresh" onclick="gcLoadSubscribers()">ЁЯФД</button>
+                    </div>
+                    <div class="gc-subs__search">
+                        <input type="text" class="gc-admin__input" id="subsSearch" placeholder="ЁЯФН ╨Я╨╛╨╕╤Б╨║ ╨┐╨╛ ╨╜╨╕╨║╤Г..."
+                            oninput="gcFilterSubscribers()">
+                    </div>
+                    <div class="gc-subs__list" id="subsList">
+                        <div class="gc-subs__loading">тП│ ╨Ч╨░╨│╤А╤Г╨╖╨║╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤З╨╕╨║╨╛╨▓...</div>
+                    </div>
+                </div>
+
+                <div class="gc-admin__divider"></div>
+
+                <div class="gc-admin__form">
+                    <div class="gc-admin__form-title">тЪЩя╕П ╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢╨░</div>
+
+                    <label class="gc-admin__label">╨Э╨░╨╖╨▓╨░╨╜╨╕╨╡</label>
+                    <input type="text" class="gc-admin__input" id="adminGcTitle" value="╨Ъ╤В╨╛ ╨╜╨░╨╜╨╡╤Б╤С╤В ╨▒╨╛╨╗╤М╤И╨╡ ╤Г╤А╨╛╨╜╨░?"
+                        placeholder="╨Э╨░╨╖╨▓╨░╨╜╨╕╨╡">
+
+                    <label class="gc-admin__label">╨Ю╨┐╨╕╤Б╨░╨╜╨╕╨╡</label>
+                    <input type="text" class="gc-admin__input" id="adminGcDesc"
+                        value="╨Э╨░╨╜╨╡╤Б╨╕ ╨╝╨░╨║╤Б╨╕╨╝╤Г╨╝ ╤Г╤А╨╛╨╜╨░ ╨╖╨░ ╨╛╨┤╨╕╨╜ ╨▒╨╛╨╣!" placeholder="╨Ю╨┐╨╕╤Б╨░╨╜╨╕╨╡">
+
+                    <label class="gc-admin__label">╨г╤Б╨╗╨╛╨▓╨╕╨╡ <span style="font-size:0.55rem;color:#5A6577;font-weight:400">(╨▓╤Л╨▒╨╡╤А╨╕ 1-3)</span></label>
+                    <div class="gc-admin__conditions" id="gcCondButtons">
+                        <button class="gc-cond-btn gc-cond-btn--active" data-cond="damage"
+                            onclick="gcToggleCond('damage', this)"><img src="img/military/cond_damage.png?v=2"> ╨г╤А╨╛╨╜</button>
+                        <button class="gc-cond-btn" data-cond="frags" onclick="gcToggleCond('frags', this)"><img src="img/military/cond_frags.png?v=2">
+                            ╨д╤А╨░╨│╨╕</button>
+                        <button class="gc-cond-btn" data-cond="xp" onclick="gcToggleCond('xp', this)"><img src="img/military/cond_xp.png?v=2"> ╨Ю╨┐╤Л╤В</button>
+                        <button class="gc-cond-btn" data-cond="spotting" onclick="gcToggleCond('spotting', this)"><img src="img/military/cond_spotting.png?v=2">
+                            ╨Ч╨░╤Б╨▓╨╡╤В</button>
+                        <button class="gc-cond-btn" data-cond="spotting_damage" onclick="gcToggleCond('spotting_damage', this)">ЁЯФн
+                            ╨г╤А╨╛╨╜ ╨┐╨╛ ╨╖╨░╤Б╨▓╨╡╤В╤Г</button>
+                        <button class="gc-cond-btn" data-cond="blocked" onclick="gcToggleCond('blocked', this)"><img src="img/military/cond_blocked.png?v=2">
+                            ╨С╨╗╨╛╨║</button>
+                        <button class="gc-cond-btn" data-cond="combined" onclick="gcToggleCond('combined', this)" title="╨г╤А╨╛╨╜ + ╨г╤А╨╛╨╜ ╨┐╨╛ ╨╖╨░╤Б╨▓╨╡╤В╤Г"><img src="img/military/cond_combined.png?v=2"> ╨б╤Г╨╝╨╝╨░╤А╨║╨░</button>
+                    </div>
+                    <div id="gcCondSelected" style="margin-top:6px;font-size:0.6rem;color:#C8AA6E;display:flex;flex-wrap:wrap;gap:4px"></div>
+
+                    <!-- ╨д╨╕╨╗╤М╤В╤А ╤В╨╡╤Е╨╜╨╕╨║╨╕ -->
+                    <label class="gc-admin__label" style="margin-top:12px">ЁЯкЦ ╨в╨╡╤Е╨╜╨╕╨║╨░ <span style="font-size:0.55rem;color:#5A6577;font-weight:400">(╨╛╨┐╤Ж╨╕╨╛╨╜╨░╨╗╤М╨╜╨╛)</span></label>
+                    <div class="gc-admin__row" style="gap:6px">
+                        <div style="flex:1">
+                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">ЁЯМН ╨Э╨░╤Ж╨╕╤П</label>
+                            <select class="gc-admin__input" id="adminGcTankNation" onchange="gcOnNationChange()" style="font-size:0.65rem">
+                                <option value="">ЁЯМН ╨Ы╤О╨▒╨░╤П</option>
+                            </select>
+                        </div>
+                        <div style="flex:1">
+                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">╨Ъ╨╗╨░╤Б╤Б</label>
+                            <select class="gc-admin__input" id="adminGcTankClass" onchange="gcOnTankClassChange()" style="font-size:0.65rem">
+                                <option value="">╨Ы╤О╨▒╨╛╨╣</option>
+                            </select>
+                        </div>
+                        <div style="flex:1">
+                            <label class="gc-admin__label" style="font-size:0.55rem;margin-bottom:4px">╨г╤А╨╛╨▓╨╡╨╜╤М</label>
+                            <select class="gc-admin__input" id="adminGcTankTier" onchange="gcOnTankTierChange()" style="font-size:0.65rem">
+                                <option value="0">╨Ы╤О╨▒╨╛╨╣</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="adminGcTankPicker" style="display:none;max-height:160px;overflow-y:auto;margin-top:6px;background:rgba(0,0,0,0.2);border:1px solid rgba(200,170,110,0.1);border-radius:10px;padding:4px"></div>
+                    <div id="adminGcTankSelected" style="margin-top:6px;font-size:0.6rem;color:#4ade80"></div>
+
+
+                    <!-- ╨С╨╡╨╖ ╨┐╤А╨╕╨╖╨╛╨▓╨╛╨│╨╛ ╤А╨╡╨╢╨╕╨╝╨░: ╤В╨░╨╣╨╝╨╡╤А = ╨┐╤А╨╛╨┤╨╛╨╗╨╢╨╕╤В╨╡╨╗╤М╨╜╨╛╤Б╤В╤М, ╨┐╤А╨╕╨╖ = ╨╝╨╛╨╜╨╡╤В╤Л -->
+                    <div id="normalModeFields">
+                        <div class="gc-admin__row">
+                            <div>
+                                <label class="gc-admin__label">тП▒ ╨Ф╨╗╨╕╤В╨╡╨╗╤М╨╜╨╛╤Б╤В╤М (╨╝╨╕╨╜)</label>
+                                <input type="number" class="gc-admin__input" id="adminGcDuration" value="60" min="5" max="1440">
+                            </div>
+                            <div>
+                                <label class="gc-admin__label">ЁЯзА ╨Э╨░╨│╤А╨░╨┤╨░ (╤Б╤Л╤А)</label>
+                                <input type="number" class="gc-admin__input" id="adminGcReward" value="500" min="0">
+                            </div>
+                        </div>
+                        <div class="gc-admin__presets">
+                            <button class="gc-preset-btn" onclick="gcSetDuration(15)">15 ╨╝╨╕╨╜</button>
+                            <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 ╨╝╨╕╨╜</button>
+                            <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 ╤З╨░╤Б</button>
+                            <button class="gc-preset-btn" onclick="gcSetDuration(120)">2 ╤З╨░╤Б╨░</button>
+                        </div>
+                    </div>
+
+                    <div class="gc-admin__row" style="margin-top:12px">
+                        <div>
+                            <label class="gc-admin__label">ЁЯОп ╨Ъ╨╛╨╗-╨▓╨╛ ╨▒╨╛╤С╨▓ <span style="font-size:0.5rem;color:#5A6577">(0 = ╨▒╨╡╨╖ ╨╗╨╕╨╝╨╕╤В╨░)</span></label>
+                            <input type="number" class="gc-admin__input" id="adminGcMaxBattles" value="0" min="0" max="100" placeholder="0 = ╨▒╨╡╨╖ ╨╗╨╕╨╝╨╕╤В╨░">
+                        </div>
+                    </div>
+
+                    <!-- ====== PRIZE MODE ====== -->
+                    <div id="prizeModeSection" style="margin-top:16px;padding:14px;background:linear-gradient(145deg,rgba(245,190,11,0.06),rgba(200,170,110,0.02));
+                         border:1px solid rgba(245,190,11,0.15);border-radius:14px">
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:0" onclick="gcTogglePrizeMode()">
+                            <div id="prizeModeToggle" style="width:44px;height:24px;border-radius:12px;
+                                 background:rgba(255,255,255,0.08);transition:all 0.3s;position:relative;flex-shrink:0;
+                                 border:1px solid rgba(255,255,255,0.1)">
+                                <div style="width:20px;height:20px;border-radius:50%;background:#5A6577;
+                                     position:absolute;top:1px;left:1px;transition:all 0.3s"></div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Russo One',sans-serif;font-size:0.72rem;color:#C8AA6E">ЁЯПЖ ╨Я╤А╨╕╨╖╨╛╨▓╨╛╨╣ ╤А╨╡╨╢╨╕╨╝</div>
+                                <div style="font-size:0.55rem;color:#5A6577;margin-top:2px">╨Ъ╨╛╨╗╨╡╤Б╨╛ ╤Д╨╛╤А╤В╤Г╨╜╤Л ╨┤╨╗╤П ╨╛╨┐╤А╨╡╨┤╨╡╨╗╨╡╨╜╨╕╤П ╨┐╨╛╨▒╨╡╨┤╨╕╤В╨╡╨╗╤П</div>
+                            </div>
+                        </label>
+
+                        <div id="prizeModeFields" style="display:none;margin-top:14px">
+
+                            <!-- ╨Т╤А╨╡╨╝╤П ╨╜╨░╨▒╨╛╤А╨░ -->
+                            <label class="gc-admin__label">тП▒ ╨Т╤А╨╡╨╝╤П ╨╜╨░╨▒╨╛╤А╨░ (╨╝╨╕╨╜)</label>
+                            <input type="number" class="gc-admin__input" id="adminGcEnrollDuration" value="60" min="1" max="1440" style="margin-bottom:4px">
+                            <div class="gc-admin__presets" style="margin-bottom:14px">
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(15)">15 ╨╝╨╕╨╜</button>
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(30)">30 ╨╝╨╕╨╜</button>
+                                <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetEnrollDuration(60)">1 ╤З╨░╤Б</button>
+                                <button class="gc-preset-btn" onclick="gcSetEnrollDuration(120)">2 ╤З╨░╤Б╨░</button>
+                            </div>
+
+                            <!-- ╨Ю╨┐╨╕╤Б╨░╨╜╨╕╨╡ ╨┐╤А╨╕╨╖╨░ -->
+                            <label class="gc-admin__label">ЁЯОБ ╨з╤В╨╛ ╤А╨░╨╖╤Л╨│╤А╤Л╨▓╨░╨╡╤В╤Б╤П</label>
+                            <input type="text" class="gc-admin__input" id="adminGcPrizeDesc"
+                                   placeholder="╨Э╨░╨┐╤А╨╕╨╝╨╡╤А: iPhone 16 Pro" style="margin-bottom:10px">
+
+                            <!-- ╨Ъ╨░╤А╤В╨╕╨╜╨║╨░ ╨┐╤А╨╕╨╖╨░ -->
+                            <label class="gc-admin__label">ЁЯЦ╝ ╨Ъ╨░╤А╤В╨╕╨╜╨║╨░ ╨┐╤А╨╕╨╖╨░</label>
+                            <input type="file" id="adminGcPrizeFile" accept="image/*" 
+                                   style="display:none" onchange="gcUploadPrizeImage(this)">
+                            <div style="display:flex;gap:8px;margin-bottom:6px">
+                                <button type="button" onclick="document.getElementById('adminGcPrizeFile').click()"
+                                    style="flex:1;padding:10px;border:1px dashed rgba(200,170,110,0.3);
+                                           border-radius:10px;background:rgba(200,170,110,0.06);color:#C8AA6E;
+                                           font-size:0.65rem;cursor:pointer;font-family:'Inter',sans-serif;
+                                           transition:all 0.3s"
+                                    onmouseover="this.style.background='rgba(200,170,110,0.12)'"
+                                    onmouseout="this.style.background='rgba(200,170,110,0.06)'">
+                                    ЁЯУд ╨Ч╨░╨│╤А╤Г╨╖╨╕╤В╤М ╤Б ╨║╨╛╨╝╨┐╤М╤О╤В╨╡╤А╨░
+                                </button>
+                            </div>
+                            <input type="text" class="gc-admin__input" id="adminGcPrizeImage"
+                                   placeholder="╨╕╨╗╨╕ ╨▓╤Б╤В╨░╨▓╨╕╤В╤М ╨┐╤А╤П╨╝╤Г╤О ╤Б╤Б╤Л╨╗╨║╤Г https://..." style="margin-bottom:6px;font-size:0.55rem"
+                                   oninput="gcPreviewPrizeImage(this.value)">
+                            <div id="prizeImagePreview" style="display:none;margin-bottom:10px;text-align:center">
+                                <img id="prizeImagePreviewImg" src="" alt="╨Я╤А╨╕╨╖" 
+                                     style="max-width:100%;max-height:120px;border-radius:10px;
+                                            border:1px solid rgba(245,190,11,0.3);object-fit:contain">
+                                <div id="prizeImageStatus" style="font-size:0.5rem;color:#4ade80;margin-top:4px"></div>
+                            </div>
+
+                            <!-- CTA ╤В╨╡╨║╤Б╤В ╨┤╨╗╤П ╨▓╨╕╨┤╨╢╨╡╤В╨░ -->
+                            <label class="gc-admin__label">ЁЯУв ╨в╨╡╨║╤Б╤В ╨┤╨╗╤П ╨▓╨╕╨┤╨╢╨╡╤В╨░ <span style="font-size:0.5rem;color:#5A6577">(╨╛╤В╨╛╨▒╤А╨░╨╢╨░╨╡╤В╤Б╤П ╨┐╨╛╨┤ ╨┐╤А╨╕╨╖╨╛╨╝)</span></label>
+                            <input type="text" class="gc-admin__input" id="adminGcPrizeCta"
+                                   placeholder="╨Т╤Б╤В╤Г╨┐╨░╨╣ ╨▓ ╨╜╨░╤И ╤В╨│. ╨║╨░╨╜╨░╨╗ ╨╕ ╨┐╤А╨╕╨╝╨╕ ╤Г╤З╨░╤Б╤В╨╕╨╡!" style="margin-bottom:10px">
+
+                            <div style="padding:8px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);
+                                 border-radius:10px;font-size:0.55rem;color:#4ade80;line-height:1.6">
+                                тП▒ <strong>╨в╨░╨╣╨╝╨╡╤А ╨╜╨░╨▒╨╛╤А╨░</strong> тЖТ ╤Г╤З╨░╤Б╤В╨╜╨╕╨║╨╕ ╨╖╨░╨┐╨╕╤Б╤Л╨▓╨░╤О╤В╤Б╤П<br>
+                                тЪФя╕П <strong>╨С╨╛╨╡╨▓╨░╤П ╤Д╨░╨╖╨░</strong> ╨╜╨░╤З╨╜╤С╤В╤Б╤П ╨░╨▓╤В╨╛╨╝╨░╤В╨╕╤З╨╡╤Б╨║╨╕ ╨┐╨╛╤Б╨╗╨╡ ╨╜╨░╨▒╨╛╤А╨░<br>
+                                ЁЯОп ╨г╤З╨░╤Б╤В╨╜╨╕╨║╨╕ ╨╕╨│╤А╨░╤О╤В ╨╖╨░╨┤╨░╨╜╨╜╨╛╨╡ <strong>╨║╨╛╨╗-╨▓╨╛ ╨▒╨╛╤С╨▓</strong> (╤Б╨╝. ╨▓╤Л╤И╨╡)<br>
+                                ЁЯОб <strong>╨Ъ╨╛╨╗╨╡╤Б╨╛</strong> ╨╖╨░╨┐╤Г╤Б╤В╨╕╤В╤Б╤П ╨┐╨╛╤Б╨╗╨╡ ╨╖╨░╨▓╨╡╤А╤И╨╡╨╜╨╕╤П ╨▒╨╛╤С╨▓
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====== WIDGET CONSTRUCTOR ====== -->
+                    <div class="wc-section">
+                        <div class="wc-section__header" onclick="gcToggleWidgetConstructor()">
+                            <span>ЁЯОи ╨Ъ╨╛╨╜╤Б╤В╤А╤Г╨║╤В╨╛╤А ╨▓╨╕╨┤╨╢╨╡╤В╨░</span>
+                            <span class="wc-section__arrow" id="wcArrow">тЦ╝</span>
+                        </div>
+
+                        <div class="wc-body" id="wcBody" style="display:none">
+                            <!-- Layout presets -->
+                            <div class="wc-label">ЁЯУР ╨Ь╨░╨║╨╡╤В ╤А╨░╤Б╤Б╤В╨░╨╜╨╛╨▓╨║╨╕</div>
+                            <div class="wc-themes">
+                                <div class="wc-theme wc-theme--active" id="wcLayout-1" onclick="gcSelectLayout(1)">
+                                    <div class="wc-theme__preview wc-theme__preview--gold">
+                                        <div class="wc-lp">
+                                            <div class="wc-lp__r" style="width:60%;height:3px;margin:0 auto"></div>
+                                            <div class="wc-lp__r" style="width:40%;height:8px;margin:2px auto"></div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                            <div class="wc-lp__r"
+                                                style="width:70%;height:10px;margin:2px auto;border:1px solid;opacity:.5">
+                                            </div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                            <div class="wc-lp__r" style="width:80%;height:3px;margin:1px auto"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">ЁЯУ▒ ╨Ъ╨╗╨░╤Б╤Б╨╕╨║╨░</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-2" onclick="gcSelectLayout(2)">
+                                    <div class="wc-theme__preview wc-theme__preview--neon">
+                                        <div class="wc-lp">
+                                            <div style="display:flex;gap:4px;align-items:center">
+                                                <div class="wc-lp__r" style="width:35%;height:14px"></div>
+                                                <div style="flex:1">
+                                                    <div class="wc-lp__r" style="height:3px;margin-bottom:2px"></div>
+                                                    <div class="wc-lp__r"
+                                                        style="height:6px;border:1px solid;opacity:.5"></div>
+                                                </div>
+                                            </div>
+                                            <div style="display:flex;gap:2px;margin-top:3px">
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">ЁЯУК ╨Ъ╨╛╨╝╨┐╨░╨║╤В</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-3" onclick="gcSelectLayout(3)">
+                                    <div class="wc-theme__preview wc-theme__preview--military">
+                                        <div class="wc-lp"
+                                            style="display:flex;align-items:center;gap:3px;justify-content:center">
+                                            <div class="wc-lp__r" style="width:8px;height:8px;border-radius:50%"></div>
+                                            <div class="wc-lp__r" style="width:30px;height:3px"></div>
+                                            <div class="wc-lp__r" style="width:20px;height:6px"></div>
+                                            <div class="wc-lp__r" style="width:25px;height:3px"></div>
+                                            <div class="wc-lp__r" style="width:20px;height:3px"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">ЁЯУП ╨Я╨╛╨╗╨╛╤Б╨║╨░</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-4" onclick="gcSelectLayout(4)">
+                                    <div class="wc-theme__preview wc-theme__preview--fire">
+                                        <div class="wc-lp">
+                                            <div class="wc-lp__r" style="width:50%;height:3px;margin:0 auto"></div>
+                                            <div class="wc-lp__r" style="width:40%;height:8px;margin:2px auto"></div>
+                                            <div style="border-top:1px solid rgba(255,255,255,.1);margin:3px 0"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                            <div class="wc-lp__r" style="height:4px;margin:2px 6px"></div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">ЁЯПЖ ╨в╨░╨▒╨╗╨╛</div>
+                                </div>
+                                <div class="wc-theme" id="wcLayout-5" onclick="gcSelectLayout(5)">
+                                    <div class="wc-theme__preview wc-theme__preview--ice">
+                                        <div class="wc-lp">
+                                            <div style="display:flex;gap:3px">
+                                                <div class="wc-lp__r"
+                                                    style="flex:1;height:20px;border:1px solid;opacity:.4;border-radius:3px">
+                                                </div>
+                                                <div class="wc-lp__r"
+                                                    style="flex:1;height:20px;border:1px solid;opacity:.4;border-radius:3px">
+                                                </div>
+                                            </div>
+                                            <div style="display:flex;gap:2px;margin-top:3px">
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                                <div class="wc-lp__r" style="flex:1;height:6px"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="wc-theme__name">ЁЯОо HUD</div>
+                                </div>
+                            </div>
+
+                            <!-- Color Theme -->
+                            <div class="wc-label">ЁЯОи ╨ж╨▓╨╡╤В╨╛╨▓╨░╤П ╤В╨╡╨╝╨░</div>
+                            <div class="wc-themes">
+                                <div class="wc-theme wc-theme--active" id="wcTheme-gold"
+                                    onclick="gcSelectTheme('gold')">
+                                    <div class="wc-theme__preview wc-theme__preview--gold" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">тЪЬя╕П ╨Ч╨╛╨╗╨╛╤В╨╛</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-neon" onclick="gcSelectTheme('neon')">
+                                    <div class="wc-theme__preview wc-theme__preview--neon" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">ЁЯТЬ ╨Э╨╡╨╛╨╜</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-military" onclick="gcSelectTheme('military')">
+                                    <div class="wc-theme__preview wc-theme__preview--military" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">ЁЯкЦ ╨Т╨╛╨╡╨╜╨╜╤Л╨╣</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-fire" onclick="gcSelectTheme('fire')">
+                                    <div class="wc-theme__preview wc-theme__preview--fire" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">ЁЯФе ╨Ш╨╜╤Д╨╡╤А╨╜╨╛</div>
+                                </div>
+                                <div class="wc-theme" id="wcTheme-ice" onclick="gcSelectTheme('ice')">
+                                    <div class="wc-theme__preview wc-theme__preview--ice" style="height:36px">
+                                        <div class="wc-theme__timer" style="font-size:.7rem">52:30</div>
+                                    </div>
+                                    <div class="wc-theme__name">тЭДя╕П ╨Р╤А╨║╤В╨╕╨║╨░</div>
+                                </div>
+                            </div>
+
+                            <!-- Custom settings -->
+                            <div class="wc-settings">
+                                <div class="wc-label">╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕</div>
+
+                                <!-- Accent color -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">ЁЯОи ╨Р╨║╤Ж╨╡╨╜╤В</span>
+                                    <div class="wc-colors" id="wcColors">
+                                        <div class="wc-color wc-color--active" data-color="#f5d36e"
+                                            style="background:#f5d36e" onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#a855f7" style="background:#a855f7"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#22c55e" style="background:#22c55e"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#3b82f6" style="background:#3b82f6"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#ef4444" style="background:#ef4444"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#f97316" style="background:#f97316"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#ec4899" style="background:#ec4899"
+                                            onclick="gcSetAccent(this)"></div>
+                                        <div class="wc-color" data-color="#14b8a6" style="background:#14b8a6"
+                                            onclick="gcSetAccent(this)"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Background opacity -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">ЁЯМС ╨д╨╛╨╜</span>
+                                    <input type="range" class="wc-slider" id="wcBgOpacity" min="50" max="100" value="90"
+                                        oninput="gcUpdatePreview()">
+                                    <span class="wc-row__val" id="wcBgVal">90%</span>
+                                </div>
+
+                                <!-- Font size -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">ЁЯФд ╨а╨░╨╖╨╝╨╡╤А</span>
+                                    <input type="range" class="wc-slider" id="wcFontSize" min="80" max="130" value="100"
+                                        oninput="gcUpdatePreview()">
+                                    <span class="wc-row__val" id="wcFontVal">100%</span>
+                                </div>
+
+                                <!-- Border style -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">ЁЯЦ╝ ╨а╨░╨╝╨║╨░</span>
+                                    <div class="wc-toggles">
+                                        <button class="wc-toggle wc-toggle--active" data-border="gold"
+                                            onclick="gcSetBorder(this)">╨Ч╨╛╨╗╨╛╤В╨╛</button>
+                                        <button class="wc-toggle" data-border="glow"
+                                            onclick="gcSetBorder(this)">╨б╨▓╨╡╤З╨╡╨╜╨╕╨╡</button>
+                                        <button class="wc-toggle" data-border="minimal"
+                                            onclick="gcSetBorder(this)">╨Ь╨╕╨╜╨╕╨╝╤Г╨╝</button>
+                                        <button class="wc-toggle" data-border="none"
+                                            onclick="gcSetBorder(this)">╨Э╨╡╤В</button>
+                                    </div>
+                                </div>
+
+                                <!-- Show/hide toggles -->
+                                <div class="wc-row">
+                                    <span class="wc-row__label">ЁЯСБ ╨н╨╗╨╡╨╝╨╡╨╜╤В╤Л</span>
+                                    <div class="wc-checks">
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowTimer"
+                                                onchange="gcUpdatePreview()">
+                                            <span>╨в╨░╨╣╨╝╨╡╤А</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowMyStats"
+                                                onchange="gcUpdatePreview()">
+                                            <span>╨Ь╨╛╨╣ ╤Б╤З╤С╤В</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <select id="wcTopCount" onchange="gcUpdatePreview()" 
+                                                style="background:#131a24;color:#C8AA6E;border:1px solid rgba(200,170,110,0.2);
+                                                       border-radius:6px;padding:2px 6px;font-size:0.55rem;cursor:pointer;
+                                                       font-family:'Inter',sans-serif">
+                                                <option value="3" selected>╨в╨╛╨┐ 3</option>
+                                                <option value="5">╨в╨╛╨┐ 5</option>
+                                                <option value="10">╨в╨╛╨┐ 10</option>
+                                                <option value="0">╨б╨║╤А╤Л╤В╤М</option>
+                                            </select>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowLive" onchange="gcUpdatePreview()">
+                                            <span>LIVE</span>
+                                        </label>
+                                        <label class="wc-check">
+                                            <input type="checkbox" checked id="wcShowBattles" onchange="gcUpdatePreview()">
+                                            <span>╨С╨╛╨╕</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- LIVE PREVIEW -->
+                            <div class="wc-label" style="margin-top:12px">ЁЯСА ╨Я╤А╨╡╨┤╨┐╤А╨╛╤Б╨╝╨╛╤В╤А</div>
+                            <div class="wc-preview-wrap">
+                                <div id="wcPreview"
+                                    style="display:flex;justify-content:center;align-items:center;min-height:120px">
+                                </div>
+                            </div>
+                            <script>if (typeof gcUpdatePreview === 'function') gcUpdatePreview();</script>
+
+                            <!-- Copy widget link -->
+                            <button class="wc-copy-link" onclick="gcCopyCustomWidgetLink()">
+                                ЁЯФЧ ╨б╨║╨╛╨┐╨╕╤А╨╛╨▓╨░╤В╤М ╤Б╤Б╤Л╨╗╨║╤Г ╨╜╨░ ╨▓╨╕╨┤╨╢╨╡╤В
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- OBS Link Section -->
+                    <div class="gc-obs-section" id="gcObsSection" style="display:none; margin-top:16px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                            <div style="font-family:'Russo One',sans-serif;font-size:0.75rem;color:#C8AA6E">
+                                ЁЯУ║ ╨б╤Б╤Л╨╗╨║╨░ ╨┤╨╗╤П OBS
+                            </div>
+                            <div style="font-size:0.5rem;color:#4ade80;font-weight:700;display:flex;align-items:center;gap:4px">
+                                <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink 1.2s infinite"></span>
+                                READY
+                            </div>
+                        </div>
+                        <div style="background:#0a0e14;border:1px solid rgba(200,170,110,0.12);border-radius:10px;padding:10px 14px;font-size:0.6rem;color:#8a94a6;word-break:break-all;line-height:1.6;margin-bottom:8px" id="gcObsUrl">
+                            ╨Ч╨░╨│╤А╤Г╨╖╨║╨░...
+                        </div>
+                        <div style="display:flex;gap:6px">
+                            <button onclick="gcCopyObsLink()" style="flex:1;padding:10px;border-radius:10px;border:1px dashed rgba(200,170,110,0.2);background:rgba(200,170,110,0.04);color:#C8AA6E;font-size:0.7rem;font-weight:700;cursor:pointer;transition:all 0.2s">
+                                ЁЯУЛ ╨б╨║╨╛╨┐╨╕╤А╨╛╨▓╨░╤В╤М ╤Б╤Б╤Л╨╗╨║╤Г OBS
+                            </button>
+                            <button onclick="gcCopyObsLinkWithConfig()" style="flex:1;padding:10px;border-radius:10px;border:1px dashed rgba(168,85,247,0.2);background:rgba(168,85,247,0.04);color:#a855f7;font-size:0.7rem;font-weight:700;cursor:pointer;transition:all 0.2s">
+                                ЁЯОи ╨б ╨║╨╛╨╜╤Б╤В╤А╤Г╨║╤В╨╛╤А╨╛╨╝
+                            </button>
+                        </div>
+                        <div style="margin-top:8px;font-size:0.55rem;color:#5A6577;line-height:1.5;padding:0 4px">
+                            ЁЯТб <b>╨Ъ╨░╨║ ╨┤╨╛╨▒╨░╨▓╨╕╤В╤М:</b> OBS тЖТ ╨Ш╤Б╤В╨╛╤З╨╜╨╕╨║╨╕ тЖТ ╨С╤А╨░╤Г╨╖╨╡╤А (Browser) тЖТ ╨Э╨╛╨▓╤Л╨╣ тЖТ ╨Т╤Б╤В╨░╨▓╤М╤В╨╡ URL<br>
+                            ЁЯУР <b>╨а╨░╨╖╨╝╨╡╤А╤Л:</b> ╨и: 400 ├Ч ╨Т: 500 (╨Ъ╨╗╨░╤Б╤Б╨╕╨║╨░) ╨╕╨╗╨╕ 560├Ч80 (╨Я╨╛╨╗╨╛╤Б╨║╨░)
+                        </div>
+                    </div>
+
+                    <div class="gc-admin__hint">
+                        ЁЯТб ╨Я╨╛╨┤╨┐╨╕╤Б╤З╨╕╨║╨╕ ╤Г╨▓╨╕╨┤╤П╤В ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢ ╨╕ ╤Б╨░╨╝╨╕ ╨▓╤Б╤В╤Г╨┐╤П╤В тАФ ╨▓╤Л╨▒╨╕╤А╨░╤В╤М ╨╜╨╕╨║╨╛╨│╨╛ ╨╜╨╡ ╨╜╤Г╨╢╨╜╨╛!
+                    </div>
+
+                    <button class="gc-admin__launch" id="adminGcLaunchBtn" onclick="gcLaunchChallenge()">
+                        ЁЯЪА ╨Ч╨Р╨Я╨г╨б╨в╨Ш╨в╨м ╨з╨Х╨Ы╨Ы╨Х╨Э╨Ф╨Ц
+                    </button>
+
+                    <button class="gc-admin__stop" id="adminGcStopBtn" onclick="gcStopChallenge()" style="display:none">
+                        тЫФ ╨Ч╨Р╨Т╨Х╨а╨и╨Ш╨в╨м ╨Ф╨Ю╨б╨а╨Ю╨з╨Э╨Ю
+                    </button>
+
+                    <button class="gc-admin__delete" id="adminGcDeleteBtn" onclick="gcDeleteChallenge()"
+                        style="display:none">
+                        ЁЯЧС ╨г╨Ф╨Р╨Ы╨Ш╨в╨м ╨з╨Х╨Ы╨Ы╨Х╨Э╨Ф╨Ц
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: TEAM BATTLES              -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-teams">
+            <!-- Sub-tabs: Browse / Create / My -->
+            <div class="tb-subtabs">
+                <button class="tb-subtab active" data-tab="browse" onclick="tbSwitchSubTab('browse')">ЁЯФе ╨Р╨║╤В╨╕╨▓╨╜╤Л╨╡</button>
+                <button class="tb-subtab" data-tab="create" onclick="tbSwitchSubTab('create')">тЮХ ╨б╨╛╨╖╨┤╨░╤В╤М</button>
+                <button class="tb-subtab" data-tab="my" onclick="tbSwitchSubTab('my')">ЁЯУЛ ╨Ь╨╛╨╕</button>
+                <button class="tb-subtab" data-tab="history" onclick="tbSwitchSubTab('history')">ЁЯУЬ ╨Ш╤Б╤В╨╛╤А╨╕╤П</button>
+            </div>
+
+            <!-- How it works -->
+            <div onclick="this.querySelector('.tb-howto-body').style.display = this.querySelector('.tb-howto-body').style.display === 'none' ? 'block' : 'none'"
+                style="margin-bottom:12px;padding:10px 14px;background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.1);border-radius:12px;cursor:pointer">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:0.72rem;color:#C8AA6E;font-weight:700">тЭУ ╨Ъ╨░╨║ ╤А╨░╨▒╨╛╤В╨░╤О╤В ╨║╨╛╨╝╨░╨╜╨┤╨╜╤Л╨╡ ╨▒╨╛╨╕?</span>
+                    <span style="font-size:0.6rem;color:#5A6577">тЦ╝</span>
+                </div>
+                <div class="tb-howto-body" style="display:none;margin-top:10px;font-size:0.65rem;color:#8a94a6;line-height:1.6">
+                    <b style="color:#E8E6E3">1.</b> ╨б╨╛╨╖╨┤╨░╨╣ ╤З╨╡╨╗╨╗╨╡╨╜╨┤╨╢: ╨▓╤Л╨▒╨╡╤А╨╕ ╤Г╤Б╨╗╨╛╨▓╨╕╨╡, ╤А╨░╨╖╨╝╨╡╤А ╨║╨╛╨╝╨░╨╜╨┤ ╨╕ ╤Б╤В╨░╨▓╨║╤Г ЁЯзА<br>
+                    <b style="color:#E8E6E3">2.</b> ╨Ф╨▓╨░ ╨╛╤В╤А╤П╨┤╨░: ЁЯФ╡ ╨Р╨Ы╨м╨д╨Р ╨╕ ЁЯФ┤ ╨С╨а╨Р╨Т╨Ю тАФ ╨╗╤О╨▒╨╛╨╣ ╨╝╨╛╨╢╨╡╤В ╨▓╤Б╤В╤Г╨┐╨╕╤В╤М<br>
+                    <b style="color:#E8E6E3">3.</b> ╨Ъ╨╛╨│╨┤╨░ ╨╛╨▒╨╡ ╨║╨╛╨╝╨░╨╜╨┤╤Л ╨╖╨░╨┐╨╛╨╗╨╜╨╡╨╜╤Л тАФ ╨▒╨╛╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╨░╨▓╤В╨╛╨╝╨░╤В╨╕╤З╨╡╤Б╨║╨╕<br>
+                    <b style="color:#E8E6E3">4.</b> ╨Ъ╨░╨╢╨┤╤Л╨╣ ╨╕╨│╤А╨░╨╡╤В ╨╖╨░╨┤╨░╨╜╨╜╨╛╨╡ ╨║╨╛╨╗╨╕╤З╨╡╤Б╤В╨▓╨╛ ╨▒╨╛╤С╨▓, ╤Г╤А╨╛╨╜ ╤Б╤Г╨╝╨╝╨╕╤А╤Г╨╡╤В╤Б╤П<br>
+                    <b style="color:#E8E6E3">5.</b> ╨Ъ╨╛╨╝╨░╨╜╨┤╨░ ╤Б ╨▒╨╛╨╗╤М╤И╨╕╨╝ ╤Б╤Г╨╝╨╝╨░╤А╨╜╤Л╨╝ ╤А╨╡╨╖╤Г╨╗╤М╤В╨░╤В╨╛╨╝ тАФ ╨┐╨╛╨▒╨╡╨╢╨┤╨░╨╡╤В!<br>
+                    <b style="color:#E8E6E3">6.</b> ╨Я╨╛╨▒╨╡╨┤╨╕╤В╨╡╨╗╨╕ ╨┤╨╡╨╗╤П╤В ╨▓╨╡╤Б╤М ╨▒╨░╨╜╨║ ╨╝╨╡╨╢╨┤╤Г ╤Б╨╛╨▒╨╛╨╣ ЁЯПЖ<br>
+                    <span style="color:#f5d36e;margin-top:4px;display:inline-block">ЁЯТб ╨Ь╨╕╨╜╨╕╨╝╨░╨╗╤М╨╜╨░╤П ╤Б╤В╨░╨▓╨║╨░ тАФ 50 ЁЯзА. ╨а╨░╨╖╨╝╨╡╤А: ╨╛╤В 2├Ч2 ╨┤╨╛ 50├Ч50</span>
+                </div>
+            </div>
+
+            <!-- BROWSE panel -->
+            <div id="tb-panel-browse">
+                <div class="tb-section-label">ЁЯФе ╨Р╨║╤В╨╕╨▓╨╜╤Л╨╡ ╨║╨╛╨╝╨░╨╜╨┤╨╜╤Л╨╡ ╨▒╨╛╨╕</div>
+                <div class="tb-list" id="tb-browse-list">
+                    <div class="tb-skeleton">
+                        <div class="tb-skeleton__card"></div>
+                        <div class="tb-skeleton__card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CREATE panel -->
+            <div id="tb-panel-create" style="display:none">
+                <!-- Filled dynamically by tbRenderCreateForm() -->
+            </div>
+
+            <!-- MY panel -->
+            <div id="tb-panel-my" style="display:none">
+                <div class="tb-section-label">ЁЯУЛ ╨Ь╨╛╨╕ ╨║╨╛╨╝╨░╨╜╨┤╨╜╤Л╨╡ ╨▒╨╛╨╕</div>
+                <div class="tb-list" id="tb-my-list">
+                    <div class="tb-skeleton">
+                        <div class="tb-skeleton__card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORY panel -->
+            <div id="tb-panel-history" style="display:none">
+                <div class="tb-section-label">ЁЯУЬ ╨Ш╤Б╤В╨╛╤А╨╕╤П ╨║╨╛╨╝╨░╨╜╨┤╨╜╤Л╤Е ╨▒╨╛╤С╨▓</div>
+                <div class="tb-list" id="tb-history-list">
+                    <div class="tb-skeleton">
+                        <div class="tb-skeleton__card"></div>
+                        <div class="tb-skeleton__card"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom nav -->
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <span class="nav-icon">ЁЯПа</span>
+            <span class="nav-label">╨У╨╗╨░╨▓╨╜╨░╤П</span>
+        </div>
+        <div class="nav-item nav-item--active">
+            <span class="nav-icon">тЪФя╕П</span>
+            <span class="nav-label">╨Р╤А╨╡╨╜╨░</span>
+        </div>
+        <div class="nav-item" onclick="location.href='friends.html'">
+            <span class="nav-icon">ЁЯСе</span>
+            <span class="nav-label">╨Ф╤А╤Г╨╖╤М╤П</span>
+        </div>
+        <div class="nav-item" onclick="location.href='profile.html'">
+            <span class="nav-icon">ЁЯСд</span>
+            <span class="nav-label">╨Я╤А╨╛╤Д╨╕╨╗╤М</span>
+        </div>
+    </nav>
+
+    <!-- Confetti canvas -->
+    <canvas id="confettiCanvas"
+        style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999"></canvas>
+
+    <script src="js/arena.js?v=50"></script>
+    <script src="js/global-challenge-tab.js?v=50"></script>
+    <script src="js/gc-obs-links.js?v=50"></script>
+    <script src="js/team-battle.js?v=50"></script>
+</body>
+
+</html>
