@@ -305,8 +305,8 @@
                 </div>
             </div>
 
-            <div class="feature-card" onclick="openGame('player.html')">
-                <span class="feature-card__badge feature-card__badge--free">Free</span>
+            <div class="feature-card" data-premium="1" onclick="openGame('player.html')">
+                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
                 <div class="feature-card__icon" style="background:rgba(255,193,7,0.12);">
                     <img src="img/icons/stream.png" alt="Донат">
                 </div>
@@ -316,8 +316,8 @@
                 </div>
             </div>
 
-            <div class="feature-card" onclick="openGame('top.html')">
-                <span class="feature-card__badge feature-card__badge--free">Free</span>
+            <div class="feature-card" data-premium="1" onclick="openGame('top.html')">
+                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
                 <div class="feature-card__icon" style="background:rgba(200,170,110,0.12);">
                     <img src="img/icons/players.png" alt="Игроки">
                 </div>
@@ -328,7 +328,7 @@
             </div>
 
             <!-- Premium features -->
-            <div class="feature-card" onclick="openGame('wheel.html')">
+            <div class="feature-card" data-premium="1" onclick="openGame('wheel.html')">
                 <span class="feature-card__badge feature-card__badge--premium">Premium</span>
                 <div class="feature-card__icon" style="background:rgba(200,170,110,0.12);">
                     <img src="img/icons/wheel.png" alt="Колесо Фортуны">
@@ -339,7 +339,7 @@
                 </div>
             </div>
 
-            <div class="feature-card" onclick="openGame('challenges.html')">
+            <div class="feature-card" data-premium="1" onclick="openGame('challenges.html')">
                 <span class="feature-card__badge feature-card__badge--premium">Premium</span>
                 <div class="feature-card__icon" style="background:rgba(200,170,110,0.12);">
                     <img src="img/icons/arena.png" alt="Арена">
@@ -350,7 +350,7 @@
                 </div>
             </div>
 
-            <div class="feature-card" onclick="openGame('quiz.html')">
+            <div class="feature-card" data-premium="1" onclick="openGame('quiz.html')">
                 <span class="feature-card__badge feature-card__badge--premium">Premium</span>
                 <div class="feature-card__icon" style="background:rgba(76,175,80,0.12);">
                     <img src="img/icons/quiz.png" alt="Викторина">
@@ -361,8 +361,9 @@
                 </div>
             </div>
 
+            <!-- Спасибо — Free -->
             <div class="feature-card" onclick="openGame('donate.html')">
-                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
+                <span class="feature-card__badge feature-card__badge--free">Free</span>
                 <div class="feature-card__icon" style="background:rgba(224,64,251,0.12);">
                     <img src="img/icons/ai.png" alt="Спасибо">
                 </div>
@@ -372,9 +373,9 @@
                 </div>
             </div>
 
-            <!-- Daily Reward -->
-            <div class="feature-card" onclick="document.getElementById('dailyRewardSection').scrollIntoView({behavior:'smooth'})">
-                <span class="feature-card__badge feature-card__badge--free">Free</span>
+            <!-- Daily Reward — Premium -->
+            <div class="feature-card" data-premium="1" onclick="document.getElementById('dailyRewardSection').scrollIntoView({behavior:'smooth'})">
+                <span class="feature-card__badge feature-card__badge--premium">Premium</span>
                 <div class="feature-card__icon" style="background:rgba(255,193,7,0.12);">
                     <img src="img/icons/daily.png" alt="Ежедневная награда">
                 </div>

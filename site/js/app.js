@@ -176,10 +176,31 @@ async function loadBalanceFromAPI() {
             userData.save();
             userData.updateUI();
         }
+        // Сохраняем статус подписки
+        const isActive = data.subscription && data.subscription.active;
+        localStorage.setItem('is_subscribed', isActive ? '1' : '0');
+        // Обновляем визуальные замки на карточках
+        updateLockCards(isActive);
     } catch (e) {
         // API не доступно — показываем localStorage
         console.log('API недоступно, используем localStorage');
     }
+}
+
+// Проверяем, есть ли подписка
+function isPremium() {
+    return localStorage.getItem('is_subscribed') === '1';
+}
+
+// Обновляем внешний вид карточек на главной (убираем/добавляем замок)
+function updateLockCards(hasSubscription) {
+    document.querySelectorAll('.feature-card[data-premium="1"]').forEach(card => {
+        if (hasSubscription) {
+            card.classList.remove('feature-card--locked');
+            const lock = card.querySelector('.lock-overlay');
+            if (lock) lock.remove();
+        }
+    });
 }
 
 function initUser() {
@@ -280,8 +301,29 @@ function claimDailyBonus() {
 // ==========================================
 // НАВИГАЦИЯ
 // ==========================================
-// Cache-busting: use timestamp to guarantee fresh page loads every time
+// Список страниц, требующих подписки
+const PREMIUM_PAGES = [
+    'player.html',     // Донаты и Музыка
+    'top.html',        // Рейтинги
+    'challenges.html', // Арена
+    'quiz.html',       // Танковая Викторина
+    'wheel.html',      // Колесо Фортуны
+    'cheese.html',     // Сыр (дополнительные функции)
+    'contest.html',    // Голосование
+];
+// Бесплатные страницы: stats.html, donate.html (Спасибо), subscribe.html, profile.html...
+
 function openGame(url) {
+    // Проверяем, требует ли страница подписки
+    const pageName = url.split('?')[0].split('/').pop();
+    const needsPremium = PREMIUM_PAGES.some(p => pageName === p || url.includes(p));
+
+    if (needsPremium && !isPremium()) {
+        // Показываем красивый попап с предложением подписки
+        showPaywall();
+        return;
+    }
+
     // Add unique timestamp + telegram_id to bypass ALL caching layers
     const sep = url.includes('?') ? '&' : '?';
     url += `${sep}_t=${Date.now()}`;
@@ -290,6 +332,90 @@ function openGame(url) {
         url += `&telegram_id=${myId}`;
     }
     window.location.href = url;
+}
+
+// Показываем paywall при попытке открыть платную функцию
+function showPaywall() {
+    // Удаляем предыдущий если есть
+    let existing = document.getElementById('paywallModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'paywallModal';
+    modal.style.cssText = `
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px; animation: fadeInUp 0.3s ease;
+    `;
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(145deg, #1a2332, #0f1520);
+            border: 1px solid rgba(200,170,110,0.3);
+            border-radius: 24px; padding: 32px 24px;
+            max-width: 380px; width: 100%; text-align: center;
+            position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        ">
+            <button onclick="document.getElementById('paywallModal').remove()" style="
+                position: absolute; top: 16px; right: 16px;
+                background: rgba(255,255,255,0.06); border: none; color: #9AA4B5;
+                width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+                font-size: 18px; display:flex; align-items:center; justify-content:center;
+            ">✕</button>
+
+            <div style="font-size: 3rem; margin-bottom: 12px;">🔒</div>
+            <div style="
+                font-family: 'Russo One', sans-serif;
+                font-size: 1.2rem; color: #C8AA6E; margin-bottom: 8px;
+            ">Только для подписчиков</div>
+            <div style="font-size: 0.85rem; color: #8B95A5; margin-bottom: 24px; line-height: 1.6;">
+                Эта функция доступна с подпиской.<br>
+                Оформи подписку и открой весь клуб!
+            </div>
+
+            <div style="display: grid; gap: 8px; margin-bottom: 20px; text-align: left;">
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#9AA4B5;">
+                    <span style="color:#C8AA6E">✅</span> Донаты и Музыка
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#9AA4B5;">
+                    <span style="color:#C8AA6E">✅</span> Рейтинги
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#9AA4B5;">
+                    <span style="color:#C8AA6E">✅</span> Арена PvP
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#9AA4B5;">
+                    <span style="color:#C8AA6E">✅</span> Танковая Викторина
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#9AA4B5;">
+                    <span style="color:#C8AA6E">✅</span> Ежедневная Награда
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#9AA4B5;">
+                    <span style="color:#C8AA6E">✅</span> Колесо Фортуны
+                </div>
+            </div>
+
+            <button onclick="
+                document.getElementById('paywallModal').remove();
+                window.location.href='subscribe.html';
+            " style="
+                width: 100%; padding: 16px;
+                background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
+                border: none; border-radius: 14px;
+                font-family: 'Russo One', sans-serif;
+                font-size: 1rem; color: #0a0e14;
+                cursor: pointer; transition: all 0.2s;
+                box-shadow: 0 4px 20px rgba(200,170,110,0.3);
+            ">💎 Оформить подписку — от 490 ₽</button>
+
+            <div style="font-size:0.65rem; color:#4A5568; margin-top:10px;">
+                Первый месяц — промо цена · Скидки до −25%
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => {
+        if (e.target === modal) modal.remove();
+    });
 }
 
 // ==========================================
