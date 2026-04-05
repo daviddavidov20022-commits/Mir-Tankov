@@ -713,11 +713,24 @@ async function loadProgress() {
 
         // Загружаем реальную статистику с сервера
         const telegramId = getTelegramId();
-        if (!telegramId) return;
+        
+        // ВРЕМЕННЫЙ ДЕБАГ:
+        // alert('Telegram ID: ' + telegramId);
+
+        if (!telegramId) {
+            setText('progCoins', 'ERR_ID');
+            return;
+        }
 
         const resp = await fetch(`${PROFILE_API_BASE}/api/profile/battle-stats?telegram_id=${telegramId}`);
-        if (!resp.ok) return;
+        if (!resp.ok) {
+            setText('progCoins', 'ERR_' + resp.status);
+            return;
+        }
         const stats = await resp.json();
+        
+        // ВРЕМЕННЫЙ ДЕБАГ:
+        // alert('Cыр: ' + stats.cheese_balance);
 
         // Сыр
         setText('progCoins', (stats.cheese_balance || 0).toLocaleString());
