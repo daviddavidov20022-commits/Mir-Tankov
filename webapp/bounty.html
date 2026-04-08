@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Охота на Стримера</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/auth-interceptor.js?v=52"></script>
+    <style>
+        .bounty-header {
+            text-align: center;
+            padding: 30px 20px 20px;
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.15) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+            margin-bottom: 20px;
+        }
+        .bounty-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+        .bounty-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.5rem;
+            color: #ef4444;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .container {
+            padding: 0 20px 80px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .role-tabs {
+            display: flex;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .role-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            color: #9AA4B5;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        .role-tab.active {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fff;
+        }
+        
+        .section-panel {
+            background: #1a1e24;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .section-panel.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-label {
+            display: block;
+            font-size: 0.85rem;
+            color: #9AA4B5;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .text-input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.2s;
+        }
+        .text-input:focus {
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+        }
+        
+        .btn-hunters {
+            width: 100%;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-family: 'Russo One', sans-serif;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+            transition: 0.2s;
+        }
+        .btn-hunters:active {
+            transform: scale(0.98);
+        }
+
+        /* Выбор темы для стримера */
+        .theme-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .theme-option {
+            background: #111;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .theme-option.active {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        .theme-preview-img {
+            width: 100%;
+            height: 60px;
+            background: #333;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .obs-link-box {
+            background: rgba(0,0,0,0.4);
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            color: #4CAF50;
+            font-size: 0.85rem;
+            border: 1px dashed rgba(76, 175, 80, 0.4);
+        }
+        
+        /* Theme previews simulated with CSS for the UI */
+        .preview-t1 { background: linear-gradient(180deg, #1e1414, #0f0a0a); border-bottom: 2px solid #ff3b30; }
+        .preview-t2 { background: #3a404d; border-radius: 8px; border: 1px solid rgba(255,255,255,0.4); }
+        .preview-t3 { background: #050510; border: 1px solid #ff00ff; border-radius: 0; }
+        .preview-t4 { background: #1e1e19; border: 2px solid #4a4a3a; font-family: Courier; }
+        .preview-t5 { background: linear-gradient(135deg, #1a1510, #0f0a05); border: 1px solid #FFD700; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-navbar">
+        <div class="navbar-inner">
+            <a href="index.html" class="nav-back">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Назад
+            </a>
+            <div style="font-weight:700; color:#E8E6E3; flex:1; text-align:center; padding-right: 24px;">Ивент</div>
+        </div>
+    </nav>
+
+    <div class="bounty-header">
+        <div class="bounty-icon">🎯</div>
+        <div class="bounty-title">Охота на Стримера</div>
+        <div style="font-size: 0.9rem; color: #9AA4B5;">Попади с стримером в один бой, настреляй урон — получи золото!</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="role-tabs">
+            <div class="role-tab active" onclick="switchRole('hunter')">Я Охотник</div>
+            <div class="role-tab" onclick="switchRole('streamer')">Я Стример</div>
+        </div>
+
+        <!-- ПАНЕЛЬ ОХОТНИКА -->
+        <div id="panelHunter" class="section-panel active">
+            <h3 style="color:#fff; margin-bottom: 10px;">Регистрация на охоту</h3>
+            <p style="color:#9AA4B5; font-size: 0.85rem; margin-bottom: 15px;">
+                Введи свой точный игровой никнейм в Мире Танков. Мод стримера автоматически узнает тебя, 
+                если ты попадешь против него!
+            </p>
+            
+            <div class="input-group">
+                <label class="input-label">Твой никнейм Мир Танков</label>
+                <input type="text" class="text-input" id="hunterNickname" placeholder="Например: Jove_Hater_99" value="">
+            </div>
+            
+            <button class="btn-hunters" onclick="alert('Ник сохранен! Жди начала отсчета на стриме и жми В БОЙ!')">УЧАСТВОВАТЬ</button>
+            
+            <div style="margin-top: 20px; padding: 15px; background: rgba(255, 215, 0, 0.1); border-radius: 8px; border-left: 4px solid #FFD700;">
+                <div style="font-size: 0.8rem; color: #FFD700; font-weight: bold; margin-bottom: 4px;">Текущий курс:</div>
+                <div style="font-size: 1.2rem; color: #fff; font-family: 'Russo One', sans-serif;">1 Урон = 1 💰</div>
+            </div>
+        </div>
+
+        <!-- ПАНЕЛЬ СТРИМЕРА -->
+        <div id="panelStreamer" class="section-panel">
+            <h3 style="color:#fff; margin-bottom: 10px;">Настройка Виджета</h3>
+            <p style="color:#9AA4B5; font-size: 0.85rem; margin-bottom: 15px;">
+                Выберите дизайн виджета для OBS. Затем скопируйте ссылку и вставьте в Browser Source.
+            </p>
+
+            <div class="theme-selector">
+                <div class="theme-option active" onclick="selectTheme(1, this)">
+                    <div class="theme-preview-img preview-t1"><span style="color:#ff3b30">Classic</span></div>
+                    <div style="font-size: 0.75rem; color: #fff;">Классика</div>
+                </div>
+                <div class="theme-option" onclick="selectTheme(2, this)">
+                    <div class="theme-preview-img preview-t2"><span style="color:#fff">Blur</span></div>
+                    <div style="font-size: 0.75rem; color: #fff;">Стекло</div>
+                </div>
+                <div class="theme-option" onclick="selectTheme(3, this)">
+                    <div class="theme-preview-img preview-t3"><span style="color:#00ffff; font-style:italic;">Neon</span></div>
+                    <div style="font-size: 0.75rem; color: #fff;">Киберпанк</div>
+                </div>
+                <div class="theme-option" onclick="selectTheme(4, this)">
+                    <div class="theme-preview-img preview-t4"><span style="color:#df4444">ARMY</span></div>
+                    <div style="font-size: 0.75rem; color: #fff;">Милитари</div>
+                </div>
+                <div class="theme-option" style="grid-column: span 2;" onclick="selectTheme(5, this)">
+                    <div class="theme-preview-img preview-t5"><span style="color:#FFD700">Gold</span></div>
+                    <div style="font-size: 0.75rem; color: #fff;">Золотой Премиум</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">Ссылка для OBS (скопируй)</label>
+                <div class="obs-link-box" id="obsLink">http://localhost:8090/obs/bounty-tracker.html?theme=1</div>
+            </div>
+            
+            <button class="btn-hunters" style="background: #10B981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onclick="copyLink()">Скопировать ссылку</button>
+            <button class="btn-hunters" style="background: #3B82F6; margin-top: 10px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);" onclick="previewTheme()">Проверить дизайн (Демо)</button>
+        </div>
+
+    </div>
+
+    <script>
+        let currentTheme = 1;
+
+        function switchRole(role) {
+            document.querySelectorAll('.role-tab').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('panelHunter').classList.remove('active');
+            document.getElementById('panelStreamer').classList.remove('active');
+            
+            if (role === 'hunter') {
+                document.getElementById('panelHunter').classList.add('active');
+            } else {
+                document.getElementById('panelStreamer').classList.add('active');
+            }
+        }
+
+        function selectTheme(themeId, el) {
+            document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+            el.classList.add('active');
+            currentTheme = themeId;
+            updateLink();
+        }
+
+        function updateLink() {
+            // В реальном проекте тут будет реальный домен
+            document.getElementById('obsLink').innerText = `http://localhost:8090/obs/bounty-tracker.html?theme=${currentTheme}`;
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(document.getElementById('obsLink').innerText);
+            alert('Ссылка скопирована! Вставьте ее в настройках Браузера в OBS.');
+        }
+
+        function previewTheme() {
+            window.open(`http://localhost:8090/obs/bounty-tracker.html?theme=${currentTheme}&demo=1`, '_blank', 'width=340,height=500');
+        }
+
+        // Автозаполнение ника если юзер авторизован
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.siteAuth && siteAuth.isLoggedIn) {
+                document.getElementById('hunterNickname').value = siteAuth.username;
+            }
+        });
+    </script>
+</body>
+</html>
