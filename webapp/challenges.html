@@ -82,6 +82,7 @@
             <button class="arena-tab arena-tab--active" onclick="switchTab('create', this)">⚔️ 1x1(PVP)</button>
             <button class="arena-tab" onclick="switchTab('global', this)">🔥 Общий</button>
             <button class="arena-tab" onclick="switchTab('teams', this)">👥 Команды</button>
+            <button class="arena-tab" onclick="switchTab('bounty', this)" style="color:#ef4444;">🎯 Охота</button>
             <button class="arena-tab" onclick="switchTab('history', this)">📜 История <span class="arena-badge"
                     id="activeBadge" style="display:none">0</span></button>
             <button class="arena-tab" onclick="switchTab('admin', this)" id="adminTab" style="display:none">🛡
@@ -394,6 +395,128 @@
                     <div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">⏳ Загрузка...</div>
                 </div>
             </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- TAB: BOUNTY HUNTER             -->
+        <!-- ============================== -->
+        <div class="tab-content" id="tab-bounty">
+            <!-- ЗРИТЕЛЬ (Охотник) -->
+            <div id="bountyHunterView">
+                <div class="gc-widget" style="text-align:center; padding: 30px 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 10px; animation: pulse 2s infinite;">🎯</div>
+                    <h2 style="font-family: 'Russo One', sans-serif; color: #ef4444; margin-bottom: 8px;">ОХОТА НА СТРИМЕРА</h2>
+                    <p style="font-size: 0.85rem; color: #9AA4B5; margin-bottom: 20px;">
+                        Попади в бой против стримера, нанеси урон и получи золото! (1 урон = 1 💰)
+                    </p>
+                    
+                    <div id="bountyStatusNotActive" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                        <span style="color: #9AA4B5; font-size: 0.8rem;">Охота сейчас не запущена стримером.</span>
+                    </div>
+
+                    <div id="bountyStatusActive" style="display:none;">
+                        <div style="display:flex; justify-content:space-between; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-bottom: 20px;">
+                            <div style="text-align:left;">
+                                <div style="font-size: 0.65rem; color: #5A6577;">Участников:</div>
+                                <div style="font-family: 'Russo One', sans-serif; color: #fff; font-size: 1.1rem;" id="bountyJoinCount">124</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size: 0.65rem; color: #5A6577;">Призовой фонд:</div>
+                                <div style="font-family: 'Russo One', sans-serif; color: #FFD700; font-size: 1.1rem;">Не ограничен</div>
+                            </div>
+                        </div>
+
+                        <button class="challenge-send-btn" id="bountyJoinBtn" onclick="joinBounty()" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+                            🔥 ВСТУПИТЬ В ОХОТУ
+                        </button>
+                        <div id="bountyJoinedMsg" style="display:none; color: #4ade80; font-weight: bold; margin-top: 15px;">
+                            ✅ Ты в списке охотников!<br><span style="font-size: 0.75rem; font-weight: normal; color: #9AA4B5;">Твой ник будет передан в игру стримера автоматически.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- СТРИМЕР (Панель Управления) -->
+            <div id="bountyStreamerView" style="display:none; margin-top: 20px;">
+                <div class="section-lbl">🛡 Управление Охотой (Стример)</div>
+                <div class="gc-admin__form">
+                    
+                    <div style="display:flex; gap: 10px; margin-bottom: 20px;">
+                        <button id="btnStartBounty" onclick="toggleBountyState(true)" style="flex:1; padding: 12px; border-radius: 10px; background: #10B981; color: white; border: none; font-weight: bold; cursor: pointer;">▶️ ЗАПУСТИТЬ</button>
+                        <button id="btnStopBounty" onclick="toggleBountyState(false)" style="flex:1; padding: 12px; border-radius: 10px; background: #374151; color: #9ca3af; border: none; font-weight: bold; cursor: pointer;" disabled>⏹ ОСТАНОВИТЬ</button>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                        <span style="color: #9AA4B5; font-size: 0.85rem;">Присоединилось охотников:</span>
+                        <span style="color: #fff; font-family: 'Russo One', sans-serif; font-size: 1.2rem;" id="adminBountyJoinCount">0</span>
+                    </div>
+
+                    <div class="gc-admin__divider"></div>
+
+                    <h4 style="color:#fff; margin-bottom: 10px;">Дизайн Виджета ОБС</h4>
+                    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;">
+                        <button class="theme-btn active" style="background:#1e1414; border: 2px solid #ff3b30; color:#fff; border-radius:8px; padding:8px;" onclick="bountyDemoTheme(1, this)">Классика</button>
+                        <button class="theme-btn" style="background:#3a404d; border: 1px solid rgba(255,255,255,0.4); color:#fff; border-radius:8px; padding:8px;" onclick="bountyDemoTheme(2, this)">Стекло</button>
+                        <button class="theme-btn" style="background:#050510; border: 1px solid #ff00ff; color:#fff; border-radius:8px; padding:8px;" onclick="bountyDemoTheme(3, this)">Неон</button>
+                        <button class="theme-btn" style="background:#1e1e19; border: 2px solid #4a4a3a; color:#fff; border-radius:8px; padding:8px; font-family:Courier;" onclick="bountyDemoTheme(4, this)">Милитари</button>
+                        <button class="theme-btn" style="grid-column: span 2; background:linear-gradient(135deg, #1a1510, #0f0a05); border: 1px solid #FFD700; color:#FFD700; border-radius:8px; padding:8px;" onclick="bountyDemoTheme(5, this)">Золотой Премиум</button>
+                    </div>
+
+                    <button onclick="previewBountyWidget()" style="width:100%; padding: 12px; border-radius: 10px; background: #3B82F6; color: white; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px;">Проверить виджет (Демо)</button>
+                    
+                    <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; font-family: monospace; font-size: 0.75rem; color: #4ade80; text-align: center; word-break: break-all;" id="bountyLinkBox">
+                        http://localhost:8090/obs/bounty-tracker.html?theme=1
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                let currentBountyTheme = 1;
+                function bountyDemoTheme(theme, el) {
+                    document.querySelectorAll('.theme-btn').forEach(b => b.style.borderColor = 'transparent');
+                    el.style.borderColor = theme === 5 || theme === 3 ? el.style.color : '#fff';
+                    currentBountyTheme = theme;
+                    document.getElementById('bountyLinkBox').innerText = `http://localhost:8090/obs/bounty-tracker.html?theme=${theme}`;
+                }
+                function previewBountyWidget() {
+                    window.open(`http://localhost:8090/obs/bounty-tracker.html?theme=${currentBountyTheme}&demo=1`, '_blank', 'width=340,height=500');
+                }
+                function toggleBountyState(active) {
+                    const statusText = active ? 'Активно' : 'Остановлено';
+                    document.getElementById('btnStartBounty').disabled = active;
+                    document.getElementById('btnStartBounty').style.background = active ? '#374151' : '#10B981';
+                    
+                    document.getElementById('btnStopBounty').disabled = !active;
+                    document.getElementById('btnStopBounty').style.background = !active ? '#374151' : '#ef4444';
+                    
+                    // Обновляем UI зрителя для симуляции
+                    document.getElementById('bountyStatusNotActive').style.display = active ? 'none' : 'block';
+                    document.getElementById('bountyStatusActive').style.display = active ? 'block' : 'none';
+                    if(!active) {
+                        document.getElementById('bountyJoinBtn').style.display = 'block';
+                        document.getElementById('bountyJoinedMsg').style.display = 'none';
+                        document.getElementById('adminBountyJoinCount').innerText = '0';
+                        document.getElementById('bountyJoinCount').innerText = '0';
+                    }
+                    alert(`Симуляция: Режим Охоты ${statusText}! В реальной версии это отправит сигнал в Desktop app.`);
+                }
+                function joinBounty() {
+                    document.getElementById('bountyJoinBtn').style.display = 'none';
+                    document.getElementById('bountyJoinedMsg').style.display = 'block';
+                    let c = parseInt(document.getElementById('bountyJoinCount').innerText) || 0;
+                    document.getElementById('bountyJoinCount').innerText = c + 1;
+                    document.getElementById('adminBountyJoinCount').innerText = c + 1;
+                    alert("Твой аккаунт Lesta (" + siteAuth.username + ") зарегистрирован на текущую охоту!");
+                }
+                
+                // Проверка админки при загрузке вкладки
+                function checkBountyAdmin() {
+                    if (siteAuth && siteAuth.isAdmin) {
+                        document.getElementById('bountyStreamerView').style.display = 'block';
+                    }
+                }
+                setTimeout(checkBountyAdmin, 500);
+            </script>
         </div>
 
         <!-- ============================== -->

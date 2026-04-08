@@ -231,8 +231,8 @@
     </div>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const theme = params.get('theme') || '1';
+        const urlParams = new URLSearchParams(window.location.search);
+        const theme = urlParams.get('theme') || '1';
         document.body.className = 'theme-' + theme;
 
         const CONFIG = {
@@ -241,7 +241,7 @@
             goldIcon: 'assets/currency/goldIcon.png'
         };
 
-        function formatCount(n) { return n.toLocaleString().replace(/,/g, ' '); }
+        function formatCount(n) { return (n || 0).toLocaleString().replace(/,/g, ' '); }
 
         let lastData = null;
         let knownHitsCount = 0;
@@ -249,15 +249,32 @@
         function renderWidget(data) {
             const widget = document.getElementById('widget');
             
-            if (!data || Object.keys(data.attackers || {}).length === 0) {
-                widget.innerHTML = `<div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">Ожидание попаданий...</div>`;
+            // Если статус остановлен
+            if (data.status === 'stopped') {
+                widget.innerHTML = `<div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">Охота на стримера завершена.</div>`;
                 return;
             }
+
+            // Если мало данных
+            if (!data || Object.keys(data.attackers || {}).length === 0) {
+                const pcount = data.participants_count || 0;
+                widget.innerHTML = `
+                    <div class="header">
+                        <div class="header__icon">🎯</div>
+                        <div class="header__title">ОХОТА: ${pcount} уч.</div>
+                    </div>
+                    <div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">
+                        Ожидание первых попаданий...
+                    </div>`;
+                return;
+            }
+
+            const pcount = data.participants_count || Object.keys(data.attackers).length;
 
             let html = `
                 <div class="header">
                     <div class="header__icon">🎯</div>
-                    <div class="header__title">ОХОТА НА СТРИМЕРА</div>
+                    <div class="header__title">ОХОТА: ${pcount} уч.</div>
                     <div class="header__total">
                         ${formatCount(data.total_gold_given)} 
                         <img src="${CONFIG.goldIcon}" onerror="this.outerHTML='<span style=\\'font-size:14px\\'>💰</span>'" alt="">
