@@ -508,15 +508,20 @@
                     document.getElementById('adminBountyJoinCount').innerText = c + 1;
                     alert("Твой аккаунт Lesta (" + siteAuth.username + ") зарегистрирован на текущую охоту!");
                 }
-                
                 // Проверка админки при загрузке вкладки
+                let bountyAdminChecks = 0;
                 function checkBountyAdmin() {
-                    if (window.siteAuth && window.siteAuth.isAdmin) {
+                    bountyAdminChecks++;
+                    const isStreamer = (window.siteAuth && window.siteAuth.isAdmin) || window.isAdmin;
+                    if (isStreamer) {
                         document.getElementById('bountyStreamerView').style.display = 'block';
                         document.getElementById('bountyHunterView').style.display = 'none'; // Скрываем от стримера зрительский вид
+                    } else if (bountyAdminChecks < 10) {
+                        // Если статус админа еще не загрузился, проверяем позже
+                        setTimeout(checkBountyAdmin, 500);
                     }
                 }
-                setTimeout(checkBountyAdmin, 500);
+                checkBountyAdmin();
             </script>
         </div>
 
