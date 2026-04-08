@@ -511,8 +511,9 @@
                 
                 // Проверка админки при загрузке вкладки
                 function checkBountyAdmin() {
-                    if (siteAuth && siteAuth.isAdmin) {
+                    if (window.siteAuth && window.siteAuth.isAdmin) {
                         document.getElementById('bountyStreamerView').style.display = 'block';
+                        document.getElementById('bountyHunterView').style.display = 'none'; // Скрываем от стримера зрительский вид
                     }
                 }
                 setTimeout(checkBountyAdmin, 500);
