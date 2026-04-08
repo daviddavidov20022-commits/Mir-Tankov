@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Глобальный Вызов — ISERVERI Клуб</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="js/auth.js"></script>
+  <style>
+    .gc-hero{background:linear-gradient(135deg,#050f20,#0f111a,#050f20);border:1px solid rgba(43,124,233,0.2);border-radius:var(--radius-xl);padding:var(--space-xl);text-align:center;margin-bottom:var(--space-xl);position:relative;overflow:hidden;}
+    .gc-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(43,124,233,0.05),transparent 60%);pointer-events:none;}
+    .gc-progress-ring{width:120px;height:120px;margin:0 auto var(--space-lg);}
+    .gc-progress-ring circle{transition:stroke-dashoffset 1s ease;transform:rotate(-90deg);transform-origin:50% 50%;}
+    .participant-row{display:flex;align-items:center;gap:var(--space-md);padding:12px var(--space-md);border-bottom:1px solid rgba(255,255,255,0.03);}
+    .participant-row:last-child{border-bottom:none;}
+    .participant-row__avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+    .participant-row__name{flex:1;font-size:.875rem;color:var(--text-primary);}
+    .participant-row__progress{font-size:.75rem;color:var(--text-muted);}
+    .participant-row__score{font-family:var(--font-heading);font-size:.85rem;color:var(--blue);}
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<nav class="navbar navbar--scrolled" id="navbar">
+  <div class="navbar__inner">
+    <a href="index.html" class="navbar__brand">
+      <svg class="navbar__logo" viewBox="0 0 44 44" fill="none">
+        <rect x="4" y="26" width="36" height="12" rx="3" fill="#C8AA6E"/>
+        <rect x="11" y="17" width="22" height="13" rx="2" fill="#A08750"/>
+        <rect x="23" y="11" width="16" height="9" rx="2" fill="#8B7040"/>
+        <circle cx="10" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="22" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="34" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+      </svg>
+      <div class="navbar__brand-text">
+        <span class="navbar__brand-title">МИР ТАНКОВ</span>
+        <span class="navbar__brand-sub">Клуб ISERVERI</span>
+      </div>
+    </a>
+    <div class="navbar__right">
+      <div class="navbar__user" onclick="goTo('profile.html')">
+        <span id="navAvatar">🪖</span><span id="navUsername">Танкист</span>
+        <span class="navbar__user-balance"><span data-balance>0</span> 🧀</span>
+      </div>
+      <button class="btn btn--ghost btn--sm" onclick="auth.logout()">🚪</button>
+    </div>
+    <button class="navbar__hamburger" id="navHam">☰</button>
+  </div>
+</nav>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+  <a class="sidebar__item active" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Глобальный Вызов</a>
+  <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена</a>
+  <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+</div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar__section">
+      <div class="sidebar__label">Навигация</div>
+      <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+      <a class="sidebar__item" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+      <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика WN8</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Мини-игры</div>
+      <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена 1vs1</a>
+      <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо Фортуны</a>
+      <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+      <a class="sidebar__item active" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Глобальный Вызов</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Сообщество</div>
+      <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+      <a class="sidebar__item" href="friends.html"><span class="sidebar__item-icon">👥</span>Друзья</a>
+      <a class="sidebar__item" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+    </div>
+    <div class="sidebar-balance">
+      <div class="sidebar-balance__label">Баланс Сыра</div>
+      <div class="sidebar-balance__value"><span data-balance>0</span> 🧀</div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="page-header animate-fade-in">
+      <div class="page-header__eyebrow">Командные ивенты</div>
+      <div class="page-header__title">🌍 Глобальный Вызов</div>
+      <div class="page-header__subtitle">Весь клуб участвует вместе — каждый вносит свой вклад</div>
+    </div>
+
+    <!-- ACTIVE CHALLENGE -->
+    <div class="gc-hero animate-fade-in" id="gcHero">
+      <div class="gc-progress-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(43,124,233,0.1)" stroke-width="8"/>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#2B7CE9" stroke-width="8"
+            stroke-dasharray="326.7" id="gcRingFill" stroke-dashoffset="326.7"
+            stroke-linecap="round"/>
+          <text x="60" y="56" text-anchor="middle" fill="#E8E4DC" font-family="Bebas Neue" font-size="22" id="gcPct">0%</text>
+          <text x="60" y="72" text-anchor="middle" fill="#5A6B7A" font-family="Barlow" font-size="10">выполнено</text>
+        </svg>
+      </div>
+      <div style="font-family:var(--font-display);font-size:2rem;color:var(--blue);letter-spacing:.06em;margin-bottom:8px;" id="gcTitle">Загрузка...</div>
+      <div style="font-size:.9rem;color:var(--text-muted);margin-bottom:var(--space-lg);" id="gcDesc">—</div>
+      <div style="display:flex;gap:var(--space-xl);justify-content:center;flex-wrap:wrap;">
+        <div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.8rem;color:var(--blue)" id="gcCurrent">—</div><div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted)" id="gcGoalLabel">из — выполнено</div></div>
+        <div style="width:1px;background:rgba(43,124,233,0.2)"></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.8rem;color:var(--gold)" id="gcReward">—</div><div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted)">🧀 за победу</div></div>
+        <div style="width:1px;background:rgba(43,124,233,0.2)"></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.8rem;color:var(--text-secondary)" id="gcEnds">—</div><div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted)">Осталось дней</div></div>
+      </div>
+    </div>
+
+    <div class="grid-2 reveal" style="gap:var(--space-lg);margin-bottom:var(--space-xl);">
+
+      <!-- HOW TO PARTICIPATE -->
+      <div class="card">
+        <div style="font-family:var(--font-heading);font-size:1rem;color:var(--text-primary);margin-bottom:var(--space-lg)">📋 Как участвовать</div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-md);" id="howToList">
+          <div style="display:flex;gap:var(--space-md);font-size:.875rem;">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(43,124,233,0.1);border:1px solid rgba(43,124,233,0.2);display:flex;align-items:center;justify-content:center;color:#2B7CE9;font-family:var(--font-heading);font-size:.8rem;flex-shrink:0;">1</div>
+            <div><strong style="color:var(--text-primary)">Играй бои</strong><p style="font-size:.8rem;color:var(--text-muted);margin-top:2px">Каждый бой в Мир Танков засчитывается в прогресс клуба</p></div>
+          </div>
+          <div style="display:flex;gap:var(--space-md);font-size:.875rem;">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(43,124,233,0.1);border:1px solid rgba(43,124,233,0.2);display:flex;align-items:center;justify-content:center;color:#2B7CE9;font-family:var(--font-heading);font-size:.8rem;flex-shrink:0;">2</div>
+            <div><strong style="color:var(--text-primary)">Получай банки</strong><p style="font-size:.8rem;color:var(--text-muted);margin-top:2px">Каждый бой = +1 банка в общий прогресс ивента</p></div>
+          </div>
+          <div style="display:flex;gap:var(--space-md);font-size:.875rem;">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(200,170,110,0.1);border:1px solid rgba(200,170,110,0.2);display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:var(--font-heading);font-size:.8rem;flex-shrink:0;">3</div>
+            <div><strong style="color:var(--text-primary)">Выиграй награду</strong><p style="font-size:.8rem;color:var(--text-muted);margin-top:2px">Если клуб достигнет цели — каждый участник получает Сыр</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY CONTRIBUTION -->
+      <div class="card">
+        <div style="font-family:var(--font-heading);font-size:1rem;color:var(--text-primary);margin-bottom:var(--space-lg)">🎖️ Мой вклад</div>
+        <div style="text-align:center;padding:var(--space-lg);" id="myContrib">
+          <div style="font-family:var(--font-display);font-size:3rem;color:var(--blue);" id="myContribVal">—</div>
+          <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:4px">Моих боёв</div>
+          <div style="margin-top:var(--space-lg);">
+            <div class="progress-bar" style="height:8px;">
+              <div class="progress-bar__fill" id="myContribBar" style="width:0%;background:linear-gradient(90deg,rgba(43,124,233,0.6),#2B7CE9)"></div>
+            </div>
+            <div style="font-size:.7rem;color:var(--text-muted);margin-top:6px" id="myContribPct">0% от цели клуба</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARTICIPANTS -->
+    <div class="section-header" style="margin-bottom:var(--space-md);">
+      <div class="section-header__title">👥 Участники</div>
+      <span class="badge badge--free" id="participantCount">0</span>
+    </div>
+    <div class="card" id="participantsList">
+      <div style="text-align:center;padding:var(--space-xl);color:var(--text-muted);font-size:.85rem">⏳ Загрузка...</div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+if (!auth.requireAuth()) {}
+
+async function loadGlobalChallenge() {
+  try {
+    const data = await API.getGlobalChallenge();
+    if (!data || !data.id) {
+      document.getElementById('gcHero').innerHTML = `
+        <div style="font-size:3rem;margin-bottom:var(--space-md)">🌍</div>
+        <div style="font-family:var(--font-display);font-size:2rem;color:var(--text-secondary)">Нет активного ивента</div>
+        <p style="color:var(--text-muted);margin-top:8px">Следи за объявлениями —<br>новый Глобальный Вызов скоро начнётся!</p>
+      `;
+      return;
+    }
+
+    const goal    = data.goal || 1000;
+    const current = data.current || 0;
+    const pct     = Math.min(100, Math.round(current / goal * 100));
+    const DASH    = 326.7;
+    const offset  = DASH - (DASH * pct / 100);
+
+    document.getElementById('gcTitle').textContent    = data.title || 'Глобальный Вызов';
+    document.getElementById('gcDesc').textContent     = data.description || '';
+    document.getElementById('gcCurrent').textContent  = current.toLocaleString();
+    document.getElementById('gcGoalLabel').textContent= `из ${goal.toLocaleString()} выполнено`;
+    document.getElementById('gcReward').textContent   = (data.reward || 100).toLocaleString();
+    document.getElementById('gcEnds').textContent     = data.days_left || '—';
+    document.getElementById('gcPct').textContent      = pct + '%';
+    setTimeout(() => {
+      document.getElementById('gcRingFill').style.strokeDashoffset = offset;
+    }, 300);
+
+    // My contrib
+    const myId = auth.getId();
+    const myContrib = data.participants?.find(p => String(p.telegram_id) === String(myId));
+    const myBattles = myContrib?.battles || 0;
+    document.getElementById('myContribVal').textContent = myBattles.toLocaleString();
+    const myPct = goal > 0 ? Math.min(100, (myBattles / goal * 100)).toFixed(1) : 0;
+    document.getElementById('myContribPct').textContent = `${myPct}% от цели клуба`;
+    setTimeout(() => {
+      document.getElementById('myContribBar').style.width = myPct + '%';
+    }, 400);
+
+  } catch {
+    document.getElementById('gcTitle').textContent = 'Нет активного ивента';
+    document.getElementById('gcDesc').textContent  = 'Следи за объявлениями!';
+  }
+}
+
+async function loadParticipants() {
+  const listEl = document.getElementById('participantsList');
+  const countEl= document.getElementById('participantCount');
+  try {
+    const data  = await API.getGlobalParticipants();
+    const users = data.participants || data.users || [];
+    countEl.textContent = users.length;
+
+    if (!users.length) {
+      listEl.innerHTML = '<p style="color:var(--text-muted);padding:var(--space-lg);text-align:center">Нет участников</p>';
+      return;
+    }
+
+    const myId = auth.getId();
+    listEl.innerHTML = users.map((u, i) => {
+      const isMe = String(u.telegram_id) === String(myId);
+      return `
+        <div class="participant-row${isMe ? '" style="background:rgba(43,124,233,0.04)' : ''}">
+          <div style="font-family:var(--font-heading);font-size:.9rem;color:var(--text-muted);width:24px;text-align:center">#${i+1}</div>
+          <div class="participant-row__avatar">🪖</div>
+          <div class="participant-row__name">${u.wot_nickname || u.username || 'Танкист'}${isMe ? ' (Ты)' : ''}</div>
+          <div class="participant-row__progress">${(u.battles || 0).toLocaleString()} боёв</div>
+          <div class="participant-row__score">${(u.contribution || u.battles || 0).toLocaleString()}</div>
+        </div>
+      `;
+    }).join('');
+  } catch {
+    listEl.innerHTML = '<p style="color:var(--text-muted);padding:var(--space-lg);text-align:center">Не удалось загрузить</p>';
+  }
+}
+
+loadGlobalChallenge();
+loadParticipants();
+</script>
+</body>
+</html>

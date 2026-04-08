@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Колесо Фортуны — ISERVERI Клуб</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="js/auth.js"></script>
+  <style>
+    .wheel-container{display:flex;flex-direction:column;align-items:center;margin-bottom:var(--space-xl);}
+    .wheel-wrap{position:relative;width:320px;height:320px;margin:0 auto var(--space-lg);}
+    .wheel-canvas{border-radius:50%;box-shadow:0 0 60px rgba(200,170,110,0.2),0 0 120px rgba(200,170,110,0.05);transition:transform var(--transition-std);}
+    .wheel-arrow{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:28px solid var(--gold);filter:drop-shadow(0 2px 8px rgba(200,170,110,0.5));z-index:10;}
+    .wheel-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#1a1505,#0f0c05);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 0 20px rgba(200,170,110,0.3);z-index:5;}
+    .spin-btn{width:200px;font-size:1.1rem;padding:18px 36px;border-radius:50px;transition:all .3s ease;}
+    .spin-btn:hover:not(:disabled){transform:scale(1.04);}
+    .cooldown-bar{width:100%;max-width:320px;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:12px;}
+    .cooldown-bar__fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));border-radius:3px;transition:width 1s linear;}
+    .prize-pop{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:500;background:linear-gradient(135deg,#1a1505,#111826);border:2px solid var(--gold);border-radius:var(--radius-xl);padding:var(--space-xl) var(--space-2xl);text-align:center;pointer-events:none;transition:transform .4s cubic-bezier(0.34,1.56,0.64,1),opacity .4s ease;opacity:0;}
+    .prize-pop.show{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all;}
+    .segments-info{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:480px;}
+    .seg-info{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px;text-align:center;font-size:.75rem;color:var(--text-muted);}
+    .seg-info__val{font-family:var(--font-heading);color:var(--gold);font-size:.95rem;margin-bottom:2px;}
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<nav class="navbar navbar--scrolled" id="navbar">
+  <div class="navbar__inner">
+    <a href="index.html" class="navbar__brand">
+      <svg class="navbar__logo" viewBox="0 0 44 44" fill="none">
+        <rect x="4" y="26" width="36" height="12" rx="3" fill="#C8AA6E"/>
+        <rect x="11" y="17" width="22" height="13" rx="2" fill="#A08750"/>
+        <rect x="23" y="11" width="16" height="9" rx="2" fill="#8B7040"/>
+        <circle cx="10" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="22" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="34" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+      </svg>
+      <div class="navbar__brand-text">
+        <span class="navbar__brand-title">МИР ТАНКОВ</span>
+        <span class="navbar__brand-sub">Клуб ISERVERI</span>
+      </div>
+    </a>
+    <div class="navbar__right">
+      <div class="navbar__user" onclick="goTo('profile.html')">
+        <span id="navAvatar">🪖</span><span id="navUsername">Танкист</span>
+        <span class="navbar__user-balance"><span data-balance>0</span> 🧀</span>
+      </div>
+      <button class="btn btn--ghost btn--sm" onclick="auth.logout()">🚪</button>
+    </div>
+    <button class="navbar__hamburger" id="navHam">☰</button>
+  </div>
+</nav>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+  <a class="sidebar__item active" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо</a>
+  <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена</a>
+  <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+</div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar__section">
+      <div class="sidebar__label">Навигация</div>
+      <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+      <a class="sidebar__item" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+      <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика WN8</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Мини-игры</div>
+      <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена 1vs1</a>
+      <a class="sidebar__item active" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо Фортуны</a>
+      <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+      <a class="sidebar__item" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Глобальный Вызов</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Аккаунт</div>
+      <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+      <a class="sidebar__item" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+    </div>
+    <div class="sidebar-balance">
+      <div class="sidebar-balance__label">Баланс Сыра</div>
+      <div class="sidebar-balance__value"><span data-balance>0</span> 🧀</div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="page-header animate-fade-in">
+      <div class="page-header__eyebrow">Удача за мастерство</div>
+      <div class="page-header__title">🎰 Колесо Фортуны</div>
+      <div class="page-header__subtitle">Крути каждый день и выигрывай до 1000 Сыра!</div>
+    </div>
+
+    <!-- WHEEL -->
+    <div class="wheel-container animate-fade-in">
+      <div class="wheel-wrap">
+        <div class="wheel-arrow" id="wheelArrow"></div>
+        <canvas id="wheelCanvas" class="wheel-canvas" width="320" height="320"></canvas>
+        <div class="wheel-center" id="wheelCenter">🎰</div>
+      </div>
+
+      <div id="cooldownWrap" style="display:none;text-align:center;width:100%;max-width:320px;margin-bottom:var(--space-md);">
+        <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;" id="cooldownText">Следующее вращение через...</div>
+        <div class="cooldown-bar"><div class="cooldown-bar__fill" id="cooldownFill" style="width:100%"></div></div>
+        <div style="font-family:var(--font-heading);color:var(--gold);font-size:1.2rem;margin-top:8px;" id="cooldownTimer">—</div>
+      </div>
+
+      <button class="btn btn--primary spin-btn" id="spinBtn" onclick="doSpin()">🎰 Крутить!</button>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:8px;" id="spinNote">1 бесплатное вращение в день · Premium = +1 вращение</div>
+    </div>
+
+    <!-- SEGMENT INFO -->
+    <div style="text-align:center;margin-bottom:var(--space-md);font-size:.75rem;color:var(--text-muted);">Возможные призы</div>
+    <div class="segments-info animate-fade-in" style="margin:0 auto var(--space-xl);">
+      <div class="seg-info"><div class="seg-info__val">+10 🧀</div>Утешение</div>
+      <div class="seg-info"><div class="seg-info__val">+25 🧀</div>Маленький</div>
+      <div class="seg-info"><div class="seg-info__val">+50 🧀</div>Средний</div>
+      <div class="seg-info"><div class="seg-info__val">+100 🧀</div>Хороший</div>
+      <div class="seg-info"><div class="seg-info__val">+200 🧀</div>Отличный</div>
+      <div class="seg-info"><div class="seg-info__val">+500 🧀</div>Редкий</div>
+      <div class="seg-info"><div class="seg-info__val">+1000 🧀</div>Джекпот!</div>
+      <div class="seg-info"><div class="seg-info__val">×2</div>Удвоение</div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="section-header" style="margin-bottom:var(--space-md);">
+      <div class="section-header__title">📜 Последние крупные выигрыши</div>
+    </div>
+    <div class="card" id="wheelHistory">
+      <div style="text-align:center;padding:var(--space-md);color:var(--text-muted);font-size:.85rem">⏳ Загрузка...</div>
+    </div>
+  </main>
+</div>
+
+<!-- PRIZE POPUP -->
+<div class="prize-pop" id="prizePop">
+  <div style="font-size:4rem;margin-bottom:var(--space-md);" id="prizeEmoji">🎉</div>
+  <div style="font-family:var(--font-display);font-size:2.5rem;color:var(--gold);letter-spacing:.08em" id="prizeTitle">+100 🧀</div>
+  <div style="font-size:.9rem;color:var(--text-muted);margin-top:8px" id="prizeDesc">Отличный выигрыш!</div>
+  <button class="btn btn--primary" style="margin-top:var(--space-lg);width:100%" onclick="closePrizePop()">🎊 Отлично!</button>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+if (!auth.requireAuth()) {}
+
+// ─── WHEEL SEGMENTS ──────────────────────────────────────────
+const SEGMENTS = [
+  { label: '10 🧀',   value: 10,   color: '#2d3748', weight: 30 },
+  { label: '25 🧀',   value: 25,   color: '#1a3a1a', weight: 25 },
+  { label: '50 🧀',   value: 50,   color: '#1a1a3a', weight: 20 },
+  { label: '100 🧀',  value: 100,  color: '#2a1a0a', weight: 12 },
+  { label: '200 🧀',  value: 200,  color: '#1a0a0a', weight: 6  },
+  { label: '500 🧀',  value: 500,  color: '#0f0f1a', weight: 3  },
+  { label: '1000 🧀', value: 1000, color: '#1a0a08', weight: 1  },
+  { label: '×2 баланс', value: -1, color: '#0a1a0a', weight: 3  },
+];
+
+const canvas  = document.getElementById('wheelCanvas');
+const ctx     = canvas.getContext('2d');
+const CX = CY = 160, R = 148;
+let spinning  = false;
+let currentAngle = 0;
+
+function drawWheel(angle = 0) {
+  ctx.clearRect(0, 0, 320, 320);
+  const total = SEGMENTS.reduce((s, g) => s + g.weight, 0);
+  let start = angle - Math.PI / 2;
+
+  // Outer glow ring
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(CX, CY, R + 6, 0, Math.PI * 2);
+  const grad = ctx.createLinearGradient(0, 0, 320, 320);
+  grad.addColorStop(0, 'rgba(200,170,110,0.3)');
+  grad.addColorStop(0.5, 'rgba(200,170,110,0.1)');
+  grad.addColorStop(1, 'rgba(200,170,110,0.3)');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  SEGMENTS.forEach((seg, i) => {
+    const arc = (seg.weight / total) * Math.PI * 2;
+    const end = start + arc;
+    const mid = start + arc / 2;
+
+    // Segment
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, start, end);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(200,170,110,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Label
+    ctx.save();
+    ctx.translate(CX + Math.cos(mid) * (R * 0.68), CY + Math.sin(mid) * (R * 0.68));
+    ctx.rotate(mid + Math.PI / 2);
+    ctx.font = `bold ${seg.value >= 1000 ? '9' : seg.value >= 200 ? '11' : '12'}px 'Barlow Condensed', sans-serif`;
+    ctx.fillStyle = seg.value >= 200 ? '#C8AA6E' : '#8B9BB4';
+    ctx.textAlign = 'center';
+    ctx.fillText(seg.label, 0, 0);
+    ctx.restore();
+
+    start = end;
+  });
+
+  // Center circle bg
+  ctx.beginPath();
+  ctx.arc(CX, CY, 28, 0, Math.PI * 2);
+  ctx.fillStyle = '#080c16';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(200,170,110,0.4)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+drawWheel();
+
+// ─── SPIN LOGIC ──────────────────────────────────────────────
+async function doSpin() {
+  if (spinning) return;
+  const btn = document.getElementById('spinBtn');
+  btn.disabled = true;
+  spinning = true;
+
+  try {
+    const data = await API.spinWheel(auth.getId());
+    if (!data.success) {
+      const secondsLeft = data.seconds_left || 0;
+      Toast.error('Уже крутил сегодня', `Следующее вращение через ${Math.ceil(secondsLeft/3600)} ч.`);
+      if (secondsLeft > 0) showCooldown(secondsLeft);
+      btn.disabled = false;
+      spinning = false;
+      return;
+    }
+
+    const prize  = data.prize || data.amount || 50;
+    const isX2   = data.type === 'x2';
+    const segIdx = findSegmentIndex(prize, isX2);
+
+    // Spin animation
+    const total  = SEGMENTS.reduce((s, g) => s + g.weight, 0);
+    let cumAngle = 0;
+    let targetMidAngle = 0;
+    SEGMENTS.forEach((seg, i) => {
+      const arc = (seg.weight / total) * Math.PI * 2;
+      if (i === segIdx) targetMidAngle = cumAngle + arc / 2;
+      cumAngle += arc;
+    });
+
+    const spinRounds = 5 + Math.random() * 3;
+    const spinAngle  = spinRounds * Math.PI * 2 - targetMidAngle;
+    const duration   = 4000;
+    const start      = performance.now();
+    const startAngle = currentAngle;
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+    function animate(now) {
+      const elapsed  = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      currentAngle   = startAngle + spinAngle * easeOut(progress);
+      drawWheel(currentAngle);
+      if (progress < 1) { requestAnimationFrame(animate); return; }
+
+      // Done!
+      spinning = false;
+      const finalAmount = isX2 ? auth.balance : prize;
+      if (isX2) {
+        auth.balance *= 2;
+      } else {
+        auth.balance += prize;
+      }
+      updateBalanceUI(auth.balance);
+      localStorage.setItem('ws_balance', auth.balance);
+      showPrizePop(prize, isX2);
+    }
+    requestAnimationFrame(animate);
+
+  } catch (e) {
+    Toast.error('Ошибка сервера');
+    btn.disabled = false;
+    spinning = false;
+  }
+}
+
+function findSegmentIndex(prize, isX2) {
+  if (isX2) return 7;
+  const map = {10:0, 25:1, 50:2, 100:3, 200:4, 500:5, 1000:6};
+  return map[prize] !== undefined ? map[prize] : 2;
+}
+
+function showPrizePop(amount, isX2) {
+  const pop   = document.getElementById('prizePop');
+  const emoji = document.getElementById('prizeEmoji');
+  const title = document.getElementById('prizeTitle');
+  const desc  = document.getElementById('prizeDesc');
+
+  if (isX2) {
+    emoji.textContent = '✨';
+    title.textContent = '× 2 Баланс!';
+    desc.textContent  = 'Твой баланс удвоен!';
+  } else if (amount >= 1000) {
+    emoji.textContent = '🏆';
+    title.textContent = `+${amount} 🧀`;
+    desc.textContent  = '🎉 ДЖЕКПОТ! Невероятная удача!';
+  } else if (amount >= 200) {
+    emoji.textContent = '💰';
+    title.textContent = `+${amount} 🧀`;
+    desc.textContent  = 'Отличный выигрыш!';
+  } else {
+    emoji.textContent = '🎊';
+    title.textContent = `+${amount} 🧀`;
+    desc.textContent  = 'Неплохо! Приходи завтра за большим!';
+  }
+  pop.classList.add('show');
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('spinNote').textContent = '✅ Уже крутил сегодня';
+}
+
+function closePrizePop() {
+  document.getElementById('prizePop').classList.remove('show');
+}
+
+function showCooldown(seconds) {
+  const wrap = document.getElementById('cooldownWrap');
+  wrap.style.display = '';
+  const total  = 86400;
+  const remaining = seconds;
+
+  function update() {
+    const pct  = (remaining / total * 100).toFixed(1);
+    const h    = Math.floor(remaining / 3600);
+    const m    = Math.floor((remaining % 3600) / 60);
+    document.getElementById('cooldownFill').style.width  = pct + '%';
+    document.getElementById('cooldownTimer').textContent = `${h} ч. ${m} мин.`;
+  }
+  update();
+}
+
+// ─── CHECK STATUS ON LOAD ────────────────────────────────────
+async function checkWheelStatus() {
+  try {
+    const data = await API.getWheelStatus(auth.getId());
+    if (data.can_spin === false || data.already_spun) {
+      document.getElementById('spinBtn').disabled = true;
+      document.getElementById('spinNote').textContent = '✅ Уже крутил сегодня · Приходи завтра!';
+      if (data.seconds_left) showCooldown(data.seconds_left);
+    }
+  } catch {}
+}
+
+// ─── HISTORY ─────────────────────────────────────────────────
+async function loadHistory() {
+  const el = document.getElementById('wheelHistory');
+  try {
+    const data = await API.get('/api/wheel/history', { limit: 8 });
+    const items = data.history || data.results || [];
+    if (!items.length) { el.innerHTML = '<p style="color:var(--text-muted);padding:var(--space-md);text-align:center;font-size:.85rem">История пуста</p>'; return; }
+    el.innerHTML = items.map(h => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px var(--space-md);border-bottom:1px solid rgba(255,255,255,0.03);">
+        <div style="font-size:.85rem;color:var(--text-primary)">${h.username || 'Игрок'}</div>
+        <div style="font-family:var(--font-heading);font-size:.85rem;color:var(--gold)">${h.type === 'x2' ? '×2' : '+' + h.amount} 🧀</div>
+      </div>
+    `).join('');
+  } catch { el.innerHTML = '<p style="color:var(--text-muted);padding:var(--space-md);text-align:center;">Данные недоступны</p>'; }
+}
+
+checkWheelStatus();
+loadHistory();
+</script>
+</body>
+</html>

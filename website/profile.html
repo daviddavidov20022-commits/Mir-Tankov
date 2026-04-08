@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Профиль — ISERVERI Клуб</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👤</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="js/auth.js"></script>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar--scrolled" id="navbar">
+  <div class="navbar__inner">
+    <a href="index.html" class="navbar__brand">
+      <svg class="navbar__logo" viewBox="0 0 44 44" fill="none">
+        <rect x="4" y="26" width="36" height="12" rx="3" fill="#C8AA6E"/>
+        <rect x="11" y="17" width="22" height="13" rx="2" fill="#A08750"/>
+        <rect x="23" y="11" width="16" height="9" rx="2" fill="#8B7040"/>
+        <circle cx="10" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="22" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="34" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+      </svg>
+      <div class="navbar__brand-text">
+        <span class="navbar__brand-title">МИР ТАНКОВ</span>
+        <span class="navbar__brand-sub">Клуб ISERVERI</span>
+      </div>
+    </a>
+    <div class="navbar__right">
+      <div class="navbar__user" onclick="goTo('profile.html')">
+        <span id="navAvatar">🪖</span>
+        <span id="navUsername">Танкист</span>
+        <span class="navbar__user-balance"><span data-balance>0</span> 🧀</span>
+      </div>
+      <button class="btn btn--ghost btn--sm" onclick="auth.logout()">🚪</button>
+    </div>
+    <button class="navbar__hamburger" id="navHam">☰</button>
+  </div>
+</nav>
+
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+  <a class="sidebar__item active" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+  <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика</a>
+  <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена</a>
+  <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо</a>
+  <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+  <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+  <a class="sidebar__item" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+</div>
+
+<!-- APP LAYOUT -->
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar__section">
+      <div class="sidebar__label">Навигация</div>
+      <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+      <a class="sidebar__item active" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+      <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика WN8</a>
+      <a class="sidebar__item" href="donate.html"><span class="sidebar__item-icon">🎙️</span>Донат на стрим</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Мини-игры</div>
+      <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена 1vs1</a>
+      <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо Фортуны</a>
+      <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+      <a class="sidebar__item" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Глобальный Вызов</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Аккаунт</div>
+      <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+      <a class="sidebar__item" href="friends.html"><span class="sidebar__item-icon">👥</span>Друзья</a>
+      <a class="sidebar__item" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+      <button class="sidebar__item" onclick="auth.logout()" style="width:100%;text-align:left;background:none;border:none;color:inherit;font:inherit;cursor:pointer;"><span class="sidebar__item-icon">🚪</span>Выйти</button>
+    </div>
+    <div class="sidebar-balance">
+      <div class="sidebar-balance__label">Баланс Сыра</div>
+      <div class="sidebar-balance__value"><span data-balance>0</span> 🧀</div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="page-header animate-fade-in">
+      <div class="page-header__eyebrow">Личный аккаунт</div>
+      <div class="page-header__title">Профиль</div>
+    </div>
+
+    <!-- PROFILE HERO CARD -->
+    <div class="profile-hero animate-fade-in" id="profileHero">
+      <div class="profile-avatar" id="profileAvatar">🪖</div>
+      <div class="profile-info">
+        <div class="profile-nickname" id="profileNickname">Загрузка...</div>
+        <div class="profile-sub" id="profileSub">WoT аккаунт</div>
+        <div class="profile-badges" id="profileBadges" style="gap:8px;display:flex;flex-wrap:wrap;"></div>
+      </div>
+      <div class="profile-stats-row">
+        <div class="profile-stat-item">
+          <div class="profile-stat-value" data-balance>0</div>
+          <div class="profile-stat-label">Сыр 🧀</div>
+        </div>
+        <div class="profile-stat-item">
+          <div class="profile-stat-value" id="profileBattles">—</div>
+          <div class="profile-stat-label">Боёв</div>
+        </div>
+        <div class="profile-stat-item">
+          <div class="profile-stat-value" id="profileWins">—</div>
+          <div class="profile-stat-label">Побед</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS GRID -->
+    <div class="grid-2 reveal" style="margin-bottom:var(--space-xl);gap:var(--space-md);">
+
+      <!-- WN8 BLOCK -->
+      <div class="card">
+        <div class="section-header" style="margin-bottom:var(--space-md)">
+          <div class="section-header__title">📊 Рейтинг WN8</div>
+          <a href="stats.html" class="section-header__action">Подробнее →</a>
+        </div>
+        <div class="wn8-block" id="wn8Block">
+          <div>
+            <div class="wn8-value" id="wn8Value">—</div>
+            <div class="wn8-label">WN8</div>
+          </div>
+          <div>
+            <div class="wn8-tier" id="wn8Tier">Загрузка...</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;" id="wn8Battles">— боёв</div>
+          </div>
+        </div>
+        <div style="margin-top:var(--space-md);display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);">
+          <div style="text-align:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--text-primary);" id="statWr">—</div>
+            <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;">% побед</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--text-primary);" id="statDmg">—</div>
+            <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;">Урон/бой</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARENA STATS -->
+      <div class="card">
+        <div class="section-header" style="margin-bottom:var(--space-md)">
+          <div class="section-header__title">⚔️ Арена</div>
+          <a href="arena.html" class="section-header__action">Играть →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-sm);margin-bottom:var(--space-md);">
+          <div style="text-align:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--text-primary)" id="arenaTotal">—</div>
+            <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;">Боёв</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:rgba(46,204,113,0.05);border-radius:10px;">
+            <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--green)" id="arenaWins">—</div>
+            <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;">Побед</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:rgba(201,59,59,0.05);border-radius:10px;">
+            <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--red)" id="arenaLosses">—</div>
+            <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;">Поражений</div>
+          </div>
+        </div>
+        <div style="margin-bottom:8px;font-size:0.72rem;color:var(--text-muted)">Win Rate арены</div>
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="arenaWrBar" style="width:0%"></div>
+        </div>
+        <div style="text-align:right;font-size:0.75rem;color:var(--gold);margin-top:4px;" id="arenaWr">0%</div>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENTS (static showcase for now) -->
+    <div class="card reveal" style="margin-bottom:var(--space-xl);">
+      <div class="section-header" style="margin-bottom:var(--space-lg)">
+        <div class="section-header__title">🏅 Достижения</div>
+      </div>
+      <div style="display:flex;gap:var(--space-md);flex-wrap:wrap;" id="achievementsList">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- TRANSACTION HISTORY -->
+    <div class="card reveal">
+      <div class="section-header" style="margin-bottom:var(--space-md)">
+        <div class="section-header__title">📜 История транзакций</div>
+      </div>
+      <div id="txHistory">
+        <div style="color:var(--text-muted);font-size:0.85rem;padding:var(--space-md);">⏳ Загрузка...</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+if (!auth.requireAuth()) {}
+
+// ─── WN8 HELPER ─────────────────────────────────────────────
+function getWn8Info(wn8) {
+  if (wn8 < 300)  return { tier: 'Плохо',            cls: 'wn8--bad' };
+  if (wn8 < 600)  return { tier: 'Ниже среднего',    cls: 'wn8--below-avg' };
+  if (wn8 < 900)  return { tier: 'Средне',            cls: 'wn8--average' };
+  if (wn8 < 1250) return { tier: 'Выше среднего',    cls: 'wn8--above-avg' };
+  if (wn8 < 1600) return { tier: 'Хорошо',           cls: 'wn8--good' };
+  if (wn8 < 2000) return { tier: 'Очень хорошо',     cls: 'wn8--very-good' };
+  if (wn8 < 2450) return { tier: 'Отлично',           cls: 'wn8--great' };
+  if (wn8 < 2900) return { tier: 'Уникум',            cls: 'wn8--unicum' };
+  return          { tier: 'Супер-Уникум',            cls: 'wn8--super-unicum' };
+}
+
+// ─── LOAD PROFILE DATA ──────────────────────────────────────
+async function loadProfile() {
+  try {
+    // Basic info
+    document.getElementById('profileNickname').textContent = auth.username;
+
+    // Battle stats
+    const data = await API.getBattleStats(auth.getId());
+    const pvp   = data.battles?.pvp || {};
+    const total = data.battles?.total || 0;
+    const wins  = pvp.wins  || 0;
+    const losses= pvp.losses|| 0;
+    const games = pvp.total || 0;
+    const wr    = games > 0 ? (wins / games * 100).toFixed(1) : '0.0';
+
+    animateCounter(document.getElementById('profileBattles'), total);
+    animateCounter(document.getElementById('profileWins'), wins);
+    document.getElementById('arenaTotal').textContent   = games;
+    document.getElementById('arenaWins').textContent    = wins;
+    document.getElementById('arenaLosses').textContent  = losses;
+    document.getElementById('arenaWr').textContent      = wr + '%';
+    setTimeout(() => {
+      document.getElementById('arenaWrBar').style.width = wr + '%';
+    }, 400);
+
+    // Badges
+    const badgesEl = document.getElementById('profileBadges');
+    if (auth.isPremium) badgesEl.innerHTML += '<span class="badge badge--gold">💎 Premium</span>';
+    if (auth.isAdmin)   badgesEl.innerHTML += '<span class="badge badge--gold">👑 Админ</span>';
+    if (wins >= 10)     badgesEl.innerHTML += '<span class="badge badge--free">⚔️ Боец</span>';
+    if (wins >= 50)     badgesEl.innerHTML += '<span class="badge badge--free">🏆 Чемпион</span>';
+    if (data.cheese_balance > 1000) badgesEl.innerHTML += '<span class="badge badge--premium">💰 Богач</span>';
+
+    // Profile sub
+    const sub = document.getElementById('profileSub');
+    if (auth.wotId) sub.textContent = `WoT ID: ${auth.wotId}`;
+    else sub.textContent = 'Участник клуба ISERVERI';
+
+  } catch (e) {
+    document.getElementById('profileNickname').textContent = auth.username;
+    console.warn('[Profile] Error:', e);
+  }
+}
+
+// ─── LOAD WN8 STATS ─────────────────────────────────────────
+async function loadWn8() {
+  try {
+    const data = await API.getWotStats(auth.getId());
+    const wn8    = data.wn8 || 0;
+    const battles= data.battles || 0;
+    const wr     = data.win_rate || 0;
+    const dmg    = data.avg_damage || 0;
+    const info   = getWn8Info(wn8);
+
+    const wn8El = document.getElementById('wn8Value');
+    wn8El.textContent = wn8.toLocaleString();
+    wn8El.className   = `wn8-value ${info.cls}`;
+
+    document.getElementById('wn8Tier').textContent    = info.tier;
+    document.getElementById('wn8Tier').className      = `wn8-tier ${info.cls}`;
+    document.getElementById('wn8Battles').textContent = `${battles.toLocaleString()} боёв`;
+    document.getElementById('statWr').textContent     = wr.toFixed(1) + '%';
+    document.getElementById('statDmg').textContent    = Math.round(dmg).toLocaleString();
+  } catch {
+    document.getElementById('wn8Tier').textContent = 'Данные не найдены';
+  }
+}
+
+// ─── ACHIEVEMENTS ────────────────────────────────────────────
+function renderAchievements() {
+  const list = [
+    { icon: '🎮', title: 'Добро пожаловать',   desc: 'Зарегистрировался в клубе', earned: true },
+    { icon: '⚔️', title: 'Первый бой',          desc: 'Сыграл первый матч в Арене', earned: auth.balance > 0 },
+    { icon: '🧀', title: 'Любитель Сыра',       desc: 'Накопил 100 Сыра',           earned: auth.balance >= 100 },
+    { icon: '💰', title: 'Богатый танкист',     desc: 'Накопил 1000 Сыра',          earned: auth.balance >= 1000 },
+    { icon: '💎', title: 'Подписчик',           desc: 'Активная подписка Premium',   earned: auth.isPremium },
+    { icon: '🎰', title: 'Удачный вращатель',   desc: 'Получил приз на колесе',      earned: false },
+  ];
+  const el = document.getElementById('achievementsList');
+  el.innerHTML = list.map(a => `
+    <div style="
+      display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 12px;border-radius:12px;text-align:center;width:100px;
+      background:${a.earned ? 'rgba(200,170,110,0.08)' : 'rgba(255,255,255,0.02)'};
+      border:1px solid ${a.earned ? 'rgba(200,170,110,0.2)' : 'rgba(255,255,255,0.04)'};
+      opacity:${a.earned ? '1' : '0.4'};
+    ">
+      <span style="font-size:1.8rem;${a.earned ? '' : 'filter:grayscale(1)'}">${a.icon}</span>
+      <span style="font-size:0.7rem;font-weight:600;color:${a.earned ? 'var(--gold)' : 'var(--text-muted)'}">${a.title}</span>
+      <span style="font-size:0.6rem;color:var(--text-muted)">${a.desc}</span>
+    </div>
+  `).join('');
+}
+
+// ─── TRANSACTION HISTORY ─────────────────────────────────────
+async function loadTxHistory() {
+  const el = document.getElementById('txHistory');
+  try {
+    const data = await API.get('/api/profile/transactions', { telegram_id: auth.getId() });
+    const txs  = data.transactions || [];
+    if (!txs.length) {
+      el.innerHTML = '<p style="color:var(--text-muted);padding:16px;font-size:0.85rem;">История транзакций пока пуста</p>';
+      return;
+    }
+    el.innerHTML = txs.slice(0, 10).map(tx => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03);">
+        <div>
+          <div style="font-size:0.85rem;color:var(--text-primary)">${tx.description || tx.type || 'Транзакция'}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted)">${tx.date || ''}</div>
+        </div>
+        <div style="font-family:var(--font-heading);font-size:0.9rem;color:${tx.amount > 0 ? 'var(--green)' : 'var(--red)'}">
+          ${tx.amount > 0 ? '+' : ''}${tx.amount} 🧀
+        </div>
+      </div>
+    `).join('');
+  } catch {
+    el.innerHTML = '<p style="color:var(--text-muted);padding:16px;font-size:0.85rem;">История недоступна</p>';
+  }
+}
+
+loadProfile();
+loadWn8();
+renderAchievements();
+loadTxHistory();
+</script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Подписка Premium — ISERVERI Клуб</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="js/auth.js"></script>
+  <style>
+    .plan-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--space-xl);text-align:center;position:relative;overflow:hidden;transition:all var(--transition-std);cursor:pointer;}
+    .plan-card:hover{border-color:var(--border-bright);transform:translateY(-4px);box-shadow:var(--shadow-gold);}
+    .plan-card.popular{border-color:rgba(200,170,110,0.3);background:linear-gradient(145deg,#111d2e,#0b1422);}
+    .plan-card__badge{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,var(--gold-dim),var(--gold));color:#0a0a0a;font-size:.65rem;font-weight:700;padding:4px 20px;border-radius:0 0 12px 12px;letter-spacing:.1em;text-transform:uppercase;}
+    .plan-card__name{font-family:var(--font-heading);font-size:1rem;color:var(--text-secondary);margin-bottom:var(--space-lg);text-transform:uppercase;letter-spacing:.08em;}
+    .plan-card__price{font-family:var(--font-display);font-size:3.5rem;color:var(--gold-bright);letter-spacing:.04em;line-height:1;}
+    .plan-card__period{font-size:.8rem;color:var(--text-muted);margin-top:4px;margin-bottom:var(--space-lg);}
+    .plan-card__save{background:rgba(46,204,113,0.1);color:var(--green);border:1px solid rgba(46,204,113,0.2);border-radius:20px;padding:4px 12px;font-size:.7rem;font-weight:700;display:inline-block;margin-bottom:var(--space-md);}
+    .perk-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.875rem;color:var(--text-secondary);border-bottom:1px solid rgba(255,255,255,0.03);}
+    .perk-item:last-child{border-bottom:none;}
+    .perk-item__icon{font-size:1.1rem;flex-shrink:0;width:24px;text-align:center;}
+    .perk-item__check{color:var(--green);font-weight:700;flex-shrink:0;font-size:.9rem;}
+    .payment-method{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-md);border-radius:var(--radius-md);background:rgba(255,255,255,0.03);border:1px solid var(--border);cursor:pointer;transition:all var(--transition-fast);}
+    .payment-method:hover{border-color:var(--border-bright);}
+    .payment-method.selected{background:var(--gold-glow);border-color:rgba(200,170,110,0.3);}
+    .star-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(62,100,255,0.1);color:#6B96FF;border:1px solid rgba(100,130,255,0.2);border-radius:20px;padding:3px 12px;font-size:.7rem;font-weight:700;}
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<nav class="navbar navbar--scrolled" id="navbar">
+  <div class="navbar__inner">
+    <a href="index.html" class="navbar__brand">
+      <svg class="navbar__logo" viewBox="0 0 44 44" fill="none">
+        <rect x="4" y="26" width="36" height="12" rx="3" fill="#C8AA6E"/>
+        <rect x="11" y="17" width="22" height="13" rx="2" fill="#A08750"/>
+        <rect x="23" y="11" width="16" height="9" rx="2" fill="#8B7040"/>
+        <circle cx="10" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="22" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="34" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+      </svg>
+      <div class="navbar__brand-text">
+        <span class="navbar__brand-title">МИР ТАНКОВ</span>
+        <span class="navbar__brand-sub">Клуб ISERVERI</span>
+      </div>
+    </a>
+    <div class="navbar__right">
+      <div class="navbar__user" onclick="goTo('profile.html')" id="navUserBlock" style="display:none">
+        <span id="navAvatar">🪖</span><span id="navUsername">Танкист</span>
+        <span class="navbar__user-balance"><span data-balance>0</span> 🧀</span>
+      </div>
+      <a href="index.html" class="btn btn--primary btn--sm" id="navGuestBlock">Войти</a>
+    </div>
+    <button class="navbar__hamburger" id="navHam">☰</button>
+  </div>
+</nav>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+  <a class="sidebar__item" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+  <a class="sidebar__item active" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+</div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar__section">
+      <div class="sidebar__label">Навигация</div>
+      <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+      <a class="sidebar__item" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+      <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика WN8</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Мини-игры</div>
+      <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена 1vs1</a>
+      <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо Фортуны</a>
+      <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+      <a class="sidebar__item" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Глобальный Вызов</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Аккаунт</div>
+      <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+      <a class="sidebar__item" href="friends.html"><span class="sidebar__item-icon">👥</span>Друзья</a>
+      <a class="sidebar__item active" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+    </div>
+    <div class="sidebar-balance" id="sidebarBalance" style="display:none">
+      <div class="sidebar-balance__label">Баланс Сыра</div>
+      <div class="sidebar-balance__value"><span data-balance>0</span> 🧀</div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+
+    <!-- HEADER -->
+    <div class="page-header animate-fade-in" style="text-align:center;max-width:600px;margin:0 auto var(--space-xl);">
+      <div class="page-header__eyebrow">Стань ближе к стримеру</div>
+      <div class="page-header__title">💎 Premium Подписка</div>
+      <div class="page-header__subtitle">Открой полный доступ ко всем возможностям клуба ISERVERI</div>
+      <div id="alreadyPremiumBanner" style="display:none;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:var(--radius-md);padding:var(--space-md);margin-top:var(--space-lg);color:var(--green);">
+        ✅ У тебя уже активна Premium подписка! <a href="dashboard.html" style="color:var(--gold)">← Вернуться</a>
+      </div>
+    </div>
+
+    <!-- PLAN CARDS -->
+    <div class="grid-3 animate-fade-in" style="margin-bottom:var(--space-xl);gap:var(--space-lg);">
+
+      <div class="plan-card" onclick="selectPlan('1m')" id="plan1m">
+        <div class="plan-card__name">1 Месяц</div>
+        <div class="plan-card__price">490</div>
+        <div class="plan-card__period">₽ в месяц  ·  или <span class="star-badge">⭐ 250</span></div>
+        <button class="btn btn--ghost btn--full" style="margin-top:var(--space-md)">Выбрать</button>
+      </div>
+
+      <div class="plan-card popular" onclick="selectPlan('3m')" id="plan3m">
+        <div class="plan-card__badge">Популярный</div>
+        <div class="plan-card__name" style="margin-top:var(--space-sm)">3 Месяца</div>
+        <div class="plan-card__price">1 100</div>
+        <div class="plan-card__period">₽ за 3 мес.  ·  <span class="star-badge">⭐ 700</span></div>
+        <div class="plan-card__save">−25% (367 ₽/мес)</div>
+        <button class="btn btn--primary btn--full">Выбрать</button>
+      </div>
+
+      <div class="plan-card" onclick="selectPlan('6m')" id="plan6m">
+        <div class="plan-card__name">6 Месяцев</div>
+        <div class="plan-card__price">1 999</div>
+        <div class="plan-card__period">₽ за 6 мес.  ·  <span class="star-badge">⭐ 1200</span></div>
+        <div class="plan-card__save">−32% (333 ₽/мес)</div>
+        <button class="btn btn--secondary btn--full" style="margin-top:var(--space-md)">Выбрать</button>
+      </div>
+
+    </div>
+
+    <!-- WHAT YOU GET -->
+    <div class="grid-2 reveal" style="gap:var(--space-lg);margin-bottom:var(--space-xl);">
+
+      <div class="card">
+        <div style="font-family:var(--font-heading);font-size:1rem;color:var(--gold);margin-bottom:var(--space-lg);">💎 Что входит в Premium</div>
+        <div class="perk-item"><span class="perk-item__icon">🎰</span><span>Колесо Фортуны — 2 вращения в день</span><span class="perk-item__check">✓</span></div>
+        <div class="perk-item"><span class="perk-item__icon">⚔️</span><span>Арена 1vs1 без ограничений</span><span class="perk-item__check">✓</span></div>
+        <div class="perk-item"><span class="perk-item__icon">🎯</span><span>Викторина с повышенной ставкой</span><span class="perk-item__check">✓</span></div>
+        <div class="perk-item"><span class="perk-item__icon">🌍</span><span>Глобальные и командные ивенты</span><span class="perk-item__check">✓</span></div>
+        <div class="perk-item"><span class="perk-item__icon">📊</span><span>Расширенная аналитика WN8</span><span class="perk-item__check">✓</span></div>
+        <div class="perk-item"><span class="perk-item__icon">🎁</span><span>Повышенная ежедневная награда</span><span class="perk-item__check">✓</span></div>
+        <div class="perk-item"><span class="perk-item__icon">🤖</span><span>AI-ассистент без лимитов</span><span class="perk-item__check">✓</span></div>
+        <div class="perk-item"><span class="perk-item__icon">🏅</span><span>Значок 💎 в профиле и чате</span><span class="perk-item__check">✓</span></div>
+      </div>
+
+      <div class="card">
+        <div style="font-family:var(--font-heading);font-size:1rem;color:var(--text-primary);margin-bottom:var(--space-lg);">💳 Способ оплаты</div>
+
+        <div id="paymentMethods" style="display:flex;flex-direction:column;gap:8px;margin-bottom:var(--space-lg);">
+          <div class="payment-method selected" onclick="selectPayment('tg-stars')">
+            <span style="font-size:1.3rem">⭐</span>
+            <div style="flex:1">
+              <div style="font-size:.875rem;color:var(--text-primary);font-weight:500">Telegram Stars</div>
+              <div style="font-size:.7rem;color:var(--text-muted)">Оплата через Telegram · от 250 ⭐</div>
+            </div>
+            <span class="badge badge--free">Быстро</span>
+          </div>
+          <div class="payment-method" onclick="selectPayment('card')">
+            <span style="font-size:1.3rem">💳</span>
+            <div style="flex:1">
+              <div style="font-size:.875rem;color:var(--text-primary);font-weight:500">Банковская карта</div>
+              <div style="font-size:.7rem;color:var(--text-muted)">Visa / Mastercard / Мир · от 490 ₽</div>
+            </div>
+            <span class="badge badge--gold">RU</span>
+          </div>
+          <div class="payment-method" onclick="selectPayment('crypto')">
+            <span style="font-size:1.3rem">₿</span>
+            <div style="flex:1">
+              <div style="font-size:.875rem;color:var(--text-primary);font-weight:500">Криптовалюта</div>
+              <div style="font-size:.7rem;color:var(--text-muted)">TON · USDT · BTC</div>
+            </div>
+            <span class="badge badge--premium">ANON</span>
+          </div>
+        </div>
+
+        <div style="background:rgba(200,170,110,0.05);border:1px solid rgba(200,170,110,0.1);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-md);font-size:.8rem;color:var(--text-muted);">
+          <strong style="color:var(--text-secondary)">Выбрано:</strong> <span id="selectedPlanLabel">3 месяца — 1 100 ₽</span>
+        </div>
+
+        <button class="btn btn--primary btn--full btn--lg" id="subscribeBtn" onclick="subscribe()">
+          💎 Оформить подписку
+        </button>
+        <p style="font-size:.7rem;color:var(--text-muted);text-align:center;margin-top:8px;">Автообновление отсутствует · Отменить можно в любой момент</p>
+      </div>
+
+    </div>
+
+    <!-- FAQ -->
+    <div class="card reveal">
+      <div style="font-family:var(--font-heading);font-size:1rem;color:var(--text-primary);margin-bottom:var(--space-lg);">❓ Частые вопросы</div>
+      <div style="display:flex;flex-direction:column;gap:var(--space-md);">
+        <div><strong style="color:var(--text-primary);font-size:.875rem">Как активируется подписка?</strong><p style="font-size:.8rem;color:var(--text-muted);margin-top:4px">После оплаты подписка активируется автоматически в течение нескольких минут. Никаких ожиданий.</p></div>
+        <div><strong style="color:var(--text-primary);font-size:.875rem">Работает ли без Telegram?</strong><p style="font-size:.8rem;color:var(--text-muted);margin-top:4px">Да! Оплатив один раз, вы получаете доступ ко всем функциям сайта без Telegram.</p></div>
+        <div><strong style="color:var(--text-primary);font-size:.875rem">Что будет, если Telegram заблокируют?</strong><p style="font-size:.8rem;color:var(--text-muted);margin-top:4px">Подписка привязана к вашему WoT аккаунту. Сайт работает полностью независимо.</p></div>
+        <div><strong style="color:var(--text-primary);font-size:.875rem">Есть ли возврат?</strong><p style="font-size:.8rem;color:var(--text-muted);margin-top:4px">Если подписка не активировалась в течение 3 часов — обратитесь в поддержку, вернём деньги.</p></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+if (auth.isLoggedIn) {
+  document.getElementById('navUserBlock').style.display  = 'flex';
+  document.getElementById('navGuestBlock').style.display = 'none';
+  document.getElementById('sidebarBalance').style.display = '';
+  if (auth.isPremium) document.getElementById('alreadyPremiumBanner').style.display = '';
+}
+
+let selectedPlan    = '3m';
+let selectedPayment = 'tg-stars';
+
+const planData = {
+  '1m': { label: '1 месяц — 490 ₽ / 250 ⭐',    price: 490, stars: 250 },
+  '3m': { label: '3 месяца — 1 100 ₽ / 700 ⭐',  price: 1100, stars: 700 },
+  '6m': { label: '6 месяцев — 1 999 ₽ / 1200 ⭐', price: 1999, stars: 1200 },
+};
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('popular'));
+  if (plan === '3m') document.getElementById('plan3m').classList.add('popular');
+  document.getElementById('selectedPlanLabel').textContent = planData[plan].label;
+}
+
+function selectPayment(method) {
+  selectedPayment = method;
+  document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+async function subscribe() {
+  if (!auth.isLoggedIn) { Toast.error('Нужно войти', 'Войди в систему для оформления подписки'); return; }
+  const btn = document.getElementById('subscribeBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Перенаправляем...';
+
+  try {
+    const data = await API.post('/api/subscribe/create', {
+      telegram_id: auth.getId(),
+      plan:        selectedPlan,
+      method:      selectedPayment,
+    });
+    if (data.payment_url) {
+      window.open(data.payment_url, '_blank');
+      Toast.info('Открыта страница оплаты', 'После оплаты подписка активируется автоматически');
+    } else if (data.tg_url) {
+      window.location.href = data.tg_url;
+    } else {
+      Toast.info('Для оплаты перейди в Telegram', 'Нажми /subscribe в боте @Mir_tankov_bot');
+    }
+  } catch {
+    Toast.info('Перейди в Telegram', 'Напиши /subscribe в @Mir_tankov_bot для оформления подписки');
+  }
+
+  setTimeout(() => { btn.disabled = false; btn.textContent = '💎 Оформить подписку'; }, 3000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Донат на стрим — ISERVERI Клуб</title>
+  <meta name="description" content="Поддержи стримера ISERVERI донатом, закажи AI-картинку или музыку на стрим.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧀</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="js/auth.js"></script>
+  <style>
+    .donate-tabs { display:flex; gap:8px; margin-bottom:var(--space-xl); }
+    .donate-tab  { flex:1; padding:14px; border-radius:var(--radius-md); font-family:var(--font-heading); font-size:0.85rem; background:var(--bg-card); border:1px solid var(--border); color:var(--text-muted); cursor:pointer; transition:all var(--transition-std); text-align:center; }
+    .donate-tab:hover { border-color:var(--border-bright); color:var(--text-primary); }
+    .donate-tab.active { background:var(--gold-glow); border-color:var(--border-bright); color:var(--gold); }
+    .amount-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:var(--space-md); }
+    .amount-btn  { padding:12px 8px; border-radius:var(--radius-md); background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text-secondary); font-family:var(--font-heading); font-size:0.85rem; cursor:pointer; transition:all var(--transition-fast); text-align:center; }
+    .amount-btn:hover  { border-color:var(--border-bright); color:var(--text-primary); }
+    .amount-btn.selected { background:var(--gold-glow); border-color:var(--gold); color:var(--gold); }
+    .history-row { display:flex; align-items:center; gap:var(--space-md); padding:12px var(--space-md); border-bottom:1px solid rgba(255,255,255,0.03); }
+    .history-row:last-child { border-bottom:none; }
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<nav class="navbar navbar--scrolled" id="navbar">
+  <div class="navbar__inner">
+    <a href="index.html" class="navbar__brand">
+      <svg class="navbar__logo" viewBox="0 0 44 44" fill="none">
+        <rect x="4" y="26" width="36" height="12" rx="3" fill="#C8AA6E"/>
+        <rect x="11" y="17" width="22" height="13" rx="2" fill="#A08750"/>
+        <rect x="23" y="11" width="16" height="9" rx="2" fill="#8B7040"/>
+        <circle cx="10" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="22" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="34" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+      </svg>
+      <div class="navbar__brand-text">
+        <span class="navbar__brand-title">МИР ТАНКОВ</span>
+        <span class="navbar__brand-sub">Клуб ISERVERI</span>
+      </div>
+    </a>
+    <div class="navbar__right">
+      <div class="navbar__user" onclick="goTo('profile.html')" id="navLoggedIn" style="display:none">
+        <span id="navAvatar">🪖</span>
+        <span id="navUsername">Танкист</span>
+        <span class="navbar__user-balance"><span data-balance>0</span> 🧀</span>
+      </div>
+      <a href="index.html" class="btn btn--primary btn--sm" id="navLoggedOut">Войти</a>
+    </div>
+    <button class="navbar__hamburger" id="navHam">☰</button>
+  </div>
+</nav>
+
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+  <a class="sidebar__item active" href="donate.html"><span class="sidebar__item-icon">🧀</span>Донат</a>
+  <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика</a>
+  <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо</a>
+</div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar__section">
+      <div class="sidebar__label">Навигация</div>
+      <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+      <a class="sidebar__item" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+      <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика WN8</a>
+      <a class="sidebar__item active" href="donate.html"><span class="sidebar__item-icon">🎙️</span>Донат на стрим</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Мини-игры</div>
+      <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена 1vs1</a>
+      <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо Фортуны</a>
+      <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+      <a class="sidebar__item" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Глобальный Вызов</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Аккаунт</div>
+      <a class="sidebar__item" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+    </div>
+    <div class="sidebar-balance" id="sidebarBalance" style="display:none">
+      <div class="sidebar-balance__label">Баланс Сыра</div>
+      <div class="sidebar-balance__value"><span data-balance>0</span> 🧀</div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="page-header animate-fade-in">
+      <div class="page-header__eyebrow">Поддержи стримера</div>
+      <div class="page-header__title">Донат Хаб</div>
+      <div class="page-header__subtitle">Отправь донат, закажи музыку или AI-картинку на стрим</div>
+    </div>
+
+    <!-- STREAM STATUS BANNER -->
+    <div class="card animate-fade-in" id="streamBanner" style="margin-bottom:var(--space-xl);background:linear-gradient(135deg,#0d1015,var(--bg-card));border-color:rgba(200,170,110,0.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-md);">
+        <div style="display:flex;align-items:center;gap:var(--space-md);">
+          <div style="font-size:2rem;">📺</div>
+          <div>
+            <div style="font-family:var(--font-heading);color:var(--text-primary);margin-bottom:2px;" id="streamStatusText">Проверяем статус стрима...</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);" id="streamStatusSub">YouTube · VK Play · Twitch · Trovo</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="https://www.twitch.tv/serverenok" target="_blank" class="btn btn--ghost btn--sm">Twitch</a>
+          <a href="https://www.youtube.com/@ISERVERI" target="_blank" class="btn btn--ghost btn--sm">YouTube</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- DONATE TABS -->
+    <div class="donate-tabs animate-fade-in">
+      <button class="donate-tab active" id="tabDonate" onclick="switchDonateTab('donate')">🧀 Донат на стрим</button>
+      <button class="donate-tab" id="tabMusic" onclick="switchDonateTab('music')">🎵 Заказ музыки</button>
+      <button class="donate-tab" id="tabSpasibo" onclick="switchDonateTab('spasibo')">🤖 Спасибо + AI</button>
+    </div>
+
+    <!-- ─── DON AT PANEL ─── -->
+    <div id="panelDonate">
+      <div class="grid-2" style="gap:var(--space-lg);">
+        <div class="card animate-fade-in">
+          <div style="font-family:var(--font-heading);font-size:1rem;color:var(--text-primary);margin-bottom:var(--space-lg);">Сообщение стримеру</div>
+
+          <div class="input-group" style="margin-bottom:var(--space-md);">
+            <label class="input-label">Ваше имя</label>
+            <input type="text" class="input" id="donorName" placeholder="Имя или никнейм" value="">
+          </div>
+
+          <div class="input-group" style="margin-bottom:var(--space-md);">
+            <label class="input-label">Сообщение</label>
+            <textarea class="input" id="donateMsg" rows="4" placeholder="Напишите что-нибудь стримеру..." style="resize:vertical;min-height:100px;"></textarea>
+          </div>
+
+          <div class="input-group" style="margin-bottom:var(--space-lg);">
+            <label class="input-label">Сумма 🧀</label>
+            <div class="amount-grid">
+              <button class="amount-btn" onclick="selectAmount(200)">200 🧀</button>
+              <button class="amount-btn" onclick="selectAmount(500)">500 🧀</button>
+              <button class="amount-btn" onclick="selectAmount(1000)">1000 🧀</button>
+              <button class="amount-btn" onclick="selectAmount(2000)">2000 🧀</button>
+            </div>
+            <input type="number" class="input" id="donateAmount" placeholder="Или введи свою сумму (мин. 200)" min="200">
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md);font-size:0.8rem;color:var(--text-muted);">
+            <span>Баланс:</span>
+            <span style="color:var(--gold);font-family:var(--font-heading);"><span data-balance>0</span> 🧀</span>
+          </div>
+
+          <button class="btn btn--primary btn--full" id="donateBtn" onclick="sendDonate()">🧀 Отправить донат</button>
+          <p style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:8px;">Минимум 200 🧀 · Сообщение появится на стриме</p>
+        </div>
+
+        <div class="card animate-fade-in" style="animation-delay:.1s;">
+          <div style="font-family:var(--font-heading);font-size:1rem;color:var(--gold);margin-bottom:var(--space-md);">📜 Последние донаты</div>
+          <div id="donateHistory">
+            <div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:var(--space-xl);">⏳ Загрузка...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── MUSIC PANEL ─── -->
+    <div id="panelMusic" style="display:none;">
+      <div class="card animate-fade-in">
+        <div style="font-family:var(--font-heading);font-size:1rem;color:var(--text-primary);margin-bottom:var(--space-lg);">🎵 Заказ музыки на стрим</div>
+        <div style="background:rgba(200,170,110,0.06);border:1px solid rgba(200,170,110,0.15);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-lg);">
+          <div style="font-size:0.85rem;color:var(--gold);font-family:var(--font-heading);margin-bottom:4px;">250 🧀 / трек</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">Трек будет поставлен в очередь и воспроизведён во время стрима</div>
+        </div>
+        <div class="input-group" style="margin-bottom:var(--space-md);">
+          <label class="input-label">Название трека / ссылка</label>
+          <input type="text" class="input" id="musicTrack" placeholder="Например: Metallica — Enter Sandman">
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md);font-size:0.8rem;color:var(--text-muted);">
+          <span>Стоимость: <strong style="color:var(--gold)">250 🧀</strong></span>
+          <span>Баланс: <span style="color:var(--gold);font-family:var(--font-heading);"><span data-balance>0</span> 🧀</span></span>
+        </div>
+        <button class="btn btn--primary btn--full" onclick="sendMusicRequest()">🎵 Заказать трек — 250 🧀</button>
+      </div>
+    </div>
+
+    <!-- ─── SPASIBO PANEL ─── -->
+    <div id="panelSpasibo" style="display:none;">
+      <div class="card animate-fade-in">
+        <div style="font-family:var(--font-heading);font-size:1rem;color:var(--text-primary);margin-bottom:var(--space-md);">🤖 Спасибо + AI-картинка</div>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:var(--space-lg);">
+          Бесплатно! Напиши стримеру «Спасибо», и ИИ сгенерирует уникальную картинку прямо на стриме.
+        </p>
+        <div class="input-group" style="margin-bottom:var(--space-md);">
+          <label class="input-label">Ваше сообщение</label>
+          <textarea class="input" id="spasiboMsg" rows="3" placeholder="Напиши что-нибудь доброе стримеру..."></textarea>
+        </div>
+        <div class="input-group" style="margin-bottom:var(--space-lg);">
+          <label class="input-label">Промпт для AI (опционально)</label>
+          <input type="text" class="input" id="spasiboPrompt" placeholder="Например: танк в космосе на закате">
+        </div>
+        <button class="btn btn--primary btn--full" onclick="sendSpasibo()">🤖 Отправить — Бесплатно</button>
+        <p style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:8px;">Функция доступна всем пользователям бесплатно</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+if (auth.isLoggedIn) {
+  document.getElementById('navLoggedIn').style.display  = 'flex';
+  document.getElementById('navLoggedOut').style.display = 'none';
+  document.getElementById('sidebarBalance').style.display = '';
+  document.getElementById('donorName').value = auth.username;
+}
+
+let selectedAmount = 0;
+
+function selectAmount(amount) {
+  selectedAmount = amount;
+  document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById('donateAmount').value = '';
+}
+
+function switchDonateTab(tab) {
+  ['donate','music','spasibo'].forEach(t => {
+    document.getElementById('tabDonate')  .classList.toggle('active', t === 'donate'  && tab === 'donate');
+    document.getElementById('tabMusic')   .classList.toggle('active', t === 'music'   && tab === 'music');
+    document.getElementById('tabSpasibo') .classList.toggle('active', t === 'spasibo' && tab === 'spasibo');
+    document.getElementById('panelDonate') .style.display = '';
+    document.getElementById('panelMusic')  .style.display = 'none';
+    document.getElementById('panelSpasibo').style.display = 'none';
+  });
+  document.getElementById('tabDonate') .classList.toggle('active', tab === 'donate');
+  document.getElementById('tabMusic')  .classList.toggle('active', tab === 'music');
+  document.getElementById('tabSpasibo').classList.toggle('active', tab === 'spasibo');
+  document.getElementById('panelDonate') .style.display = tab === 'donate'  ? '' : 'none';
+  document.getElementById('panelMusic')  .style.display = tab === 'music'   ? '' : 'none';
+  document.getElementById('panelSpasibo').style.display = tab === 'spasibo' ? '' : 'none';
+}
+
+async function sendDonate() {
+  if (!auth.isLoggedIn) { Toast.error('Нужно войти', 'Войдите в систему для отправки доната'); return; }
+  const msg    = document.getElementById('donateMsg').value.trim();
+  const amount = parseInt(document.getElementById('donateAmount').value) || selectedAmount;
+  if (!msg)    { Toast.error('Введите сообщение'); return; }
+  if (amount < 200) { Toast.error('Минимум 200 🧀'); return; }
+
+  const btn = document.getElementById('donateBtn');
+  btn.disabled = true; btn.textContent = '⏳ Отправляем...';
+  try {
+    const data = await API.sendDonate(auth.getId(), msg, amount);
+    if (data.success) {
+      Toast.success('Донат отправлен!', `${amount} 🧀 — "${msg.slice(0,30)}..."`);
+      auth.balance -= amount;
+      updateBalanceUI(auth.balance);
+      document.getElementById('donateMsg').value = '';
+    } else {
+      Toast.error(data.error || 'Недостаточно Сыра');
+    }
+  } catch { Toast.error('Ошибка сервера', 'Попробуйте ещё раз'); }
+  btn.disabled = false; btn.textContent = '🧀 Отправить донат';
+}
+
+async function sendMusicRequest() {
+  if (!auth.isLoggedIn) { Toast.error('Нужно войти'); return; }
+  const track = document.getElementById('musicTrack').value.trim();
+  if (!track) { Toast.error('Укажите название трека'); return; }
+  try {
+    const data = await API.sendMusicRequest(auth.getId(), track, 250);
+    if (data.success) {
+      Toast.success('Трек заказан!', `"${track}" поставлен в очередь`);
+      auth.balance -= 250;
+      updateBalanceUI(auth.balance);
+      document.getElementById('musicTrack').value = '';
+    } else { Toast.error(data.error || 'Недостаточно Сыра'); }
+  } catch { Toast.error('Ошибка', 'Попробуйте ещё раз'); }
+}
+
+async function sendSpasibo() {
+  const msg    = document.getElementById('spasiboMsg').value.trim();
+  const prompt = document.getElementById('spasiboPrompt').value.trim();
+  if (!msg) { Toast.error('Введите сообщение'); return; }
+  try {
+    await API.post('/api/donate/spasibo', { telegram_id: auth.getId() || '0', message: msg, prompt });
+    Toast.success('Спасибо отправлено!', 'AI-картинка будет показана на стриме');
+    document.getElementById('spasiboMsg').value = '';
+  } catch { Toast.error('Ошибка', 'Попробуйте ещё раз'); }
+}
+
+// Stream status
+async function loadStreamStatus() {
+  try {
+    const data = await API.getStreamStatus();
+    const anyLive = Object.values(data).some(p => p && p.live);
+    const totalV  = Object.values(data).reduce((s, p) => s + (p && p.live ? (p.viewers||0) : 0), 0);
+    const el  = document.getElementById('streamStatusText');
+    const sub = document.getElementById('streamStatusSub');
+    if (anyLive) {
+      el.innerHTML  = `<span class="live-dot" style="display:inline-block;margin-right:6px"></span> LIVE · ${totalV} зрителей`;
+      el.style.color = 'var(--red)';
+    } else {
+      el.textContent  = '⚫ Стрим не ведётся';
+      sub.textContent = 'Следи за расписанием в Telegram';
+    }
+  } catch {}
+}
+
+// Donate history
+async function loadDonateHistory() {
+  const el = document.getElementById('donateHistory');
+  try {
+    const data = await API.get('/api/donate/history', { limit: 10 });
+    const items = data.history || data.donates || [];
+    if (!items.length) {
+      el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:var(--space-lg);font-size:0.85rem">Донатов пока нет</p>';
+      return;
+    }
+    el.innerHTML = items.map(d => `
+      <div class="history-row">
+        <div style="font-size:1.2rem;">🧀</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:0.85rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.username || 'Аноним'}: ${d.message || ''}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted)">${d.date || ''}</div>
+        </div>
+        <div style="font-family:var(--font-heading);font-size:0.85rem;color:var(--gold);flex-shrink:0">${d.amount || 0} 🧀</div>
+      </div>
+    `).join('');
+  } catch {
+    el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:var(--space-lg);font-size:0.85rem;">История недоступна</p>';
+  }
+}
+
+loadStreamStatus();
+loadDonateHistory();
+</script>
+</body>
+</html>

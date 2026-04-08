@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кабинет — ISERVERI Клуб</title>
+  <meta name="description" content="Личный кабинет участника клуба ISERVERI. Баланс Сыра, мини-игры, ежедневная награда.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='15' y='55' width='70' height='22' rx='4' fill='%23C8AA6E'/><rect x='28' y='38' width='40' height='22' rx='3' fill='%23A08750'/><circle cx='26' cy='82' r='8' fill='%23333' stroke='%23C8AA6E' stroke-width='3'/><circle cx='50' cy='82' r='8' fill='%23333' stroke='%23C8AA6E' stroke-width='3'/><circle cx='74' cy='82' r='8' fill='%23333' stroke='%23C8AA6E' stroke-width='3'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="js/auth.js"></script>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<!-- ─── NAVBAR ───────────────────────────────────────────── -->
+<nav class="navbar navbar--scrolled" id="navbar">
+  <div class="navbar__inner">
+    <a href="index.html" class="navbar__brand">
+      <svg class="navbar__logo" viewBox="0 0 44 44" fill="none">
+        <rect x="4" y="26" width="36" height="12" rx="3" fill="#C8AA6E"/>
+        <rect x="11" y="17" width="22" height="13" rx="2" fill="#A08750"/>
+        <rect x="23" y="11" width="16" height="9" rx="2" fill="#8B7040"/>
+        <circle cx="10" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="22" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="34" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+      </svg>
+      <div class="navbar__brand-text">
+        <span class="navbar__brand-title">МИР ТАНКОВ</span>
+        <span class="navbar__brand-sub">Клуб ISERVERI</span>
+      </div>
+    </a>
+
+    <div class="navbar__right">
+      <div class="navbar__user" onclick="goTo('profile.html')">
+        <span id="navAvatar">🪖</span>
+        <span id="navUsername">Танкист</span>
+        <span class="navbar__user-balance"><span data-balance>0</span> 🧀</span>
+      </div>
+      <button class="btn btn--ghost btn--sm" onclick="auth.logout()">🚪</button>
+      <span class="live-dot" id="navLiveDot" style="display:none;" title="Идёт стрим!"></span>
+    </div>
+
+    <button class="navbar__hamburger" id="navHam">☰</button>
+  </div>
+</nav>
+
+<!-- ─── MOBILE DRAWER ─────────────────────────────────────── -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="sidebar__item active" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+  <a class="sidebar__item" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+  <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика</a>
+  <a class="sidebar__item" href="donate.html"><span class="sidebar__item-icon">🧀</span>Донат</a>
+  <div style="height:1px;background:rgba(200,170,110,0.1);margin:12px 0;"></div>
+  <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена</a>
+  <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо</a>
+  <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+  <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+  <a class="sidebar__item" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Ивенты</a>
+  <a class="sidebar__item" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+</div>
+
+<!-- ─── APP LAYOUT ─────────────────────────────────────────── -->
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sidebar__section">
+      <div class="sidebar__label">Навигация</div>
+      <a class="sidebar__item active" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+      <a class="sidebar__item" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+      <a class="sidebar__item" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика WN8</a>
+      <a class="sidebar__item" href="donate.html"><span class="sidebar__item-icon">🎙️</span>Донат на стрим</a>
+    </div>
+
+    <div class="sidebar__section">
+      <div class="sidebar__label">Мини-игры</div>
+      <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена 1vs1</a>
+      <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо Фортуны</a>
+      <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+      <a class="sidebar__item" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Глобальный Вызов</a>
+    </div>
+
+    <div class="sidebar__section">
+      <div class="sidebar__label">Сообщество</div>
+      <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+      <a class="sidebar__item" href="friends.html"><span class="sidebar__item-icon">👥</span>Друзья</a>
+      <a class="sidebar__item" href="guide.html"><span class="sidebar__item-icon">📖</span>Что такое Сыр?</a>
+    </div>
+
+    <div class="sidebar__section">
+      <div class="sidebar__label">Аккаунт</div>
+      <a class="sidebar__item" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+      <a class="sidebar__item" href="#" data-admin-only style="display:none;" onclick="goTo('challenges.html?tab=admin')"><span class="sidebar__item-icon">🛡️</span>Админ-панель</a>
+      <button class="sidebar__item" onclick="auth.logout()" style="width:100%;text-align:left;background:none;border:none;color:inherit;font:inherit;cursor:pointer;"><span class="sidebar__item-icon">🚪</span>Выйти</button>
+    </div>
+
+    <!-- Balance widget in sidebar -->
+    <div class="sidebar-balance">
+      <div class="sidebar-balance__label">Баланс Сыра</div>
+      <div class="sidebar-balance__value"><span data-balance>0</span> 🧀</div>
+      <div class="sidebar-balance__bar">
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="sidebarXpBar" style="width:0%"></div>
+        </div>
+        <span class="sidebar-balance__level" id="sidebarLevel">Уровень 1</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="app-main">
+
+    <!-- ─── WELCOME HEADER ────────────────────────────────── -->
+    <div class="dash-welcome animate-fade-in">
+      <div class="dash-welcome__text">
+        <div class="dash-welcome__greeting" id="greetingText">Добро пожаловать</div>
+        <div class="dash-welcome__name" id="welcomeName">Танкист</div>
+      </div>
+      <div class="dash-welcome__badges" id="welcomeBadges">
+        <span class="badge badge--gold" id="premiumBadge" style="display:none;">💎 Premium</span>
+        <span class="badge badge--gold" id="adminBadge" style="display:none;">👑 Админ</span>
+      </div>
+    </div>
+
+    <!-- ─── STATS ROW ──────────────────────────────────────── -->
+    <div class="grid-4 dash-stats" style="margin-bottom:var(--space-xl);">
+      <div class="stat-card animate-fade-in">
+        <div class="stat-card__value" data-balance>0</div>
+        <div class="stat-card__label">Сыр 🧀</div>
+        <div class="stat-card__glow"></div>
+      </div>
+      <div class="stat-card animate-fade-in" style="animation-delay:0.1s">
+        <div class="stat-card__value" id="statBattles">—</div>
+        <div class="stat-card__label">Боёв сыграно</div>
+        <div class="stat-card__glow" style="background:radial-gradient(circle,rgba(201,59,59,0.08),transparent 70%)"></div>
+      </div>
+      <div class="stat-card animate-fade-in" style="animation-delay:0.2s">
+        <div class="stat-card__value" id="statWins">—</div>
+        <div class="stat-card__label">Побед</div>
+        <div class="stat-card__glow" style="background:radial-gradient(circle,rgba(46,204,113,0.08),transparent 70%)"></div>
+      </div>
+      <div class="stat-card animate-fade-in" style="animation-delay:0.3s">
+        <div class="stat-card__value" id="statWinRate">—</div>
+        <div class="stat-card__label">% побед</div>
+        <div class="stat-card__glow" style="background:radial-gradient(circle,rgba(43,124,233,0.08),transparent 70%)"></div>
+      </div>
+    </div>
+
+    <!-- ─── DAILY REWARD CARD ─────────────────────────────── -->
+    <div class="daily-reward-card card animate-fade-in" id="dailyCard" style="margin-bottom:var(--space-xl);">
+      <div class="daily-icon" id="dailyIcon">🎁</div>
+      <div class="daily-info">
+        <div class="daily-title">Ежедневная Награда</div>
+        <div class="daily-streak" id="dailyStreak">Серия: 0 дней</div>
+        <div class="daily-progress" id="dailyProgress"></div>
+        <div class="daily-tiers">1-7 дн: 15🧀 · 8-14: 25🧀 · 15-21: 35🧀 · 22-30: 50🧀</div>
+      </div>
+      <div class="daily-amount-wrap">
+        <div class="daily-amount" id="dailyAmount">15 🧀</div>
+        <button class="btn btn--primary" id="dailyBtn" onclick="claimDaily()">Забрать</button>
+      </div>
+    </div>
+
+    <!-- ─── QUICK ACTIONS ─────────────────────────────────── -->
+    <div class="section-header" style="margin-bottom:var(--space-md);">
+      <div class="section-header__title">Быстрые действия</div>
+    </div>
+
+    <div class="grid-3 quick-actions" style="margin-bottom:var(--space-xl);">
+
+      <a href="donate.html" class="quick-card quick-card--donate">
+        <div class="quick-card__icon">🧀</div>
+        <div class="quick-card__info">
+          <div class="quick-card__title">Донат на стрим</div>
+          <div class="quick-card__desc">от 200 🧀</div>
+        </div>
+        <div class="quick-card__arrow">→</div>
+      </a>
+
+      <a href="wheel.html" class="quick-card quick-card--wheel">
+        <div class="quick-card__icon">🎰</div>
+        <div class="quick-card__info">
+          <div class="quick-card__title">Колесо Фортуны</div>
+          <div class="quick-card__desc">Крути каждый день</div>
+        </div>
+        <div class="quick-card__arrow">→</div>
+      </a>
+
+      <a href="arena.html" class="quick-card quick-card--arena">
+        <div class="quick-card__icon">⚔️</div>
+        <div class="quick-card__info">
+          <div class="quick-card__title">Арена 1vs1</div>
+          <div class="quick-card__desc">Вызови соперника</div>
+        </div>
+        <div class="quick-card__arrow">→</div>
+      </a>
+
+      <a href="quiz.html" class="quick-card quick-card--quiz">
+        <div class="quick-card__icon">🎯</div>
+        <div class="quick-card__info">
+          <div class="quick-card__title">Викторина</div>
+          <div class="quick-card__desc">Заработай Сыр</div>
+        </div>
+        <div class="quick-card__arrow">→</div>
+      </a>
+
+      <a href="stats.html" class="quick-card quick-card--stats">
+        <div class="quick-card__icon">📊</div>
+        <div class="quick-card__info">
+          <div class="quick-card__title">Статистика WN8</div>
+          <div class="quick-card__desc">Мой рейтинг</div>
+        </div>
+        <div class="quick-card__arrow">→</div>
+      </a>
+
+      <a href="challenges.html" class="quick-card quick-card--gc">
+        <div class="quick-card__icon">🌍</div>
+        <div class="quick-card__info">
+          <div class="quick-card__title">Глобальный Вызов</div>
+          <div class="quick-card__desc">Командные ивенты</div>
+        </div>
+        <div class="quick-card__arrow">→</div>
+      </a>
+
+    </div>
+
+    <!-- ─── STREAM STATUS ──────────────────────────────────── -->
+    <div class="section-header" style="margin-bottom:var(--space-md);">
+      <div class="section-header__title">Статус стримов</div>
+      <a href="donate.html" class="section-header__action">Задонатить →</a>
+    </div>
+
+    <div class="grid-4 streams-mini" style="margin-bottom:var(--space-xl);">
+      <div class="stream-mini-card" id="platYt-mini">
+        <span class="stream-mini-card__name">📹 YouTube</span>
+        <span id="ytBadge" class="badge badge--offline">OFFLINE</span>
+      </div>
+      <div class="stream-mini-card" id="platVk-mini">
+        <span class="stream-mini-card__name">🎮 VK Play</span>
+        <span id="vkBadge" class="badge badge--offline">OFFLINE</span>
+      </div>
+      <div class="stream-mini-card" id="platTrovo-mini">
+        <span class="stream-mini-card__name">🟢 Trovo</span>
+        <span id="trovoBadge" class="badge badge--offline">OFFLINE</span>
+      </div>
+      <div class="stream-mini-card" id="platTwitch-mini">
+        <span class="stream-mini-card__name">💜 Twitch</span>
+        <span id="twitchBadge" class="badge badge--offline">OFFLINE</span>
+      </div>
+    </div>
+
+    <!-- ─── SUBSCRIBE CTA (if not premium) ───────────────── -->
+    <div id="subCtaBlock" class="sub-cta-mini card" style="margin-bottom:var(--space-xl);display:none;">
+      <div class="sub-cta-mini__icon">💎</div>
+      <div class="sub-cta-mini__text">
+        <div class="sub-cta-mini__title">Оформи подписку и получи полный доступ</div>
+        <div class="sub-cta-mini__desc">Арена, Колесо, Викторина, Глобальный вызов и значок подписчика</div>
+      </div>
+      <a href="subscribe.html" class="btn btn--primary">💎 490 ₽ / мес</a>
+    </div>
+
+    <!-- ─── LEADERBOARD PREVIEW ───────────────────────────── -->
+    <div class="section-header" style="margin-bottom:var(--space-md);">
+      <div class="section-header__title">🏆 Топ по Сыру</div>
+      <a href="top.html" class="section-header__action">Весь рейтинг →</a>
+    </div>
+
+    <div class="card" id="leaderboardPreview" style="margin-bottom:var(--space-xl);">
+      <div id="leaderboardList">
+        <div style="color:var(--text-muted);font-size:0.85rem;padding:var(--space-md);">⏳ Загрузка рейтинга...</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── SCRIPTS ──────────────────────────────────────────── -->
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+// ─── AUTH GUARD ────────────────────────────────────────────
+if (!auth.requireAuth()) { /* redirect handled */ }
+
+// ─── GREET USER ────────────────────────────────────────────
+const hour = new Date().getHours();
+const greeting = hour < 12 ? 'Доброе утро' : hour < 17 ? 'Добрый день' : hour < 22 ? 'Добрый вечер' : 'С возвращением';
+document.getElementById('greetingText').textContent = greeting + ',';
+document.getElementById('welcomeName').textContent  = auth.username;
+
+if (auth.isPremium) {
+  document.getElementById('premiumBadge').style.display = '';
+}
+if (auth.isAdmin) {
+  document.getElementById('adminBadge').style.display   = '';
+  document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = '');
+}
+
+// ─── LOAD BATTLE STATS ────────────────────────────────────
+async function loadBattleStats() {
+  try {
+    const data = await API.getBattleStats(auth.getId());
+    const total   = data.battles?.total || 0;
+    const pvpWins = data.battles?.pvp?.wins || 0;
+    const pvpGames= data.battles?.pvp?.total || 0;
+    const wr = pvpGames > 0 ? Math.round((pvpWins / pvpGames) * 100) : 0;
+
+    animateCounter(document.getElementById('statBattles'),  total);
+    animateCounter(document.getElementById('statWins'),     pvpWins);
+    document.getElementById('statWinRate').textContent = wr + '%';
+
+    // Level calc from cheese
+    const cheese = data.cheese_balance || auth.balance;
+    const level  = Math.floor(cheese / 500) + 1;
+    const xpPct  = ((cheese % 500) / 500) * 100;
+    const bar    = document.getElementById('sidebarXpBar');
+    const lvlEl  = document.getElementById('sidebarLevel');
+    if (bar) bar.style.width = xpPct + '%';
+    if (lvlEl) lvlEl.textContent = `Уровень ${level}`;
+  } catch (e) {
+    console.warn('[Stats] Error:', e);
+    ['statBattles', 'statWins', 'statWinRate'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
+  }
+}
+
+// ─── LOAD LEADERBOARD PREVIEW ─────────────────────────────
+async function loadLeaderboard() {
+  const listEl = document.getElementById('leaderboardList');
+  if (!listEl) return;
+  try {
+    const data = await API.getLeaderboard('cheese', 5);
+    const users = data.users || data.leaderboard || data || [];
+    if (!users.length) {
+      listEl.innerHTML = '<p style="color:var(--text-muted);padding:16px;font-size:0.85rem;">Данные недоступны</p>';
+      return;
+    }
+    const myId = auth.getId();
+    listEl.innerHTML = users.map((u, i) => {
+      const isMe = String(u.telegram_id) === String(myId);
+      const medal = ['🥇','🥈','🥉'][i] || `#${i+1}`;
+      return `
+        <div class="leaderboard-row ${isMe ? 'leaderboard-row--me' : ''}">
+          <span class="leaderboard-row__rank">${medal}</span>
+          <span class="leaderboard-row__name">${u.wot_nickname || u.username || 'Танкист'}</span>
+          <span class="leaderboard-row__score">${(u.coins || u.cheese || 0).toLocaleString()} 🧀</span>
+        </div>
+      `;
+    }).join('');
+  } catch {
+    listEl.innerHTML = '<p style="color:var(--text-muted);padding:16px;font-size:0.85rem;">Не удалось загрузить рейтинг</p>';
+  }
+}
+
+// ─── SHOW SUB CTA IF NOT PREMIUM ──────────────────────────
+if (!auth.isPremium) {
+  document.getElementById('subCtaBlock').style.display = 'flex';
+}
+
+// ─── SIDEBAR LEVEL (from stored balance) ──────────────────
+(function() {
+  const cheese = auth.balance;
+  const level  = Math.floor(cheese / 500) + 1;
+  const xpPct  = ((cheese % 500) / 500) * 100;
+  const bar    = document.getElementById('sidebarXpBar');
+  const lvlEl  = document.getElementById('sidebarLevel');
+  if (bar) setTimeout(() => bar.style.width = xpPct + '%', 300);
+  if (lvlEl) lvlEl.textContent = `Уровень ${level}`;
+})();
+
+loadBattleStats();
+loadLeaderboard();
+</script>
+</body>
+</html>

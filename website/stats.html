@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статистика WN8 — ISERVERI Клуб</title>
+  <meta name="description" content="Проверь свою статистику WN8 в Мир Танков. Бесплатно для всех участников клуба ISERVERI.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="js/auth.js"></script>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<nav class="navbar navbar--scrolled" id="navbar">
+  <div class="navbar__inner">
+    <a href="index.html" class="navbar__brand">
+      <svg class="navbar__logo" viewBox="0 0 44 44" fill="none">
+        <rect x="4" y="26" width="36" height="12" rx="3" fill="#C8AA6E"/>
+        <rect x="11" y="17" width="22" height="13" rx="2" fill="#A08750"/>
+        <rect x="23" y="11" width="16" height="9" rx="2" fill="#8B7040"/>
+        <circle cx="10" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="22" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+        <circle cx="34" cy="42" r="5" fill="#2a2a2a" stroke="#C8AA6E" stroke-width="2"/>
+      </svg>
+      <div class="navbar__brand-text">
+        <span class="navbar__brand-title">МИР ТАНКОВ</span>
+        <span class="navbar__brand-sub">Клуб ISERVERI</span>
+      </div>
+    </a>
+    <div class="navbar__right" id="navLoggedIn" style="display:none;">
+      <div class="navbar__user" onclick="goTo('profile.html')">
+        <span id="navAvatar">🪖</span>
+        <span id="navUsername">Танкист</span>
+        <span class="navbar__user-balance"><span data-balance>0</span> 🧀</span>
+      </div>
+    </div>
+    <div id="navLoggedOut">
+      <a href="index.html#joinSection" class="btn btn--primary btn--sm">Войти</a>
+    </div>
+    <button class="navbar__hamburger" id="navHam">☰</button>
+  </div>
+</nav>
+
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+  <a class="sidebar__item active" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика</a>
+  <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена</a>
+  <a class="sidebar__item" href="donate.html"><span class="sidebar__item-icon">🧀</span>Донат</a>
+</div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar__section">
+      <div class="sidebar__label">Навигация</div>
+      <a class="sidebar__item" href="dashboard.html"><span class="sidebar__item-icon">🏠</span>Главная</a>
+      <a class="sidebar__item" href="profile.html"><span class="sidebar__item-icon">👤</span>Профиль</a>
+      <a class="sidebar__item active" href="stats.html"><span class="sidebar__item-icon">📊</span>Статистика WN8</a>
+      <a class="sidebar__item" href="donate.html"><span class="sidebar__item-icon">🎙️</span>Донат на стрим</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Мини-игры</div>
+      <a class="sidebar__item" href="arena.html"><span class="sidebar__item-icon">⚔️</span>Арена 1vs1</a>
+      <a class="sidebar__item" href="wheel.html"><span class="sidebar__item-icon">🎰</span>Колесо Фортуны</a>
+      <a class="sidebar__item" href="quiz.html"><span class="sidebar__item-icon">🎯</span>Викторина</a>
+      <a class="sidebar__item" href="challenges.html"><span class="sidebar__item-icon">🌍</span>Глобальный Вызов</a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Аккаунт</div>
+      <a class="sidebar__item" href="top.html"><span class="sidebar__item-icon">🏆</span>Рейтинги</a>
+      <a class="sidebar__item" href="friends.html"><span class="sidebar__item-icon">👥</span>Друзья</a>
+      <a class="sidebar__item" href="subscribe.html"><span class="sidebar__item-icon">💎</span>Подписка</a>
+    </div>
+    <div class="sidebar-balance" id="sidebarBalance" style="display:none;">
+      <div class="sidebar-balance__label">Баланс Сыра</div>
+      <div class="sidebar-balance__value"><span data-balance>0</span> 🧀</div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="page-header animate-fade-in">
+      <div class="page-header__eyebrow">Мир Танков</div>
+      <div class="page-header__title">Статистика WN8</div>
+      <div class="page-header__subtitle">Объективная оценка мастерства танкиста</div>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div class="search-bar animate-fade-in" style="margin-bottom:var(--space-xl);">
+      <input type="text" class="input" id="searchInput"
+        placeholder="Введите никнейм Мир Танков..."
+        onkeydown="if(event.key==='Enter') searchPlayer()"
+        autocomplete="off" spellcheck="false">
+      <button class="btn btn--primary" id="searchBtn" onclick="searchPlayer()">🔍 Найти</button>
+    </div>
+
+    <!-- WN8 SCALE REFERENCE -->
+    <div class="card reveal" style="margin-bottom:var(--space-xl);">
+      <div style="font-family:var(--font-heading);font-size:0.85rem;color:var(--text-muted);margin-bottom:var(--space-md);">Шкала WN8</div>
+      <div style="display:flex;gap:4px;height:10px;border-radius:5px;overflow:hidden;margin-bottom:var(--space-sm);">
+        <div style="flex:1;background:#935D31"></div>
+        <div style="flex:1;background:#CD6026"></div>
+        <div style="flex:1;background:#F5A623"></div>
+        <div style="flex:1;background:#F5D823"></div>
+        <div style="flex:1;background:#82AF00"></div>
+        <div style="flex:1;background:#4D7326"></div>
+        <div style="flex:1;background:#4099BF"></div>
+        <div style="flex:1;background:#793DB6"></div>
+        <div style="flex:1;background:#371A60"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-muted);">
+        <span>Плохо &lt;300</span>
+        <span>Средне ~900</span>
+        <span>Хорошо ~1600</span>
+        <span>Уникум &gt;2450</span>
+      </div>
+    </div>
+
+    <!-- RESULTS AREA -->
+    <div id="statsResult" style="display:none;">
+
+      <!-- Player Header Card -->
+      <div class="card animate-fade-in" style="margin-bottom:var(--space-md);">
+        <div style="display:flex;align-items:center;gap:var(--space-lg);flex-wrap:wrap;">
+          <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1a1a0f,#111520);border:2px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">🪖</div>
+          <div style="flex:1;">
+            <div style="font-family:var(--font-display);font-size:1.6rem;color:var(--text-primary);letter-spacing:.04em;" id="resNickname">—</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);" id="resAccount">WoT аккаунт</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="wn8-value" id="resWn8">—</div>
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);">WN8</div>
+            <div class="wn8-tier" id="resWn8Tier" style="margin-top:4px;">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid-4 reveal" style="margin-bottom:var(--space-md);">
+        <div class="stat-card">
+          <div class="stat-card__value" id="resBattles">—</div>
+          <div class="stat-card__label">Всего боёв</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value" id="resWr">—%</div>
+          <div class="stat-card__label">% побед</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value" id="resDmg">—</div>
+          <div class="stat-card__label">Урон/бой</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value" id="resKills">—</div>
+          <div class="stat-card__label">Фрагов/бой</div>
+        </div>
+      </div>
+
+      <!-- Top Tanks -->
+      <div class="card reveal" style="margin-bottom:var(--space-md);">
+        <div class="section-header" style="margin-bottom:var(--space-md);">
+          <div class="section-header__title">🏆 Топ танков</div>
+        </div>
+        <div id="topTanksList">
+          <div style="color:var(--text-muted);font-size:0.85rem;padding:var(--space-md)">Загрузка...</div>
+        </div>
+      </div>
+
+      <!-- In Club? -->
+      <div class="card reveal" id="inClubCard" style="display:none;background:linear-gradient(135deg,#1a1505,var(--bg-card));border-color:rgba(200,170,110,0.2);">
+        <div style="display:flex;align-items:center;gap:var(--space-md);">
+          <span style="font-size:2rem;">🎮</span>
+          <div>
+            <div style="font-family:var(--font-heading);color:var(--gold);margin-bottom:4px;" id="inClubTitle">Этот игрок в клубе!</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);" id="inClubDesc">Участник клуба ISERVERI</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="statsEmpty" class="card" style="text-align:center;padding:var(--space-2xl);">
+      <div style="font-size:3rem;margin-bottom:var(--space-md);">🎯</div>
+      <div style="font-family:var(--font-heading);font-size:1.2rem;color:var(--text-primary);margin-bottom:var(--space-sm);">Введи никнейм танкиста</div>
+      <div style="font-size:0.85rem;color:var(--text-muted);">Найди статистику любого игрока Мир Танков по никнейму</div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+// Show sidebar balance if logged in
+if (auth.isLoggedIn) {
+  document.getElementById('sidebarBalance').style.display = '';
+}
+
+function getWn8Info(wn8) {
+  if (wn8 < 300)  return { tier: 'Плохо',         cls: 'wn8--bad' };
+  if (wn8 < 600)  return { tier: 'Ниже среднего', cls: 'wn8--below-avg' };
+  if (wn8 < 900)  return { tier: 'Средне',         cls: 'wn8--average' };
+  if (wn8 < 1250) return { tier: 'Выше среднего', cls: 'wn8--above-avg' };
+  if (wn8 < 1600) return { tier: 'Хорошо',        cls: 'wn8--good' };
+  if (wn8 < 2000) return { tier: 'Очень хорошо',  cls: 'wn8--very-good' };
+  if (wn8 < 2450) return { tier: 'Отлично',        cls: 'wn8--great' };
+  if (wn8 < 2900) return { tier: 'Уникум',         cls: 'wn8--unicum' };
+  return          { tier: 'Супер-Уникум',         cls: 'wn8--super-unicum' };
+}
+
+async function searchPlayer() {
+  const input = document.getElementById('searchInput');
+  const btn   = document.getElementById('searchBtn');
+  const q     = input.value.trim();
+  if (!q) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  document.getElementById('statsEmpty').style.display  = 'none';
+  document.getElementById('statsResult').style.display = 'none';
+
+  try {
+    // Try to find in our system first
+    const search = await API.searchUsers(q);
+    let telegramId = null;
+    if (search.users && search.users.length > 0) {
+      telegramId = search.users[0].telegram_id;
+    }
+
+    // Load WN8 from our API
+    const statsResp = telegramId
+      ? await API.getWotStats(telegramId)
+      : await API.get('/api/wot/search', { nickname: q });
+
+    const wn8     = statsResp.wn8 || 0;
+    const battles = statsResp.battles || 0;
+    const wr      = statsResp.win_rate || 0;
+    const dmg     = statsResp.avg_damage || 0;
+    const kills   = statsResp.avg_frags || 0;
+    const nickname= statsResp.nickname || q;
+    const info    = getWn8Info(wn8);
+
+    document.getElementById('resNickname').textContent  = nickname;
+    document.getElementById('resAccount').textContent   = `WoT ID: ${statsResp.account_id || '—'}`;
+    document.getElementById('resWn8').textContent       = wn8.toLocaleString();
+    document.getElementById('resWn8').className         = `wn8-value ${info.cls}`;
+    document.getElementById('resWn8Tier').textContent   = info.tier;
+    document.getElementById('resWn8Tier').className     = `wn8-tier ${info.cls}`;
+    document.getElementById('resBattles').textContent   = battles.toLocaleString();
+    document.getElementById('resWr').textContent        = wr.toFixed(1) + '%';
+    document.getElementById('resDmg').textContent       = Math.round(dmg).toLocaleString();
+    document.getElementById('resKills').textContent     = kills.toFixed(2);
+
+    // Top tanks
+    const tanksEl = document.getElementById('topTanksList');
+    const tanks = statsResp.top_tanks || [];
+    if (tanks.length) {
+      tanksEl.innerHTML = tanks.map((t, i) => `
+        <div class="tank-row">
+          <div class="tank-row__tier">X</div>
+          <div class="tank-row__name">${t.name || 'Неизвестный танк'}</div>
+          <div class="tank-row__battles">${(t.battles||0).toLocaleString()} боёв</div>
+          <div class="tank-row__wr ${(t.win_rate||0) >= 55 ? 'tank-row__wr--good' : (t.win_rate||0) >= 48 ? 'tank-row__wr--avg' : 'tank-row__wr--bad'}">
+            ${(t.win_rate||0).toFixed(1)}%
+          </div>
+        </div>
+      `).join('');
+    } else {
+      tanksEl.innerHTML = '<p style="color:var(--text-muted);padding:16px;font-size:0.85rem">Данные о танках недоступны</p>';
+    }
+
+    // In club?
+    if (telegramId) {
+      document.getElementById('inClubCard').style.display = '';
+      document.getElementById('inClubTitle').textContent  = `${nickname} — в клубе!`;
+    }
+
+    document.getElementById('statsResult').style.display = '';
+    Toast.success(`Найден игрок: ${nickname}`);
+
+  } catch (e) {
+    document.getElementById('statsEmpty').style.display = '';
+    Toast.error('Игрок не найден', 'Проверь правильность никнейма');
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔍 Найти';
+}
+
+// Auto-search if logged in
+if (auth.isLoggedIn && auth.username && auth.username !== 'Танкист') {
+  document.getElementById('searchInput').value = auth.username;
+  searchPlayer();
+}
+
+// Parse URL param
+const urlNick = new URLSearchParams(window.location.search).get('nick');
+if (urlNick) {
+  document.getElementById('searchInput').value = urlNick;
+  searchPlayer();
+}
+</script>
+</body>
+</html>
