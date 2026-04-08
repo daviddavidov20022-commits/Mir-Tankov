@@ -1,0 +1,30 @@
+{
+  "session_start": "2026-04-09 01:00:00",
+  "total_opened": 3074,
+  "containers": {
+    "Дар Востока": 2520,
+    "Редкий гость": 554
+  },
+  "rewards": {
+    "gold": 172400,
+    "credits": 142500000,
+    "free_xp": 907000,
+    "premium_days": 0,
+    "slots": 0
+  },
+  "items": {
+    "boosters": 16300,
+    "crew_books": 13,
+    "blueprints_national": 11,
+    "blueprints_universal": 15,
+    "blueprints_fragment": 12,
+    "equipment_demount": 9,
+    "customizations": 0
+  },
+  "vehicles": [
+    {"compact_desc": "A13_T34_hvy", "time": "2026-04-09 01:05:00"},
+    {"compact_desc": "A117_T26E5", "time": "2026-04-09 01:10:00"},
+    {"compact_desc": "A115_Chrysler_K", "time": "2026-04-09 01:15:00"}
+  ],
+  "last_update": "2026-04-09 01:42:00"
+}
