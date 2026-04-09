@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Bounty Tracker — OBS Widget</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: transparent;
+            color: #fff;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        .bounty-widget {
+            width: 320px;
+            background: linear-gradient(180deg, rgba(30, 20, 20, 0.95) 0%, rgba(15, 10, 10, 0.98) 100%);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(220, 53, 69, 0.2), inset 0 0 20px rgba(220, 53, 69, 0.05);
+            position: relative;
+        }
+
+        /* ── Декоративная линия ── */
+        .bounty-widget::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff3b30, transparent);
+            box-shadow: 0 0 10px #ff3b30;
+        }
+
+        /* ── Хедер ── */
+        .header {
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 59, 48, 0.15);
+            background: rgba(255, 59, 48, 0.05);
+        }
+        .header__icon {
+            font-size: 1.4rem;
+            animation: pulse 2s infinite;
+        }
+        .header__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 0.5px;
+        }
+        .header__total {
+            margin-left: auto;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.1rem;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .header__total img {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ── Сессия время ── */
+        .session-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 14px;
+            font-size: 0.55rem;
+            color: #5A6577;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .session-bar__time {
+            color: #ff6b5e;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ── Последние попадания (Поп-апы) ── */
+        .recent-hits {
+            padding: 8px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 40px;
+        }
+        .hit-row {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(90deg, rgba(255, 59, 48, 0.15) 0%, transparent 100%);
+            border-left: 2px solid #ff3b30;
+            padding: 6px 10px;
+            border-radius: 0 6px 6px 0;
+            gap: 8px;
+            animation: slideInLeft 0.4s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .hit-row--new {
+            border-left-color: #FFD700;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, transparent 100%);
+        }
+        .hit-row--new::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+            animation: flash 1.2s ease-out forwards;
+        }
+        .hit-row__info {
+            flex: 1;
+            min-width: 0;
+        }
+        .hit-row__name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #E8E6E3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .hit-row__tank {
+            font-size: 0.55rem;
+            color: #5A6577;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .hit-row__dmg {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.95rem;
+            color: #ff3b30;
+            text-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+        }
+        .hit-row__gold {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.95rem;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .hit-row__gold img { width: 14px; height: 14px; }
+
+        /* ── Топ Охотников ── */
+        .top-hunters {
+            padding: 8px 14px 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .top-hunters__title {
+            font-size: 0.65rem;
+            color: #9AA4B5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+        .hunter-row {
+            display: flex;
+            align-items: center;
+            padding: 4px 0;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .hunter-row__rank {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.8rem;
+            color: #5A6577;
+            width: 14px;
+            text-align: center;
+        }
+        .hunter-row:nth-child(2) .hunter-row__rank { color: #FFD700; } /* 1 место */
+        .hunter-row:nth-child(3) .hunter-row__rank { color: #C0C0C0; } /* 2 место */
+        .hunter-row:nth-child(4) .hunter-row__rank { color: #CD7F32; } /* 3 место */
+        
+        .hunter-row__info {
+            flex: 1;
+            min-width: 0;
+        }
+        .hunter-row__name {
+            font-size: 0.75rem;
+            color: #C8AA6E;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .hunter-row__tank {
+            font-size: 0.5rem;
+            color: #5A6577;
+        }
+        .hunter-row__total {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 0.75rem;
+            color: #E8E6E3;
+        }
+        .hunter-row__bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ff3b30, transparent);
+            transition: width 0.8s ease;
+        }
+
+        /* ── Дефолт (Theme 1: Классика) ── */
+        .theme-1 .bounty-widget { background: linear-gradient(180deg, rgba(30, 20, 20, 0.95) 0%, rgba(15, 10, 10, 0.98) 100%); border: 1px solid rgba(220, 53, 69, 0.3); box-shadow: 0 10px 40px rgba(220, 53, 69, 0.2); }
+        .theme-1 .bounty-widget::before { background: linear-gradient(90deg, transparent, #ff3b30, transparent); box-shadow: 0 0 10px #ff3b30; }
+        .theme-1 .header { background: rgba(255, 59, 48, 0.05); }
+        .theme-1 .hit-row { background: linear-gradient(90deg, rgba(255, 59, 48, 0.15) 0%, transparent 100%); border-left: 2px solid #ff3b30; }
+        .theme-1 .hit-row__dmg { color: #ff3b30; text-shadow: 0 0 8px rgba(255, 59, 48, 0.4); }
+
+        /* ── Theme 2: Minimalist Glass ── */
+        .theme-2 .bounty-widget { background: rgba(10, 15, 25, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+        .theme-2 .bounty-widget::before { display: none; }
+        .theme-2 .header__title { font-family: 'Inter', sans-serif; font-weight: 800; text-shadow: none; letter-spacing: -0.5px; }
+        .theme-2 .hit-row { background: rgba(255, 255, 255, 0.03); border-left: 2px solid #fff; border-radius: 8px; }
+        .theme-2 .hit-row__dmg { color: #fff; font-family: 'Inter', sans-serif; text-shadow: none; }
+
+        /* ── Theme 3: Cyberpunk/Neon ── */
+        .theme-3 .bounty-widget { background: #050510; border: 1px solid #ff00ff; border-radius: 0; box-shadow: 0 0 15px rgba(255,0,255,0.2), inset 0 0 10px rgba(0,255,255,0.1); }
+        .theme-3 .bounty-widget::before { background: linear-gradient(90deg, #ff00ff, #00ffff); box-shadow: 0 0 15px #00ffff; height: 2px; }
+        .theme-3 .header { border-bottom: 1px solid #ff00ff; }
+        .theme-3 .header__title { font-style: italic; color: #00ffff; text-shadow: 0 0 5px #00ffff; }
+        .theme-3 .hit-row { background: linear-gradient(90deg, rgba(255,0,255,0.2) 0%, transparent 100%); border-left: 3px solid #00ffff; border-radius: 0; }
+        .theme-3 .hit-row__dmg { color: #ff00ff; text-shadow: 0 0 8px #ff00ff; font-style: italic; }
+        
+        /* ── Theme 4: Military/WoT ── */
+        .theme-4 .bounty-widget { background: url('https://www.transparenttextures.com/patterns/black-scales.png'), #1e1e19; border: 2px solid #4a4a3a; border-radius: 4px; }
+        .theme-4 .bounty-widget::before { display: none; }
+        .theme-4 .header { background: #141410; border-bottom: 2px solid #2a2a20; }
+        .theme-4 .header__title { color: #c0ba9e; font-family: Courier, monospace; letter-spacing: 1px; }
+        .theme-4 .hit-row { background: #24241e; border-left: 4px solid #8b0000; border-radius: 0; }
+        .theme-4 .hit-row__dmg { color: #df4444; font-family: Courier, monospace; font-weight: bold; }
+        .theme-4 .hunter-row__name { color: #e5e0c8; }
+
+        /* ── Theme 5: Gold & Prestige ── */
+        .theme-5 .bounty-widget { background: linear-gradient(135deg, #1a1510 0%, #0f0a05 100%); border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 8px; box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1); }
+        .theme-5 .bounty-widget::before { background: linear-gradient(90deg, transparent, #FFD700, transparent); box-shadow: 0 0 10px #FFD700; height: 1px; }
+        .theme-5 .header { background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%); border-bottom: 1px solid rgba(255, 215, 0, 0.2); }
+        .theme-5 .header__title { color: #FFD700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .theme-5 .hit-row { background: linear-gradient(90deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%); border-left: 2px solid #FFD700; }
+        .theme-5 .hit-row__dmg { color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+
+        /* ── Анимации ── */
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255,59,48,0.5)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(255,59,48,1)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255,59,48,0.5)); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes flash {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        @keyframes goldPop {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.3); color: #FFD700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+            100% { transform: scale(1); }
+        }
+        @keyframes newHitGlow {
+            0% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+            30% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+            100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+        }
+        .gold-pop {
+            animation: goldPop 0.5s ease;
+        }
+    </style>
+</head>
+<body class="theme-1">
+    <div class="bounty-widget" id="widget">
+        <!-- Заполняется динамически -->
+        <div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">
+            Ожидание старта охоты...
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const theme = urlParams.get('theme') || '1';
+        document.body.className = 'theme-' + theme;
+
+        const CONFIG = {
+            jsonUrl: 'bounty_session.json',
+            refreshInterval: 1500,
+            goldIcon: 'assets/currency/goldIcon.png'
+        };
+
+        function formatCount(n) { return (n || 0).toLocaleString().replace(/,/g, ' '); }
+
+        function formatSessionTime(startStr) {
+            if (!startStr) return '--:--';
+            try {
+                const start = new Date(startStr.replace(' ', 'T'));
+                const now = new Date();
+                const diff = Math.floor((now - start) / 1000);
+                if (diff < 0 || isNaN(diff)) return '--:--';
+                const h = Math.floor(diff / 3600);
+                const m = Math.floor((diff % 3600) / 60);
+                const s = diff % 60;
+                if (h > 0) return `${h}ч ${String(m).padStart(2,'0')}м`;
+                return `${m}м ${String(s).padStart(2,'0')}с`;
+            } catch(e) { return '--:--'; }
+        }
+
+        let lastData = null;
+        let knownHitsCount = 0;
+        let lastTotalGold = 0;
+
+        function renderWidget(data, isNewHit) {
+            const widget = document.getElementById('widget');
+            
+            // Если статус остановлен
+            if (data.status === 'stopped') {
+                widget.innerHTML = `<div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">Охота на стримера завершена.</div>`;
+                return;
+            }
+
+            // Если мало данных
+            if (!data || Object.keys(data.attackers || {}).length === 0) {
+                const pcount = data.participants_count || 0;
+                widget.innerHTML = `
+                    <div class="header">
+                        <div class="header__icon">🎯</div>
+                        <div class="header__title">ОХОТА${pcount > 0 ? ': ' + pcount + ' уч.' : ''}</div>
+                    </div>
+                    <div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">
+                        Ожидание первых попаданий...
+                    </div>`;
+                return;
+            }
+
+            const attackerCount = Object.keys(data.attackers).length;
+            const pcount = data.participants_count || attackerCount;
+            const totalGold = data.total_gold_given || data.total_damage_received || 0;
+            const goldPopClass = isNewHit ? 'gold-pop' : '';
+
+            let html = `
+                <div class="header">
+                    <div class="header__icon">🎯</div>
+                    <div class="header__title">ОХОТА: ${pcount} уч.</div>
+                    <div class="header__total ${goldPopClass}">
+                        ${formatCount(totalGold)} 
+                        <img src="${CONFIG.goldIcon}" onerror="this.outerHTML='<span style=\\'font-size:14px\\'>💰</span>'" alt="">
+                    </div>
+                </div>
+                <div class="session-bar">
+                    <span>⏱ ${formatSessionTime(data.session_start)}</span>
+                    <span>Урон: <span class="session-bar__time">${formatCount(data.total_damage_received || 0)}</span></span>
+                </div>
+            `;
+
+            // ── Последние попадания ──
+            if (data.recent_hits && data.recent_hits.length > 0) {
+                html += '<div class="recent-hits">';
+                // Показываем последние 3
+                const hitsToShow = data.recent_hits.slice(0, 3);
+                hitsToShow.forEach((hit, i) => {
+                    const isNew = isNewHit && i === 0;
+                    html += `
+                        <div class="hit-row ${isNew ? 'hit-row--new' : ''}" ${isNew ? 'style="animation: slideInLeft 0.4s ease-out, newHitGlow 1.5s ease"' : ''}>
+                            <div class="hit-row__info">
+                                <div class="hit-row__name">${hit.name}</div>
+                                <div class="hit-row__tank">${hit.tank || ''}</div>
+                            </div>
+                            <span class="hit-row__dmg">💥 ${hit.damage}</span>
+                            <span class="hit-row__gold">
+                                +${hit.gold} 
+                                <img src="${CONFIG.goldIcon}" onerror="this.outerHTML='<span style=\\'font-size:12px\\'>💰</span>'" alt="">
+                            </span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            // ── Топ Охотников ──
+            if (data.attackers && Object.keys(data.attackers).length > 0) {
+                html += '<div class="top-hunters">';
+                html += '<div class="top-hunters__title">Топ Охотников</div>';
+                
+                // Сортируем по урону
+                const sortedAttackers = Object.entries(data.attackers)
+                    .sort((a, b) => {
+                        const da = typeof a[1] === 'object' ? a[1].damage : a[1];
+                        const db = typeof b[1] === 'object' ? b[1].damage : b[1];
+                        return db - da;
+                    })
+                    .slice(0, 5);
+                
+                const maxDmg = (() => {
+                    const first = sortedAttackers[0];
+                    return first ? (typeof first[1] === 'object' ? first[1].damage : first[1]) : 1;
+                })();
+
+                let rank = 1;
+                for (const [name, info] of sortedAttackers) {
+                    const dmg = typeof info === 'object' ? info.damage : info;
+                    const tank = typeof info === 'object' ? info.tank : '';
+                    const barWidth = Math.round((dmg / maxDmg) * 100);
+                    html += `
+                        <div class="hunter-row" style="position: relative;">
+                            <span class="hunter-row__rank">${rank}</span>
+                            <div class="hunter-row__info">
+                                <div class="hunter-row__name">${name}</div>
+                                ${tank ? `<div class="hunter-row__tank">${tank}</div>` : ''}
+                            </div>
+                            <span class="hunter-row__total">${formatCount(dmg)}</span>
+                            <div class="hunter-row__bar" style="width: ${barWidth}%;"></div>
+                        </div>
+                    `;
+                    rank++;
+                }
+                html += '</div>';
+            }
+
+            widget.innerHTML = html;
+        }
+
+        async function loadData() {
+            try {
+                const resp = await fetch(CONFIG.jsonUrl + '?t=' + Date.now());
+                if (!resp.ok) return;
+                const data = await resp.json();
+                
+                const currentTotalGold = data.total_gold_given || data.total_damage_received || 0;
+                const isNewHit = lastData && currentTotalGold > lastTotalGold;
+
+                // Чтобы не перерисовывать зря, проверяем изменилось ли кол-во хитов или общий урон
+                if (!lastData || 
+                    data.total_damage_received !== lastData.total_damage_received ||
+                    (data.recent_hits && data.recent_hits.length !== knownHitsCount)) {
+                    
+                    lastTotalGold = currentTotalGold;
+                    lastData = data;
+                    knownHitsCount = data.recent_hits ? data.recent_hits.length : 0;
+                    renderWidget(data, isNewHit);
+                }
+            } catch (e) {}
+        }
+
+        // ============================================
+        // DEMO MODE — Живая симуляция
+        // ============================================
+        function loadDemoData() {
+            const tanks = ['Об. 430У', 'FV4005', 'ИС-7', 'EBR 105', 'Grille 15', 'Leopard 1', 'T57 Heavy', 'Об. 705А', 'Kranvagn'];
+            const names = ['Jove_Hater_99', 'Korben_Fan', 'SniperPro_2026', 'Vasya_Tankist', 'Nagibator228', 'ProArty_2025'];
+            
+            const demo = {
+                session_start: new Date(Date.now() - 35 * 60000).toISOString(),
+                total_damage_received: 9450,
+                total_gold_given: 9450,
+                gold_rate: 1,
+                attackers: {
+                    'Jove_Hater_99': { damage: 3450, tank: 'Об. 430У' },
+                    'Korben_Fan': { damage: 2100, tank: 'FV4005' },
+                    'SniperPro_2026': { damage: 1500, tank: 'ИС-7' },
+                    'Vasya_Tankist': { damage: 1200, tank: 'EBR 105' },
+                    'Nagibator228': { damage: 1200, tank: 'Grille 15' }
+                },
+                recent_hits: [
+                    { name: 'Vasya_Tankist', tank: 'EBR 105', damage: 450, gold: 450, time: new Date().toISOString() },
+                    { name: 'Jove_Hater_99', tank: 'Об. 430У', damage: 750, gold: 750, time: new Date().toISOString() },
+                    { name: 'Nagibator228', tank: 'Grille 15', damage: 320, gold: 320, time: new Date().toISOString() }
+                ],
+                last_update: new Date().toISOString()
+            };
+            
+            renderWidget(demo, false);
+
+            // Живая симуляция новых попаданий каждые 3-6 секунд
+            function simulateHit() {
+                const name = names[Math.floor(Math.random() * names.length)];
+                const tank = tanks[Math.floor(Math.random() * tanks.length)];
+                const dmg = Math.floor(Math.random() * 600) + 150;
+                const gold = dmg;
+
+                // Обновляем attackers
+                if (!demo.attackers[name]) {
+                    demo.attackers[name] = { damage: 0, tank: tank };
+                }
+                if (typeof demo.attackers[name] === 'object') {
+                    demo.attackers[name].damage += dmg;
+                } else {
+                    demo.attackers[name] += dmg;
+                }
+
+                demo.total_damage_received += dmg;
+                demo.total_gold_given += dmg;
+
+                // Добавляем в recent_hits
+                demo.recent_hits.unshift({
+                    name: name,
+                    tank: tank,
+                    damage: dmg,
+                    gold: gold,
+                    time: new Date().toISOString()
+                });
+                demo.recent_hits = demo.recent_hits.slice(0, 5);
+                demo.last_update = new Date().toISOString();
+
+                renderWidget(demo, true);
+                
+                // Следующий хит через 3-6 секунд
+                const nextDelay = 3000 + Math.random() * 3000;
+                setTimeout(simulateHit, nextDelay);
+            }
+
+            setTimeout(simulateHit, 3000);
+            
+            // Обновляем таймер каждую секунду
+            setInterval(() => renderWidget(demo, false), 15000);
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('demo') === '1' || params.get('demo') === 'true') {
+            loadDemoData();
+        } else {
+            if (params.get('json')) CONFIG.jsonUrl = params.get('json');
+            loadData();
+            setInterval(loadData, CONFIG.refreshInterval);
+        }
+    </script>
+</body>
+</html>

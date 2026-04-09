@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Container Tracker — OBS Widget</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: transparent;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .widget {
+            width: 340px;
+            background: linear-gradient(180deg, rgba(20, 25, 35, 0.95) 0%, rgba(12, 16, 24, 0.97) 100%);
+            border: 1px solid rgba(200, 170, 110, 0.15);
+            border-radius: 12px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        /* ─── Секция: Контейнеры ─── */
+        .containers-section {
+            padding: 10px 14px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .container-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 0;
+        }
+        .container-row__icon {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .container-row__name {
+            font-size: 0.7rem;
+            color: #9AA4B5;
+            flex: 1;
+        }
+        .container-row__count {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ─── Секция: Золото ─── */
+        .gold-section {
+            padding: 6px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .gold-section__icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+        .gold-section__label {
+            font-size: 0.65rem;
+            color: #9AA4B5;
+            flex: 1;
+        }
+        .gold-section__value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.5rem;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        /* ─── Секция: Валюты в ряд ─── */
+        .currencies-row {
+            display: flex;
+            padding: 6px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            gap: 4px;
+        }
+        .currency-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .currency-item__icon {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+        .currency-item__label {
+            font-size: 0.55rem;
+            color: #5A6577;
+        }
+        .currency-item__value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+            color: #fff;
+        }
+        .currency-item--credits .currency-item__value { color: #C0C0C0; }
+        .currency-item--xp .currency-item__value { color: #FFD700; }
+
+        /* ─── Секция: Предметы (grid 2 колонки) ─── */
+        .items-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px 8px;
+            padding: 6px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .item-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 0;
+        }
+        .item-row__icon {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .item-row__count {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #E8E6E3;
+        }
+
+        /* ─── Секция: Танки ─── */
+        .tanks-section {
+            padding: 6px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .tanks-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .tanks-header__item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.6rem;
+            color: #5A6577;
+        }
+        .tanks-header__icon {
+            width: 16px;
+            height: 16px;
+        }
+        .tanks-header__value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.85rem;
+            color: #48BB78;
+        }
+        .tanks-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .tank-badge {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 2px 6px;
+        }
+        .tank-badge__img {
+            width: 40px;
+            height: 20px;
+            object-fit: contain;
+        }
+        .tank-badge__name {
+            font-size: 0.55rem;
+            color: #C8AA6E;
+            font-weight: 700;
+            max-width: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .tank-badge__count {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.65rem;
+            color: #FFD700;
+            margin-left: auto;
+        }
+
+        /* ─── Анимации ─── */
+        @keyframes countUp {
+            from { transform: scale(1.3); color: #FFD700; }
+            to { transform: scale(1); }
+        }
+        .flash {
+            animation: countUp 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .tank-badge {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* ─── Тема: Тёмный геймерский полупрозрачный фон ─── */
+        .widget::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #C8AA6E, transparent);
+            opacity: 0.5;
+        }
+
+        /* Пустое состояние */
+        .empty-state {
+            padding: 24px 14px;
+            text-align: center;
+            color: #5A6577;
+            font-size: 0.8rem;
+        }
+        .empty-state__icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget" id="widget">
+        <!-- Заполняется динамически из JS -->
+        <div class="empty-state">
+            <div class="empty-state__icon">📦</div>
+            <div>Ожидание открытия контейнеров...</div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // КОНФИГУРАЦИЯ
+        // ============================================
+        const CONFIG = {
+            // Путь к JSON-файлу сессии (генерируется модом)
+            // Для OBS: используйте file:// протокол или локальный сервер
+            jsonUrl: 'container_session.json',
+            
+            // Интервал обновления (мс)
+            refreshInterval: 2000,
+            
+            // Путь к иконкам
+            iconsPath: 'assets/',
+            
+            // Маппинг иконок (реальные имена из game_assets)
+            icons: {
+                gold: 'currency/goldIcon.png',
+                credits: 'currency/creditsIcon.png',
+                freeXP: 'currency/freeXP.png',
+                premium: 'currency/gold.png',
+                slot: 'currency/credits.png',
+                booster: 'items/booster_xp.png',
+                blueprint_national: 'items/blueprints_ussr.png',
+                blueprint_universal: 'items/blueprint.png',
+                blueprint_fragment: 'items/blueprint_tube.png',
+                crew_book: 'items/experience.png',
+                equipment_demount: 'items/free_equipment_demounting.png',
+                customization: 'items/equipment.png',
+                container_default: 'items/random.png'
+            },
+            // Emoji фолбеки если иконка не загрузилась
+            emojis: {
+                gold: '💰', credits: '🪙', freeXP: '⭐',
+                booster: '🚀', blueprint_national: '📐', blueprint_universal: '📐',
+                blueprint_fragment: '🧩', crew_book: '📚', equipment_demount: '🔧',
+                customization: '🎨', container_default: '📦'
+            }
+        };
+
+        // ============================================
+        // ФОРМАТИРОВАНИЕ
+        // ============================================
+        function formatNumber(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+            return n.toLocaleString();
+        }
+
+        function formatCount(n) {
+            return n.toLocaleString().replace(/,/g, ' ');
+        }
+
+        function iconHtml(cls, iconPath, emoji, size) {
+            size = size || 20;
+            return `<img class="${cls}" src="${CONFIG.iconsPath}${iconPath}" 
+                    style="width:${size}px;height:${size}px"
+                    onerror="this.outerHTML='<span style=\\'font-size:${size-4}px\\'>${emoji || '📦'}</span>'" alt="">`;
+        }
+
+        // ============================================
+        // РЕНДЕР ВИДЖЕТА
+        // ============================================
+        let lastData = null;
+
+        function renderWidget(data) {
+            const widget = document.getElementById('widget');
+            
+            if (!data || data.total_opened === 0) {
+                widget.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">📦</div>
+                        <div>Ожидание открытия контейнеров...</div>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+
+            // ── Контейнеры ──
+            if (data.containers && Object.keys(data.containers).length > 0) {
+                html += '<div class="containers-section">';
+                for (const [name, count] of Object.entries(data.containers)) {
+                    html += `
+                        <div class="container-row">
+                            ${iconHtml('container-row__icon', CONFIG.icons.container_default, '📦', 28)}
+                            <span class="container-row__name">${name}</span>
+                            <span class="container-row__count">${formatCount(count)}</span>
+                        </div>`;
+                }
+                html += '</div>';
+            }
+
+            // ── Золото (большой) ──
+            const r = data.rewards || {};
+            if (r.gold > 0) {
+                html += `
+                    <div class="gold-section">
+                        ${iconHtml('gold-section__icon', CONFIG.icons.gold, '💰', 24)}
+                        <span class="gold-section__label">Золото</span>
+                        <span class="gold-section__value">${formatNumber(r.gold)}</span>
+                    </div>`;
+            }
+
+            // ── Кредиты + Свободный опыт ──
+            if (r.credits > 0 || r.free_xp > 0) {
+                html += '<div class="currencies-row">';
+                if (r.credits > 0) {
+                    html += `
+                        <div class="currency-item currency-item--credits">
+                            ${iconHtml('currency-item__icon', CONFIG.icons.credits, '🪙', 18)}
+                            <div>
+                                <div class="currency-item__label">Кредиты</div>
+                                <div class="currency-item__value">${formatNumber(r.credits)}</div>
+                            </div>
+                        </div>`;
+                }
+                if (r.free_xp > 0) {
+                    html += `
+                        <div class="currency-item currency-item--xp">
+                            ${iconHtml('currency-item__icon', CONFIG.icons.freeXP, '⭐', 18)}
+                            <div>
+                                <div class="currency-item__label">Свободный опыт</div>
+                                <div class="currency-item__value">${formatNumber(r.free_xp)}</div>
+                            </div>
+                        </div>`;
+                }
+                html += '</div>';
+            }
+
+            // ── Предметы (grid) ──
+            const items = data.items || {};
+            const hasItems = Object.values(items).some(v => v > 0);
+            if (hasItems) {
+                html += '<div class="items-grid">';
+                const itemList = [
+                    { key: 'boosters', icon: CONFIG.icons.booster, label: 'Бустеры', emoji: '🚀' },
+                    { key: 'crew_books', icon: CONFIG.icons.crew_book, label: 'Книги экипажа', emoji: '📚' },
+                    { key: 'blueprints_universal', icon: CONFIG.icons.blueprint_universal, label: 'Чертежи (унив.)', emoji: '📐' },
+                    { key: 'blueprints_national', icon: CONFIG.icons.blueprint_national, label: 'Чертежи (нац.)', emoji: '🏴' },
+                    { key: 'blueprints_fragment', icon: CONFIG.icons.blueprint_fragment, label: 'Фрагменты', emoji: '🧩' },
+                    { key: 'equipment_demount', icon: CONFIG.icons.equipment_demount, label: 'Наборы демонтажа', emoji: '🔧' },
+                    { key: 'customizations', icon: CONFIG.icons.customization, label: 'Кастомизация', emoji: '🎨' }
+                ];
+                for (const item of itemList) {
+                    if (items[item.key] > 0) {
+                        html += `
+                            <div class="item-row" title="${item.label}">
+                                ${iconHtml('item-row__icon', item.icon, item.emoji, 20)}
+                                <span class="item-row__count">${formatCount(items[item.key])}</span>
+                            </div>`;
+                    }
+                }
+                html += '</div>';
+            }
+
+            // ── Секция: Важные счётчики (премиум, слоты) ──
+            if (r.premium_days > 0 || r.slots > 0) {
+                html += '<div class="tanks-section"><div class="tanks-header">';
+                if (r.premium_days > 0) {
+                    html += `
+                        <div class="tanks-header__item">
+                            К оборудованию
+                            <span class="tanks-header__value">${formatCount(r.premium_days)} дн.</span>
+                        </div>`;
+                }
+                if (r.slots > 0) {
+                    html += `
+                        <div class="tanks-header__item">
+                            Слоты
+                            <span class="tanks-header__value">${formatCount(r.slots)}</span>
+                        </div>`;
+                }
+                html += '</div></div>';
+            }
+
+            // ── Танки ──
+            if (data.vehicles && data.vehicles.length > 0) {
+                html += '<div class="tanks-section">';
+                html += '<div class="tanks-list">';
+                // Группируем по compact_desc
+                const tankCounts = {};
+                for (const v of data.vehicles) {
+                    const cd = v.compact_desc || 'unknown';
+                    if (!tankCounts[cd]) tankCounts[cd] = 0;
+                    tankCounts[cd]++;
+                }
+                for (const [cd, count] of Object.entries(tankCounts)) {
+                    // Пытаемся найти иконку танка
+                    const tankIcon = CONFIG.iconsPath + 'lootboxes/' + cd + '.png';
+                    html += `
+                        <div class="tank-badge">
+                            <img class="tank-badge__img" src="${tankIcon}" 
+                                 onerror="this.style.display='none'" alt="">
+                            <span class="tank-badge__name">${cd}</span>
+                            ${count > 1 ? `<span class="tank-badge__count">x${count}</span>` : ''}
+                        </div>`;
+                }
+                html += '</div></div>';
+            }
+
+            widget.innerHTML = html;
+        }
+
+        // ============================================
+        // ЗАГРУЗКА ДАННЫХ
+        // ============================================
+        async function loadData() {
+            try {
+                const resp = await fetch(CONFIG.jsonUrl + '?t=' + Date.now());
+                if (!resp.ok) return;
+                const data = await resp.json();
+                
+                // Проверяем, изменились ли данные
+                const dataStr = JSON.stringify(data);
+                if (dataStr !== JSON.stringify(lastData)) {
+                    lastData = data;
+                    renderWidget(data);
+                }
+            } catch (e) {
+                // Файл ещё не создан — ок
+            }
+        }
+
+        // ============================================
+        // ДЕМО ДАННЫЕ (для тестирования без мода)
+        // ============================================
+        function loadDemoData() {
+            const demo = {
+                session_start: new Date().toISOString(),
+                total_opened: 3074,
+                containers: {
+                    'Дар Востока': 2520,
+                    'Редкий гость': 554
+                },
+                rewards: {
+                    gold: 172400,
+                    credits: 142500000,
+                    free_xp: 907000,
+                    premium_days: 0,
+                    slots: 0
+                },
+                items: {
+                    boosters: 16300,
+                    crew_books: 13,
+                    blueprints_national: 11,
+                    blueprints_universal: 15,
+                    blueprints_fragment: 12,
+                    equipment_demount: 9,
+                    customizations: 0
+                },
+                vehicles: [
+                    { compact_desc: 'A13_T34_hvy' },
+                    { compact_desc: 'A117_T26E5' },
+                    { compact_desc: 'A115_Chrysler_K' }
+                ],
+                last_update: new Date().toISOString()
+            };
+            renderWidget(demo);
+        }
+
+        // ============================================
+        // ЗАПУСК
+        // ============================================
+        // URL параметры
+        const params = new URLSearchParams(window.location.search);
+        
+        if (params.get('demo') === '1' || params.get('demo') === 'true') {
+            // Демо-режим для тестирования
+            loadDemoData();
+        } else {
+            // Живой режим — читаем JSON
+            if (params.get('json')) {
+                CONFIG.jsonUrl = params.get('json');
+            }
+            if (params.get('icons')) {
+                CONFIG.iconsPath = params.get('icons');
+            }
+            
+            loadData();
+            setInterval(loadData, CONFIG.refreshInterval);
+        }
+    </script>
+</body>
+</html>
