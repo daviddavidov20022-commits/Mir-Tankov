@@ -472,31 +472,16 @@
             
             <script>
                 let currentBountyTheme = 1;
+                const BOUNTY_WIDGET_BASE = 'https://mir-tankov-production.up.railway.app/webapp/obs/bounty-tracker.html';
+                
                 function bountyDemoTheme(theme, el) {
                     document.querySelectorAll('.theme-btn').forEach(b => b.style.borderColor = 'transparent');
                     el.style.borderColor = theme === 5 || theme === 3 ? el.style.color : '#fff';
                     currentBountyTheme = theme;
-                    
-                    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
-                    const origin = isLocal ? 'https://mir-tankov-production.up.railway.app' : window.location.origin;
-                    let basePath = origin + '/site/obs/bounty-tracker.html';
-                    if (!isLocal && window.location.pathname.includes('webapp')) {
-                         basePath = origin + '/webapp/obs/bounty-tracker.html';
-                    }
-                    if (isLocal && !window.location.pathname.includes('site')) {
-                         basePath = origin + '/site/obs/bounty-tracker.html';
-                    }
-                    
-                    document.getElementById('bountyLinkBox').innerText = `${basePath}?theme=${theme}`;
+                    document.getElementById('bountyLinkBox').innerText = `${BOUNTY_WIDGET_BASE}?theme=${theme}`;
                 }
                 function previewBountyWidget() {
-                    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
-                    const origin = isLocal ? 'https://mir-tankov-production.up.railway.app' : window.location.origin;
-                    let basePath = origin + '/site/obs/bounty-tracker.html';
-                    if (!isLocal && window.location.pathname.includes('webapp')) {
-                         basePath = origin + '/webapp/obs/bounty-tracker.html';
-                    }
-                    window.open(`${basePath}?theme=${currentBountyTheme}&demo=1`, '_blank', 'width=340,height=500');
+                    window.open(`${BOUNTY_WIDGET_BASE}?theme=${currentBountyTheme}&demo=1`, '_blank', 'width=340,height=500');
                 }
                 function toggleBountyState(active) {
                     const statusText = active ? 'Активно' : 'Остановлено';
