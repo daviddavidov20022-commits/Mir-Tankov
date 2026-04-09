@@ -512,7 +512,9 @@
                 let bountyAdminChecks = 0;
                 function checkBountyAdmin() {
                     bountyAdminChecks++;
-                    const isStreamer = (window.siteAuth && window.siteAuth.isAdmin) || window.isAdmin;
+                    const arenaAdmin = (typeof isAdmin !== 'undefined' && isAdmin);
+                    const authAdmin = (window.siteAuth && window.siteAuth.isAdmin);
+                    const isStreamer = arenaAdmin || authAdmin;
                     if (isStreamer) {
                         document.getElementById('bountyStreamerView').style.display = 'block';
                         document.getElementById('bountyHunterView').style.display = 'none'; // Скрываем от стримера зрительский вид
