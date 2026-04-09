@@ -472,6 +472,11 @@
             
             <script>
                 let currentBountyTheme = 1;
+                function bountyDemoTheme(theme, el) {
+                    document.querySelectorAll('.theme-btn').forEach(b => b.style.borderColor = 'transparent');
+                    el.style.borderColor = theme === 5 || theme === 3 ? el.style.color : '#fff';
+                    currentBountyTheme = theme;
+                    
                     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
                     const origin = isLocal ? 'https://mir-tankov-production.up.railway.app' : window.location.origin;
                     let basePath = origin + '/site/obs/bounty-tracker.html';
@@ -526,7 +531,7 @@
                 
                 // Проверка админки при загрузке вкладки
                 function checkBountyAdmin() {
-                    if (window.siteAuth && window.siteAuth.isAdmin) {
+                    if ((typeof isAdmin !== 'undefined' && isAdmin) || (window.siteAuth && window.siteAuth.isAdmin)) {
                         document.getElementById('bountyStreamerView').style.display = 'block';
                         document.getElementById('bountyHunterView').style.display = 'none';
                     }

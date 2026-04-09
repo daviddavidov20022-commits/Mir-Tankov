@@ -116,6 +116,7 @@ async function loadMyProfile() {
             isAdmin = true;
             const adminTab = document.getElementById('adminTab');
             if (adminTab) adminTab.style.display = '';
+            if (typeof checkBountyAdmin === 'function') checkBountyAdmin();
         }
         // Cheese balance: API or localStorage fallback
         const cheeseEl = document.getElementById('cheeseBalance');
