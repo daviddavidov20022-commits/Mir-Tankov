@@ -19,6 +19,164 @@
     <link rel="stylesheet" href="css/global-challenge.css?v=50">
     <link rel="stylesheet" href="css/team-battle.css?v=50">
 <script src="js/auth-interceptor.js?v=52"></script>
+<style id="overlayModeCSS">
+/* Overlay mode — active only when ?mode=overlay */
+</style>
+<script>
+(function() {
+    if (!new URLSearchParams(window.location.search).has('mode') || 
+        new URLSearchParams(window.location.search).get('mode') !== 'overlay') {
+        document.getElementById('overlayModeCSS').remove();
+        return;
+    }
+    document.getElementById('overlayModeCSS').textContent = `
+        /* === OVERLAY MODE === */
+        body {
+            background: #0a0e14 !important;
+            padding-bottom: 0 !important;
+            margin: 0 !important;
+            overflow-x: hidden !important;
+        }
+        .bg-particles { display: none !important; }
+        .bottom-nav { display: none !important; }
+        .back-btn { display: none !important; }
+        
+        /* Compact arena hero */
+        .arena-hero {
+            padding: 8px 0 4px !important;
+            margin-bottom: 4px !important;
+        }
+        .arena-hero__icon { font-size: 1.2rem !important; margin-bottom: 0 !important; }
+        .arena-hero__title { font-size: 1rem !important; margin-bottom: 2px !important; }
+        .arena-hero__subtitle { font-size: 0.6rem !important; margin-bottom: 0 !important; }
+        .account-badge { font-size: 0.6rem !important; padding: 2px 8px !important; margin-top: 4px !important; }
+        
+        /* Compact info box */
+        .arena-info { display: none !important; }
+        
+        /* Smaller cheese bar */
+        .cheese-bar { 
+            padding: 6px 10px !important; 
+            margin-bottom: 6px !important;
+            border-radius: 8px !important;
+        }
+        .cheese-bar__label { font-size: 0.55rem !important; }
+        .cheese-bar__amount { font-size: 0.85rem !important; }
+        .cheese-bar__icon { font-size: 1rem !important; }
+        .cheese-bar__buy { font-size: 0.6rem !important; padding: 4px 10px !important; }
+        
+        /* Compact tabs */
+        .arena-tabs {
+            gap: 3px !important;
+            margin-bottom: 8px !important;
+            padding: 0 !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+        }
+        .arena-tab {
+            font-size: 0.55rem !important;
+            padding: 6px 6px !important;
+            border-radius: 6px !important;
+            white-space: nowrap !important;
+            min-width: 0 !important;
+        }
+        
+        /* Steps */
+        .create-step { padding: 8px !important; margin-bottom: 6px !important; }
+        .step-header { margin-bottom: 6px !important; }
+        .step-number { width: 22px !important; height: 22px !important; font-size: 0.65rem !important; }
+        .step-title { font-size: 0.7rem !important; }
+        .form-label { font-size: 0.6rem !important; margin-bottom: 4px !important; }
+        
+        /* Tank class buttons */
+        .class-btn, .class-btn2 { font-size: 0.55rem !important; padding: 4px 6px !important; }
+        .tier-btn, .tier-btn2 { font-size: 0.6rem !important; padding: 4px 8px !important; min-width: 28px !important; }
+        .mode-btn { font-size: 0.6rem !important; padding: 6px 8px !important; }
+        
+        /* Condition cards */
+        .condition-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; }
+        .condition-card { padding: 6px 4px !important; border-radius: 8px !important; }
+        .condition-card__icon { font-size: 1rem !important; }
+        .condition-card__name { font-size: 0.6rem !important; }
+        .condition-card__desc { font-size: 0.45rem !important; }
+        
+        /* Battles selector */
+        .battles-btn { font-size: 0.7rem !important; padding: 6px 10px !important; }
+        
+        /* Wager */
+        .wager-preset { font-size: 0.6rem !important; padding: 4px 8px !important; }
+        .form-input { font-size: 0.75rem !important; padding: 6px 10px !important; }
+        
+        /* Summary */
+        .challenge-summary-full { padding: 10px !important; }
+        .summary-row { font-size: 0.65rem !important; padding: 4px 0 !important; }
+        .challenge-send-btn { font-size: 0.7rem !important; padding: 10px !important; }
+        
+        /* Global challenge widget */
+        .gc-widget { padding: 10px !important; border-radius: 10px !important; }
+        .gc-header__title { font-size: 0.9rem !important; }
+        .gc-header__desc { font-size: 0.6rem !important; }
+        .gc-timer-ring { width: 100px !important; height: 100px !important; }
+        .gc-timer-svg { width: 100px !important; height: 100px !important; }
+        .gc-timer-value { font-size: 1rem !important; }
+        .gc-stat__value { font-size: 0.8rem !important; }
+        .gc-stat__label { font-size: 0.5rem !important; }
+        .gc-join-btn { font-size: 0.7rem !important; padding: 10px !important; }
+        .gc-lb-title { font-size: 0.7rem !important; }
+        .gc-auto-info { font-size: 0.5rem !important; padding: 6px !important; }
+        
+        /* Section labels */
+        .section-lbl { font-size: 0.65rem !important; padding: 6px 8px !important; margin-bottom: 6px !important; }
+        
+        /* Admin panel */
+        .gc-admin { padding: 10px !important; }
+        .gc-admin__title { font-size: 0.75rem !important; }
+        .gc-admin__label { font-size: 0.6rem !important; }
+        .gc-admin__input { font-size: 0.65rem !important; padding: 6px 10px !important; }
+        .gc-admin__row { gap: 8px !important; }
+        .gc-preset-btn { font-size: 0.55rem !important; padding: 4px 8px !important; }
+        .gc-cond-btn { font-size: 0.55rem !important; padding: 4px 6px !important; }
+        .gc-cond-btn img { width: 14px !important; height: 14px !important; }
+        
+        /* Search box */
+        .search-box { margin-bottom: 6px !important; }
+        .search-box__input { font-size: 0.65rem !important; padding: 8px 10px !important; }
+        
+        /* Opponent source buttons */
+        .opp-src-btn { font-size: 0.6rem !important; padding: 6px 8px !important; }
+        
+        /* History */
+        .history-subtabs button { font-size: 0.6rem !important; padding: 6px 10px !important; }
+        
+        /* Selected items */
+        .selected-opponent { padding: 8px !important; }
+        .selected-opponent__name { font-size: 0.7rem !important; }
+        
+        /* Bounty section */
+        #bountyHunterView .gc-widget h2 { font-size: 0.9rem !important; }
+        #bountyHunterView .gc-widget p { font-size: 0.65rem !important; }
+        
+        /* Arena page padding */
+        .arena-page { padding: 6px 8px 10px !important; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(200,170,110,0.2); border-radius: 2px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        
+        /* Tank list */
+        .tank-list { max-height: 150px !important; }
+        .tank-item { padding: 4px 6px !important; font-size: 0.6rem !important; }
+        
+        /* Widget studio button */
+        .arena-page > div:last-of-type button { font-size: 0.6rem !important; padding: 8px !important; }
+        
+        /* Team battle */
+        .tb-card { padding: 8px !important; }
+        .tb-card__title { font-size: 0.7rem !important; }
+    `;
+})();
+</script>
 </head>
 
 <body>

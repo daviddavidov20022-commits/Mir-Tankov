@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мир Танков — Радар</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: rgba(10, 14, 20, 0.96);
+            --bg-card: rgba(20, 28, 44, 0.85);
+            --bg-ally: rgba(34, 197, 94, 0.06);
+            --bg-enemy: rgba(239, 68, 68, 0.06);
+            --border: rgba(200, 170, 110, 0.12);
+            --gold: #C8AA6E;
+            --ally: #4ade80;
+            --enemy: #ef4444;
+            --text: #E8E6E3;
+            --text-dim: #5A6577;
+            --accent: #C8AA6E;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            user-select: none;
+        }
+
+        /* ── Заголовок (Перетаскивание) ── */
+        .titlebar {
+            height: 36px;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid var(--border);
+            padding: 0 12px;
+            gap: 8px;
+            cursor: move;
+            -webkit-app-region: drag;
+        }
+        .titlebar__logo {
+            font-size: 1rem;
+        }
+        .titlebar__text {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.7rem;
+            color: var(--gold);
+            letter-spacing: 1px;
+        }
+        .titlebar__battle {
+            margin-left: auto;
+            font-size: 0.6rem;
+            color: var(--text-dim);
+        }
+        .titlebar__btn {
+            -webkit-app-region: no-drag;
+            width: 20px; height: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent;
+            color: #888;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+        }
+        .titlebar__btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .titlebar__btn--close:hover { background: rgba(239, 68, 68, 0.3); color: #ef4444; }
+
+        /* ── Вкладки ── */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .tabs__item {
+            flex: 1;
+            padding: 8px 4px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tabs__item:hover { color: var(--text); }
+        .tabs__item--active {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+        }
+
+        /* ── Контент ── */
+        .content {
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(200,170,110,0.2) transparent;
+        }
+        .content::-webkit-scrollbar { width: 4px; }
+        .content::-webkit-scrollbar-track { background: transparent; }
+        .content::-webkit-scrollbar-thumb { background: rgba(200,170,110,0.2); border-radius: 2px; }
+
+        .tab-panel { display: none; padding: 10px; }
+        .tab-panel--active { display: block; }
+
+        /* ── Панель боя ── */
+        .battle-header {
+            text-align: center;
+            padding: 12px 0 8px;
+        }
+        .battle-header__number {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.65rem;
+            color: var(--gold);
+        }
+        .battle-header__map {
+            font-size: 0.55rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .team-label {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+            padding: 6px 10px;
+            margin: 4px 0 2px;
+            border-radius: 6px;
+        }
+        .team-label--ally {
+            color: var(--ally);
+            background: var(--bg-ally);
+            border-left: 3px solid var(--ally);
+        }
+        .team-label--enemy {
+            color: var(--enemy);
+            background: var(--bg-enemy);
+            border-left: 3px solid var(--enemy);
+        }
+
+        /* ── Строка игрока ── */
+        .player-row {
+            display: flex;
+            align-items: center;
+            padding: 5px 8px;
+            border-radius: 6px;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+        .player-row:hover { background: rgba(255,255,255,0.03); }
+        .player-row--me { background: rgba(200, 170, 110, 0.08) !important; border-left: 2px solid var(--gold); }
+        .player-row--sub { border-left: 2px solid #3b82f6; }
+        
+        .player-row__rank {
+            font-size: 0.55rem;
+            color: var(--text-dim);
+            width: 16px;
+            text-align: center;
+            font-weight: 700;
+        }
+        .player-row__nick {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .player-row__tank {
+            font-size: 0.55rem;
+            color: var(--text-dim);
+            max-width: 80px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .player-row__stat {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.7rem;
+            min-width: 40px;
+            text-align: right;
+        }
+        .player-row__stat--dmg { color: #fca5a5; }
+        .player-row__stat--kills { color: var(--gold); }
+
+        .player-row__badge {
+            font-size: 0.45rem;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+        .player-row__badge--sub {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* ── Суммарная статистика ── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin: 10px 0;
+        }
+        .summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+        }
+        .summary-card__label {
+            font-size: 0.5rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .summary-card__value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text);
+            margin-top: 2px;
+        }
+        .summary-card__value--green { color: var(--ally); }
+        .summary-card__value--red { color: var(--enemy); }
+        .summary-card__value--gold { color: var(--gold); }
+
+        /* ── Пустое состояние ── */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-dim);
+        }
+        .empty-state__icon { font-size: 2rem; margin-bottom: 8px; }
+        .empty-state__text { font-size: 0.75rem; }
+
+        /* ── Свернуть ── */
+        .titlebar__btn--toggle { font-size: 0.7rem; }
+        /* Мини-режим */
+        body.mini-mode .tabs,
+        body.mini-mode .content { display: none !important; }
+        body.mini-mode .titlebar {
+            border: none;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        body.mini-mode .titlebar__logo,
+        body.mini-mode .titlebar__text,
+        body.mini-mode .titlebar__battle,
+        body.mini-mode .titlebar__btn:not(.titlebar__btn--toggle) { display: none !important; }
+        body.mini-mode .titlebar__btn--toggle {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 0;
+            font-size: 1.2rem;
+            color: var(--gold);
+            margin: 0;
+        }
+
+        /* ── Iframe вкладки ── */
+        .tab-panel--iframe {
+            padding: 0 !important;
+            height: 100%;
+        }
+        .tab-panel--iframe iframe {
+            width: 100%;
+            height: calc(100vh - 36px - 34px);
+            border: none;
+            background: var(--bg-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Заголовок -->
+    <div class="titlebar" id="titlebar">
+        <span class="titlebar__logo">📡</span>
+        <span class="titlebar__text">РАДАР</span>
+        <span class="titlebar__battle" id="battleNum">Бой #—</span>
+        <button class="titlebar__btn" onclick="toggleOpacity()" title="Прозрачность">◐</button>
+        <button class="titlebar__btn titlebar__btn--toggle" onclick="toggleCollapse()" id="collapseBtn" title="Свернуть/Развернуть">▼</button>
+        <button class="titlebar__btn titlebar__btn--close" onclick="if(window.pywebview) pywebview.api.close(); else window.close();" title="Закрыть">✕</button>
+    </div>
+
+    <!-- Вкладки -->
+    <div class="tabs">
+        <div class="tabs__item tabs__item--active" onclick="switchTab('battle', this)">⛔️ Бой</div>
+        <div class="tabs__item" onclick="switchTab('arena', this)">⚔️ Арена</div>
+        <div class="tabs__item" onclick="switchTab('history', this)">📜 История</div>
+        <div class="tabs__item" onclick="switchTab('subs', this)">👥 Подп.</div>
+    </div>
+
+    <!-- Контент -->
+    <div class="content">
+        <!-- Последний бой -->
+        <div class="tab-panel tab-panel--active" id="panel-battle">
+            <div class="empty-state">
+                <div class="empty-state__icon">📡</div>
+                <div class="empty-state__text">Ожидание данных боя...</div>
+            </div>
+        </div>
+
+        <!-- История -->
+        <div class="tab-panel" id="panel-history">
+            <div class="empty-state">
+                <div class="empty-state__icon">📜</div>
+                <div class="empty-state__text">История боёв появится здесь</div>
+            </div>
+        </div>
+
+        <!-- Подписчики -->
+        <div class="tab-panel" id="panel-subs">
+            <div class="empty-state">
+                <div class="empty-state__icon">👥</div>
+                <div class="empty-state__text">Подписчики в бою</div>
+            </div>
+        </div>
+
+        <!-- Арена (iframe) -->
+        <div class="tab-panel tab-panel--iframe" id="panel-arena">
+            <iframe id="arenaFrame" src="about:blank" loading="lazy"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // ===============================
+        // CONFIG
+        // ===============================
+        const RADAR_JSON = 'http://localhost:8090/obs/radar_results_overlay.json';
+        const RADAR_LOCAL = '../obs/radar_results_overlay.json';
+        const GAME_RADAR = 'file:///D:/Танки/World_of_Tanks_RU/radar_results.json';
+        const API_URL = 'https://mir-tankov-production.up.railway.app';
+        const MY_TG_ID = localStorage.getItem('my_telegram_id') || '6507474079';
+        const ARENA_URL = API_URL + '/challenges.html?telegram_id=' + MY_TG_ID + '&mode=overlay';
+        const REFRESH_MS = 2000;
+        
+        let currentBattle = null;
+        let allBattles = [];
+        let knownSubs = {};
+        let opacityLevel = 1;
+        let lastDataHash = '';
+        let isCollapsed = false;
+        let arenaLoaded = false;
+        let profileLoaded = false;
+
+        // ===============================
+        // TAB SWITCHING
+        // ===============================
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-panel--active'));
+            document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
+            document.getElementById('panel-' + id).classList.add('tab-panel--active');
+            btn.classList.add('tabs__item--active');
+            
+            // Ленивая загрузка iframe
+            if (id === 'arena' && !arenaLoaded) {
+                document.getElementById('arenaFrame').src = ARENA_URL;
+                arenaLoaded = true;
+            }
+        }
+
+        function toggleOpacity() {
+            opacityLevel = opacityLevel === 1 ? 0.6 : opacityLevel === 0.6 ? 0.3 : 1;
+            document.body.style.opacity = opacityLevel;
+        }
+
+        function toggleCollapse() {
+            isCollapsed = !isCollapsed;
+            const btn = document.getElementById('collapseBtn');
+            if (isCollapsed) {
+                document.body.classList.add('mini-mode');
+                btn.textContent = '+';
+                btn.title = 'Развернуть';
+                // Resize pywebview window to tiny square
+                if (window.pywebview && window.pywebview.api) {
+                    pywebview.api.minimize_window();
+                }
+            } else {
+                document.body.classList.remove('mini-mode');
+                btn.textContent = '▼';
+                btn.title = 'Свернуть';
+                if (window.pywebview && window.pywebview.api) {
+                    pywebview.api.restore_window();
+                }
+            }
+        }
+
+        // ===============================
+        // DATA LOADING
+        // ===============================
+        async function loadRadarData() {
+            // Пробуем несколько источников
+            const sources = [
+                'radar_results_overlay.json',
+                '/obs/radar_results_overlay.json',
+                RADAR_JSON
+            ];
+            
+            for (const src of sources) {
+                try {
+                    const resp = await fetch(src + '?t=' + Date.now());
+                    if (!resp.ok) continue;
+                    const data = await resp.json();
+                    if (data && (data.allies || data.enemies || data.players)) {
+                        processData(data);
+                        return;
+                    }
+                } catch(e) {}
+            }
+            
+            // Fallback: попробуем прочитать из файловой системы через pywebview
+            if (window.pywebview && window.pywebview.api) {
+                try {
+                    const raw = await pywebview.api.read_radar_json();
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        processData(data);
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function processData(data) {
+            if (!data) return;
+            
+            // Проверяем изменились ли данные (фикс мерцания)
+            const hash = JSON.stringify(data);
+            if (hash === lastDataHash) return; // Данные не изменились — не перерисовываем!
+            lastDataHash = hash;
+
+            // Новый бой?
+            if (!currentBattle || data.battle_number !== currentBattle.battle_number) {
+                if (currentBattle) {
+                    allBattles.unshift(currentBattle);
+                    if (allBattles.length > 20) allBattles = allBattles.slice(0, 20);
+                }
+                currentBattle = data;
+                document.getElementById('battleNum').textContent = 'Бой #' + (data.battle_number || '?');
+                renderBattle(data);
+                renderHistory();
+                checkSubscribers(data);
+            } else {
+                // Обновились результаты текущего боя
+                currentBattle = data;
+                renderBattle(data);
+            }
+        }
+
+        // ===============================
+        // RENDER BATTLE
+        // ===============================
+        function fmt(n) { return typeof n === 'number' ? n.toLocaleString('ru') : (n || '—'); }
+
+        function renderBattle(data) {
+            const panel = document.getElementById('panel-battle');
+            const allies = (data.allies || []).sort((a, b) => (b.damage || 0) - (a.damage || 0));
+            const enemies = (data.enemies || []).sort((a, b) => (b.damage || 0) - (a.damage || 0));
+
+            const totalAllyDmg = allies.reduce((s, p) => s + (p.damage || 0), 0);
+            const totalEnemyDmg = enemies.reduce((s, p) => s + (p.damage || 0), 0);
+            const totalAllyKills = allies.reduce((s, p) => s + (p.kills || 0), 0);
+            const totalEnemyKills = enemies.reduce((s, p) => s + (p.kills || 0), 0);
+
+            let html = `
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-card__label">Бой</div>
+                        <div class="summary-card__value summary-card__value--gold">#${data.battle_number || '?'}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card__label">Наш урон</div>
+                        <div class="summary-card__value summary-card__value--green">${fmt(totalAllyDmg)}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card__label">Их урон</div>
+                        <div class="summary-card__value summary-card__value--red">${fmt(totalEnemyDmg)}</div>
+                    </div>
+                </div>
+            `;
+
+            // Союзники
+            html += '<div class="team-label team-label--ally">🟢 СОЮЗНИКИ (' + allies.length + ')</div>';
+            allies.forEach((p, i) => {
+                const isSub = knownSubs[p.account_id] || knownSubs[p.nick];
+                const cls = isSub ? 'player-row--sub' : '';
+                const badge = isSub ? '<span class="player-row__badge player-row__badge--sub">ТГ</span>' : '';
+                html += `
+                    <div class="player-row ${cls}" style="animation-delay:${i * 0.03}s">
+                        <span class="player-row__rank">${i + 1}</span>
+                        <span class="player-row__nick">${p.nick || '?'} ${badge}</span>
+                        <span class="player-row__tank">${p.tank || ''}</span>
+                        <span class="player-row__stat player-row__stat--dmg">${fmt(p.damage)}</span>
+                        <span class="player-row__stat player-row__stat--kills">${p.kills || 0}💀</span>
+                    </div>`;
+            });
+
+            // Противники
+            html += '<div class="team-label team-label--enemy" style="margin-top:8px">🔴 ПРОТИВНИКИ (' + enemies.length + ')</div>';
+            enemies.forEach((p, i) => {
+                const isSub = knownSubs[p.account_id] || knownSubs[p.nick];
+                const cls = isSub ? 'player-row--sub' : '';
+                const badge = isSub ? '<span class="player-row__badge player-row__badge--sub">ТГ</span>' : '';
+                html += `
+                    <div class="player-row ${cls}" style="animation-delay:${i * 0.03}s">
+                        <span class="player-row__rank">${i + 1}</span>
+                        <span class="player-row__nick">${p.nick || '?'} ${badge}</span>
+                        <span class="player-row__tank">${p.tank || ''}</span>
+                        <span class="player-row__stat player-row__stat--dmg">${fmt(p.damage)}</span>
+                        <span class="player-row__stat player-row__stat--kills">${p.kills || 0}💀</span>
+                    </div>`;
+            });
+
+            panel.innerHTML = html;
+        }
+
+        // ===============================
+        // HISTORY
+        // ===============================
+        function renderHistory() {
+            const panel = document.getElementById('panel-history');
+            if (!allBattles.length) {
+                panel.innerHTML = '<div class="empty-state"><div class="empty-state__icon">📜</div><div class="empty-state__text">Пока нет завершённых боёв</div></div>';
+                return;
+            }
+
+            let html = '';
+            allBattles.forEach((b, i) => {
+                const allies = b.allies || [];
+                const enemies = b.enemies || [];
+                const totalDmg = allies.reduce((s, p) => s + (p.damage || 0), 0);
+                const totalKills = allies.reduce((s, p) => s + (p.kills || 0), 0);
+                html += `
+                    <div class="player-row" style="cursor:pointer; margin-bottom:4px; background:var(--bg-card); border-radius:8px; padding:8px 10px;" onclick="showHistoryBattle(${i})">
+                        <span class="player-row__rank" style="color:var(--gold)">#${b.battle_number || '?'}</span>
+                        <span class="player-row__nick" style="font-size:0.65rem">${allies.length}v${enemies.length}</span>
+                        <span class="player-row__stat player-row__stat--dmg">${fmt(totalDmg)}</span>
+                        <span class="player-row__stat player-row__stat--kills">${totalKills}💀</span>
+                    </div>`;
+            });
+            panel.innerHTML = html;
+        }
+
+        function showHistoryBattle(idx) {
+            const b = allBattles[idx];
+            if (b) renderBattle(b);
+            switchTab('battle', document.querySelector('.tabs__item'));
+        }
+
+        // ===============================
+        // SUBSCRIBERS CHECK
+        // ===============================
+        async function checkSubscribers(data) {
+            try {
+                const allPlayers = [...(data.allies || []), ...(data.enemies || [])];
+                const accountIds = allPlayers.map(p => p.account_id).filter(Boolean);
+                const nicknames = allPlayers.map(p => p.nick).filter(Boolean);
+                
+                if (!accountIds.length && !nicknames.length) return;
+
+                const resp = await fetch(API_URL + '/api/users/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ account_ids: accountIds, nicknames: nicknames })
+                });
+                const result = await resp.json();
+                if (result.registered) {
+                    for (const [key, val] of Object.entries(result.registered)) {
+                        knownSubs[key] = val;
+                    }
+                    renderBattle(data);
+                    renderSubsList(data);
+                }
+            } catch(e) {}
+        }
+
+        function renderSubsList(data) {
+            const panel = document.getElementById('panel-subs');
+            const allPlayers = [...(data.allies || []), ...(data.enemies || [])];
+            const subs = allPlayers.filter(p => knownSubs[p.account_id] || knownSubs[p.nick]);
+            
+            if (!subs.length) {
+                panel.innerHTML = '<div class="empty-state"><div class="empty-state__icon">👥</div><div class="empty-state__text">В этом бою нет подписчиков ТГ-канала</div></div>';
+                return;
+            }
+
+            let html = '<div class="team-label" style="color:#3b82f6; background:rgba(59,130,246,0.06); border-left:3px solid #3b82f6;">👥 ПОДПИСЧИКИ В БОЮ (' + subs.length + ')</div>';
+            subs.forEach((p, i) => {
+                const side = (data.allies || []).includes(p) ? '🟢' : '🔴';
+                html += `
+                    <div class="player-row player-row--sub">
+                        <span class="player-row__rank">${side}</span>
+                        <span class="player-row__nick">${p.nick}</span>
+                        <span class="player-row__tank">${p.tank || ''}</span>
+                        <span class="player-row__stat player-row__stat--dmg">${fmt(p.damage)}</span>
+                        <span class="player-row__stat player-row__stat--kills">${p.kills || 0}💀</span>
+                    </div>`;
+            });
+            panel.innerHTML = html;
+        }
+
+        // ===============================
+        // POLLING
+        // ===============================
+        loadRadarData();
+        setInterval(loadRadarData, REFRESH_MS);
+    </script>
+</body>
+</html>
