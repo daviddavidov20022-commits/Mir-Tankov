@@ -199,20 +199,51 @@ class BountyPopup(ctk.CTkToplevel):
             self.btn_start.configure(state="normal")
             self.btn_stop.configure(state="disabled")
 
+    def _save_to_history(self, d):
+        """Сохраняет текущую сессию в bounty_history.json"""
+        if not d.get('session_start') or not d.get('total_damage_received'):
+            return  # Пустая сессия — не сохраняем
+        history_path = os.path.join(APP, "site", "obs", "bounty_history.json")
+        try:
+            history = []
+            if os.path.exists(history_path):
+                with open(history_path, "r", encoding="utf-8") as f:
+                    history = json.load(f)
+            session = {
+                'session_start': d.get('session_start', ''),
+                'session_end': str(time.strftime("%Y-%m-%d %H:%M:%S")),
+                'total_damage': d.get('total_damage_received', 0),
+                'total_gold': d.get('total_gold_given', 0),
+                'gold_rate': d.get('gold_rate', 1),
+                'attackers': d.get('attackers', {})
+            }
+            history.insert(0, session)
+            history = history[:200]  # Держим не более 200 сессий
+            with open(history_path, "w", encoding="utf-8") as f:
+                json.dump(history, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[BountyHistory] Save error: {e}")
+
     def _start(self):
         d = self._read_data()
         d['status'] = 'active'
+        if not d.get('session_start'):
+            d['session_start'] = str(time.strftime("%Y-%m-%d %H:%M:%S"))
         self._write_data(d)
         self._refresh_status()
 
     def _stop(self):
         d = self._read_data()
+        self._save_to_history(d)   # Сохраняем в историю перед остановкой
         d['status'] = 'stopped'
+        d['session_end'] = str(time.strftime("%Y-%m-%d %H:%M:%S"))
         self._write_data(d)
         self._refresh_status()
 
     def _reset(self):
         if messagebox.askyesno("Подтверждение", "Точно сбросить всю статистику охоты?"):
+            d = self._read_data()
+            self._save_to_history(d)   # Архивируем перед сбросом
             d = {
                 'status': 'stopped',
                 'session_start': str(time.strftime("%Y-%m-%d %H:%M:%S")),

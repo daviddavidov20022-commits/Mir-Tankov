@@ -10773,6 +10773,35 @@ async def tma_auth_middleware(request: web.Request, handler):
 # ЗАПУСК
 # ==========================================
 
+async def api_bounty_history(request):
+    """GET /api/bounty/history — история всех сессий охоты"""
+    try:
+        import json as _json
+        history_path = os.path.join(os.path.dirname(__file__), 'site', 'obs', 'bounty_history.json')
+        if not os.path.exists(history_path):
+            return cors_response({'sessions': []})
+        with open(history_path, 'r', encoding='utf-8') as f:
+            data = _json.load(f)
+        return cors_response({'sessions': data})
+    except Exception as e:
+        logger.error(f"Bounty history API error: {e}")
+        return cors_response({'error': str(e)}, 500)
+
+
+async def api_bounty_session(request):
+    """GET /api/bounty/session — текущая сессия охоты"""
+    try:
+        import json as _json
+        session_path = os.path.join(os.path.dirname(__file__), 'site', 'obs', 'bounty_session.json')
+        if not os.path.exists(session_path):
+            return cors_response({'status': 'stopped'})
+        with open(session_path, 'r', encoding='utf-8') as f:
+            data = _json.load(f)
+        return cors_response(data)
+    except Exception as e:
+        return cors_response({'error': str(e)}, 500)
+
+
 def create_api_app():
     """Создать aiohttp приложение с API маршрутами"""
     app = web.Application(client_max_size=10 * 1024 * 1024, middlewares=[tma_auth_middleware])  # 10MB для медиа загрузок
@@ -10891,6 +10920,10 @@ def create_api_app():
     app.router.add_post("/api/donate-contest/finish", api_donate_contest_finish)
     app.router.add_post("/api/donate-contest/delete", api_donate_contest_delete)
     app.router.add_get("/api/donate-contest/widget", api_donate_contest_widget)
+
+    # Bounty Hunter API
+    app.router.add_get("/api/bounty/history", api_bounty_history)
+    app.router.add_get("/api/bounty/session", api_bounty_session)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)

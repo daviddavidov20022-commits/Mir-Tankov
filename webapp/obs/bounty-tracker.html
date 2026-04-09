@@ -16,6 +16,91 @@
             padding: 10px;
         }
 
+        /* ── ANNOUNCEMENT OVERLAY ── */
+        #announcement {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(10,8,5,0.97) 0%, rgba(20,14,4,0.97) 100%);
+            z-index: 200;
+            border: 2px solid rgba(255,215,0,0.4);
+            border-radius: 14px;
+            padding: 20px;
+            animation: annIn 0.5s ease;
+        }
+        #announcement.hide { display: none; }
+
+        .ann-cheese {
+            font-size: 3.5rem;
+            animation: cheeseFloat 1.2s ease-in-out infinite alternate;
+            margin-bottom: 8px;
+        }
+        .ann-badge {
+            font-size: 0.6rem;
+            color: #9AA4B5;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+        .ann-name {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.7rem;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.3);
+            text-align: center;
+            word-break: break-all;
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+        .ann-tank {
+            font-size: 0.8rem;
+            color: #C8AA6E;
+            margin-bottom: 14px;
+            background: rgba(200,170,110,0.1);
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(200,170,110,0.2);
+        }
+        .ann-label {
+            font-size: 0.85rem;
+            color: #E8E6E3;
+            margin-bottom: 12px;
+        }
+        .ann-gold {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ann-gold img { width: 22px; height: 22px; }
+        .ann-gold-label {
+            font-size: 0.6rem;
+            color: #5A6577;
+            text-align: center;
+            margin-top: 2px;
+            margin-bottom: 14px;
+        }
+        .ann-progress-wrap {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+        }
+        .ann-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #ff9900);
+            width: 100%;
+            transform-origin: left;
+        }
+
+        /* ── MAIN WIDGET ── */
         .bounty-widget {
             width: 320px;
             background: linear-gradient(180deg, rgba(30, 20, 20, 0.95) 0%, rgba(15, 10, 10, 0.98) 100%);
@@ -25,8 +110,6 @@
             box-shadow: 0 10px 40px rgba(220, 53, 69, 0.2), inset 0 0 20px rgba(220, 53, 69, 0.05);
             position: relative;
         }
-
-        /* ── Декоративная линия ── */
         .bounty-widget::before {
             content: '';
             position: absolute;
@@ -36,7 +119,7 @@
             box-shadow: 0 0 10px #ff3b30;
         }
 
-        /* ── Хедер ── */
+        /* ── HEADER ── */
         .header {
             padding: 12px 14px;
             display: flex;
@@ -45,15 +128,12 @@
             border-bottom: 1px solid rgba(255, 59, 48, 0.15);
             background: rgba(255, 59, 48, 0.05);
         }
-        .header__icon {
-            font-size: 1.4rem;
-            animation: pulse 2s infinite;
-        }
+        .header__icon { font-size: 1.4rem; animation: pulse 2s infinite; }
         .header__title {
             font-family: 'Russo One', sans-serif;
             font-size: 1.1rem;
             color: #fff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
             letter-spacing: 0.5px;
         }
         .header__total {
@@ -65,27 +145,20 @@
             align-items: center;
             gap: 4px;
         }
-        .header__total img {
-            width: 18px;
-            height: 18px;
-        }
+        .header__total img { width: 18px; height: 18px; }
 
-        /* ── Сессия время ── */
+        /* ── SESSION BAR ── */
         .session-bar {
             display: flex;
             justify-content: space-between;
             padding: 4px 14px;
             font-size: 0.55rem;
             color: #5A6577;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
         }
-        .session-bar__time {
-            color: #ff6b5e;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-        }
+        .session-bar__time { color: #ff6b5e; font-weight: 700; }
 
-        /* ── Последние попадания (Поп-апы) ── */
+        /* ── RECENT HITS ── */
         .recent-hits {
             padding: 8px 14px;
             display: flex;
@@ -96,7 +169,7 @@
         .hit-row {
             display: flex;
             align-items: center;
-            background: linear-gradient(90deg, rgba(255, 59, 48, 0.15) 0%, transparent 100%);
+            background: linear-gradient(90deg, rgba(255,59,48,0.15) 0%, transparent 100%);
             border-left: 2px solid #ff3b30;
             padding: 6px 10px;
             border-radius: 0 6px 6px 0;
@@ -107,19 +180,16 @@
         }
         .hit-row--new {
             border-left-color: #FFD700;
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, transparent 100%);
+            background: linear-gradient(90deg, rgba(255,215,0,0.2) 0%, transparent 100%);
         }
         .hit-row--new::after {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+            background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, transparent 100%);
             animation: flash 1.2s ease-out forwards;
         }
-        .hit-row__info {
-            flex: 1;
-            min-width: 0;
-        }
+        .hit-row__info { flex: 1; min-width: 0; }
         .hit-row__name {
             font-size: 0.85rem;
             font-weight: 700;
@@ -130,16 +200,17 @@
         }
         .hit-row__tank {
             font-size: 0.55rem;
-            color: #5A6577;
+            color: #C8AA6E;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            opacity: 0.8;
         }
         .hit-row__dmg {
             font-family: 'Russo One', sans-serif;
             font-size: 0.95rem;
             color: #ff3b30;
-            text-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+            text-shadow: 0 0 8px rgba(255,59,48,0.4);
         }
         .hit-row__gold {
             font-family: 'Russo One', sans-serif;
@@ -151,10 +222,10 @@
         }
         .hit-row__gold img { width: 14px; height: 14px; }
 
-        /* ── Топ Охотников ── */
+        /* ── TOP HUNTERS ── */
         .top-hunters {
             padding: 8px 14px 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255,255,255,0.05);
         }
         .top-hunters__title {
             font-size: 0.65rem;
@@ -178,14 +249,10 @@
             width: 14px;
             text-align: center;
         }
-        .hunter-row:nth-child(2) .hunter-row__rank { color: #FFD700; } /* 1 место */
-        .hunter-row:nth-child(3) .hunter-row__rank { color: #C0C0C0; } /* 2 место */
-        .hunter-row:nth-child(4) .hunter-row__rank { color: #CD7F32; } /* 3 место */
-        
-        .hunter-row__info {
-            flex: 1;
-            min-width: 0;
-        }
+        .hunter-row:nth-child(2) .hunter-row__rank { color: #FFD700; }
+        .hunter-row:nth-child(3) .hunter-row__rank { color: #C0C0C0; }
+        .hunter-row:nth-child(4) .hunter-row__rank { color: #CD7F32; }
+        .hunter-row__info { flex: 1; min-width: 0; }
         .hunter-row__name {
             font-size: 0.75rem;
             color: #C8AA6E;
@@ -196,6 +263,9 @@
         .hunter-row__tank {
             font-size: 0.5rem;
             color: #5A6577;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .hunter-row__total {
             font-family: 'Inter', sans-serif;
@@ -205,36 +275,32 @@
         }
         .hunter-row__bar {
             position: absolute;
-            bottom: 0;
-            left: 0;
+            bottom: 0; left: 0;
             height: 2px;
             background: linear-gradient(90deg, #ff3b30, transparent);
             transition: width 0.8s ease;
         }
 
-        /* ── Дефолт (Theme 1: Классика) ── */
-        .theme-1 .bounty-widget { background: linear-gradient(180deg, rgba(30, 20, 20, 0.95) 0%, rgba(15, 10, 10, 0.98) 100%); border: 1px solid rgba(220, 53, 69, 0.3); box-shadow: 0 10px 40px rgba(220, 53, 69, 0.2); }
+        /* ── THEMES ── */
+        .theme-1 .bounty-widget { background: linear-gradient(180deg, rgba(30,20,20,0.95) 0%, rgba(15,10,10,0.98) 100%); border: 1px solid rgba(220,53,69,0.3); }
         .theme-1 .bounty-widget::before { background: linear-gradient(90deg, transparent, #ff3b30, transparent); box-shadow: 0 0 10px #ff3b30; }
-        .theme-1 .header { background: rgba(255, 59, 48, 0.05); }
-        .theme-1 .hit-row { background: linear-gradient(90deg, rgba(255, 59, 48, 0.15) 0%, transparent 100%); border-left: 2px solid #ff3b30; }
-        .theme-1 .hit-row__dmg { color: #ff3b30; text-shadow: 0 0 8px rgba(255, 59, 48, 0.4); }
+        .theme-1 .header { background: rgba(255,59,48,0.05); }
+        .theme-1 .hit-row { background: linear-gradient(90deg, rgba(255,59,48,0.15) 0%, transparent 100%); border-left: 2px solid #ff3b30; }
+        .theme-1 .hit-row__dmg { color: #ff3b30; text-shadow: 0 0 8px rgba(255,59,48,0.4); }
 
-        /* ── Theme 2: Minimalist Glass ── */
-        .theme-2 .bounty-widget { background: rgba(10, 15, 25, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+        .theme-2 .bounty-widget { background: rgba(10,15,25,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; }
         .theme-2 .bounty-widget::before { display: none; }
-        .theme-2 .header__title { font-family: 'Inter', sans-serif; font-weight: 800; text-shadow: none; letter-spacing: -0.5px; }
-        .theme-2 .hit-row { background: rgba(255, 255, 255, 0.03); border-left: 2px solid #fff; border-radius: 8px; }
+        .theme-2 .header__title { font-family: 'Inter', sans-serif; font-weight: 800; }
+        .theme-2 .hit-row { background: rgba(255,255,255,0.03); border-left: 2px solid #fff; border-radius: 8px; }
         .theme-2 .hit-row__dmg { color: #fff; font-family: 'Inter', sans-serif; text-shadow: none; }
 
-        /* ── Theme 3: Cyberpunk/Neon ── */
-        .theme-3 .bounty-widget { background: #050510; border: 1px solid #ff00ff; border-radius: 0; box-shadow: 0 0 15px rgba(255,0,255,0.2), inset 0 0 10px rgba(0,255,255,0.1); }
+        .theme-3 .bounty-widget { background: #050510; border: 1px solid #ff00ff; border-radius: 0; box-shadow: 0 0 15px rgba(255,0,255,0.2); }
         .theme-3 .bounty-widget::before { background: linear-gradient(90deg, #ff00ff, #00ffff); box-shadow: 0 0 15px #00ffff; height: 2px; }
         .theme-3 .header { border-bottom: 1px solid #ff00ff; }
         .theme-3 .header__title { font-style: italic; color: #00ffff; text-shadow: 0 0 5px #00ffff; }
         .theme-3 .hit-row { background: linear-gradient(90deg, rgba(255,0,255,0.2) 0%, transparent 100%); border-left: 3px solid #00ffff; border-radius: 0; }
         .theme-3 .hit-row__dmg { color: #ff00ff; text-shadow: 0 0 8px #ff00ff; font-style: italic; }
-        
-        /* ── Theme 4: Military/WoT ── */
+
         .theme-4 .bounty-widget { background: url('https://www.transparenttextures.com/patterns/black-scales.png'), #1e1e19; border: 2px solid #4a4a3a; border-radius: 4px; }
         .theme-4 .bounty-widget::before { display: none; }
         .theme-4 .header { background: #141410; border-bottom: 2px solid #2a2a20; }
@@ -243,15 +309,14 @@
         .theme-4 .hit-row__dmg { color: #df4444; font-family: Courier, monospace; font-weight: bold; }
         .theme-4 .hunter-row__name { color: #e5e0c8; }
 
-        /* ── Theme 5: Gold & Prestige ── */
-        .theme-5 .bounty-widget { background: linear-gradient(135deg, #1a1510 0%, #0f0a05 100%); border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 8px; box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1); }
+        .theme-5 .bounty-widget { background: linear-gradient(135deg, #1a1510 0%, #0f0a05 100%); border: 1px solid rgba(255,215,0,0.4); border-radius: 8px; }
         .theme-5 .bounty-widget::before { background: linear-gradient(90deg, transparent, #FFD700, transparent); box-shadow: 0 0 10px #FFD700; height: 1px; }
-        .theme-5 .header { background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%); border-bottom: 1px solid rgba(255, 215, 0, 0.2); }
-        .theme-5 .header__title { color: #FFD700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .theme-5 .hit-row { background: linear-gradient(90deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%); border-left: 2px solid #FFD700; }
-        .theme-5 .hit-row__dmg { color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        .theme-5 .header { background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, transparent 100%); border-bottom: 1px solid rgba(255,215,0,0.2); }
+        .theme-5 .header__title { color: #FFD700; }
+        .theme-5 .hit-row { background: linear-gradient(90deg, rgba(255,215,0,0.08) 0%, transparent 100%); border-left: 2px solid #FFD700; }
+        .theme-5 .hit-row__dmg { color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
 
-        /* ── Анимации ── */
+        /* ── ANIMATIONS ── */
         @keyframes pulse {
             0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255,59,48,0.5)); }
             50% { transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(255,59,48,1)); }
@@ -267,22 +332,44 @@
         }
         @keyframes goldPop {
             0% { transform: scale(1); }
-            30% { transform: scale(1.3); color: #FFD700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+            30% { transform: scale(1.3); color: #FFD700; }
             100% { transform: scale(1); }
         }
-        @keyframes newHitGlow {
-            0% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
-            30% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
-            100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+        @keyframes annIn {
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
         }
-        .gold-pop {
-            animation: goldPop 0.5s ease;
+        @keyframes cheeseFloat {
+            from { transform: translateY(0) rotate(-5deg); }
+            to { transform: translateY(-12px) rotate(5deg); }
         }
+        @keyframes annCountDown {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        .gold-pop { animation: goldPop 0.5s ease; }
     </style>
 </head>
 <body class="theme-1">
+
+    <!-- ANNOUNCEMENT OVERLAY — кто попался в бою -->
+    <div id="announcement" class="hide">
+        <div class="ann-cheese">🧀</div>
+        <div class="ann-badge">ПОПАЛ В БОЙ СО СТРИМЕРОМ</div>
+        <div class="ann-name" id="annName">PlayerName</div>
+        <div class="ann-tank" id="annTank">Танк</div>
+        <div class="ann-label">присоединился к охоте!</div>
+        <div class="ann-gold">
+            +<span id="annGold">0</span>&nbsp;
+            <img src="assets/currency/goldIcon.png" onerror="this.outerHTML='💰'" alt="">
+        </div>
+        <div class="ann-gold-label">за первый урон по стримеру</div>
+        <div class="ann-progress-wrap">
+            <div class="ann-progress-bar" id="annProgressBar"></div>
+        </div>
+    </div>
+
     <div class="bounty-widget" id="widget">
-        <!-- Заполняется динамически -->
         <div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">
             Ожидание старта охоты...
         </div>
@@ -299,7 +386,7 @@
             goldIcon: 'assets/currency/goldIcon.png'
         };
 
-        function formatCount(n) { return (n || 0).toLocaleString().replace(/,/g, ' '); }
+        function fmt(n) { return (n || 0).toLocaleString('ru').replace(/,/g, ' '); }
 
         function formatSessionTime(startStr) {
             if (!startStr) return '--:--';
@@ -316,20 +403,45 @@
             } catch(e) { return '--:--'; }
         }
 
+        // ── Announcement Logic ──
+        let seenPlayers = new Set();
+        let annTimer = null;
+        let annCountTimer = null;
+
+        function showAnnouncement(name, tank, gold) {
+            const el = document.getElementById('announcement');
+            document.getElementById('annName').textContent = name;
+            document.getElementById('annTank').textContent = tank && tank !== 'Unknown' ? tank : '🪖 Танк';
+            document.getElementById('annGold').textContent = fmt(gold);
+
+            // Reset progress bar
+            const bar = document.getElementById('annProgressBar');
+            bar.style.animation = 'none';
+            bar.offsetHeight; // force reflow
+            bar.style.animation = 'annCountDown 10s linear forwards';
+
+            el.classList.remove('hide');
+            clearTimeout(annTimer);
+            clearInterval(annCountTimer);
+
+            annTimer = setTimeout(() => {
+                el.classList.add('hide');
+            }, 10000);
+        }
+
+        // ── State ──
         let lastData = null;
-        let knownHitsCount = 0;
         let lastTotalGold = 0;
+        let knownHitsCount = 0;
 
         function renderWidget(data, isNewHit) {
             const widget = document.getElementById('widget');
-            
-            // Если статус остановлен
+
             if (data.status === 'stopped') {
                 widget.innerHTML = `<div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">Охота на стримера завершена.</div>`;
                 return;
             }
 
-            // Если мало данных
             if (!data || Object.keys(data.attackers || {}).length === 0) {
                 const pcount = data.participants_count || 0;
                 widget.innerHTML = `
@@ -353,178 +465,167 @@
                     <div class="header__icon">🎯</div>
                     <div class="header__title">ОХОТА: ${pcount} уч.</div>
                     <div class="header__total ${goldPopClass}">
-                        ${formatCount(totalGold)} 
+                        ${fmt(totalGold)}&nbsp;
                         <img src="${CONFIG.goldIcon}" onerror="this.outerHTML='<span style=\\'font-size:14px\\'>💰</span>'" alt="">
                     </div>
                 </div>
                 <div class="session-bar">
                     <span>⏱ ${formatSessionTime(data.session_start)}</span>
-                    <span>Урон: <span class="session-bar__time">${formatCount(data.total_damage_received || 0)}</span></span>
-                </div>
-            `;
+                    <span>Урон: <span class="session-bar__time">${fmt(data.total_damage_received || 0)}</span></span>
+                </div>`;
 
-            // ── Последние попадания ──
+            // ── Recent Hits ──
             if (data.recent_hits && data.recent_hits.length > 0) {
                 html += '<div class="recent-hits">';
-                // Показываем последние 3
-                const hitsToShow = data.recent_hits.slice(0, 3);
-                hitsToShow.forEach((hit, i) => {
+                data.recent_hits.slice(0, 3).forEach((hit, i) => {
                     const isNew = isNewHit && i === 0;
                     html += `
-                        <div class="hit-row ${isNew ? 'hit-row--new' : ''}" ${isNew ? 'style="animation: slideInLeft 0.4s ease-out, newHitGlow 1.5s ease"' : ''}>
+                        <div class="hit-row ${isNew ? 'hit-row--new' : ''}" ${isNew ? 'style="animation: slideInLeft 0.4s ease-out"' : ''}>
                             <div class="hit-row__info">
                                 <div class="hit-row__name">${hit.name}</div>
-                                <div class="hit-row__tank">${hit.tank || ''}</div>
+                                ${hit.tank && hit.tank !== 'Unknown' ? `<div class="hit-row__tank">🪖 ${hit.tank}</div>` : ''}
                             </div>
-                            <span class="hit-row__dmg">💥 ${hit.damage}</span>
+                            <span class="hit-row__dmg">💥 ${fmt(hit.damage)}</span>
                             <span class="hit-row__gold">
-                                +${hit.gold} 
+                                +${fmt(hit.gold)}&nbsp;
                                 <img src="${CONFIG.goldIcon}" onerror="this.outerHTML='<span style=\\'font-size:12px\\'>💰</span>'" alt="">
                             </span>
-                        </div>
-                    `;
+                        </div>`;
                 });
                 html += '</div>';
             }
 
-            // ── Топ Охотников ──
+            // ── Top Hunters ──
             if (data.attackers && Object.keys(data.attackers).length > 0) {
-                html += '<div class="top-hunters">';
-                html += '<div class="top-hunters__title">Топ Охотников</div>';
-                
-                // Сортируем по урону
-                const sortedAttackers = Object.entries(data.attackers)
+                html += '<div class="top-hunters"><div class="top-hunters__title">Топ Охотников</div>';
+                const sorted = Object.entries(data.attackers)
                     .sort((a, b) => {
                         const da = typeof a[1] === 'object' ? a[1].damage : a[1];
                         const db = typeof b[1] === 'object' ? b[1].damage : b[1];
                         return db - da;
-                    })
-                    .slice(0, 5);
-                
+                    }).slice(0, 5);
                 const maxDmg = (() => {
-                    const first = sortedAttackers[0];
-                    return first ? (typeof first[1] === 'object' ? first[1].damage : first[1]) : 1;
+                    const f = sorted[0];
+                    return f ? (typeof f[1] === 'object' ? f[1].damage : f[1]) : 1;
                 })();
-
                 let rank = 1;
-                for (const [name, info] of sortedAttackers) {
+                for (const [name, info] of sorted) {
                     const dmg = typeof info === 'object' ? info.damage : info;
-                    const tank = typeof info === 'object' ? info.tank : '';
-                    const barWidth = Math.round((dmg / maxDmg) * 100);
+                    const tank = typeof info === 'object' ? (info.tank && info.tank !== 'Unknown' ? info.tank : '') : '';
                     html += `
-                        <div class="hunter-row" style="position: relative;">
+                        <div class="hunter-row" style="position:relative;">
                             <span class="hunter-row__rank">${rank}</span>
                             <div class="hunter-row__info">
                                 <div class="hunter-row__name">${name}</div>
-                                ${tank ? `<div class="hunter-row__tank">${tank}</div>` : ''}
+                                ${tank ? `<div class="hunter-row__tank">🪖 ${tank}</div>` : ''}
                             </div>
-                            <span class="hunter-row__total">${formatCount(dmg)}</span>
-                            <div class="hunter-row__bar" style="width: ${barWidth}%;"></div>
-                        </div>
-                    `;
+                            <span class="hunter-row__total">${fmt(dmg)}</span>
+                        </div>`;
                     rank++;
                 }
                 html += '</div>';
             }
 
             widget.innerHTML = html;
+
+            // ── Check new players & show announcement ──
+            const newPlayers = Object.keys(data.attackers).filter(name => !seenPlayers.has(name));
+            Object.keys(data.attackers).forEach(n => seenPlayers.add(n));
+            if (newPlayers.length > 0) {
+                const name = newPlayers[0];
+                const info = data.attackers[name];
+                const gold = typeof info === 'object' ? info.damage : info;
+                const tank = typeof info === 'object' ? info.tank : '';
+                showAnnouncement(name, tank, gold);
+            }
         }
 
+        // ── Data Fetching ──
         async function loadData() {
             try {
                 const resp = await fetch(CONFIG.jsonUrl + '?t=' + Date.now());
                 if (!resp.ok) return;
                 const data = await resp.json();
-                
                 const currentTotalGold = data.total_gold_given || data.total_damage_received || 0;
                 const isNewHit = lastData && currentTotalGold > lastTotalGold;
-
-                // Чтобы не перерисовывать зря, проверяем изменилось ли кол-во хитов или общий урон
-                if (!lastData || 
+                if (!lastData ||
                     data.total_damage_received !== lastData.total_damage_received ||
                     (data.recent_hits && data.recent_hits.length !== knownHitsCount)) {
-                    
                     lastTotalGold = currentTotalGold;
                     lastData = data;
                     knownHitsCount = data.recent_hits ? data.recent_hits.length : 0;
                     renderWidget(data, isNewHit);
                 }
-            } catch (e) {}
+            } catch(e) {}
         }
 
-        // ============================================
-        // DEMO MODE — Живая симуляция
-        // ============================================
+        // ── DEMO MODE ──
         function loadDemoData() {
-            const tanks = ['Об. 430У', 'FV4005', 'ИС-7', 'EBR 105', 'Grille 15', 'Leopard 1', 'T57 Heavy', 'Об. 705А', 'Kranvagn'];
+            const tanks = ['Об. 430У', 'FV4005', 'ИС-7', 'EBR 105', 'Grille 15', 'Leopard 1', 'T57 Heavy', 'Об. 705А'];
             const names = ['Jove_Hater_99', 'Korben_Fan', 'SniperPro_2026', 'Vasya_Tankist', 'Nagibator228', 'ProArty_2025'];
-            
+
             const demo = {
+                status: 'active',
                 session_start: new Date(Date.now() - 35 * 60000).toISOString(),
-                total_damage_received: 9450,
-                total_gold_given: 9450,
+                total_damage_received: 6399,
+                total_gold_given: 6399,
                 gold_rate: 1,
                 attackers: {
-                    'Jove_Hater_99': { damage: 3450, tank: 'Об. 430У' },
-                    'Korben_Fan': { damage: 2100, tank: 'FV4005' },
-                    'SniperPro_2026': { damage: 1500, tank: 'ИС-7' },
-                    'Vasya_Tankist': { damage: 1200, tank: 'EBR 105' },
-                    'Nagibator228': { damage: 1200, tank: 'Grille 15' }
+                    'Vasya_Tankist': { damage: 2100, tank: 'EBR 105' },
+                    'SniperPro_2026': { damage: 1800, tank: 'ИС-7' },
+                    'Jove_Hater_99': { damage: 1500, tank: 'Об. 430У' },
+                    'Korben_Fan': { damage: 1000, tank: 'FV4005' },
                 },
                 recent_hits: [
-                    { name: 'Vasya_Tankist', tank: 'EBR 105', damage: 450, gold: 450, time: new Date().toISOString() },
-                    { name: 'Jove_Hater_99', tank: 'Об. 430У', damage: 750, gold: 750, time: new Date().toISOString() },
-                    { name: 'Nagibator228', tank: 'Grille 15', damage: 320, gold: 320, time: new Date().toISOString() }
+                    { name: 'Vasya_Tankist', tank: 'EBR 105', damage: 430, gold: 430 },
+                    { name: 'SniperPro_2026', tank: 'ИС-7', damage: 750, gold: 750 },
+                    { name: 'Jove_Hater_99', tank: 'Об. 430У', damage: 320, gold: 320 }
                 ],
-                last_update: new Date().toISOString()
+                participants_count: 4
             };
-            
+
+            // Pre-populate seenPlayers so first render doesn't trigger announcements
+            Object.keys(demo.attackers).forEach(n => seenPlayers.add(n));
             renderWidget(demo, false);
 
-            // Живая симуляция новых попаданий каждые 3-6 секунд
+            // Simulate new players hitting
             function simulateHit() {
                 const name = names[Math.floor(Math.random() * names.length)];
                 const tank = tanks[Math.floor(Math.random() * tanks.length)];
                 const dmg = Math.floor(Math.random() * 600) + 150;
-                const gold = dmg;
 
-                // Обновляем attackers
                 if (!demo.attackers[name]) {
                     demo.attackers[name] = { damage: 0, tank: tank };
                 }
-                if (typeof demo.attackers[name] === 'object') {
-                    demo.attackers[name].damage += dmg;
-                } else {
-                    demo.attackers[name] += dmg;
-                }
-
+                demo.attackers[name].damage += dmg;
                 demo.total_damage_received += dmg;
                 demo.total_gold_given += dmg;
-
-                // Добавляем в recent_hits
-                demo.recent_hits.unshift({
-                    name: name,
-                    tank: tank,
-                    damage: dmg,
-                    gold: gold,
-                    time: new Date().toISOString()
-                });
+                demo.recent_hits.unshift({ name, tank, damage: dmg, gold: dmg });
                 demo.recent_hits = demo.recent_hits.slice(0, 5);
-                demo.last_update = new Date().toISOString();
 
                 renderWidget(demo, true);
-                
-                // Следующий хит через 3-6 секунд
-                const nextDelay = 3000 + Math.random() * 3000;
-                setTimeout(simulateHit, nextDelay);
+                setTimeout(simulateHit, 3000 + Math.random() * 4000);
             }
 
-            setTimeout(simulateHit, 3000);
-            
-            // Обновляем таймер каждую секунду
+            // Announce a "new" player after 2 seconds
+            setTimeout(() => {
+                const newName = 'ProArty_2025';
+                const newTank = 'Grille 15';
+                const newDmg = 287;
+                demo.attackers[newName] = { damage: newDmg, tank: newTank };
+                demo.total_damage_received += newDmg;
+                demo.total_gold_given += newDmg;
+                demo.recent_hits.unshift({ name: newName, tank: newTank, damage: newDmg, gold: newDmg });
+                demo.recent_hits = demo.recent_hits.slice(0, 5);
+                renderWidget(demo, true); // triggers announcement since ProArty_2025 not in seenPlayers
+                setTimeout(simulateHit, 4000);
+            }, 2000);
+
+            // Timer refresh
             setInterval(() => renderWidget(demo, false), 15000);
         }
 
+        // ── INIT ──
         const params = new URLSearchParams(window.location.search);
         if (params.get('demo') === '1' || params.get('demo') === 'true') {
             loadDemoData();
