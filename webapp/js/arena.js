@@ -75,6 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (globalTabBtn) {
             setTimeout(() => switchTab('global', globalTabBtn), 100);
         }
+    } else if (tab === 'bounty') {
+        const bountyTabBtn = Array.from(document.querySelectorAll('.arena-tab')).find(b => b.textContent.includes('Охота'));
+        if (bountyTabBtn) {
+            setTimeout(() => switchTab('bounty', bountyTabBtn), 100);
+        }
     }
 });
 

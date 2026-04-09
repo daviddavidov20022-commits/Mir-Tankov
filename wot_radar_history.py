@@ -141,6 +141,88 @@ class MatchPopup(ctk.CTkToplevel):
         messagebox.showinfo("Успех", "Комментарий сохранён!", parent=self)
 
 
+class BountyPopup(ctk.CTkToplevel):
+    def __init__(self, master):
+        super().__init__(master)
+        self.title("🎯 Управление: Охота на стримера")
+        self.geometry("400x350")
+        self.configure(fg_color=BG)
+        self.attributes('-topmost', 1)
+        self.json_path = os.path.join(APP, "site", "obs", "bounty_session.json")
+        
+        lbl = ctk.CTkLabel(self, text="УПРАВЛЕНИЕ ОХОТОЙ", font=("Segoe UI", 16, "bold"), text_color=GOLD)
+        lbl.pack(pady=(20, 10))
+
+        self.status_lbl = ctk.CTkLabel(self, text="Загрузка...", font=("Segoe UI", 12))
+        self.status_lbl.pack(pady=5)
+        
+        btn_frame = ctk.CTkFrame(self, fg_color="transparent")
+        btn_frame.pack(pady=20)
+        
+        self.btn_start = ctk.CTkButton(btn_frame, text="▶ СТАРТ / ПРОДОЛЖИТЬ", fg_color=GREEN, hover_color="#16a34a", text_color=BG, font=("Segoe UI", 12, "bold"), command=self._start)
+        self.btn_start.pack(fill="x", pady=5)
+        
+        self.btn_stop = ctk.CTkButton(btn_frame, text="⏹ ОСТАНОВИТЬ", fg_color=RED, hover_color="#b91c1c", text_color=WHITE, font=("Segoe UI", 12, "bold"), command=self._stop)
+        self.btn_stop.pack(fill="x", pady=5)
+        
+        self.btn_reset = ctk.CTkButton(btn_frame, text="🔄 СБРОСИТЬ (Новая охота)", fg_color=CARD, border_width=1, border_color=GOLD, text_color=GOLD, font=("Segoe UI", 12, "bold"), command=self._reset)
+        self.btn_reset.pack(fill="x", pady=20)
+
+        self._refresh_status()
+
+    def _read_data(self):
+        try:
+            if os.path.exists(self.json_path):
+                with open(self.json_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except: pass
+        return {'status': 'stopped', 'total_damage_received': 0}
+
+    def _write_data(self, data):
+        data['last_update'] = str(time.strftime("%Y-%m-%d %H:%M:%S"))
+        try:
+            with open(self.json_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            messagebox.showerror("Ошибка", str(e))
+
+    def _refresh_status(self):
+        data = self._read_data()
+        st = data.get('status', 'stopped')
+        dmg = data.get('total_damage_received', 0)
+        if st == 'active':
+            self.status_lbl.configure(text=f"Статус: АКТИВНА\nНанесено урона: {dmg}", text_color=GREEN)
+            self.btn_start.configure(state="disabled")
+            self.btn_stop.configure(state="normal")
+        else:
+            self.status_lbl.configure(text=f"Статус: ОСТАНОВЛЕНА\nИтоговый урон: {dmg}", text_color=RED)
+            self.btn_start.configure(state="normal")
+            self.btn_stop.configure(state="disabled")
+
+    def _start(self):
+        d = self._read_data()
+        d['status'] = 'active'
+        self._write_data(d)
+        self._refresh_status()
+
+    def _stop(self):
+        d = self._read_data()
+        d['status'] = 'stopped'
+        self._write_data(d)
+        self._refresh_status()
+
+    def _reset(self):
+        if messagebox.askyesno("Подтверждение", "Точно сбросить всю статистику охоты?"):
+            d = {
+                'status': 'stopped',
+                'session_start': str(time.strftime("%Y-%m-%d %H:%M:%S")),
+                'total_damage_received': 0, 'total_gold_given': 0, 'gold_rate': 1,
+                'attackers': {}, 'recent_hits': [], 'last_update': ''
+            }
+            self._write_data(d)
+            self._refresh_status()
+
+
 class RadarApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -175,6 +257,10 @@ class RadarApp(ctk.CTk):
         ctk.CTkButton(bf, text="🔑 API ключ Лесты", command=self._set_api_key, fg_color=CARD, border_width=1, border_color="#444", text_color=WHITE, height=32).pack(fill="x", pady=2)
         ctk.CTkButton(bf, text="📊 Экспорт CSV", command=self._export_csv, fg_color=CARD, border_width=1, border_color="#444", text_color=WHITE, height=32).pack(fill="x", pady=2)
         ctk.CTkButton(bf, text="🗑 Сброс базы", command=self._clear, fg_color="transparent", border_width=1, border_color="#333", text_color=GRAY, height=28).pack(fill="x", pady=10)
+        
+        # BOUNTY TRACKER BUTTON
+        ctk.CTkButton(bf, text="🎯 Охота: УПРАВЛЕНИЕ", command=self._open_bounty_popup, fg_color=CARD, border_width=1, border_color="#f59e0b", text_color="#f59e0b", height=32).pack(fill="x", pady=5)
+        
         self.stat_lbl = ctk.CTkLabel(sb, text="", font=("Segoe UI",12), text_color=WHITE, justify="left")
         self.stat_lbl.grid(row=5, column=0, padx=20, pady=0, sticky="w")
         self.log_box = ctk.CTkTextbox(sb, height=180, font=("Consolas",9), fg_color="#080b10", text_color="#5e6d82")
@@ -372,7 +458,9 @@ class RadarApp(ctk.CTk):
             ctk.CTkLabel(row, text=f"☠ {r['total_kills']}", text_color=RED).pack(side="right", padx=8)
             if r["count"] > 1: ctk.CTkLabel(row, text=f"×{r['count']}", font=("Segoe UI",11,"bold"), text_color=ORANGE).pack(side="right", padx=5)
 
-    # ──── UTILITIES ────
+    def _open_bounty_popup(self):
+        BountyPopup(self)
+
     def _empty(self, t):
         ctk.CTkLabel(self.scroll, text=t, font=("Segoe UI",14), text_color=GRAY, justify="center").pack(pady=80)
 

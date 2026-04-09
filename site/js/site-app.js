@@ -16,6 +16,12 @@ class SiteAuth {
         this.isLoggedIn = !!this.telegramId;
     }
 
+    get isAdmin() {
+        const ADMIN_ID = 6507474079;
+        const tgId = parseInt(this.getTelegramId());
+        return tgId === ADMIN_ID || localStorage.getItem('admin_mode') === 'true';
+    }
+
     login(telegramId, username) {
         this.telegramId = String(telegramId);
         this.username = username || 'Танкист';
