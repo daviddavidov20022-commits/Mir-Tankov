@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Конструктор виджета — Голосование</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --gold: #C8AA6E; --gold2: #E8D5A3; --cheese: #FFC107;
+            --bg: #080c12; --card: #0d1420; --card2: #131b28; --card3: #1a2332;
+            --border: rgba(200,170,110,0.10); --border2: rgba(200,170,110,0.22);
+            --text: #E8E6E3; --text2: #8B95A5; --text3: #4A5568;
+            --purple: #A78BFA; --blue: #60A5FA;
+        }
+        html, body {
+            min-height: 100vh;
+            background: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif;
+            /* Allow the full page to scroll */
+            overflow-y: auto;
+        }
+
+        .editor-layout {
+            display: flex; gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto;
+            align-items: flex-start;
+        }
+
+        /* На мобильном — вертикальный стек */
+        @media (max-width: 700px) {
+            .editor-layout { flex-direction: column; padding: 12px; gap: 12px; }
+            .preview-area { width: 100%; }
+        }
+
+        /* ═══ LEFT: CONTROLS ═══ */
+        .controls {
+            width: 360px; flex-shrink: 0;
+            display: flex; flex-direction: column; gap: 12px;
+            /* НЕ sticky — пусть страница скроллится целиком */
+        }
+
+        @media (max-width: 700px) {
+            .controls { width: 100%; }
+        }
+
+        .ctrl-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(168,85,247,0.03));
+            border: 1px solid rgba(168,85,247,0.15);
+            border-radius: 16px;
+        }
+        .ctrl-header__icon { font-size: 1.8rem; }
+        .ctrl-header__title { font-family: 'Russo One'; font-size: 1rem; color: var(--purple); }
+        .ctrl-header__sub { font-size: 0.6rem; color: var(--text3); }
+
+        .ctrl-group {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 14px; overflow: visible;
+        }
+        .ctrl-group__title {
+            font-family: 'Russo One'; font-size: 0.7rem; color: var(--gold);
+            margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+        }
+
+        .ctrl-row {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 8px; font-size: 0.72rem; color: var(--text2);
+        }
+        .ctrl-row:last-child { margin-bottom: 0; }
+        .ctrl-row label { flex: 1; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+        .ctrl-input {
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 8px; padding: 6px 8px; color: var(--text); font-size: 0.72rem;
+            font-family: 'Inter', sans-serif; outline: none; width: 70px; text-align: center;
+        }
+        .ctrl-input:focus { border-color: var(--border2); }
+        .ctrl-input--wide { width: 100%; text-align: left; }
+
+        .ctrl-select {
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 8px; padding: 6px 8px; color: var(--text); font-size: 0.72rem;
+            font-family: 'Inter', sans-serif; outline: none; flex: 1;
+        }
+
+        .ctrl-color {
+            width: 32px; height: 32px; border: 2px solid var(--border2);
+            border-radius: 8px; cursor: pointer; padding: 0;
+            background: transparent;
+        }
+
+        .ctrl-range { width: 100%; accent-color: var(--purple); }
+        .ctrl-range-val { font-size: 0.65rem; color: var(--text3); min-width: 35px; text-align: right; }
+
+        .ctrl-checkbox { width: 14px; height: 14px; accent-color: var(--purple); cursor: pointer; }
+
+        .ctrl-btn {
+            width: 100%; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
+            font-family: 'Russo One'; font-size: 0.8rem; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .ctrl-btn--primary {
+            background: linear-gradient(135deg, var(--purple), #9333ea);
+            color: white;
+        }
+        .ctrl-btn--primary:hover { transform: scale(1.02); }
+        .ctrl-btn--secondary {
+            background: rgba(200,170,110,0.06); border: 1px solid var(--border2);
+            color: var(--gold); font-size: 0.72rem;
+        }
+        .ctrl-btn--secondary:hover { background: rgba(200,170,110,0.12); }
+
+        .ctrl-presets {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+        }
+        .ctrl-preset {
+            padding: 8px; border-radius: 10px; border: 1px solid var(--border);
+            background: rgba(0,0,0,0.2); cursor: pointer; text-align: center;
+            font-size: 0.6rem; color: var(--text2); transition: all 0.2s;
+        }
+        .ctrl-preset:hover { border-color: var(--purple); background: rgba(168,85,247,0.06); }
+        .ctrl-preset.active { border-color: var(--purple); background: rgba(168,85,247,0.12); color: var(--purple); }
+        .ctrl-preset__icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+
+        /* ═══ RIGHT: PREVIEW ═══ */
+        .preview-area {
+            flex: 1; display: flex; flex-direction: column;
+        }
+        .preview-label {
+            font-family: 'Russo One'; font-size: 0.7rem; color: var(--text3);
+            margin-bottom: 10px; letter-spacing: 1px;
+        }
+        .preview-bg {
+            flex: 1; border-radius: 16px; position: relative;
+            display: flex; align-items: flex-start; justify-content: center;
+            padding: 30px; overflow: hidden;
+        }
+        .preview-bg--dark { background: #1a1a2e; }
+        .preview-bg--green { background: #00b140; }
+        .preview-bg--game { background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="%231a1a2e"/><circle cx="60" cy="80" r="40" fill="%23111122" opacity="0.5"/><circle cx="150" cy="120" r="50" fill="%23112" opacity="0.4"/></svg>') center/cover; }
+
+        .preview-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Widget in preview */
+        #widget-preview { position: relative; z-index: 1; transition: all 0.3s; }
+
+        /* ═══ OBS URL BAR ═══ */
+        .obs-url-bar {
+            margin-top: 12px; padding: 12px 14px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; display: flex; align-items: center; gap: 8px;
+        }
+        .obs-url-bar input {
+            flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+            border-radius: 8px; padding: 8px 10px; color: var(--purple);
+            font-size: 0.6rem; font-family: monospace; outline: none;
+        }
+        .obs-url-bar button {
+            padding: 8px 14px; border-radius: 8px; border: none; cursor: pointer;
+            background: rgba(168,85,247,0.12); color: var(--purple);
+            font-size: 0.65rem; font-weight: 700; font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .obs-url-bar button:hover { background: rgba(168,85,247,0.2); }
+
+        /* ═══ TOAST ═══ */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--card3); border: 1px solid var(--border2); border-radius: 14px;
+            padding: 10px 18px; display: flex; align-items: center; gap: 8px;
+            font-size: 0.78rem; z-index: 999; opacity: 0; pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 768px) {
+            .editor-layout { flex-direction: column; padding: 12px; }
+            .controls { width: 100%; }
+        }
+    </style>
+<script src="js/auth-interceptor.js?v=52"></script>
+</head>
+<body>
+
+<div class="editor-layout">
+    <!-- LEFT: CONTROLS -->
+    <div class="controls">
+        <div class="ctrl-header">
+            <span class="ctrl-header__icon">🎨</span>
+            <div>
+                <div class="ctrl-header__title">КОНСТРУКТОР</div>
+                <div class="ctrl-header__sub">Настройка OBS виджета</div>
+            </div>
+        </div>
+
+        <!-- THEME PRESETS -->
+        <div class="ctrl-group">
+            <div class="ctrl-group__title">🎭 Тема</div>
+            <div class="ctrl-presets" id="presets">
+                <div class="ctrl-preset active" data-preset="purple" onclick="applyPreset('purple')">
+                    <span class="ctrl-preset__icon">💜</span> Фиолет
+                </div>
+                <div class="ctrl-preset" data-preset="gold" onclick="applyPreset('gold')">
+                    <span class="ctrl-preset__icon">🏆</span> Золото
+                </div>
+                <div class="ctrl-preset" data-preset="neon" onclick="applyPreset('neon')">
+                    <span class="ctrl-preset__icon">💚</span> Неон
+                </div>
+                <div class="ctrl-preset" data-preset="fire" onclick="applyPreset('fire')">
+                    <span class="ctrl-preset__icon">🔥</span> Огонь
+                </div>
+                <div class="ctrl-preset" data-preset="ice" onclick="applyPreset('ice')">
+                    <span class="ctrl-preset__icon">❄️</span> Лёд
+                </div>
+                <div class="ctrl-preset" data-preset="minimal" onclick="applyPreset('minimal')">
+                    <span class="ctrl-preset__icon">⬜</span> Минимал
+                </div>
+            </div>
+        </div>
+
+        <!-- COLORS -->
+        <div class="ctrl-group">
+            <div class="ctrl-group__title">🎨 Цвета</div>
+            <div class="ctrl-row">
+                <label>Основной цвет</label>
+                <input type="color" class="ctrl-color" id="clrAccent" value="#a855f7" onchange="updatePreview()">
+            </div>
+            <div class="ctrl-row">
+                <label>Фон виджета</label>
+                <input type="color" class="ctrl-color" id="clrBg" value="#0f141e" onchange="updatePreview()">
+            </div>
+            <div class="ctrl-row">
+                <label>Текст</label>
+                <input type="color" class="ctrl-color" id="clrText" value="#e8e6e3" onchange="updatePreview()">
+            </div>
+            <div class="ctrl-row">
+                <label>Рамка</label>
+                <input type="color" class="ctrl-color" id="clrBorder" value="#a855f7" onchange="updatePreview()">
+            </div>
+        </div>
+
+        <!-- LAYOUT -->
+        <div class="ctrl-group">
+            <div class="ctrl-group__title">📐 Размеры</div>
+            <div class="ctrl-row">
+                <label>Ширина (px)</label>
+                <input type="number" class="ctrl-input" id="cfgWidth" value="420" min="200" max="800" onchange="updatePreview()">
+            </div>
+            <div class="ctrl-row">
+                <label>Скругление (px)</label>
+                <input type="range" class="ctrl-range" id="cfgRadius" value="18" min="0" max="40" oninput="updatePreview()">
+                <span class="ctrl-range-val" id="cfgRadiusVal">18px</span>
+            </div>
+            <div class="ctrl-row">
+                <label>Прозрачность фона</label>
+                <input type="range" class="ctrl-range" id="cfgOpacity" value="95" min="0" max="100" oninput="updatePreview()">
+                <span class="ctrl-range-val" id="cfgOpacityVal">95%</span>
+            </div>
+            <div class="ctrl-row">
+                <label>Толщина рамки</label>
+                <input type="range" class="ctrl-range" id="cfgBorderWidth" value="1" min="0" max="4" oninput="updatePreview()">
+                <span class="ctrl-range-val" id="cfgBorderWidthVal">1px</span>
+            </div>
+        </div>
+
+        <!-- ELEMENTS -->
+        <div class="ctrl-group">
+            <div class="ctrl-group__title">👁 Видимые элементы</div>
+            <div class="ctrl-row">
+                <label><input type="checkbox" class="ctrl-checkbox" id="showTimer" checked onchange="updatePreview()"> ⏱ Таймер</label>
+            </div>
+            <div class="ctrl-row">
+                <label><input type="checkbox" class="ctrl-checkbox" id="showStats" checked onchange="updatePreview()"> 📊 Статистика</label>
+            </div>
+            <div class="ctrl-row">
+                <label><input type="checkbox" class="ctrl-checkbox" id="showMessages" checked onchange="updatePreview()"> 💬 Текст сообщений</label>
+            </div>
+            <div class="ctrl-row">
+                <label><input type="checkbox" class="ctrl-checkbox" id="showPrize" checked onchange="updatePreview()"> 🎁 Приз</label>
+            </div>
+            <div class="ctrl-row">
+                <label><input type="checkbox" class="ctrl-checkbox" id="showBars" checked onchange="updatePreview()"> 📊 Полосы прогресса</label>
+            </div>
+            <div class="ctrl-row">
+                <label>Макс. записей</label>
+                <input type="number" class="ctrl-input" id="cfgMaxEntries" value="5" min="1" max="20" onchange="updatePreview()">
+            </div>
+        </div>
+
+        <!-- FONT -->
+        <div class="ctrl-group">
+            <div class="ctrl-group__title">🔤 Шрифт</div>
+            <div class="ctrl-row">
+                <label>Размер заголовка</label>
+                <input type="range" class="ctrl-range" id="cfgTitleSize" value="85" min="50" max="150" oninput="updatePreview()">
+                <span class="ctrl-range-val" id="cfgTitleSizeVal">0.85rem</span>
+            </div>
+            <div class="ctrl-row">
+                <label>Размер текста</label>
+                <input type="range" class="ctrl-range" id="cfgTextSize" value="70" min="40" max="120" oninput="updatePreview()">
+                <span class="ctrl-range-val" id="cfgTextSizeVal">0.70rem</span>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <button class="ctrl-btn ctrl-btn--primary" onclick="saveAndCopyUrl()">
+            📋 Сохранить и скопировать OBS URL
+        </button>
+        <button class="ctrl-btn ctrl-btn--secondary" onclick="resetToDefault()">
+            🔄 Сброс по умолчанию
+        </button>
+    </div>
+
+    <!-- RIGHT: PREVIEW -->
+    <div class="preview-area">
+        <div class="preview-label">👁 ПРЕДПРОСМОТР</div>
+        <div class="preview-bg preview-bg--dark" id="previewBg">
+            <div class="preview-grid"></div>
+            <div id="widget-preview"></div>
+        </div>
+
+        <!-- OBS URL -->
+        <div class="obs-url-bar">
+            <input type="text" id="obsUrlField" readonly value="" placeholder="Нажмите 'Сохранить' чтобы сгенерировать URL">
+            <button onclick="copyUrl()">📋 Копировать</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastText"></span></div>
+
+<script>
+// ═══════════════════════════════════════════
+// PRESETS
+// ═══════════════════════════════════════════
+const PRESETS = {
+    purple: { accent: '#a855f7', bg: '#0f141e', text: '#e8e6e3', border: '#a855f7' },
+    gold: { accent: '#C8AA6E', bg: '#0a0e14', text: '#E8E6E3', border: '#C8AA6E' },
+    neon: { accent: '#22c55e', bg: '#0a120a', text: '#d4ffda', border: '#22c55e' },
+    fire: { accent: '#f97316', bg: '#1a0c04', text: '#fde8d0', border: '#ef4444' },
+    ice: { accent: '#38bdf8', bg: '#0a1628', text: '#e0f2fe', border: '#0ea5e9' },
+    minimal: { accent: '#94a3b8', bg: '#111827', text: '#e2e8f0', border: '#334155' }
+};
+
+function applyPreset(name) {
+    const p = PRESETS[name];
+    if (!p) return;
+    document.getElementById('clrAccent').value = p.accent;
+    document.getElementById('clrBg').value = p.bg;
+    document.getElementById('clrText').value = p.text;
+    document.getElementById('clrBorder').value = p.border;
+
+    document.querySelectorAll('.ctrl-preset').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-preset="${name}"]`)?.classList.add('active');
+
+    updatePreview();
+}
+
+// ═══════════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════════
+const DEMO = {
+    contest: { title: 'Лучший донат вечера', prize: 'Интересный текст', status: 'active', ends_at: new Date(Date.now() + 3600000).toISOString() },
+    entries: [
+        { id: 1, nickname: 'TankMaster', message: 'Шутка дня: Танк зашёл в бар и сказал — мне двойной бронебойный!', votes_count: 42, cheese_spent: 100 },
+        { id: 2, nickname: 'CheeseLover', message: 'Стих: Розы красные, фиалки синие, мой танк горит, а я на мине', votes_count: 38, cheese_spent: 200 },
+        { id: 3, nickname: 'ProPlayer', message: 'Когда купил премиум танк за 50$, но навыки не купишь 😅', votes_count: 25, cheese_spent: 100 },
+        { id: 4, nickname: 'Newbie2026', message: 'Мой первый бой — заехал на базу врага случайно и выиграл', votes_count: 19, cheese_spent: 100 },
+        { id: 5, nickname: 'StreamFan', message: 'Смотрю стримы чаще чем играю сам 🎮', votes_count: 12, cheese_spent: 100 }
+    ]
+};
+
+// ═══════════════════════════════════════════
+// GET CONFIG
+// ═══════════════════════════════════════════
+function getConfig() {
+    return {
+        accent: document.getElementById('clrAccent').value,
+        bg: document.getElementById('clrBg').value,
+        text: document.getElementById('clrText').value,
+        border: document.getElementById('clrBorder').value,
+        width: parseInt(document.getElementById('cfgWidth').value),
+        radius: parseInt(document.getElementById('cfgRadius').value),
+        opacity: parseInt(document.getElementById('cfgOpacity').value),
+        borderWidth: parseInt(document.getElementById('cfgBorderWidth').value),
+        showTimer: document.getElementById('showTimer').checked,
+        showStats: document.getElementById('showStats').checked,
+        showMessages: document.getElementById('showMessages').checked,
+        showPrize: document.getElementById('showPrize').checked,
+        showBars: document.getElementById('showBars').checked,
+        maxEntries: parseInt(document.getElementById('cfgMaxEntries').value),
+        titleSize: parseInt(document.getElementById('cfgTitleSize').value),
+        textSize: parseInt(document.getElementById('cfgTextSize').value),
+    };
+}
+
+// ═══════════════════════════════════════════
+// UPDATE PREVIEW
+// ═══════════════════════════════════════════
+function updatePreview() {
+    const cfg = getConfig();
+
+    // Update range labels
+    document.getElementById('cfgRadiusVal').textContent = cfg.radius + 'px';
+    document.getElementById('cfgOpacityVal').textContent = cfg.opacity + '%';
+    document.getElementById('cfgBorderWidthVal').textContent = cfg.borderWidth + 'px';
+    document.getElementById('cfgTitleSizeVal').textContent = (cfg.titleSize / 100).toFixed(2) + 'rem';
+    document.getElementById('cfgTextSizeVal').textContent = (cfg.textSize / 100).toFixed(2) + 'rem';
+
+    const opacityHex = Math.round(cfg.opacity * 2.55).toString(16).padStart(2, '0');
+    const accentRgb = hexToRgb(cfg.accent);
+    const borderRgb = hexToRgb(cfg.border);
+    const entries = DEMO.entries.slice(0, cfg.maxEntries);
+    const maxVotes = Math.max(...entries.map(e => e.votes_count), 1);
+
+    let html = `<div style="
+        max-width:${cfg.width}px; width:${cfg.width}px;
+        background:${cfg.bg}${opacityHex};
+        border:${cfg.borderWidth}px solid rgba(${borderRgb},0.25);
+        border-radius:${cfg.radius}px;
+        padding:16px; font-family:'Inter',sans-serif;
+    ">`;
+
+    // Header
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(${accentRgb},0.12);">
+        <div style="font-family:'Russo One',sans-serif;font-size:${cfg.titleSize/100}rem;color:${cfg.accent};display:flex;align-items:center;gap:6px;">🗳️ ${DEMO.contest.title}</div>
+        ${cfg.showPrize && DEMO.contest.prize ? `<div style="font-size:0.6rem;color:#f5d36e;font-weight:700;">🎁 ${DEMO.contest.prize}</div>` : ''}
+    </div>`;
+
+    // Timer
+    if (cfg.showTimer) {
+        html += `<div style="font-family:'Russo One',sans-serif;font-size:0.9rem;color:${cfg.accent};text-align:center;padding:8px;background:rgba(${accentRgb},0.06);border-radius:10px;margin-bottom:12px;letter-spacing:2px;">⏱ 00:45:12</div>`;
+    }
+
+    // Stats
+    if (cfg.showStats) {
+        html += `<div style="display:flex;gap:8px;margin-bottom:12px;">
+            <div style="flex:1;text-align:center;padding:8px;background:rgba(0,0,0,0.3);border-radius:10px;">
+                <div style="font-family:'Russo One',sans-serif;font-size:0.9rem;color:${cfg.text};">${entries.length}</div>
+                <div style="font-size:0.45rem;color:#5A6577;text-transform:uppercase;">участников</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:8px;background:rgba(0,0,0,0.3);border-radius:10px;">
+                <div style="font-family:'Russo One',sans-serif;font-size:0.9rem;color:${cfg.text};">${entries.reduce((s,e) => s + e.votes_count, 0)}</div>
+                <div style="font-size:0.45rem;color:#5A6577;text-transform:uppercase;">голосов</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:8px;background:rgba(0,0,0,0.3);border-radius:10px;">
+                <div style="font-family:'Russo One',sans-serif;font-size:0.9rem;color:${cfg.text};">🧀 ${entries.reduce((s,e) => s + e.cheese_spent, 0)}</div>
+                <div style="font-size:0.45rem;color:#5A6577;text-transform:uppercase;">собрано</div>
+            </div>
+        </div>`;
+    }
+
+    // Entries
+    const rankColors = ['', 'linear-gradient(135deg,#f5d36e,#C8AA6E)', 'linear-gradient(135deg,#94a3b8,#64748b)', 'linear-gradient(135deg,#cd7f32,#a0522d)'];
+    entries.forEach((e, i) => {
+        const rank = i + 1;
+        const pct = Math.round((e.votes_count / maxVotes) * 100);
+        const rankBg = rank <= 3 ? rankColors[rank] : `rgba(${accentRgb},0.15)`;
+        const rankClr = rank <= 3 ? (rank === 3 ? '#fff' : '#0a0e14') : cfg.accent;
+
+        html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;margin-bottom:6px;position:relative;overflow:hidden;background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.03);">`;
+
+        if (cfg.showBars) {
+            html += `<div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:linear-gradient(90deg,rgba(${accentRgb},0.12),rgba(${accentRgb},0.02));border-radius:12px;"></div>`;
+        }
+
+        html += `<div style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;flex-shrink:0;position:relative;background:${rankBg};color:${rankClr};">${rank}</div>`;
+        html += `<div style="flex:1;min-width:0;position:relative;">
+            <div style="font-size:${cfg.textSize/100}rem;font-weight:700;color:${cfg.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.nickname}</div>
+            ${cfg.showMessages ? `<div style="font-size:${cfg.textSize/100*0.78}rem;color:#8a94a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.message.substring(0, 50)}...</div>` : ''}
+        </div>`;
+        html += `<div style="position:relative;text-align:right;">
+            <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:${cfg.accent};">${e.votes_count}</div>
+            <div style="font-size:0.4rem;color:#5A6577;">голосов</div>
+        </div>`;
+        html += `</div>`;
+    });
+
+    html += `</div>`;
+    document.getElementById('widget-preview').innerHTML = html;
+
+    // Update OBS URL
+    generateUrl();
+}
+
+function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r},${g},${b}`;
+}
+
+// ═══════════════════════════════════════════
+// GENERATE OBS URL
+// ═══════════════════════════════════════════
+function generateUrl() {
+    const cfg = getConfig();
+    const base = 'https://daviddavidov20022-commits.github.io/Mir-Tankov/site/dc-widget.html';
+    const params = new URLSearchParams();
+    params.set('contest_id', '1');
+    params.set('accent', cfg.accent.replace('#', ''));
+    params.set('bg', cfg.bg.replace('#', ''));
+    params.set('text', cfg.text.replace('#', ''));
+    params.set('border', cfg.border.replace('#', ''));
+    params.set('w', cfg.width);
+    params.set('r', cfg.radius);
+    params.set('op', cfg.opacity);
+    params.set('bw', cfg.borderWidth);
+    params.set('timer', cfg.showTimer ? 1 : 0);
+    params.set('stats', cfg.showStats ? 1 : 0);
+    params.set('msgs', cfg.showMessages ? 1 : 0);
+    params.set('prize', cfg.showPrize ? 1 : 0);
+    params.set('bars', cfg.showBars ? 1 : 0);
+    params.set('max', cfg.maxEntries);
+    params.set('ts', cfg.titleSize);
+    params.set('fs', cfg.textSize);
+
+    document.getElementById('obsUrlField').value = base + '?' + params.toString();
+}
+
+function copyUrl() {
+    const url = document.getElementById('obsUrlField').value;
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => showToast('📋 OBS URL скопирован!')).catch(() => {});
+}
+
+function saveAndCopyUrl() {
+    const cfg = getConfig();
+    localStorage.setItem('dc_widget_config', JSON.stringify(cfg));
+    generateUrl();
+    copyUrl();
+    showToast('💾 Сохранено и скопировано!');
+}
+
+function resetToDefault() {
+    applyPreset('purple');
+    document.getElementById('cfgWidth').value = 420;
+    document.getElementById('cfgRadius').value = 18;
+    document.getElementById('cfgOpacity').value = 95;
+    document.getElementById('cfgBorderWidth').value = 1;
+    document.getElementById('showTimer').checked = true;
+    document.getElementById('showStats').checked = true;
+    document.getElementById('showMessages').checked = true;
+    document.getElementById('showPrize').checked = true;
+    document.getElementById('showBars').checked = true;
+    document.getElementById('cfgMaxEntries').value = 5;
+    document.getElementById('cfgTitleSize').value = 85;
+    document.getElementById('cfgTextSize').value = 70;
+    updatePreview();
+    showToast('🔄 Сброшено по умолчанию');
+}
+
+function showToast(text) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastText').textContent = text;
+    t.classList.add('show');
+    clearTimeout(window._toastT);
+    window._toastT = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════
+// LOAD SAVED CONFIG
+// ═══════════════════════════════════════════
+function loadSavedConfig() {
+    try {
+        const saved = localStorage.getItem('dc_widget_config');
+        if (!saved) return;
+        const cfg = JSON.parse(saved);
+        if (cfg.accent) document.getElementById('clrAccent').value = cfg.accent;
+        if (cfg.bg) document.getElementById('clrBg').value = cfg.bg;
+        if (cfg.text) document.getElementById('clrText').value = cfg.text;
+        if (cfg.border) document.getElementById('clrBorder').value = cfg.border;
+        if (cfg.width) document.getElementById('cfgWidth').value = cfg.width;
+        if (cfg.radius !== undefined) document.getElementById('cfgRadius').value = cfg.radius;
+        if (cfg.opacity !== undefined) document.getElementById('cfgOpacity').value = cfg.opacity;
+        if (cfg.borderWidth !== undefined) document.getElementById('cfgBorderWidth').value = cfg.borderWidth;
+        if (cfg.showTimer !== undefined) document.getElementById('showTimer').checked = cfg.showTimer;
+        if (cfg.showStats !== undefined) document.getElementById('showStats').checked = cfg.showStats;
+        if (cfg.showMessages !== undefined) document.getElementById('showMessages').checked = cfg.showMessages;
+        if (cfg.showPrize !== undefined) document.getElementById('showPrize').checked = cfg.showPrize;
+        if (cfg.showBars !== undefined) document.getElementById('showBars').checked = cfg.showBars;
+        if (cfg.maxEntries) document.getElementById('cfgMaxEntries').value = cfg.maxEntries;
+        if (cfg.titleSize) document.getElementById('cfgTitleSize').value = cfg.titleSize;
+        if (cfg.textSize) document.getElementById('cfgTextSize').value = cfg.textSize;
+    } catch (e) {}
+}
+
+// Init
+loadSavedConfig();
+updatePreview();
+</script>
+</body>
+</html>

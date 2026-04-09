@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Танковая Викторина — МИР ТАНКОВ</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#0a0e17;--card:#141b2d;--card2:#1a2340;--accent:#C8AA6E;--accent2:#F0C75E;--green:#4CAF50;--red:#f44336;--text:#e0e0e0;--dim:#6c7a93}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:20px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at 20% 50%,rgba(200,170,110,.04) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(100,140,255,.03) 0%,transparent 50%);pointer-events:none}
+.container{max-width:700px;margin:0 auto;padding:12px 16px;position:relative;z-index:1}
+/* Header */
+.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.btn-back{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;transition:.2s}
+.btn-back:hover{background:rgba(200,170,110,.15);border-color:var(--accent)}
+.top-title{font-family:'Russo One',sans-serif;font-size:1.1rem;color:var(--accent)}
+/* Start screen */
+.start-screen{text-align:center;padding:30px 10px}
+.start-screen h1{font-family:'Russo One',sans-serif;font-size:2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.start-screen .sub{color:var(--dim);font-size:.95rem;margin-bottom:24px;line-height:1.5}
+/* Question count selector */
+.q-select{margin-bottom:24px}
+.q-select label{display:block;color:var(--dim);font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.q-options{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.q-opt{background:var(--card);border:2px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 20px;cursor:pointer;transition:.2s;text-align:center;min-width:70px}
+.q-opt:hover{border-color:var(--accent);background:rgba(200,170,110,.08)}
+.q-opt.active{border-color:var(--accent);background:rgba(200,170,110,.12)}
+.q-opt .num{font-size:1.4rem;font-weight:900;color:var(--accent)}
+.q-opt .lbl{font-size:.65rem;color:var(--dim)}
+.btn-start{background:linear-gradient(135deg,var(--accent),#e6c84d);color:#000;border:none;padding:16px 48px;font-size:1.1rem;font-weight:800;border-radius:12px;cursor:pointer;font-family:'Russo One',sans-serif;transition:.3s;box-shadow:0 4px 20px rgba(200,170,110,.3);width:100%;max-width:320px}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(200,170,110,.5)}
+/* Progress */
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.progress-info{font-size:.85rem;color:var(--dim)}
+.progress-info span{color:var(--accent);font-weight:700}
+.score-display{display:flex;gap:10px;font-size:.8rem}
+.score-correct{color:var(--green);font-weight:700}
+.score-wrong{color:var(--red);font-weight:700}
+.progress-bar{width:100%;height:5px;background:rgba(255,255,255,.08);border-radius:3px;margin-bottom:16px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .4s}
+/* Question */
+.question-card{background:var(--card);border:1px solid rgba(200,170,110,.12);border-radius:14px;padding:20px;margin-bottom:14px;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.q-cat{font-size:.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.q-text{font-size:1.1rem;font-weight:700;line-height:1.5}
+.tank-name{color:var(--accent2);font-family:'Russo One',sans-serif}
+.class-tag{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:6px;margin-left:6px;font-weight:700;vertical-align:middle}
+.class-tag.ht{background:rgba(231,76,60,.2);color:#e74c3c}
+.class-tag.mt{background:rgba(241,196,15,.2);color:#f1c40f}
+.class-tag.lt{background:rgba(46,204,113,.2);color:#2ecc71}
+.class-tag.td{background:rgba(52,152,219,.2);color:#3498db}
+/* Answers */
+.answers{display:grid;gap:8px}
+.answer-btn{background:var(--card2);border:2px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;text-align:left;font-size:1rem;color:var(--text);cursor:pointer;transition:.2s;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:10px}
+.answer-btn:hover:not(.disabled){border-color:var(--accent);transform:translateX(3px);background:rgba(200,170,110,.06)}
+.answer-letter{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;background:rgba(255,255,255,.06);flex-shrink:0}
+.answer-btn.correct{border-color:var(--green)!important;background:rgba(76,175,80,.15)!important}
+.answer-btn.correct .answer-letter{background:var(--green);color:#fff}
+.answer-btn.wrong{border-color:var(--red)!important;background:rgba(244,67,54,.12)!important}
+.answer-btn.wrong .answer-letter{background:var(--red);color:#fff}
+.answer-btn.disabled{pointer-events:none;opacity:.5}
+.answer-btn.correct.disabled,.answer-btn.wrong.disabled{opacity:1}
+.explanation{margin-top:12px;padding:12px 14px;background:rgba(200,170,110,.06);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;font-size:.85rem;color:var(--dim);display:none}
+.explanation.show{display:block;animation:fadeIn .3s ease}
+.btn-next{background:var(--accent);color:#000;border:none;padding:14px;font-size:1rem;font-weight:700;border-radius:10px;cursor:pointer;margin-top:12px;width:100%;transition:.2s;display:none}
+.btn-next.show{display:block}
+.btn-next:hover{background:var(--accent2)}
+/* Results */
+.results-screen{display:none}
+.results-header{text-align:center;padding:24px 10px}
+.results-icon{font-size:3.5rem;margin-bottom:8px}
+.results-title{font-family:'Russo One',sans-serif;font-size:1.6rem;margin-bottom:4px}
+.results-subtitle{color:var(--dim);margin-bottom:20px;font-size:.9rem}
+.results-score{display:flex;justify-content:center;gap:24px;margin-bottom:20px}
+.results-stat{text-align:center}
+.results-stat .big{font-size:2rem;font-weight:900}
+.results-stat .lbl{font-size:.7rem;color:var(--dim)}
+.results-stat.good .big{color:var(--green)}
+.results-stat.bad .big{color:var(--red)}
+.results-stat.percent .big{color:var(--accent)}
+/* Share */
+.share-section{text-align:center;margin-bottom:20px}
+.btn-share{background:linear-gradient(135deg,#2AABEE,#1E96D1);color:#fff;border:none;padding:14px 28px;font-size:1rem;font-weight:700;border-radius:12px;cursor:pointer;transition:.2s;width:100%;max-width:320px}
+.btn-share:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(42,171,238,.4)}
+.share-hint{font-size:.75rem;color:var(--dim);margin-top:6px}
+/* Review */
+.review-toggle{background:var(--card);border:1px solid rgba(255,255,255,.1);color:var(--dim);padding:12px;border-radius:10px;cursor:pointer;width:100%;text-align:center;font-size:.85rem;margin-bottom:10px;transition:.2s}
+.review-toggle:hover{border-color:var(--accent);color:var(--text)}
+.review-list{display:none;gap:8px;margin-bottom:20px}
+.review-list.show{display:grid}
+.review-item{background:var(--card);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;border-left:3px solid}
+.review-item.ok{border-color:var(--green)}
+.review-item.fail{border-color:var(--red)}
+.review-icon{font-size:1rem;flex-shrink:0;margin-top:1px}
+.review-q{font-weight:600;font-size:.8rem;margin-bottom:3px}
+.review-a{font-size:.75rem;color:var(--dim)}
+.review-a span{color:var(--green);font-weight:600}
+.btn-restart{background:linear-gradient(135deg,var(--accent),#e6c84d);color:#000;border:none;padding:14px;font-size:1rem;font-weight:800;border-radius:12px;cursor:pointer;width:100%;font-family:'Russo One',sans-serif;transition:.3s}
+.btn-restart:hover{transform:translateY(-2px)}
+.hidden{display:none!important}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+.shake{animation:shake .35s ease}.pop{animation:pop .25s ease}
+/* Multiplayer styles */
+.player-select{margin-bottom:24px}
+.player-select label{display:block;color:var(--dim);font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.p-badge{padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:8px;display:inline-block}
+.p1-bg{background:var(--accent);color:#000}
+.p2-bg{background:#3498db;color:#fff}
+.p3-bg{background:#2ecc71;color:#fff}
+.p4-bg{background:#9b59b6;color:#fff}
+.p1-border{border-color:var(--accent)!important}
+.p2-border{border-color:#3498db!important}
+.p3-border{border-color:#2ecc71!important}
+.p4-border{border-color:#9b59b6!important}
+.p-mark{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;margin-left:4px;border:2px solid rgba(255,255,255,0.2)}
+.turn-indicator{text-align:center;margin-bottom:10px;animation:pop .3s ease}
+.results-table{width:100%;border-collapse:collapse;margin-top:15px;background:var(--card2);border-radius:12px;overflow:hidden}
+.results-table th{background:rgba(255,255,255,.05);padding:10px;font-size:.7rem;color:var(--dim);text-align:left}
+.results-table td{padding:12px 10px;border-top:1px solid rgba(255,255,255,.05);font-size:.9rem}
+.results-table tr.winner{background:rgba(200,170,110,.1)}
+
+/* Mode styles */
+.mode-select{margin-bottom:24px}
+.mode-select label{display:block;color:var(--dim);font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.mode-inputs{margin-top:16px;display:grid;gap:10px;animation:fadeIn .3s ease}
+.mode-input-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:10px}
+.mode-input-item input{background:transparent;border:none;color:var(--text);font-size:0.9rem;width:100%;outline:none}
+.mode-input-item input::placeholder{color:var(--dim);opacity:0.5}
+
+.timer-box{position:relative;width:100%;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;margin-bottom:10px;overflow:hidden;display:none}
+.timer-box.active{display:block}
+.timer-fill{height:100%;background:var(--accent);width:100%;transition:width 0.1s linear}
+.timer-text{font-size:0.75rem;color:var(--accent);font-weight:700;margin-bottom:4px;text-align:right}
+
+.stake-info{background:rgba(200,170,110,0.1);border:1px dashed var(--accent);border-radius:10px;padding:10px;margin-bottom:20px;text-align:center;font-size:0.9rem;color:var(--accent2)}
+</style>
+<script src="js/auth-interceptor.js?v=52"></script>
+</head>
+<body>
+<div class="container">
+<div class="top-bar">
+  <button class="btn-back" onclick="goBack()">←</button>
+  <span class="top-title">🎯 Танковая Викторина</span>
+</div>
+
+<!-- START -->
+<div id="startScreen" class="start-screen">
+  <h1>ТАНКОВАЯ ВИКТОРИНА</h1>
+  <p class="sub">Проверь знания танков X уровня!<br>Реальные характеристики из Мира Танков</p>
+  <div class="q-select">
+    <label>Количество вопросов</label>
+    <div class="q-options">
+      <div class="q-opt" onclick="pickCount(10)" data-n="10"><div class="num">10</div><div class="lbl">Быстро</div></div>
+      <div class="q-opt active" onclick="pickCount(20)" data-n="20"><div class="num">20</div><div class="lbl">Норм</div></div>
+      <div class="q-opt" onclick="pickCount(30)" data-n="30"><div class="num">30</div><div class="lbl">Полная</div></div>
+      <div class="q-opt" onclick="pickCount(50)" data-n="50"><div class="num">50</div><div class="lbl">Хардкор</div></div>
+    </div>
+  </div>
+  <div class="player-select">
+    <label>Количество участников</label>
+    <div class="q-options">
+      <div class="q-opt active" onclick="pickPlayers(1)" data-p="1"><div class="num">1</div><div class="lbl">Один</div></div>
+      <div class="q-opt" onclick="pickPlayers(2)" data-p="2"><div class="num">2</div><div class="lbl">Дуэль</div></div>
+      <div class="q-opt" onclick="pickPlayers(3)" data-p="3"><div class="num">3</div><div class="lbl">Трио</div></div>
+      <div class="q-opt" onclick="pickPlayers(4)" data-p="4"><div class="num">4</div><div class="lbl">Квартет</div></div>
+    </div>
+  </div>
+
+  <div class="mode-select" id="modeSelect">
+    <label>На что соревнуемся?</label>
+    <div class="q-options">
+      <div class="q-opt active" onclick="pickMode('fun')" data-m="fun"><div class="num">😊</div><div class="lbl">Интерес</div></div>
+      <div class="q-opt" onclick="pickMode('desire')" data-m="desire"><div class="num">🎁</div><div class="lbl">Желание</div></div>
+      <div class="q-opt" onclick="pickMode('cheese')" data-m="cheese"><div class="num">🧀</div><div class="lbl">Сыр</div></div>
+    </div>
+    <div id="modeInputs" class="mode-inputs hidden"></div>
+  </div>
+
+  <button class="btn-start" onclick="startQuiz()">НАЧАТЬ ВИКТОРИНУ</button>
+</div>
+
+<!-- QUIZ -->
+<div class="hidden" id="quizScreen">
+  <div class="quiz-header">
+    <div class="progress-info">Вопрос <span id="qNum">1</span>/<span id="qTotal">20</span></div>
+    <div class="score-display"><span class="score-correct">✅ <span id="correctCount">0</span></span><span class="score-wrong">❌ <span id="wrongCount">0</span></span></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div id="quizTimerBox" class="timer-box">
+    <div class="timer-text" id="timerText">15с</div>
+    <div class="timer-fill" id="timerFill"></div>
+  </div>
+  <div id="turnIndicator" class="turn-indicator hidden"></div>
+  <div class="question-card" id="questionCard"><div class="q-cat" id="qCategory"></div><div class="q-text" id="qText"></div></div>
+  <div class="answers" id="answersContainer"></div>
+  <div class="explanation" id="explanation"></div>
+  <button class="btn-next" id="btnNext" onclick="nextQuestion()">Следующий →</button>
+</div>
+
+<!-- RESULTS -->
+<div id="resultsScreen" class="results-screen">
+  <div class="results-header">
+    <div class="results-icon" id="rIcon">🏆</div>
+    <div class="results-title" id="rTitle"></div>
+    <div class="results-subtitle" id="rSub"></div>
+  </div>
+  <div id="resultsStake" class="stake-info hidden"></div>
+  <div class="results-score">
+    <div class="results-stat good"><div class="big" id="fCorrect">0</div><div class="lbl">Верно</div></div>
+    <div class="results-stat bad"><div class="big" id="fWrong">0</div><div class="lbl">Ошибок</div></div>
+    <div class="results-stat percent"><div class="big" id="fPct">0%</div><div class="lbl">Точность</div></div>
+  </div>
+  <div id="multiplayerResults" class="hidden"></div>
+  <div class="share-section">
+    <button class="btn-share" onclick="shareResult()">📤 Поделиться результатом</button>
+    <div class="share-hint">Отправь в чат и покажи свои знания!</div>
+  </div>
+  <button class="review-toggle" onclick="toggleReview()">📋 Показать разбор ответов</button>
+  <div class="review-list" id="reviewList"></div>
+  <button class="btn-restart" onclick="restartQuiz()">🔄 ЗАНОВО</button>
+</div>
+</div>
+
+<script>
+// === TANK DATA (real Lesta API) ===
+const T={
+// ТТ
+"ИС-7":{c:"ТТ",hp:2400,view:400,spd:60,dmg:490,pen:250,rld:13.7,cal:130,af:150,at:240},
+"ИС-4":{c:"ТТ",hp:2500,view:400,spd:43,dmg:390,pen:217,rld:11.0,cal:122,af:155,at:250},
+"Объект 277":{c:"ТТ",hp:2200,view:400,spd:55,dmg:490,pen:265,rld:12.5,cal:130,af:140,at:290},
+"Объект 705А":{c:"ТТ",hp:2450,view:390,spd:40,dmg:650,pen:256,rld:18.1,cal:152,af:175,at:330},
+"Maus":{c:"ТТ",hp:3000,view:400,spd:20,dmg:490,pen:246,rld:13.3,cal:128,af:200,at:260},
+"T110E5":{c:"ТТ",hp:2200,view:400,spd:37,dmg:400,pen:258,rld:8.8,cal:120,af:254,at:203},
+"WZ-111 5A":{c:"ТТ",hp:2200,view:400,spd:50,dmg:490,pen:250,rld:11.2,cal:130,af:160,at:300},
+"Super Conqueror":{c:"ТТ",hp:2400,view:400,spd:34,dmg:400,pen:259,rld:9.5,cal:120,af:152,at:279},
+"AMX 50 B":{c:"ТТ",hp:2300,view:400,spd:65,dmg:400,pen:257,rld:30.0,cal:120,af:170,at:100},
+"60TP":{c:"ТТ",hp:2600,view:390,spd:35,dmg:750,pen:250,rld:19.5,cal:152,af:160,at:260},
+"Kranvagn":{c:"ТТ",hp:2300,view:390,spd:45,dmg:440,pen:258,rld:25.0,cal:120,af:90,at:225},
+"Vz. 55":{c:"ТТ",hp:2100,view:390,spd:50,dmg:490,pen:260,rld:11.2,cal:130,af:115,at:300},
+"СТ-II":{c:"ТТ",hp:2500,view:390,spd:40,dmg:440,pen:258,rld:11.7,cal:122,af:160,at:300},
+"Pz.Kpfw. VII":{c:"ТТ",hp:2500,view:400,spd:33,dmg:560,pen:258,rld:14.7,cal:128,af:240,at:200},
+"113":{c:"ТТ",hp:2300,view:400,spd:50,dmg:440,pen:249,rld:10.0,cal:122,af:140,at:290},
+"Объект 260":{c:"ТТ",hp:2100,view:400,spd:60,dmg:440,pen:260,rld:11.0,cal:122,af:150,at:350},
+"Type 71":{c:"ТТ",hp:2400,view:400,spd:40,dmg:420,pen:260,rld:10.0,cal:120,af:170,at:245},
+"BZ-75":{c:"ТТ",hp:2500,view:390,spd:30,dmg:650,pen:258,rld:18.0,cal:152,af:200,at:330},
+// СТ
+"Объект 140":{c:"СТ",hp:2050,view:400,spd:55,dmg:320,pen:264,rld:6.6,cal:100,af:120,at:240},
+"Объект 430У":{c:"СТ",hp:2000,view:400,spd:50,dmg:440,pen:252,rld:10.2,cal:122,af:160,at:300},
+"Объект 907":{c:"СТ",hp:2000,view:400,spd:55,dmg:320,pen:264,rld:6.5,cal:100,af:110,at:228},
+"Leopard 1":{c:"СТ",hp:1850,view:410,spd:70,dmg:420,pen:278,rld:9.3,cal:105,af:70,at:52},
+"E 50 M":{c:"СТ",hp:2050,view:400,spd:60,dmg:390,pen:270,rld:9.6,cal:105,af:150,at:250},
+"STB-1":{c:"СТ",hp:2000,view:400,spd:50,dmg:360,pen:258,rld:7.1,cal:105,af:110,at:222},
+"Bat.-Châtillon 25 t":{c:"СТ",hp:1800,view:400,spd:65,dmg:240,pen:248,rld:24.0,cal:90,af:60,at:50},
+"Progetto 65":{c:"СТ",hp:1900,view:400,spd:65,dmg:360,pen:268,rld:15.4,cal:105,af:40,at:120},
+"M48 Patton":{c:"СТ",hp:2200,view:420,spd:50,dmg:390,pen:268,rld:8.35,cal:105,af:152,at:254},
+"Centurion AX":{c:"СТ",hp:1950,view:410,spd:55,dmg:390,pen:268,rld:8.0,cal:105,af:121,at:254},
+"К-91":{c:"СТ",hp:1950,view:410,spd:55,dmg:320,pen:276,rld:6.3,cal:100,af:140,at:220},
+"121":{c:"СТ",hp:2050,view:400,spd:56,dmg:440,pen:262,rld:9.6,cal:122,af:135,at:240},
+"AMX 30 B":{c:"СТ",hp:1900,view:410,spd:65,dmg:420,pen:248,rld:7.85,cal:105,af:80,at:150},
+// ЛТ
+"Т-100 ЛТ":{c:"ЛТ",hp:1500,view:390,spd:72,dmg:300,pen:230,rld:7.8,cal:100,af:90,at:180},
+"Sheridan":{c:"ЛТ",hp:1600,view:420,spd:65,dmg:390,pen:236,rld:9.2,cal:105,af:14,at:38},
+"Rhm. Pzw.":{c:"ЛТ",hp:1600,view:420,spd:75,dmg:320,pen:242,rld:8.0,cal:105,af:30,at:20},
+"WZ-132-1":{c:"ЛТ",hp:1500,view:400,spd:65,dmg:390,pen:246,rld:10.7,cal:105,af:50,at:200},
+// ПТ
+"Grille 15":{c:"ПТ",hp:1800,view:390,spd:60,dmg:750,pen:279,rld:18.0,cal:150,af:30,at:0},
+"Объект 268/4":{c:"ПТ",hp:1900,view:370,spd:40,dmg:650,pen:293,rld:17.0,cal:152,af:260,at:0},
+"FV4005":{c:"ПТ",hp:1850,view:390,spd:32,dmg:1150,pen:310,rld:30.0,cal:183,af:76,at:14},
+"Jagdpanzer E 100":{c:"ПТ",hp:2200,view:390,spd:30,dmg:1050,pen:299,rld:25.7,cal:170,af:200,at:0},
+"T110E3":{c:"ПТ",hp:1950,view:370,spd:24,dmg:750,pen:295,rld:18.0,cal:155,af:305,at:0},
+"T110E4":{c:"ПТ",hp:2000,view:390,spd:35,dmg:750,pen:295,rld:19.5,cal:155,af:260,at:203},
+"Strv 103B":{c:"ПТ",hp:1800,view:360,spd:50,dmg:390,pen:308,rld:7.0,cal:105,af:50,at:0},
+"FV215b (183)":{c:"ПТ",hp:2000,view:390,spd:34,dmg:1150,pen:310,rld:30.0,cal:183,af:152,at:254},
+"Объект 268":{c:"ПТ",hp:1950,view:370,spd:48,dmg:750,pen:303,rld:16.5,cal:152,af:187,at:0},
+"Badger":{c:"ПТ",hp:2100,view:390,spd:30,dmg:480,pen:272,rld:8.5,cal:123,af:356,at:0},
+"Minotauro":{c:"ПТ",hp:2100,view:390,spd:30,dmg:530,pen:265,rld:24.0,cal:130,af:300,at:300},
+};
+const names=Object.keys(T);
+const byClass=c=>names.filter(n=>T[n].c===c);
+const fullC={ТТ:"Тяжёлый танк",СТ:"Средний танк",ЛТ:"Лёгкий танк",ПТ:"ПТ-САУ"};
+const clsTag=c=>({ТТ:'ht',СТ:'mt',ЛТ:'lt',ПТ:'td'}[c]||'ht');
+
+let chosenCount=20, playerCount=1, players=[], curTurn=0, questions=[], curQ=0, answered=false, results=[], pendingAnswers=[];
+let quizMode='fun', cheeseBet=0, playerDesires=[], timerVal=15, timerInterval=null;
+function pickPlayers(p){
+  playerCount=p;
+  document.querySelectorAll('.player-select .q-opt').forEach(el=>{
+    el.classList.toggle('active',+el.dataset.p===p);
+  });
+  updateModeInputs();
+}
+function pickMode(m){
+  quizMode=m;
+  document.querySelectorAll('.mode-select .q-opt').forEach(el=>{
+    el.classList.toggle('active',el.dataset.m===m);
+  });
+  updateModeInputs();
+}
+function updateModeInputs(){
+  const box = document.getElementById('modeInputs');
+  box.innerHTML = '';
+  if(quizMode === 'desire' && playerCount > 1) {
+    box.classList.remove('hidden');
+    for(let i=1; i<=playerCount; i++) {
+        const item = document.createElement('div');
+        item.className = 'mode-input-item';
+        item.innerHTML = `<span class="p-badge p${i}-bg">P${i}</span><input type="text" placeholder="Желание игрока ${i}" id="desireP${i}">`;
+        box.appendChild(item);
+    }
+  } else if(quizMode === 'cheese') {
+    box.classList.remove('hidden');
+    const item = document.createElement('div');
+    item.className = 'mode-input-item';
+    item.innerHTML = `<span class="num">🧀</span><input type="number" placeholder="Ставка сыра" id="cheeseBetInput" value="100">`;
+    box.appendChild(item);
+  } else {
+    box.classList.add('hidden');
+  }
+}
+function pickCount(n){
+  chosenCount=n;
+  document.querySelectorAll('.q-select .q-opt').forEach(el=>{
+    el.classList.toggle('active',+el.dataset.n===n);
+  });
+}
+
+function goBack(){
+  if(!document.getElementById('startScreen').classList.contains('hidden')){
+    // On start screen — go back to main menu
+    window.location.href = 'index.html';
+  } else {
+    // In quiz — go back to start screen
+    restartQuiz();
+  }
+}
+
+function pickCount(n){
+  chosenCount=n;
+  document.querySelectorAll('.q-opt').forEach(el=>{
+    el.classList.toggle('active',+el.dataset.n===n);
+  });
+}
+
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+
+function genOpts(correct,pool,unit){
+  const others=pool.filter(v=>v!==correct);
+  const picked=shuffle(others).slice(0,3);
+  return shuffle([correct+unit,...picked.map(v=>v+unit)]);
+}
+function numOpts(val,offsets,unit=''){
+  const s=new Set([val]);
+  const sh=shuffle(offsets);
+  for(const o of sh){const v=+(val+o).toFixed(1);if(v>0)s.add(v);if(s.size>=4)break;}
+  while(s.size<4)s.add(+(val+Math.floor(Math.random()*200-100)).toFixed(0));
+  return shuffle([...s].map(v=>v+unit));
+}
+
+function makeDPM(t){return Math.round(T[t].dmg*(60/T[t].rld));}
+
+// Question templates per class
+function getTemplates(){
+  const tpls=[];
+  // === ТТ specific ===
+  const hts=byClass('ТТ');
+  // HP
+  tpls.push(...hts.map(t=>()=>({cat:"ТТ • ПРОЧНОСТЬ",text:`Сколько HP у <span class="tank-name">${t}</span>?`,
+    correct:T[t].hp+'',opts:numOpts(T[t].hp,[-400,-200,-100,100,200,300,500]),expl:`${t} имеет ${T[t].hp} HP.`})));
+  // Alpha
+  tpls.push(...hts.map(t=>()=>({cat:"ТТ • АЛЬФА-УРОН",text:`Средний урон ББ у <span class="tank-name">${t}</span>?`,
+    correct:T[t].dmg+'',opts:numOpts(T[t].dmg,[-100,-60,-50,50,60,100,120]),expl:`Альфа ${t} — ${T[t].dmg}. Калибр ${T[t].cal} мм.`})));
+  // Reload (fire rate)
+  tpls.push(...hts.map(t=>()=>({cat:"ТТ • ПЕРЕЗАРЯДКА",text:`Время перезарядки <span class="tank-name">${t}</span>?`,
+    correct:T[t].rld+' сек',opts:numOpts(T[t].rld,[-4,-2,-1,1,2,4,6],' сек'),expl:`Перезарядка ${t} — ${T[t].rld} сек. ДПМ ≈ ${makeDPM(t)}.`})));
+  // Penetration
+  tpls.push(...hts.map(t=>()=>({cat:"ТТ • ПРОБИТИЕ",text:`Среднее пробитие базовым снарядом у <span class="tank-name">${t}</span>?`,
+    correct:T[t].pen+' мм',opts:numOpts(T[t].pen,[-30,-20,-10,10,20,30],' мм'),expl:`Пробитие ${t} — ${T[t].pen} мм.`})));
+  // === СТ specific ===
+  const mts=byClass('СТ');
+  tpls.push(...mts.map(t=>()=>({cat:"СТ • АЛЬФА-УРОН",text:`Средний урон ББ у <span class="tank-name">${t}</span>?`,
+    correct:T[t].dmg+'',opts:numOpts(T[t].dmg,[-80,-50,-30,30,50,80]),expl:`Альфа ${t} — ${T[t].dmg}. Калибр ${T[t].cal} мм.`})));
+  tpls.push(...mts.map(t=>()=>({cat:"СТ • ПЕРЕЗАРЯДКА",text:`Перезарядка <span class="tank-name">${t}</span>?`,
+    correct:T[t].rld+' сек',opts:numOpts(T[t].rld,[-3,-2,-1,1,2,3,5],' сек'),expl:`Перезарядка ${t} — ${T[t].rld} сек. ДПМ ≈ ${makeDPM(t)}.`})));
+  tpls.push(...mts.map(t=>()=>({cat:"СТ • ПРОБИТИЕ",text:`Пробитие базовым у <span class="tank-name">${t}</span>?`,
+    correct:T[t].pen+' мм',opts:numOpts(T[t].pen,[-25,-15,-10,10,15,25],' мм'),expl:`Пробитие ${t} — ${T[t].pen} мм.`})));
+  tpls.push(...mts.map(t=>()=>({cat:"СТ • СКОРОСТЬ",text:`Макс. скорость <span class="tank-name">${t}</span>?`,
+    correct:T[t].spd+' км/ч',opts:numOpts(T[t].spd,[-15,-10,-5,5,10,15],' км/ч'),expl:`Скорость ${t} — ${T[t].spd} км/ч.`})));
+  // === ЛТ specific ===
+  const lts=byClass('ЛТ');
+  tpls.push(...lts.map(t=>()=>({cat:"ЛТ • ОБЗОР 🔭",text:`Обзор <span class="tank-name">${t}</span>?`,
+    correct:T[t].view+' м',opts:genOpts(T[t].view,[350,360,370,380,390,400,410,420,430,440,445],' м'),expl:`Обзор ${t} — ${T[t].view} м. Один из ключевых параметров ЛТ!`})));
+  tpls.push(...lts.map(t=>()=>({cat:"ЛТ • СКОРОСТЬ",text:`Макс. скорость <span class="tank-name">${t}</span>?`,
+    correct:T[t].spd+' км/ч',opts:numOpts(T[t].spd,[-10,-5,5,10,15],' км/ч'),expl:`${t} разгоняется до ${T[t].spd} км/ч.`})));
+  tpls.push(...lts.map(t=>()=>({cat:"ЛТ • УРОН",text:`Средний урон у <span class="tank-name">${t}</span>?`,
+    correct:T[t].dmg+'',opts:numOpts(T[t].dmg,[-60,-40,40,60,90]),expl:`Альфа ${t} — ${T[t].dmg}.`})));
+  // === ПТ specific ===
+  const tds=byClass('ПТ');
+  tpls.push(...tds.map(t=>()=>({cat:"ПТ • АЛЬФА-УРОН 💥",text:`Средний урон ББ у <span class="tank-name">${t}</span>?`,
+    correct:T[t].dmg+'',opts:numOpts(T[t].dmg,[-200,-100,-50,50,100,200]),expl:`Альфа ${t} — ${T[t].dmg}. Калибр ${T[t].cal} мм.`})));
+  tpls.push(...tds.map(t=>()=>({cat:"ПТ • ПРОБИТИЕ 🎯",text:`Пробитие базовым у <span class="tank-name">${t}</span>?`,
+    correct:T[t].pen+' мм',opts:numOpts(T[t].pen,[-30,-20,-10,10,20,30],' мм'),expl:`Пробитие ${t} — ${T[t].pen} мм.`})));
+  tpls.push(...tds.filter(t=>T[t].af>=100).map(t=>()=>({cat:"ПТ • БРОНЯ",text:`Лобовая броня корпуса <span class="tank-name">${t}</span>?`,
+    correct:T[t].af+' мм',opts:numOpts(T[t].af,[-60,-30,30,60,100],' мм'),expl:`Лоб корпуса ${t} — ${T[t].af} мм.`})));
+  // === Cross-class comparisons ===
+  for(let i=0;i<20;i++){
+    const a=names[Math.floor(Math.random()*names.length)],b=names[Math.floor(Math.random()*names.length)];
+    if(a===b||T[a].dmg===T[b].dmg)continue;
+    tpls.push(()=>{
+      const extras=shuffle(names.filter(n=>n!==a&&n!==b)).slice(0,2);
+      const opts=shuffle([a,b,...extras]);
+      const winner=opts.reduce((best,n)=>T[n].dmg>T[best].dmg?n:best,opts[0]);
+      const loser=opts.reduce((worst,n)=>T[n].dmg<T[worst].dmg?n:worst,opts[0]);
+      return{cat:"СРАВНЕНИЕ • УРОН",text:`У кого БОЛЬШЕ разовый урон?`,correct:winner,opts,expl:`${winner} — ${T[winner].dmg}, ${loser} — ${T[loser].dmg}.`};
+    });
+  }
+  return tpls;
+}
+
+function generateQuestions(){
+  const tpls=shuffle(getTemplates());
+  const qs=[];
+  for(const fn of tpls){
+    if(qs.length>=chosenCount*2)break;
+    try{
+      const q=fn();
+      if(q.opts.length>=4 && q.opts.includes(q.correct)){
+        qs.push({category:q.cat,text:q.text,options:q.opts.slice(0,4).map(String),correct:String(q.correct),explanation:q.expl});
+      }
+    }catch(e){}
+  }
+  return shuffle(qs).slice(0,chosenCount);
+}
+function startQuiz(){
+  // Gather mode data
+  if(quizMode === 'desire' && playerCount > 1) {
+    playerDesires = [];
+    for(let i=1; i<=playerCount; i++) {
+        const val = document.getElementById(`desireP${i}`).value || 'Желание игрока '+i;
+        playerDesires.push(val);
+    }
+  } else if(quizMode === 'cheese') {
+    cheeseBet = parseInt(document.getElementById('cheeseBetInput').value) || 0;
+  }
+  questions=generateQuestions();
+  curQ=0; curTurn=0; answered=false; results=[];
+  players = [];
+  for(let i=0; i<playerCount; i++) {
+    players.push({ id: i+1, correct: 0, wrong: 0, desire: playerDesires[i] || '' });
+  }
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').style.display='none';
+  document.getElementById('quizScreen').classList.remove('hidden');
+  document.getElementById('qTotal').textContent=questions.length;
+  const ti = document.getElementById('turnIndicator');
+  if(playerCount > 1) ti.classList.remove('hidden'); else ti.classList.add('hidden');
+  const timerBox = document.getElementById('quizTimerBox');
+  if(quizMode === 'cheese') timerBox.classList.add('active'); else timerBox.classList.remove('active');
+  showQuestion();
+}
+function startTimer() {
+    if(quizMode !== 'cheese' || answered) return;
+    clearInterval(timerInterval);
+    timerVal = 15;
+    const fill = document.getElementById('timerFill');
+    const txt = document.getElementById('timerText');
+    fill.style.width = '100%';
+    txt.textContent = '15с';
+    timerInterval = setInterval(() => {
+        timerVal -= 0.1;
+        if(timerVal <= 0) {
+            timerVal = 0;
+            clearInterval(timerInterval);
+            selectAnswer(-1); // Timeout
+        }
+        fill.style.width = (timerVal / 15 * 100) + '%';
+        txt.textContent = Math.ceil(timerVal) + 'с';
+    }, 100);
+}
+function showQuestion(){
+  if(curQ >= questions.length){showResults();return;}
+  answered=false; pendingAnswers = []; curTurn = 0;
+  const q=questions[curQ];
+  document.getElementById('qNum').textContent = curQ + 1;
+  document.getElementById('progressFill').style.width = ((curQ/questions.length)*100)+'%';
+  updateTurnUI();
+  const card = document.getElementById('questionCard');
+  document.getElementById('qCategory').textContent=q.category;
+  document.getElementById('qText').innerHTML=q.text;
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  renderAnswers();
+  card.style.animation='none';
+  card.offsetHeight;
+  card.style.animation='fadeIn .35s ease';
+  startTimer();
+}
+function updateTurnUI(){
+  const p = players[curTurn];
+  const ti = document.getElementById('turnIndicator');
+  if(playerCount > 1) {
+    ti.innerHTML = `<span class="p-badge p${p.id}-bg">Ход Игрока ${p.id}</span>`;
+    document.getElementById('questionCard').className = `question-card p${p.id}-border`;
+    document.getElementById('correctCount').textContent = p.correct;
+    document.getElementById('wrongCount').textContent = p.wrong;
+  } else {
+    document.getElementById('correctCount').textContent = p.correct;
+    document.getElementById('wrongCount').textContent = p.wrong;
+  }
+}
+function renderAnswers(){
+  const q=questions[curQ];
+  const box=document.getElementById('answersContainer');
+  box.innerHTML='';
+  const L=['А','Б','В','Г'];
+  q.options.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='answer-btn';
+    b.innerHTML=`<span class="answer-letter">${L[i]}</span><span class="o-text">${o}</span><span class="p-marks"></span>`;
+    b.onclick=()=>selectAnswer(i);
+    box.appendChild(b);
+  });
+}
+function selectAnswer(idx){
+  if(answered)return;
+  pendingAnswers[curTurn] = idx;
+  if(curTurn < playerCount - 1) {
+    curTurn++;
+    updateTurnUI();
+    const card = document.getElementById('questionCard');
+    card.style.transform = 'scale(0.98)';
+    card.style.opacity = '0.7';
+    setTimeout(()=> {
+      card.style.transform = 'scale(1)';
+      card.style.opacity = '1';
+    }, 150);
+    startTimer();
+  } else {
+    clearInterval(timerInterval);
+    revealAnswers();
+  }
+}
+function revealAnswers(){
+  clearInterval(timerInterval);
+  answered = true;
+  const q = questions[curQ];
+  const btns = document.querySelectorAll('.answer-btn');
+  pendingAnswers.forEach((ansIdx, pIdx) => {
+    const p = players[pIdx];
+    const isCorrect = ansIdx !== -1 && q.options[ansIdx] === q.correct;
+    if(isCorrect) p.correct++; else p.wrong++;
+    if(ansIdx !== -1) {
+        const mark = document.createElement('span');
+        mark.className = `p-mark p${p.id}-bg`;
+        mark.textContent = p.id;
+        btns[ansIdx].querySelector('.p-marks').appendChild(mark);
+    }
+  });
+  btns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if(q.options[i] === q.correct) b.classList.add('correct');
+    else if(pendingAnswers.includes(i)) b.classList.add('wrong');
+  });
+  if(playerCount === 1) {
+    const ok = q.options[pendingAnswers[0]] === q.correct;
+    results.push({question:q.text.replace(/<[^>]+>/g,''),correct:q.correct,selected:q.options[pendingAnswers[0]],isCorrect:ok});
+  }
+  document.getElementById('turnIndicator').innerHTML = `<span class="p-badge">Результат раунда</span>`;
+  document.getElementById('explanation').innerHTML=q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+}
+function nextQuestion(){
+  curQ++;
+  showQuestion();
+}
+function showResults(){
+  document.getElementById('quizScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').style.display='block';
+  const sorted = [...players].sort((a,b) => b.correct - a.correct);
+  const best = sorted[0];
+  const isMulti = playerCount > 1;
+  const mainP = players[0];
+  const pct=Math.round((mainP.correct/chosenCount)*100);
+  document.getElementById('fCorrect').textContent=mainP.correct;
+  document.getElementById('fWrong').textContent=mainP.wrong;
+  document.getElementById('fPct').textContent=pct+'%';
+  const stakeDiv = document.getElementById('resultsStake');
+  if(quizMode === 'desire' && playerCount > 1) {
+    stakeDiv.classList.remove('hidden');
+    stakeDiv.textContent = 'Соревнование на желания! Выполнит проигравший.';
+  } else if(quizMode === 'cheese') {
+    stakeDiv.classList.remove('hidden');
+    stakeDiv.textContent = `Турнир на сыр! Общий банк: 🧀 ${cheeseBet * playerCount}`;
+  } else {
+    stakeDiv.classList.add('hidden');
+  }
+  const multDiv = document.getElementById('multiplayerResults');
+  if(isMulti) {
+    multDiv.classList.remove('hidden');
+    document.querySelector('.results-score').classList.add('hidden');
+    let html = `<table class="results-table">
+      <tr><th>ИГРОК</th><th>ВЕРНО</th><th>ОШИБОК</th><th>%</th></tr>`;
+    players.forEach(p => {
+      const pPct = Math.round((p.correct/chosenCount)*100);
+      const isWinner = p.correct === best.correct && best.correct > 0;
+      html += `<tr class="${isWinner ? 'winner' : ''}">
+        <td><span class="p-badge p${p.id}-bg">Игрок ${p.id}</span> ${isWinner ? '👑' : ''}</td>
+        <td><b>${p.correct}</b></td>
+        <td>${p.wrong}</td>
+        <td>${pPct}%</td>
+      </tr>`;
+    });
+    html += `</table>`;
+    multDiv.innerHTML = html;
+    document.getElementById('rIcon').textContent = '🏆';
+    document.getElementById('rTitle').textContent = best.correct > 0 ? `ПОБЕДА ИГРОКА ${best.id}!` : 'НИЧЬЯ!';
+    if(quizMode === 'desire') {
+        document.getElementById('rSub').textContent = `ПОБЕДИТЕЛЬ ПОЛУЧАЕТ: ${best.desire}`;
+    } else if(quizMode === 'cheese') {
+        document.getElementById('rSub').textContent = `ВЫИГРЫШ: 🧀 ${cheeseBet * playerCount}`;
+    } else {
+        document.getElementById('rSub').textContent = 'Отличное соревнование!';
+    }
+  } else {
+    multDiv.classList.add('hidden');
+    document.querySelector('.results-score').classList.remove('hidden');
+    if(pct>=90){document.getElementById('rIcon').textContent='🏆';document.getElementById('rTitle').textContent='ТАНКОВЫЙ ЭКСПЕРТ!';document.getElementById('rSub').textContent='Ты знаешь технику как свои 5 пальцев!';}
+    else if(pct>=70){document.getElementById('rIcon').textContent='⭐';document.getElementById('rTitle').textContent='Отличный результат!';document.getElementById('rSub').textContent='Хорошо разбираешься в технике';}
+    else if(pct>=50){document.getElementById('rIcon').textContent='🎯';document.getElementById('rTitle').textContent='Неплохо!';document.getElementById('rSub').textContent='Есть куда расти, командир';}
+    else{document.getElementById('rIcon').textContent='📚';document.getElementById('rTitle').textContent='Нужна подготовка';document.getElementById('rSub').textContent='Изучи танкопедию и попробуй снова';}
+  }
+  const list=document.getElementById('reviewList');
+  list.innerHTML='';list.classList.remove('show');
+  if(!isMulti) {
+    results.forEach((r,i)=>{
+      const d=document.createElement('div');
+      d.className='review-item '+(r.isCorrect?'ok':'fail');
+      d.innerHTML=`<span class="review-icon">${r.isCorrect?'✅':'❌'}</span><div><div class="review-q">${i+1}. ${r.question}</div><div class="review-a">${r.isCorrect?'':'Ваш: '+r.selected+' | '}Ответ: <span>${r.correct}</span></div></div>`;
+      list.appendChild(d);
+    });
+    document.querySelector('.review-toggle').style.display = 'block';
+  } else {
+    document.querySelector('.review-toggle').style.display = 'none';
+  }
+}
+
+function toggleReview(){document.getElementById('reviewList').classList.toggle('show');}
+
+function shareResult(){
+  const pct=Math.round((correct/questions.length)*100);
+  let rank='📚 Новичок';
+  if(pct>=90)rank='🏆 Эксперт';else if(pct>=70)rank='⭐ Знаток';else if(pct>=50)rank='🎯 Любитель';
+  const text=`🎯 Танковая Викторина — МИР ТАНКОВ\n\n✅ ${correct}/${questions.length} правильных (${pct}%)\n${rank}\n\nПроверь свои знания тоже! 👇`;
+  const botUrl='https://t.me/Mir_tankov_bot/app';
+  if(window.Telegram?.WebApp){
+    // Telegram sharing
+    const shareUrl=`https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(text)}`;
+    window.Telegram.WebApp.openTelegramLink(shareUrl);
+  } else {
+    // Fallback: copy to clipboard
+    navigator.clipboard?.writeText(text+'\n'+botUrl).then(()=>alert('Скопировано!')).catch(()=>{});
+  }
+}
+
+function restartQuiz(){
+  document.getElementById('resultsScreen').style.display='none';
+  document.getElementById('quizScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
+}
+
+
+</script>
+</body>
+</html>

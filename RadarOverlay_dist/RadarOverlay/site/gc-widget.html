@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Челлендж Виджет — Мир Танков</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800;900&family=Orbitron:wght@500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            color: #E8E6E3;
+            overflow: hidden
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            vertical-align: middle;
+            display: inline-block;
+        }
+
+        .w-icon img {
+            width: 1em;
+            height: 1em;
+            object-fit: contain;
+        }
+
+        .w-badge img, .w-me img, .w-lb img {
+            width: 1.2em;
+            height: 1.2em;
+            margin-right: 4px;
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        /* ═══════════════════════════════════
+           LAYOUT 1: CLASSIC (Вертикальный)
+           ═══════════════════════════════════ */
+        .L1 {
+            width: 380px;
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            padding: 2px
+        }
+
+        .L1 .wi {
+            padding: 20px;
+            position: relative;
+            border-radius: 12px
+        }
+
+        .L1 .w-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: .5rem;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 10px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .L1 .w-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #fff;
+            animation: blink 1.2s infinite
+        }
+
+        .L1 .w-hdr {
+            text-align: center;
+            margin-bottom: 4px
+        }
+
+        .L1 .w-icon {
+            font-size: 1.8rem;
+            display: inline-block;
+            filter: drop-shadow(0 0 8px rgba(245, 190, 11, .5));
+            margin-bottom: 2px
+        }
+
+        .L1 .w-ttl {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            line-height: 1.2
+        }
+
+        .L1 .w-desc {
+            font-size: .55rem;
+            opacity: .5;
+            margin-top: 3px
+        }
+
+        .L1 .w-time {
+            text-align: center;
+            margin: 8px 0 4px
+        }
+
+        .L1 .w-tv {
+            font-family: 'Russo One', sans-serif;
+            font-size: 4rem;
+            letter-spacing: 4px;
+            line-height: 1
+        }
+
+        .L1 .w-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 4px 0 14px;
+            font-size: .7rem;
+            opacity: .6
+        }
+
+        .L1 .w-rv {
+            font-weight: 900;
+            opacity: 1
+        }
+
+        .L1 .w-me {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border-radius: 8px
+        }
+
+        .L1 .w-av {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Russo One', sans-serif;
+            font-size: .65rem;
+            flex-shrink: 0
+        }
+
+        .L1 .w-mn {
+            font-family: 'Russo One', sans-serif;
+            font-size: .85rem;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .L1 .w-ms {
+            text-align: right
+        }
+
+        .L1 .w-msv {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.8rem;
+            line-height: 1
+        }
+
+        .L1 .w-msu {
+            font-size: .45rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: .5
+        }
+
+        .L1 .w-lbt {
+            font-family: 'Russo One', sans-serif;
+            font-size: .55rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            opacity: .5
+        }
+
+        .L1 .w-li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            margin-bottom: 3px;
+            border-radius: 5px
+        }
+
+        .L1 .w-lr {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+            width: 20px;
+            text-align: center
+        }
+
+        .L1 .w-la {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .42rem;
+            font-weight: 900;
+            flex-shrink: 0
+        }
+
+        .L1 .w-ln {
+            flex: 1;
+            font-family: 'Russo One', sans-serif;
+            font-size: .7rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .L1 .w-lv {
+            font-family: 'Russo One', sans-serif;
+            font-size: .75rem
+        }
+
+        .w-lb-battles {
+            font-size: .42rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 8px;
+            letter-spacing: .5px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        /* ═══════════════════════════════════
+           LAYOUT 2: COMPACT (Горизонтальный)
+           ═══════════════════════════════════ */
+        .L2 {
+            width: 480px;
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 2px
+        }
+
+        .L2 .wi {
+            padding: 14px 18px;
+            border-radius: 10px
+        }
+
+        .L2 .w-badge {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: .4rem;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 3px
+        }
+
+        .L2 .w-badge::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #fff;
+            animation: blink 1.2s infinite
+        }
+
+        .L2 .w-top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 10px;
+            position: relative
+        }
+
+        .L2 .w-left {
+            flex-shrink: 0;
+            text-align: center
+        }
+
+        .L2 .w-tv {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.4rem;
+            letter-spacing: 3px;
+            line-height: 1
+        }
+
+        .L2 .w-tlab {
+            font-size: .4rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: .4;
+            margin-top: 2px
+        }
+
+        .L2 .w-right {
+            flex: 1;
+            min-width: 0
+        }
+
+        .L2 .w-ttl {
+            font-family: 'Russo One', sans-serif;
+            font-size: .9rem;
+            line-height: 1.2;
+            margin-bottom: 4px
+        }
+
+        .L2 .w-me-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 3px
+        }
+
+        .L2 .w-av {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .38rem;
+            font-weight: 900;
+            flex-shrink: 0
+        }
+
+        .L2 .w-mn {
+            font-size: .65rem;
+            font-weight: 700;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .L2 .w-msv {
+            font-family: 'Russo One', sans-serif;
+            font-size: .9rem
+        }
+
+        .L2 .w-bot {
+            display: flex;
+            gap: 4px
+        }
+
+        .L2 .w-li {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 5px
+        }
+
+        .L2 .w-lr {
+            font-family: 'Russo One', sans-serif;
+            font-size: .8rem;
+            width: 16px
+        }
+
+        .L2 .w-ln {
+            flex: 1;
+            font-size: .55rem;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .L2 .w-lv {
+            font-family: 'Russo One', sans-serif;
+            font-size: .6rem
+        }
+
+        /* ═══════════════════════════════════
+           LAYOUT 3: MINIMAL STRIP (Полоска)
+           ═══════════════════════════════════ */
+        .L3 {
+            width: 560px;
+            border-radius: 8px;
+            overflow: hidden;
+            padding: 1px
+        }
+
+        .L3 .wi {
+            padding: 10px 16px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .L3 .w-badge {
+            font-size: .35rem;
+            font-weight: 900;
+            padding: 2px 5px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 3px
+        }
+
+        .L3 .w-badge::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #fff;
+            animation: blink 1.2s infinite
+        }
+
+        .L3 .w-sep {
+            width: 1px;
+            height: 24px;
+            opacity: .15;
+            flex-shrink: 0
+        }
+
+        .L3 .w-ttl {
+            font-family: 'Russo One', sans-serif;
+            font-size: .65rem;
+            flex-shrink: 0;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .L3 .w-tv {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            flex-shrink: 0
+        }
+
+        .L3 .w-me-mini {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0
+        }
+
+        .L3 .w-mn {
+            font-size: .55rem;
+            font-weight: 700
+        }
+
+        .L3 .w-msv {
+            font-family: 'Russo One', sans-serif;
+            font-size: .75rem
+        }
+
+        .L3 .w-top3 {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0
+        }
+
+        .L3 .w-ti {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: .5rem
+        }
+
+        .L3 .w-tr {
+            font-weight: 900
+        }
+
+        .L3 .w-tn {
+            opacity: .7;
+            max-width: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .L3 .w-tval {
+            font-family: 'Russo One', sans-serif;
+            font-size: .55rem
+        }
+
+        /* ═══════════════════════════════════
+           LAYOUT 4: SCOREBOARD (Табло)
+           ═══════════════════════════════════ */
+        .L4 {
+            width: 360px;
+            border-radius: 4px;
+            overflow: hidden;
+            font-family: 'Orbitron', 'Russo One', sans-serif
+        }
+
+        .L4 .wi {
+            position: relative
+        }
+
+        .L4 .w-badge {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            font-size: .35rem;
+            font-weight: 900;
+            padding: 2px 5px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 3px
+        }
+
+        .L4 .w-badge::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #fff;
+            animation: blink 1.2s infinite
+        }
+
+        .L4 .w-head {
+            padding: 8px 14px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, .06)
+        }
+
+        .L4 .w-ttl {
+            font-size: .6rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: .6
+        }
+
+        .L4 .w-tv {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 6px;
+            line-height: 1.2
+        }
+
+        .L4 .w-stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            padding: 6px;
+            font-size: .4rem;
+            letter-spacing: 1px;
+            opacity: .4;
+            border-bottom: 1px solid rgba(255, 255, 255, .06)
+        }
+
+        .L4 .w-rv {
+            font-weight: 900;
+            opacity: 1
+        }
+
+        .L4 .w-thead {
+            display: flex;
+            padding: 5px 14px;
+            font-size: .35rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: .3;
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .L4 .w-thead span:first-child {
+            width: 24px
+        }
+
+        .L4 .w-thead span:nth-child(2) {
+            flex: 1
+        }
+
+        .L4 .w-thead span:last-child {
+            width: 70px;
+            text-align: right
+        }
+
+        .L4 .w-li {
+            display: flex;
+            align-items: center;
+            padding: 8px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, .03)
+        }
+
+        .L4 .w-lr {
+            width: 24px;
+            font-size: .7rem;
+            font-weight: 900
+        }
+
+        .L4 .w-ln {
+            flex: 1;
+            font-size: .6rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .L4 .w-lv {
+            width: 70px;
+            text-align: right;
+            font-size: .7rem;
+            font-weight: 900
+        }
+
+        .L4 .w-li--me {
+            position: relative
+        }
+
+        /* ═══════════════════════════════════
+           LAYOUT 5: HUD (Игровой интерфейс)
+           ═══════════════════════════════════ */
+        .L5 {
+            width: 400px;
+            position: relative
+        }
+
+        .L5 .wi {
+            position: relative;
+            padding: 0
+        }
+
+        .L5 .w-badge {
+            position: absolute;
+            top: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: .35rem;
+            font-weight: 900;
+            padding: 2px 10px;
+            border-radius: 0 0 6px 6px;
+            letter-spacing: 2px;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            gap: 3px
+        }
+
+        .L5 .w-badge::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #fff;
+            animation: blink 1.2s infinite
+        }
+
+        .L5 .w-corners {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px
+        }
+
+        .L5 .w-corner {
+            flex: 1;
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+            text-align: center
+        }
+
+        .L5 .w-corner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 12px;
+            height: 12px;
+            border-top: 2px solid;
+            border-left: 2px solid;
+            opacity: .5
+        }
+
+        .L5 .w-corner::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-bottom: 2px solid;
+            border-right: 2px solid;
+            opacity: .5
+        }
+
+        .L5 .w-c-label {
+            font-size: .35rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: .4;
+            margin-bottom: 2px
+        }
+
+        .L5 .w-tv {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            line-height: 1
+        }
+
+        .L5 .w-ttl {
+            font-family: 'Russo One', sans-serif;
+            font-size: .55rem;
+            opacity: .7;
+            margin-top: 2px
+        }
+
+        .L5 .w-c-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            line-height: 1
+        }
+
+        .L5 .w-c-sub {
+            font-size: .4rem;
+            opacity: .5;
+            margin-top: 2px
+        }
+
+        .L5 .w-mn {
+            font-family: 'Russo One', sans-serif;
+            font-size: .6rem;
+            margin-bottom: 2px
+        }
+
+        .L5 .w-bar {
+            width: 100%;
+            border-radius: 4px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px
+        }
+
+        .L5 .w-bi {
+            font-size: .45rem;
+            opacity: .5
+        }
+
+        .L5 .w-li {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 6px
+        }
+
+        .L5 .w-lr {
+            font-family: 'Orbitron', sans-serif;
+            font-size: .65rem;
+            font-weight: 900;
+            width: 14px
+        }
+
+        .L5 .w-ln {
+            flex: 1;
+            font-size: .5rem;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .L5 .w-lv {
+            font-family: 'Orbitron', sans-serif;
+            font-size: .55rem;
+            font-weight: 700
+        }
+
+        /* ═══════ SHARED ═══════ */
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .2
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px var(--glow)
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--glow)
+            }
+        }
+
+        .w-empty {
+            text-align: center;
+            padding: 50px 20px
+        }
+
+        .w-empty__icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            opacity: .3
+        }
+
+        .w-empty__text {
+            font-family: 'Russo One', sans-serif;
+            font-size: .7rem;
+            opacity: .3
+        }
+
+        .w-tv--danger {
+            animation: dangerpulse .8s infinite
+        }
+
+        @keyframes dangerpulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .6
+            }
+        }
+    </style>
+<script src="js/auth-interceptor.js?v=52"></script>
+</head>
+
+<body>
+    <div id="widget"></div>
+    <div class="w-empty" id="wEmpty">
+        <div class="w-empty__icon">⚔️</div>
+        <div class="w-empty__text">Нет активных челленджей</div>
+    </div>
+
+    <script>
+        const BOT_API_URL = (() => {
+            const params = new URLSearchParams(window.location.search);
+            const host = params.get('api') || localStorage.getItem('api_host') || localStorage.getItem('bot_api_url');
+            if (host) return host;
+            return 'https://mir-tankov-production.up.railway.app';
+        })();
+        const P = new URLSearchParams(window.location.search);
+        const myId = P.get('telegram_id') ? parseInt(P.get('telegram_id')) : null;
+        const layout = parseInt(P.get('layout')) || 1;
+        const themeName = P.get('theme') || 'gold';
+        const accentOverride = P.get('accent') ? '#' + P.get('accent') : null;
+        const borderStyle = P.get('border') || 'gold';
+        const bgOp = (parseInt(P.get('bg')) || 90) / 100;
+        const fontScale = (parseInt(P.get('font')) || 100) / 100;
+        const showTimer = P.get('timer') !== '0';
+        const showMe = P.get('me') !== '0';
+        const showTop = P.get('top') !== '0';
+        const topCount = parseInt(P.get('topcount')) || 3;
+        const showLive = P.get('live') !== '0';
+        const showBattles = P.get('battles') !== '0';
+
+        const COND = {
+            damage:          { icon: '<img src="img/military/cond_damage.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'урона',   short: 'ДМГ',  color: '#ff9800' },
+            frags:           { icon: '<img src="img/military/cond_frags.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'фрагов',  short: 'ФРАГ', color: '#f44336' },
+            xp:              { icon: '<img src="img/military/cond_xp.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'опыта',   short: 'ОПЫТ', color: '#ffd700' },
+            spotting:        { icon: '<img src="img/military/cond_spotting.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'засвета', short: 'СВЕТ', color: '#2196f3' },
+            spotting_damage: { icon: '🔭', unit: 'урона по засвету', short: 'ЗАСВ', color: '#00bcd4' },
+            blocked:         { icon: '<img src="img/military/cond_blocked.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'блока',   short: 'БЛОК', color: '#607d8b' },
+            wins:            { icon: '<img src="img/military/cond_wins.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'побед',   short: 'ПОБ',  color: '#ffd700' },
+            combined:        { icon: '<img src="img/military/cond_combined.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'суммарки', short: 'СУМ',  color: '#ff9800' },
+        };
+        const THEMES = {
+            gold: { bg: 'rgba(26,21,8,{o})', ac: '#f5d36e', acD: '#8B6914', tc: '#ffeeb0', ts: '0 0 15px rgba(245,211,110,.4),0 2px 0 #a07c2a,0 4px 8px rgba(0,0,0,.7)' },
+            neon: { bg: 'rgba(15,5,32,{o})', ac: '#a855f7', acD: '#6d28d9', tc: '#d8b4fe', ts: '0 0 15px rgba(168,85,247,.5),0 2px 0 #6d28d9' },
+            military: { bg: 'rgba(15,26,10,{o})', ac: '#22c55e', acD: '#14532d', tc: '#bbf7d0', ts: '0 0 15px rgba(34,197,94,.4),0 2px 0 #14532d' },
+            fire: { bg: 'rgba(26,8,0,{o})', ac: '#ff6b35', acD: '#b33d00', tc: '#ffd4b0', ts: '0 0 15px rgba(255,107,53,.5),0 2px 0 #b33d00' },
+            ice: { bg: 'rgba(4,10,20,{o})', ac: '#38bdf8', acD: '#0369a1', tc: '#bae6fd', ts: '0 0 15px rgba(56,189,248,.5),0 2px 0 #0369a1' },
+        };
+
+        const T = THEMES[themeName] || THEMES.gold;
+        const AC = accentOverride || T.ac;
+        const BG = T.bg.replace('{o}', bgOp.toFixed(2));
+
+        let timerInterval = null;
+
+        // ═══════ BUILDERS ═══════
+        function buildLayout1(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
+            const ctaText = ch.prize_cta || '';
+            
+            return `<div class="L1" style="background:linear-gradient(180deg,${AC}22,${AC}08)">
+                <div class="wi" style="background:${BG}">
+                    ${showLive ? `<div class="w-badge" style="background:linear-gradient(135deg,#f44,#c00)">LIVE</div>` : ''}
+                    <div class="w-hdr">
+                        <div class="w-icon">${ch.icon || '🔥'}</div>
+                        <div class="w-ttl" style="color:${T.tc};text-shadow:${T.ts}">${ch.title || 'Челлендж'}</div>
+                        ${ch.description ? `<div class="w-desc">${ch.description}</div>` : ''}
+                    </div>
+                    ${showTimer ? `<div class="w-time"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div><div id="wTimerLabel" style="font-size:.5rem;color:${AC};opacity:.6;letter-spacing:2px;margin-top:2px"></div></div>` : ''}
+                    <div class="w-row"><span>👥 <span class="w-rv" style="color:${AC}">${ch.participants_count || 0}</span> игроков</span><span>${ch.prize_description ? `🏆 <span class="w-rv" style="color:${AC}">${ch.prize_description}</span>` : `🧀 <span class="w-rv" style="color:${AC}">${ch.reward_coins || 0}</span> приз`}</span></div>
+                    ${ch.prize_image_url ? `<div style="text-align:center;margin:6px 0"><img src="${ch.prize_image_url}" alt="Приз" style="max-width:120px;max-height:60px;border-radius:8px;border:1px solid ${AC}33;object-fit:contain" onerror="this.style.display='none'"></div>` : ''}
+                    ${isEnroll && ctaText ? `<div style="text-align:center;margin:8px 4px;padding:8px 12px;background:linear-gradient(135deg,${AC}15,${AC}08);border:1px solid ${AC}22;border-radius:8px;font-size:.55rem;color:${T.tc};line-height:1.4;opacity:.9">${ctaText}</div>` : ''}
+                    ${buildCondBadges((ch.condition || 'damage').split(','))}
+                    ${!isEnroll && showMe && me ? `<div class="w-me" style="border:1px solid ${AC}33;background:${AC}0d">
+                        <div class="w-av" style="background:linear-gradient(135deg,${AC},${T.acD});color:${T.bg.split(',')[0].replace('rgba(', '')};border:2px solid ${AC}">${(me.nickname || 'T').substring(0, 2).toUpperCase()}</div>
+                        <div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}</div>
+                        <div class="w-ms"><div class="w-msv" style="color:${T.tc};text-shadow:0 0 10px ${AC}44">${formatCondValue(me, ch)}</div><div class="w-msu">${cond.unit}</div></div>
+                    </div>`: ''}
+                    ${!isEnroll && showTop ? `<div class="w-lbt">Top ${topCount} Leaderboard</div>${top3.map((p, i) => {
+                const n = p.nickname || 'Танкист'; const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesTag = showBattles && maxB > 0 ? `<div class="w-lb-battles" style="background:${AC}18;color:${AC}">${p.battles_played || 0}/${maxB}</div>` : ''; return `<div class="w-li" style="background:${AC}${['14', '08', '06'][i] || '04'};border:1px solid ${AC}${['22', '11', '0a'][i] || '08'}">
+                        <div class="w-lr" style="color:${T.tc}">${i + 1}</div>
+                        <div class="w-la" style="background:linear-gradient(135deg,${AC},${T.acD})">${n.substring(0, 2).toUpperCase()}</div>
+                        <div class="w-ln">${isMe ? '⭐ ' : ''}${n}</div>
+                        ${battlesTag}
+                        <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
+                    </div>`}).join('')}` : ''}
+                </div></div>`;
+        }
+
+        function buildLayout2(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
+            const ctaText = ch.prize_cta || '';
+            return `<div class="L2" style="background:linear-gradient(90deg,${AC}22,${AC}08)">
+                <div class="wi" style="background:${BG};position:relative">
+                    ${showLive ? `<div class="w-badge" style="background:linear-gradient(135deg,#f44,#c00)">LIVE</div>` : ''}
+                    <div class="w-top">
+                        ${showTimer ? `<div class="w-left"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div><div id="wTimerLabel" class="w-tlab" style="color:${AC}">осталось</div></div>` : ''}
+                        <div class="w-right">
+                            <div class="w-ttl" style="color:${T.tc}">${ch.icon || '🔥'} ${ch.title || 'Челлендж'}</div>
+                            ${!isEnroll && showMe && me ? `<div class="w-me-line" style="background:${AC}0d;border:1px solid ${AC}22">
+                                <div class="w-av" style="background:linear-gradient(135deg,${AC},${T.acD})">${(me.nickname || 'T').substring(0, 2).toUpperCase()}</div>
+                                <div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}</div>
+                                <div class="w-msv" style="color:${T.tc}">${formatCondValue(me, ch)}</div>
+                            </div>`: ''}
+                            ${isEnroll && ctaText ? `<div style="font-size:.45rem;color:${T.tc};opacity:.8;margin-top:4px">${ctaText}</div>` : ''}
+                        </div>
+                    </div>
+                    ${!isEnroll && showTop ? `<div class="w-bot">${top3.map((p, i) => {
+                const n = p.nickname || 'Танкист'; return `<div class="w-li" style="background:${AC}${['10', '08', '06'][i]};border:1px solid ${AC}15">
+                        <div class="w-lr" style="color:${T.tc}">${i + 1}</div>
+                        <div class="w-ln">${n}</div>
+                        <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
+                    </div>`}).join('')}</div>` : ''}
+                </div></div>`;
+        }
+
+        function buildLayout3(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
+            return `<div class="L3" style="background:${AC}33">
+                <div class="wi" style="background:${BG}">
+                    ${showLive ? `<div class="w-badge" style="background:#e00">LIVE</div>` : ''}
+                    <div class="w-sep" style="background:${AC}"></div>
+                    <div class="w-ttl" style="color:${T.tc}">${ch.icon || '🔥'} ${ch.title || 'Челлендж'}</div>
+                    <div class="w-sep" style="background:${AC}"></div>
+                    ${showTimer ? `<div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div>` : ''}
+                    ${!isEnroll && showMe && me ? `<><div class="w-sep" style="background:${AC}"></div><div class="w-me-mini"><div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}:</div><div class="w-msv" style="color:${T.tc}">${formatCondValue(me, ch)}</div></div></>` : ''}
+                    ${!isEnroll && showTop && top3.length ? `<div class="w-sep" style="background:${AC}"></div><div class="w-top3">${top3.map((p, i) => `<div class="w-ti"><span class="w-tr" style="color:${AC}">${['🥇', '🥈', '🥉'][i]}</span><span class="w-tn">${p.nickname || '?'}</span><span class="w-tval" style="color:${T.tc}">${formatCondValue(p, ch)}</span></div>`).join('')}</div>` : ''}
+                </div></div>`;
+        }
+
+        function buildLayout4(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
+            const ctaText = ch.prize_cta || '';
+            const all = !isEnroll ? top3.map((p, i) => {
+                const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesTag = showBattles && maxB > 0 ? `<div class="w-lb-battles" style="background:${AC}18;color:${AC}">${p.battles_played || 0}/${maxB}</div>` : ''; return `<div class="w-li${isMe ? ' w-li--me' : ''}" style="${isMe ? `background:${AC}12;border-left:3px solid ${AC}` : ''}">
+                <div class="w-lr" style="color:${['#ffd700', '#c0c0c0', '#cd7f32'][i] || T.tc}">${i + 1}</div>
+                <div class="w-ln">${isMe ? '⭐ ' : ''}${p.nickname || 'Танкист'}</div>
+                ${battlesTag}
+                <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
+            </div>`}).join('') : '';
+            return `<div class="L4" style="border:1px solid ${AC}33">
+                <div class="wi" style="background:${BG}">
+                    ${showLive ? `<div class="w-badge" style="background:#e00">LIVE</div>` : ''}
+                    <div class="w-head">
+                        <div class="w-ttl" style="color:${AC}">${ch.title || 'Челлендж'}</div>
+                        ${showTimer ? `<div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div>` : ''}
+                    </div>
+                    <div class="w-stats"><span>👥 <span class="w-rv" style="color:${AC}">${ch.participants_count || 0}</span> игроков</span><span>${ch.prize_description ? `🏆 <span class="w-rv" style="color:${AC}">${ch.prize_description}</span>` : `🧀 <span class="w-rv" style="color:${AC}">${ch.reward_coins || 0}</span>`}</span></div>
+                    ${isEnroll && ctaText ? `<div style="text-align:center;padding:6px 10px;font-size:.4rem;color:${T.tc};opacity:.8">${ctaText}</div>` : ''}
+                    ${buildCondBadges((ch.condition || 'damage').split(','))}
+                    ${!isEnroll && showTop ? `<div class="w-thead"><span>#</span><span>Игрок</span><span>${cond.unit}</span></div>${all}` : ''}
+                </div></div>`;
+        }
+
+        function buildLayout5(ch, cond, me, top3) {
+            const isEnroll = currentPhase === 'enrollment';
+            return `<div class="L5">
+                <div class="wi">
+                    ${showLive ? `<div class="w-badge" style="background:${AC};color:#000">LIVE</div>` : ''}
+                    <div class="w-corners">
+                        <div class="w-corner" style="background:${BG};border-color:${AC}">
+                            <div id="wTimerLabel" class="w-c-label" style="color:${AC}">⏱ Осталось</div>
+                            ${showTimer ? `<div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div>` : ''}
+                            <div class="w-ttl" style="color:${AC}">${ch.icon || '🔥'} ${ch.title || 'Челлендж'}</div>
+                        </div>
+                        ${!isEnroll && showMe && me ? `<div class="w-corner" style="background:${BG};border-color:${AC}">
+                            <div class="w-c-label" style="color:${AC}">👤 ${cond.unit}</div>
+                            <div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}</div>
+                            <div class="w-c-val" style="color:${T.tc}">${formatCondValue(me, ch)}</div>
+                            <div class="w-c-sub">${cond.unit}</div>
+                        </div>`: ''}
+                    </div>
+                    ${!isEnroll && showTop ? `<div class="w-bar" style="background:${BG};display:flex;gap:4px;padding:4px">${top3.map((p, i) => `<div class="w-li" style="background:${AC}${['12', '0a', '06'][i]};border:1px solid ${AC}20;border-radius:6px">
+                        <div class="w-lr" style="color:${['#ffd700', '#c0c0c0', '#cd7f32'][i]}">${i + 1}</div>
+                        <div class="w-ln">${p.nickname || '?'}</div>
+                        <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
+                    </div>`).join('')}</div>` : ''}
+                </div></div>`;
+        }
+
+        const BUILDERS = { 1: buildLayout1, 2: buildLayout2, 3: buildLayout3, 4: buildLayout4, 5: buildLayout5 };
+
+        // ═══════ LOAD & RENDER ═══════
+        let currentPhase = 'none';
+        let lastDataHash = '';
+
+        async function loadWidget() {
+            try {
+                if (currentPhase !== 'enrollment') {
+                    try { await fetch(`${BOT_API_URL}/api/global-challenge/refresh-stats`, { method: 'POST' }); } catch (e) { }
+                }
+                const resp = await fetch(`${BOT_API_URL}/api/global-challenge/active`);
+                const data = await resp.json();
+                
+                if ((data.status === 'active' || data.status === 'enrollment' || data.status === 'wheel_pending') && data.challenge) {
+                    const hash = JSON.stringify({
+                        s: data.status,
+                        id: data.challenge.id,
+                        pc: data.challenge.participants_count,
+                        lb: (data.challenge.leaderboard || []).map(p => `${p.telegram_id}:${p.current_value}:${p.battles_played||0}`)
+                    });
+                    
+                    const phaseChanged = currentPhase !== data.status;
+                    currentPhase = data.status;
+                    
+                    if (hash !== lastDataHash || phaseChanged) {
+                        lastDataHash = hash;
+                        showChallenge(data.challenge);
+                    }
+                } else {
+                    currentPhase = 'none';
+                    lastDataHash = '';
+                    showEmpty();
+                }
+            } catch (e) { }
+        }
+
+        function showEmpty() {
+            document.getElementById('widget').innerHTML = '';
+            document.getElementById('wEmpty').style.display = '';
+        }
+        function formatCondValue(player, ch) {
+            const conditions = (ch.condition || 'damage').split(',');
+            if (conditions.length <= 1) {
+                return (player.current_value || 0).toLocaleString('ru');
+            }
+            let cv = player.condition_values;
+            if (typeof cv === 'string') {
+                try { cv = JSON.parse(cv); } catch (e) { cv = null; }
+            }
+            if (cv && typeof cv === 'object') {
+                return conditions.map(c => {
+                    const ci = COND[c] || COND.damage;
+                    const val = (cv[c] || 0).toLocaleString('ru');
+                    return `<span style="display:inline-flex;align-items:center;gap:2px;padding:1px 5px;background:${ci.color}18;border:1px solid ${ci.color}33;border-radius:10px;font-size:.85em;white-space:nowrap">${ci.icon}<span style="color:${ci.color};font-weight:700">${val}</span></span>`;
+                }).join(' ');
+            }
+            return (player.current_value || 0).toLocaleString('ru');
+        }
+
+        function buildCondBadges(conditions) {
+            if (conditions.length <= 1) return '';
+            return `<div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin:6px 0">${conditions.map(c => {
+                const ci = COND[c] || COND.damage;
+                return `<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:${ci.color}15;border:1px solid ${ci.color}30;border-radius:12px;font-size:11px;color:${ci.color};font-weight:600">${ci.icon} ${ci.short}</span>`;
+            }).join('')}</div>`;
+        }
+
+        function showChallenge(ch) {
+            document.getElementById('wEmpty').style.display = 'none';
+            const conditions = (ch.condition || 'damage').split(',');
+            const baseCond = COND[conditions[0]] || COND.damage;
+            const cond = { ...baseCond };
+            if (conditions.length > 1) {
+                cond.unit = conditions.map(c => (COND[c] || COND.damage).short).join('+');
+                cond.icon = conditions.map(c => (COND[c] || COND.damage).icon).join(' ');
+            }
+            const lb = ch.leaderboard || [];
+            const me = lb.find(p => p.telegram_id === myId);
+            const top3 = lb.slice(0, topCount);
+            const builder = BUILDERS[layout] || BUILDERS[1];
+            document.getElementById('widget').innerHTML = builder(ch, cond, me, top3);
+
+            const w = document.getElementById('widget').firstElementChild;
+            if (w && fontScale !== 1) w.style.fontSize = (fontScale * 16) + 'px';
+
+            if (showTimer) {
+                if (currentPhase === 'enrollment') {
+                    const enrollEnd = ch.enrollment_ends_at || ch.ends_at;
+                    startTimer(enrollEnd, 'ДО СТАРТА');
+                } else if (currentPhase === 'active') {
+                    // Hide timer if it's a battle-count challenge (duration = 0)
+                    if (ch.challenge_duration_minutes > 0 && ch.ends_at) {
+                        startTimer(ch.ends_at, 'ОСТАЛОСЬ');
+                    } else {
+                        const tel = document.getElementById('wTimer');
+                        const tlbl = document.getElementById('wTimerLabel');
+                        if (tel) tel.textContent = 'АКТИВЕН';
+                        if (tlbl) tlbl.textContent = 'СТАТИСТИКА ВКЛ';
+                    }
+                }
+            }
+        }
+
+        function startTimer(endsAtStr, label) {
+            if (timerInterval) clearInterval(timerInterval);
+            const endsAt = new Date(endsAtStr);
+            
+            // Set label once at start
+            setTimeout(() => {
+                const labelEl = document.getElementById('wTimerLabel');
+                if (labelEl && label) labelEl.textContent = label;
+            }, 50);
+            
+            async function onTimerEnd() {
+                clearInterval(timerInterval);
+                const el = document.getElementById('wTimer');
+                if (el) el.textContent = '00:00';
+                
+                // If enrollment just ended — trigger auto-start on server
+                if (currentPhase === 'enrollment') {
+                    try {
+                        await fetch(`${BOT_API_URL}/api/global-challenge/auto-start`, { method: 'POST' });
+                    } catch(e) {}
+                }
+                // Reload widget after server processes transition
+                setTimeout(loadWidget, 1500);
+                setTimeout(loadWidget, 4000);
+            }
+            
+            function tick() {
+                const el = document.getElementById('wTimer');
+                if (!el) return;
+                const diff = Math.max(0, Math.floor((endsAt - new Date()) / 1000));
+                if (diff <= 0) { onTimerEnd(); return; }
+                const h = Math.floor(diff / 3600), m = Math.floor((diff % 3600) / 60), s = diff % 60;
+                el.textContent = h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                if (diff < 60) el.classList.add('w-tv--danger'); else el.classList.remove('w-tv--danger');
+            }
+            tick();
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        loadWidget();
+        setInterval(loadWidget, 10000);
+    </script>
+</body>
+
+</html>

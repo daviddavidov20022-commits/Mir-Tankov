@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Друзья — Мир Танков</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/friends.css">
+<script src="js/auth-interceptor.js?v=52"></script>
+</head>
+
+<body>
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <div class="friends-page">
+        <a href="index.html" class="back-btn">← Назад</a>
+
+        <!-- My Avatar -->
+        <div class="my-profile-bar">
+            <div class="my-avatar" id="myAvatar" onclick="openAvatarPicker()">🪖</div>
+            <div class="my-profile-info">
+                <div class="my-name" id="myName">Танкист</div>
+                <div class="my-status">🟢 Онлайн</div>
+            </div>
+            <button class="edit-avatar-btn" onclick="openAvatarPicker()">✏️</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="friends-tabs">
+            <button class="friends-tab friends-tab--active" onclick="switchFriendsTab('list', this)">👥 Друзья</button>
+            <button class="friends-tab" onclick="switchFriendsTab('requests', this)">📩 Запросы <span class="tab-badge"
+                    id="requestsBadge" style="display:none">0</span></button>
+            <button class="friends-tab" onclick="switchFriendsTab('add', this)">➕ Найти</button>
+        </div>
+
+        <!-- TAB: Friends List -->
+        <div class="ftab-content ftab-content--active" id="ftab-list">
+            <div class="friends-list" id="friendsList"></div>
+        </div>
+
+        <!-- TAB: Friend Requests -->
+        <div class="ftab-content" id="ftab-requests">
+            <div id="requestsList"></div>
+        </div>
+
+        <!-- TAB: Add Friend -->
+        <div class="ftab-content" id="ftab-add">
+            <div class="search-box">
+                <input type="text" class="search-box__input" id="friendSearchInput" placeholder="Введи ник игрока...">
+                <button class="search-box__btn" onclick="searchForFriend()">🔍</button>
+            </div>
+            <div id="friendSearchResults"></div>
+        </div>
+    </div>
+
+    <!-- CHAT MODAL -->
+    <div class="chat-overlay" id="chatOverlay">
+        <div class="chat-container">
+            <div class="chat-header">
+                <button class="chat-back" onclick="closeChat()">←</button>
+                <div class="chat-header__avatar" id="chatAvatar">🪖</div>
+                <div class="chat-header__info">
+                    <div class="chat-header__name" id="chatName">Друг</div>
+                    <div class="chat-header__status" id="chatStatus">В сети</div>
+                </div>
+                <button class="chat-duel-btn" id="chatDuelBtn" onclick="challengeFriend()">⚔️</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-bar">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Сообщение..."
+                    onkeydown="if(event.key==='Enter')sendMsg()">
+                <button class="chat-send" onclick="sendMsg()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AVATAR PICKER MODAL -->
+    <div class="modal-overlay" id="avatarModal">
+        <div class="avatar-picker">
+            <div class="avatar-picker__header">
+                <span>🎨 Выбери аватарку</span>
+                <button class="modal-header__close" onclick="closeAvatarPicker()">✕</button>
+            </div>
+            <div class="avatar-picker__grid" id="avatarGrid"></div>
+            <div class="avatar-picker__custom">
+                <label class="form-label">Или загрузи фото</label>
+                <input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarUpload(event)"
+                    style="display:none">
+                <button class="upload-avatar-btn" onclick="document.getElementById('avatarFileInput').click()">📷
+                    Загрузить фото</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </div>
+        <div class="nav-item" onclick="location.href='challenges.html?v=50'">
+            <span class="nav-icon">⚔️</span>
+            <span class="nav-label">Арена</span>
+        </div>
+        <div class="nav-item nav-item--active">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Друзья</span>
+        </div>
+        <div class="nav-item" onclick="goToProfile()">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
+        </div>
+    </nav>
+
+    <script src="js/app.js?v=57"></script>
+    <script src="js/friends.js?v=3"></script>
+
+    <!-- ИНЛАЙН: Друзья — полная логика (обходит кэш) -->
+    <script>
+    (function() {
+        var API = 'https://mir-tankov-production.up.railway.app';
+        var myId = null;
+
+        // Получить telegram_id из всех источников
+        function getMyId() {
+            try {
+                var tg = window.Telegram && window.Telegram.WebApp;
+                if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+                    var id = String(tg.initDataUnsafe.user.id);
+                    localStorage.setItem('my_telegram_id', id);
+                    return id;
+                }
+            } catch(e){}
+            var urlId = new URLSearchParams(window.location.search).get('telegram_id');
+            if (urlId) { localStorage.setItem('my_telegram_id', urlId); return urlId; }
+            return localStorage.getItem('my_telegram_id') ||
+                   localStorage.getItem('tg_user_id') ||
+                   localStorage.getItem('site_telegram_id');
+        }
+
+        // Переключение вкладок (гарантированно работает)
+        window.switchFriendsTab = function(tabId, btn) {
+            document.querySelectorAll('.ftab-content').forEach(function(t){ t.classList.remove('ftab-content--active'); });
+            document.querySelectorAll('.friends-tab').forEach(function(t){ t.classList.remove('friends-tab--active'); });
+            var tab = document.getElementById('ftab-' + tabId);
+            if (tab) tab.classList.add('ftab-content--active');
+            if (btn) btn.classList.add('friends-tab--active');
+        };
+
+        // Отрисовка друзей
+        function renderFriendsInline(friends, requests) {
+            var list = document.getElementById('friendsList');
+            var badge = document.getElementById('requestsBadge');
+
+            // Бейдж запросов
+            if (badge) {
+                badge.style.display = requests.length > 0 ? 'inline' : 'none';
+                badge.textContent = requests.length;
+            }
+
+            if (!list) return;
+
+            if (!friends || friends.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state__icon">👥</div>' +
+                    '<div class="empty-state__text">У тебя пока нет друзей.<br>Перейди во вкладку «Найти» и добавь!</div></div>';
+                return;
+            }
+
+            list.innerHTML = friends.map(function(f) {
+                var name = f.wot_nickname || f.first_name || f.username || 'Игрок';
+                var isPending = f.status === 'pending';
+                var statusLabel = isPending ? '⏳ Ожидает подтверждения' : '✅ Друг';
+                var statusColor = isPending ? '#5A6577' : '#4ade80';
+                return '<div class="friend-card ' + (isPending ? 'friend-card--pending' : 'friend-card--accepted') + '">' +
+                    '<div class="friend-card__avatar">🪖</div>' +
+                    '<div class="friend-card__info">' +
+                        '<div class="friend-card__name">' + name + '</div>' +
+                        '<div class="friend-card__wot">' + (f.wot_nickname || '') + '</div>' +
+                        '<div style="font-size:0.6rem;color:' + statusColor + ';margin-top:2px">' + statusLabel + '</div>' +
+                    '</div>' +
+                    '<div class="friend-card__actions">' +
+                        (isPending ? '' :
+                            '<button class="friend-card__action friend-card__action--duel" ' +
+                            'onclick="location.href=\'challenges.html?opponent=' + encodeURIComponent(name) + '&opponent_id=' + f.telegram_id + '\'">⚔️</button>'
+                        ) +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            // Отрисовка запросов
+            var reqList = document.getElementById('requestsList');
+            if (reqList) {
+                if (!requests || requests.length === 0) {
+                    reqList.innerHTML = '<div class="empty-state"><div class="empty-state__icon">📩</div>' +
+                        '<div class="empty-state__text">Нет входящих запросов</div></div>';
+                } else {
+                    reqList.innerHTML = requests.map(function(r) {
+                        var rname = r.wot_nickname || r.first_name || r.username || 'Игрок';
+                        return '<div class="request-card">' +
+                            '<div class="request-card__avatar">🪖</div>' +
+                            '<div class="request-card__info">' +
+                                '<div class="request-card__name">' + rname + '</div>' +
+                                '<div class="request-card__sub">' + (r.wot_nickname || '') + '</div>' +
+                            '</div>' +
+                            '<div class="request-btns">' +
+                                '<button class="request-btn-accept" onclick="inlineAccept(' + r.telegram_id + ')">✅ Принять</button>' +
+                                '<button class="request-btn-decline" onclick="inlineDecline(' + r.telegram_id + ')">✕</button>' +
+                            '</div>' +
+                        '</div>';
+                    }).join('');
+                }
+            }
+        }
+
+        // Загрузка друзей с сервера
+        async function loadFriends() {
+            myId = getMyId();
+            if (!myId) {
+                var list = document.getElementById('friendsList');
+                if (list) list.innerHTML = '<div class="empty-state"><div class="empty-state__icon">🔑</div>' +
+                    '<div class="empty-state__text">Откройте через Telegram-бот,<br>чтобы система вас узнала.</div></div>';
+                return;
+            }
+            try {
+                var r = await fetch(API + '/api/friends?telegram_id=' + myId);
+                var d = await r.json();
+                renderFriendsInline(d.friends || [], d.requests || []);
+            } catch(e) {
+                console.error('Friends load error', e);
+            }
+        }
+
+        // Поиск игроков
+        window.searchForFriend = async function() {
+            var input = document.getElementById('friendSearchInput');
+            var query = input ? input.value.trim() : '';
+            if (query.length < 2) { return; }
+            var results = document.getElementById('friendSearchResults');
+            if (results) results.innerHTML = '<div style="text-align:center;padding:20px;color:#5A6577">🔍 Ищем «' + query + '»...</div>';
+            try {
+                var LESTA_API = 'https://api.tanki.su/wot';
+                var LESTA_APP = 'c984faa7dc529f4cb0139505d5e8043c';
+                var url = LESTA_API + '/account/list/?application_id=' + LESTA_APP +
+                    '&search=' + encodeURIComponent(query) + '&type=startswith&limit=10';
+                var resp = await fetch(url);
+                var data = await resp.json();
+                if (data.status !== 'ok' || !data.data || data.data.length === 0) {
+                    results.innerHTML = '<div class="empty-state" style="padding:30px">' +
+                        '<div class="empty-state__icon">😕</div>' +
+                        '<div class="empty-state__text">Игрок «' + query + '» не найден</div></div>';
+                    return;
+                }
+                // Проверяем кто в боте
+                var accountIds = data.data.map(function(p){ return p.account_id; });
+                var nicknames = data.data.map(function(p){ return p.nickname; });
+                var registered = {};
+                try {
+                    var cr = await fetch(API + '/api/users/check', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({account_ids: accountIds, nicknames: nicknames})
+                    });
+                    var cd = await cr.json();
+                    if (cd && cd.registered) registered = cd.registered;
+                } catch(e2){}
+
+                results.innerHTML = data.data.map(function(player) {
+                    var regInfo = registered[String(player.account_id)];
+                    var badge, btn;
+                    if (regInfo) {
+                        badge = '<span style="font-size:0.6rem;color:#4ade80">● Участник бота</span>';
+                        btn = myId ?
+                            '<button class="request-btn-accept" onclick="inlineAddFriend(\'' +
+                            player.nickname.replace(/'/g, "\\'") + '\',' + regInfo.telegram_id + ')">➕ Добавить</button>' : '';
+                    } else {
+                        badge = '<span style="font-size:0.6rem;color:#5A6577">⚫ Не в приложении</span>';
+                        btn = '';
+                    }
+                    return '<div class="friend-card" style="margin-bottom:6px;' + (regInfo ? '' : 'opacity:0.6') + '">' +
+                        '<div class="friend-card__avatar">🪖</div>' +
+                        '<div class="friend-card__info">' +
+                            '<div class="friend-card__name">' + player.nickname + '</div>' +
+                            '<div class="friend-card__wot">' + badge + '</div>' +
+                        '</div>' + btn + '</div>';
+                }).join('');
+            } catch(err) {
+                if (results) results.innerHTML = '<div class="empty-state"><div class="empty-state__icon">⚠️</div>' +
+                    '<div class="empty-state__text">Ошибка поиска.</div></div>';
+            }
+        };
+
+        // Добавить друга
+        window.inlineAddFriend = async function(name, toId) {
+            if (!myId) return;
+            try {
+                var r = await fetch(API + '/api/friends/add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({from_telegram_id: myId, to_telegram_id: toId})
+                });
+                var d = await r.json();
+                alert(d.success ? (d.auto_accepted ? '🤝 Теперь друзья!' : '📩 Запрос отправлен ' + name + '!') : (d.error || 'Ошибка'));
+                if (d.success) loadFriends();
+            } catch(e) { alert('Ошибка сети'); }
+        };
+
+        window.inlineAccept = async function(fromId) {
+            if (!myId) return;
+            await fetch(API + '/api/friends/accept', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({my_telegram_id: myId, from_telegram_id: fromId})
+            });
+            loadFriends();
+        };
+
+        window.inlineDecline = async function(fromId) {
+            if (!myId) return;
+            await fetch(API + '/api/friends/decline', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({my_telegram_id: myId, from_telegram_id: fromId})
+            });
+            loadFriends();
+        };
+
+        // Запуск
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadFriends);
+        } else {
+            loadFriends();
+        }
+
+        // Кнопка Enter в поиске
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.querySelector('.search-box__btn');
+            if (btn) {
+                btn.onclick = window.searchForFriend;
+                btn.style.pointerEvents = 'auto';
+                btn.style.position = 'relative';
+                btn.style.zIndex = '10';
+            }
+            var inp = document.getElementById('friendSearchInput');
+            if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') window.searchForFriend(); });
+        });
+
+    })();
+    </script>
+</body>
+
+</html>

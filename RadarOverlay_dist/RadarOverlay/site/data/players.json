@@ -1,0 +1,22 @@
+{
+  "players": [
+    {
+      "telegram_id": 6507474079,
+      "first_name": "Дрон",
+      "username": "Fors604",
+      "wot_nickname": "Fors777_2016",
+      "wot_account_id": 63712847,
+      "avatar": ""
+    },
+    {
+      "telegram_id": 1011431758,
+      "first_name": "Сергей",
+      "username": "rik604",
+      "wot_nickname": "GloriAmtower",
+      "wot_account_id": 101862451,
+      "avatar": ""
+    }
+  ],
+  "total": 2,
+  "updated_at": "2026-03-26T20:44:40.488230"
+}

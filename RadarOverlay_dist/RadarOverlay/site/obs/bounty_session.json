@@ -1,0 +1,50 @@
+{
+  "recent_hits": [
+    {
+      "name": "AlexTestov", 
+      "damage": 505, 
+      "gold": 505, 
+      "time": "2026-04-09 13:51:58.049000"
+    }, 
+    {
+      "name": "1_69_TaNkIsT_69_3", 
+      "damage": 390, 
+      "gold": 390, 
+      "time": "2026-04-09 13:51:34.051000"
+    }, 
+    {
+      "name": "TEDDY_TANK", 
+      "damage": 404, 
+      "gold": 404, 
+      "time": "2026-04-09 13:01:42.199000"
+    }, 
+    {
+      "name": "Mishanya457", 
+      "damage": 772, 
+      "gold": 772, 
+      "time": "2026-04-09 13:01:40.699000"
+    }, 
+    {
+      "name": " Err_dark_tiror", 
+      "damage": 384, 
+      "gold": 384, 
+      "time": "2026-04-09 13:01:34.400000"
+    }
+  ], 
+  "total_damage_received": 4798, 
+  "gold_rate": 1, 
+  "session_start": "2026-04-09 12:44:17.394000", 
+  "attackers": {
+    "olegrandool": 499, 
+    "Mishanya457": 772, 
+    "Lev04ka": 393, 
+    "1_69_TaNkIsT_69_3": 390, 
+    " Err_dark_tiror": 384, 
+    "dobrii1977": 1451, 
+    "AlexTestov": 505, 
+    "TEDDY_TANK": 404
+  }, 
+  "participants_count": 0, 
+  "total_gold_given": 4798, 
+  "last_update": "2026-04-09 13:51:58.050000"
+}

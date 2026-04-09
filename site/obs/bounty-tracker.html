@@ -70,6 +70,21 @@
             height: 18px;
         }
 
+        /* ── Сессия время ── */
+        .session-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 14px;
+            font-size: 0.55rem;
+            color: #5A6577;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .session-bar__time {
+            color: #ff6b5e;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+        }
+
         /* ── Последние попадания (Поп-апы) ── */
         .recent-hits {
             padding: 8px 14px;
@@ -90,18 +105,32 @@
             position: relative;
             overflow: hidden;
         }
-        .hit-row::after {
+        .hit-row--new {
+            border-left-color: #FFD700;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, transparent 100%);
+        }
+        .hit-row--new::after {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
-            animation: flash 1s ease-out forwards;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+            animation: flash 1.2s ease-out forwards;
+        }
+        .hit-row__info {
+            flex: 1;
+            min-width: 0;
         }
         .hit-row__name {
             font-size: 0.85rem;
             font-weight: 700;
             color: #E8E6E3;
-            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .hit-row__tank {
+            font-size: 0.55rem;
+            color: #5A6577;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -140,6 +169,7 @@
             align-items: center;
             padding: 4px 0;
             gap: 8px;
+            transition: all 0.3s ease;
         }
         .hunter-row__rank {
             font-family: 'Russo One', sans-serif;
@@ -152,19 +182,34 @@
         .hunter-row:nth-child(3) .hunter-row__rank { color: #C0C0C0; } /* 2 место */
         .hunter-row:nth-child(4) .hunter-row__rank { color: #CD7F32; } /* 3 место */
         
+        .hunter-row__info {
+            flex: 1;
+            min-width: 0;
+        }
         .hunter-row__name {
             font-size: 0.75rem;
             color: #C8AA6E;
-            flex: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .hunter-row__tank {
+            font-size: 0.5rem;
+            color: #5A6577;
         }
         .hunter-row__total {
             font-family: 'Inter', sans-serif;
             font-weight: 800;
             font-size: 0.75rem;
             color: #E8E6E3;
+        }
+        .hunter-row__bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ff3b30, transparent);
+            transition: width 0.8s ease;
         }
 
         /* ── Дефолт (Theme 1: Классика) ── */
@@ -220,6 +265,19 @@
             0% { opacity: 1; }
             100% { opacity: 0; }
         }
+        @keyframes goldPop {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.3); color: #FFD700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+            100% { transform: scale(1); }
+        }
+        @keyframes newHitGlow {
+            0% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+            30% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+            100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+        }
+        .gold-pop {
+            animation: goldPop 0.5s ease;
+        }
     </style>
 </head>
 <body class="theme-1">
@@ -243,10 +301,26 @@
 
         function formatCount(n) { return (n || 0).toLocaleString().replace(/,/g, ' '); }
 
+        function formatSessionTime(startStr) {
+            if (!startStr) return '--:--';
+            try {
+                const start = new Date(startStr.replace(' ', 'T'));
+                const now = new Date();
+                const diff = Math.floor((now - start) / 1000);
+                if (diff < 0 || isNaN(diff)) return '--:--';
+                const h = Math.floor(diff / 3600);
+                const m = Math.floor((diff % 3600) / 60);
+                const s = diff % 60;
+                if (h > 0) return `${h}ч ${String(m).padStart(2,'0')}м`;
+                return `${m}м ${String(s).padStart(2,'0')}с`;
+            } catch(e) { return '--:--'; }
+        }
+
         let lastData = null;
         let knownHitsCount = 0;
+        let lastTotalGold = 0;
 
-        function renderWidget(data) {
+        function renderWidget(data, isNewHit) {
             const widget = document.getElementById('widget');
             
             // Если статус остановлен
@@ -261,7 +335,7 @@
                 widget.innerHTML = `
                     <div class="header">
                         <div class="header__icon">🎯</div>
-                        <div class="header__title">ОХОТА: ${pcount} уч.</div>
+                        <div class="header__title">ОХОТА${pcount > 0 ? ': ' + pcount + ' уч.' : ''}</div>
                     </div>
                     <div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">
                         Ожидание первых попаданий...
@@ -269,16 +343,23 @@
                 return;
             }
 
-            const pcount = data.participants_count || Object.keys(data.attackers).length;
+            const attackerCount = Object.keys(data.attackers).length;
+            const pcount = data.participants_count || attackerCount;
+            const totalGold = data.total_gold_given || data.total_damage_received || 0;
+            const goldPopClass = isNewHit ? 'gold-pop' : '';
 
             let html = `
                 <div class="header">
                     <div class="header__icon">🎯</div>
                     <div class="header__title">ОХОТА: ${pcount} уч.</div>
-                    <div class="header__total">
-                        ${formatCount(data.total_gold_given)} 
+                    <div class="header__total ${goldPopClass}">
+                        ${formatCount(totalGold)} 
                         <img src="${CONFIG.goldIcon}" onerror="this.outerHTML='<span style=\\'font-size:14px\\'>💰</span>'" alt="">
                     </div>
+                </div>
+                <div class="session-bar">
+                    <span>⏱ ${formatSessionTime(data.session_start)}</span>
+                    <span>Урон: <span class="session-bar__time">${formatCount(data.total_damage_received || 0)}</span></span>
                 </div>
             `;
 
@@ -287,10 +368,14 @@
                 html += '<div class="recent-hits">';
                 // Показываем последние 3
                 const hitsToShow = data.recent_hits.slice(0, 3);
-                for (const hit of hitsToShow) {
+                hitsToShow.forEach((hit, i) => {
+                    const isNew = isNewHit && i === 0;
                     html += `
-                        <div class="hit-row">
-                            <span class="hit-row__name">${hit.name}</span>
+                        <div class="hit-row ${isNew ? 'hit-row--new' : ''}" ${isNew ? 'style="animation: slideInLeft 0.4s ease-out, newHitGlow 1.5s ease"' : ''}>
+                            <div class="hit-row__info">
+                                <div class="hit-row__name">${hit.name}</div>
+                                <div class="hit-row__tank">${hit.tank || ''}</div>
+                            </div>
                             <span class="hit-row__dmg">💥 ${hit.damage}</span>
                             <span class="hit-row__gold">
                                 +${hit.gold} 
@@ -298,7 +383,7 @@
                             </span>
                         </div>
                     `;
-                }
+                });
                 html += '</div>';
             }
 
@@ -309,16 +394,32 @@
                 
                 // Сортируем по урону
                 const sortedAttackers = Object.entries(data.attackers)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 5); // Показываем топ-5
+                    .sort((a, b) => {
+                        const da = typeof a[1] === 'object' ? a[1].damage : a[1];
+                        const db = typeof b[1] === 'object' ? b[1].damage : b[1];
+                        return db - da;
+                    })
+                    .slice(0, 5);
                 
+                const maxDmg = (() => {
+                    const first = sortedAttackers[0];
+                    return first ? (typeof first[1] === 'object' ? first[1].damage : first[1]) : 1;
+                })();
+
                 let rank = 1;
-                for (const [name, damage] of sortedAttackers) {
+                for (const [name, info] of sortedAttackers) {
+                    const dmg = typeof info === 'object' ? info.damage : info;
+                    const tank = typeof info === 'object' ? info.tank : '';
+                    const barWidth = Math.round((dmg / maxDmg) * 100);
                     html += `
-                        <div class="hunter-row">
+                        <div class="hunter-row" style="position: relative;">
                             <span class="hunter-row__rank">${rank}</span>
-                            <span class="hunter-row__name">${name}</span>
-                            <span class="hunter-row__total">${formatCount(damage)}</span>
+                            <div class="hunter-row__info">
+                                <div class="hunter-row__name">${name}</div>
+                                ${tank ? `<div class="hunter-row__tank">${tank}</div>` : ''}
+                            </div>
+                            <span class="hunter-row__total">${formatCount(dmg)}</span>
+                            <div class="hunter-row__bar" style="width: ${barWidth}%;"></div>
                         </div>
                     `;
                     rank++;
@@ -335,52 +436,98 @@
                 if (!resp.ok) return;
                 const data = await resp.json();
                 
+                const currentTotalGold = data.total_gold_given || data.total_damage_received || 0;
+                const isNewHit = lastData && currentTotalGold > lastTotalGold;
+
                 // Чтобы не перерисовывать зря, проверяем изменилось ли кол-во хитов или общий урон
                 if (!lastData || 
                     data.total_damage_received !== lastData.total_damage_received ||
                     (data.recent_hits && data.recent_hits.length !== knownHitsCount)) {
                     
+                    lastTotalGold = currentTotalGold;
                     lastData = data;
                     knownHitsCount = data.recent_hits ? data.recent_hits.length : 0;
-                    renderWidget(data);
+                    renderWidget(data, isNewHit);
                 }
             } catch (e) {}
         }
 
+        // ============================================
+        // DEMO MODE — Живая симуляция
+        // ============================================
         function loadDemoData() {
+            const tanks = ['Об. 430У', 'FV4005', 'ИС-7', 'EBR 105', 'Grille 15', 'Leopard 1', 'T57 Heavy', 'Об. 705А', 'Kranvagn'];
+            const names = ['Jove_Hater_99', 'Korben_Fan', 'SniperPro_2026', 'Vasya_Tankist', 'Nagibator228', 'ProArty_2025'];
+            
             const demo = {
-                session_start: new Date().toISOString(),
+                session_start: new Date(Date.now() - 35 * 60000).toISOString(),
                 total_damage_received: 9450,
                 total_gold_given: 9450,
                 gold_rate: 1,
                 attackers: {
-                    'Jove_Hater_99': 3450,
-                    'Korben_Fan': 2100,
-                    'SniperPro_2026': 1500,
-                    'Vasya_Tankist': 1200,
-                    'Nagibator228': 1200
+                    'Jove_Hater_99': { damage: 3450, tank: 'Об. 430У' },
+                    'Korben_Fan': { damage: 2100, tank: 'FV4005' },
+                    'SniperPro_2026': { damage: 1500, tank: 'ИС-7' },
+                    'Vasya_Tankist': { damage: 1200, tank: 'EBR 105' },
+                    'Nagibator228': { damage: 1200, tank: 'Grille 15' }
                 },
                 recent_hits: [
-                    { name: 'Vasya_Tankist', damage: 450, gold: 450, time: new Date().toISOString() },
-                    { name: 'Jove_Hater_99', damage: 750, gold: 750, time: new Date().toISOString() },
-                    { name: 'Nagibator228', damage: 320, gold: 320, time: new Date().toISOString() }
+                    { name: 'Vasya_Tankist', tank: 'EBR 105', damage: 450, gold: 450, time: new Date().toISOString() },
+                    { name: 'Jove_Hater_99', tank: 'Об. 430У', damage: 750, gold: 750, time: new Date().toISOString() },
+                    { name: 'Nagibator228', tank: 'Grille 15', damage: 320, gold: 320, time: new Date().toISOString() }
                 ],
                 last_update: new Date().toISOString()
             };
-            renderWidget(demo);
+            
+            renderWidget(demo, false);
+
+            // Живая симуляция новых попаданий каждые 3-6 секунд
+            function simulateHit() {
+                const name = names[Math.floor(Math.random() * names.length)];
+                const tank = tanks[Math.floor(Math.random() * tanks.length)];
+                const dmg = Math.floor(Math.random() * 600) + 150;
+                const gold = dmg;
+
+                // Обновляем attackers
+                if (!demo.attackers[name]) {
+                    demo.attackers[name] = { damage: 0, tank: tank };
+                }
+                if (typeof demo.attackers[name] === 'object') {
+                    demo.attackers[name].damage += dmg;
+                } else {
+                    demo.attackers[name] += dmg;
+                }
+
+                demo.total_damage_received += dmg;
+                demo.total_gold_given += dmg;
+
+                // Добавляем в recent_hits
+                demo.recent_hits.unshift({
+                    name: name,
+                    tank: tank,
+                    damage: dmg,
+                    gold: gold,
+                    time: new Date().toISOString()
+                });
+                demo.recent_hits = demo.recent_hits.slice(0, 5);
+                demo.last_update = new Date().toISOString();
+
+                renderWidget(demo, true);
+                
+                // Следующий хит через 3-6 секунд
+                const nextDelay = 3000 + Math.random() * 3000;
+                setTimeout(simulateHit, nextDelay);
+            }
+
+            setTimeout(simulateHit, 3000);
+            
+            // Обновляем таймер каждую секунду
+            setInterval(() => renderWidget(demo, false), 15000);
         }
 
         const params = new URLSearchParams(window.location.search);
         if (params.get('demo') === '1' || params.get('demo') === 'true') {
             loadDemoData();
-            // Симуляция новых попаданий в демо
-            setInterval(() => {
-                const names = ['Jove_Hater_99', 'Korben_Fan', 'SniperPro_2026', 'Vasya_Tankist', 'Nagibator228', 'Random_Dude'];
-                const randomName = names[Math.floor(Math.random() * names.length)];
-                const randomDmg = Math.floor(Math.random() * 500) + 200;
-                
-                // ... (демо логика обновления не нужна для простого показа)
-            }, 3000);
         } else {
             if (params.get('json')) CONFIG.jsonUrl = params.get('json');
             loadData();

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVP Challenge Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;800&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            color: #E8E6E3;
+            overflow: hidden;
+        }
+
+        /* ===== CSS Variables (overridden by URL params) ===== */
+        :root {
+            --accent: #C8AA6E;
+            --accent-glow: rgba(200, 170, 110, 0.25);
+            --bg: rgba(10, 14, 20, 0.94);
+            --bg2: rgba(15, 20, 30, 0.97);
+            --card-bg: rgba(0, 0, 0, 0.35);
+            --border: rgba(200, 170, 110, 0.25);
+            --text: #E8E6E3;
+            --text-dim: #8a94a6;
+            --text-muted: #5A6577;
+            --lead-color: #4ade80;
+            --lose-color: #ef4444;
+            --p1-color: #60a5fa;
+            --p2-color: #f59e0b;
+            --border-radius: 18px;
+            --font-scale: 1;
+            --progress-h: 4px;
+            --top-line: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .widget {
+            display: inline-flex;
+            flex-direction: column;
+            padding: calc(20px * var(--font-scale)) calc(28px * var(--font-scale));
+            background: linear-gradient(145deg, var(--bg), var(--bg2));
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            min-width: 460px;
+            max-width: 580px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .widget::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--top-line);
+            opacity: 0.6;
+        }
+
+        /* --- Themes --- */
+        body.theme-neon { --accent: #a855f7; --accent-glow: rgba(168,85,247,0.25); --border: rgba(168,85,247,0.3);
+            --top-line: linear-gradient(90deg, transparent, #a855f7, #6366f1, transparent);
+            --p1-color: #22d3ee; --p2-color: #f472b6; }
+        body.theme-military { --accent: #6b8a3d; --accent-glow: rgba(107,138,61,0.25); --border: rgba(107,138,61,0.3);
+            --bg: rgba(15, 18, 10, 0.95); --bg2: rgba(20, 25, 15, 0.97);
+            --top-line: linear-gradient(90deg, transparent, #6b8a3d, transparent); }
+        body.theme-fire { --accent: #f97316; --accent-glow: rgba(249,115,22,0.25); --border: rgba(249,115,22,0.25);
+            --bg: rgba(20, 10, 5, 0.95); --bg2: rgba(25, 12, 8, 0.97);
+            --top-line: linear-gradient(90deg, transparent, #ef4444, #f97316, transparent);
+            --lead-color: #fbbf24; --p1-color: #fb923c; --p2-color: #f87171; }
+        body.theme-ice { --accent: #38bdf8; --accent-glow: rgba(56,189,248,0.25); --border: rgba(56,189,248,0.2);
+            --bg: rgba(5, 12, 25, 0.96); --bg2: rgba(8, 16, 30, 0.97);
+            --top-line: linear-gradient(90deg, transparent, #38bdf8, #818cf8, transparent);
+            --lead-color: #67e8f9; --p1-color: #7dd3fc; --p2-color: #a5b4fc; }
+        body.theme-blood { --accent: #dc2626; --accent-glow: rgba(220,38,38,0.25); --border: rgba(220,38,38,0.25);
+            --bg: rgba(15, 5, 5, 0.96); --bg2: rgba(20, 8, 8, 0.97);
+            --top-line: linear-gradient(90deg, transparent, #dc2626, transparent);
+            --lead-color: #fca5a5; --p1-color: #f87171; --p2-color: #fbbf24; }
+        body.theme-cyber { --accent: #22d3ee; --accent-glow: rgba(34,211,238,0.25); --border: rgba(34,211,238,0.2);
+            --bg: rgba(5, 5, 15, 0.97); --bg2: rgba(8, 8, 20, 0.98);
+            --top-line: linear-gradient(90deg, #22d3ee, #a855f7, #22d3ee);
+            --p1-color: #34d399; --p2-color: #c084fc; }
+
+        /* Header */
+        .widget-header {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; margin-bottom: 6px;
+        }
+        .widget-header .title {
+            font-family: 'Russo One', sans-serif;
+            font-size: calc(0.85rem * var(--font-scale));
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .widget-header .icon { font-size: calc(1.1rem * var(--font-scale)); }
+
+        /* Subtitle info strip */
+        .widget-info {
+            display: flex; align-items: center; justify-content: center;
+            gap: 14px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .widget-info .info-tag {
+            font-size: calc(0.6rem * var(--font-scale));
+            color: var(--text-muted);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .widget-info .info-tag .val { color: var(--text-dim); font-weight: 600; }
+
+        /* Players section */
+        .players-row {
+            display: flex; align-items: stretch; gap: 12px; margin-bottom: 14px;
+        }
+        .player-card {
+            flex: 1; text-align: center;
+            padding: calc(14px * var(--font-scale)) calc(10px * var(--font-scale)) calc(12px * var(--font-scale));
+            background: var(--card-bg); border-radius: calc(14px * var(--font-scale));
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.5s ease; position: relative;
+        }
+        .player-card.leading {
+            border-color: rgba(74, 222, 128, 0.2);
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.05);
+        }
+        .player-card.losing { border-color: rgba(239, 68, 68, 0.15); }
+
+        .player-label {
+            font-size: calc(0.55rem * var(--font-scale));
+            color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+        }
+        .player-name {
+            font-family: 'Russo One', sans-serif;
+            font-size: calc(0.8rem * var(--font-scale));
+            color: var(--text); margin-bottom: 8px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .player-score {
+            font-size: calc(2.2rem * var(--font-scale));
+            font-family: 'Russo One', sans-serif;
+            line-height: 1; margin-bottom: 6px;
+            transition: all 0.5s ease;
+        }
+        .player-score.updated { animation: scorePop 0.5s ease; }
+        .player-battles {
+            font-size: calc(0.65rem * var(--font-scale));
+            color: var(--text-dim); margin-top: 8px;
+            display: inline-block; padding: 4px 12px;
+            background: rgba(0,0,0,0.3); border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+        .player-battles .done { color: var(--lead-color); font-weight: 700; }
+        .player-battles.battles-completed {
+            border-color: rgba(34,197,94,0.3);
+            background: rgba(34,197,94,0.1);
+            color: #4ade80;
+        }
+
+        /* VS divider */
+        .vs-divider {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 4px; min-width: 36px;
+        }
+        .vs-icon { font-size: calc(1.6rem * var(--font-scale)); filter: drop-shadow(0 0 8px var(--accent-glow)); }
+        .vs-text { font-family: 'Russo One', sans-serif; font-size: 0.5rem; color: rgba(200,170,110,0.4); letter-spacing: 2px; }
+
+        /* Progress bar */
+        .progress-section { margin-bottom: 14px; }
+        .progress-labels {
+            display: flex; justify-content: space-between;
+            font-size: calc(0.55rem * var(--font-scale)); color: var(--text-muted); margin-bottom: 5px;
+        }
+        .progress-bar {
+            height: var(--progress-h); border-radius: 3px;
+            background: rgba(255,255,255,0.06); overflow: hidden; display: flex;
+        }
+        .progress-fill-left {
+            height: 100%; background: linear-gradient(90deg, var(--lead-color), #22c55e);
+            transition: width 0.8s ease; border-radius: 3px 0 0 3px;
+        }
+        .progress-fill-right {
+            height: 100%; background: linear-gradient(90deg, #3b82f6, var(--p1-color));
+            transition: width 0.8s ease; border-radius: 0 3px 3px 0;
+        }
+
+        /* Battle history */
+        .battle-log { border-top: 1px solid rgba(255,255,255,0.04); padding-top: 10px; margin-bottom: 10px; }
+        .battle-log-title {
+            font-size: calc(0.55rem * var(--font-scale)); color: var(--text-muted);
+            letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;
+        }
+        .battle-entry {
+            display: flex; align-items: center; gap: 8px;
+            padding: 4px 8px; border-radius: 6px; margin-bottom: 3px;
+            font-size: calc(0.6rem * var(--font-scale)); background: rgba(255,255,255,0.02);
+        }
+        .battle-entry .be-num { color: var(--text-muted); min-width: 18px; }
+        .battle-entry .be-name { flex: 1; }
+        .battle-entry .be-value { font-weight: 700; min-width: 50px; text-align: right; }
+
+        /* Winner banner */
+        .winner-banner {
+            text-align: center; padding: 14px 20px; border-radius: 12px;
+            background: linear-gradient(135deg, rgba(74,222,128,0.08), rgba(34,197,94,0.04));
+            border: 1px solid rgba(74,222,128,0.2); animation: winGlow 2s ease infinite;
+        }
+        .winner-banner .trophy { font-size: 2rem; margin-bottom: 4px; }
+        .winner-banner .winner-name { font-family: 'Russo One', sans-serif; font-size: 1rem; color: var(--lead-color); }
+        .winner-banner .winner-prize { font-size: 0.7rem; color: var(--accent); margin-top: 4px; }
+
+        /* Footer */
+        .widget-footer {
+            display: flex; justify-content: center; gap: 16px;
+            padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.04);
+        }
+        .footer-tag { font-size: calc(0.55rem * var(--font-scale)); color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+        .footer-tag .ft-val { color: var(--accent); font-weight: 700; }
+
+        /* Loading */
+        .loading { text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 40px; }
+        .loading .spinner { font-size: 1.5rem; animation: spin 1.5s linear infinite; margin-bottom: 8px; }
+
+        /* Branding watermark */
+        .brand-watermark {
+            text-align: center; padding-top: 8px; margin-top: 6px;
+            font-size: calc(0.45rem * var(--font-scale)); color: rgba(255,255,255,0.12);
+            letter-spacing: 1px; text-transform: uppercase;
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+        .brand-watermark.hide { display: none; }
+
+        /* Animations */
+        @keyframes scorePop { 0% { transform: scale(1.4); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes winGlow { 0%, 100% { box-shadow: 0 0 20px rgba(74,222,128,0.05); } 50% { box-shadow: 0 0 30px rgba(74,222,128,0.12); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+        .fade-in { animation: fadeIn 0.4s ease; }
+
+        /* === Layout: compact === */
+        body.layout-compact .widget { min-width: 380px; max-width: 460px; padding: 14px 18px; }
+        body.layout-compact .player-score { font-size: calc(1.6rem * var(--font-scale)); }
+        body.layout-compact .battle-log { display: none; }
+
+        /* === Layout: minimal === */
+        body.layout-minimal .widget { min-width: 340px; max-width: 400px; padding: 12px 16px; border-radius: 12px; }
+        body.layout-minimal .widget-info { display: none; }
+        body.layout-minimal .battle-log { display: none; }
+        body.layout-minimal .widget-footer { display: none; }
+        body.layout-minimal .progress-section { display: none; }
+        body.layout-minimal .player-score { font-size: calc(1.8rem * var(--font-scale)); }
+        body.layout-minimal .player-label { display: none; }
+        body.layout-minimal .brand-watermark { display: none; }
+
+        /* === Layout: horizontal === */
+        body.layout-horizontal .widget { min-width: 600px; max-width: 720px; }
+        body.layout-horizontal .players-row { gap: 16px; }
+
+        /* Hide toggles */
+        .hide-history .battle-log { display: none !important; }
+        .hide-progress .progress-section { display: none !important; }
+        .hide-footer .widget-footer { display: none !important; }
+        .hide-info .widget-info { display: none !important; }
+        .hide-header .widget-header { display: none !important; }
+
+        /* No animations */
+        body.no-anim, body.no-anim * { animation: none !important; transition: none !important; }
+
+        /* Glow border effect */
+        body.glow-border .widget { box-shadow: 0 0 25px var(--accent-glow), 0 8px 40px rgba(0,0,0,0.5); }
+
+        /* Score font variants */
+        body.font-orbitron .player-score, body.font-orbitron .widget-header .title { font-family: 'Orbitron', sans-serif; }
+    </style>
+<script src="js/auth-interceptor.js?v=52"></script>
+</head>
+
+<body>
+    <div class="widget" id="widget">
+        <div class="loading" id="loading">
+            <div class="spinner">⚔️</div>
+            Загрузка челленджа...
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const API_URL = params.get('api') || localStorage.getItem('bot_api_url') || 'https://mir-tankov-production.up.railway.app';
+        const challengeId = params.get('id');
+        const REFRESH_INTERVAL = parseInt(params.get('refresh')) || 20000;
+
+        // ===== Apply URL config =====
+        const theme = params.get('theme') || 'gold';
+        if (theme !== 'gold') document.body.classList.add('theme-' + theme);
+
+        const layout = params.get('layout') || 'full';
+        if (layout !== 'full') document.body.classList.add('layout-' + layout);
+
+        const scoreFont = params.get('font') || 'russo';
+        if (scoreFont === 'orbitron') document.body.classList.add('font-orbitron');
+
+        // Toggles
+        if (params.get('history') === '0') document.body.classList.add('hide-history');
+        if (params.get('progress') === '0') document.body.classList.add('hide-progress');
+        if (params.get('footer') === '0') document.body.classList.add('hide-footer');
+        if (params.get('info') === '0') document.body.classList.add('hide-info');
+        if (params.get('header') === '0') document.body.classList.add('hide-header');
+        if (params.get('anim') === '0') document.body.classList.add('no-anim');
+        if (params.get('glow') === '1') document.body.classList.add('glow-border');
+
+        // Custom accent color
+        const customAccent = params.get('accent');
+        if (customAccent) {
+            const c = '#' + customAccent;
+            document.documentElement.style.setProperty('--accent', c);
+            document.documentElement.style.setProperty('--accent-glow', c + '40');
+            document.documentElement.style.setProperty('--border', c + '40');
+            document.documentElement.style.setProperty('--top-line', `linear-gradient(90deg, transparent, ${c}, transparent)`);
+        }
+
+        // Font scale
+        const scale = parseFloat(params.get('scale')) || 1;
+        document.documentElement.style.setProperty('--font-scale', scale);
+
+        // BG opacity
+        const bgOp = parseFloat(params.get('bgop'));
+        if (!isNaN(bgOp)) {
+            document.documentElement.style.setProperty('--bg', `rgba(10,14,20,${bgOp})`);
+            document.documentElement.style.setProperty('--bg2', `rgba(15,20,30,${Math.min(bgOp + 0.03, 1)})`);
+        }
+
+        // Border radius
+        const br = params.get('radius');
+        if (br) document.documentElement.style.setProperty('--border-radius', br + 'px');
+
+        // Progress height
+        const ph = params.get('pheight');
+        if (ph) document.documentElement.style.setProperty('--progress-h', ph + 'px');
+
+        // Show/hide branding
+        const showBrand = params.get('brand') !== '0';
+
+        const COND_DISPLAY = {
+            damage:   { icon: '💥', name: 'УРОН',    key: 'damage',  avg: 'avg_damage',  unit: '' },
+            spotting: { icon: '👁', name: 'ЗАСВЕТ',  key: 'spotted', avg: 'avg_spotted', unit: '' },
+            blocked:  { icon: '🛡', name: 'БЛОК',    key: 'blocked', avg: 'blocked',     unit: '' },
+            frags:    { icon: '🎯', name: 'ФРАГИ',   key: 'frags',   avg: 'avg_frags',   unit: '' },
+            xp:       { icon: '⭐', name: 'ОПЫТ',    key: 'xp',      avg: 'avg_xp',      unit: '' },
+            wins:     { icon: '🏆', name: 'ПОБЕДЫ',  key: 'wins',    avg: 'winrate',     unit: '%' },
+        };
+
+        let lastV1 = null, lastV2 = null;
+
+        async function loadWidget() {
+            // DEMO mode for widget constructor preview
+            if (!challengeId || challengeId === 'preview' || challengeId === 'demo') {
+                renderWidget({
+                    challenge: { tank_name: 'Объект 140', condition: 'damage', battles: 5, wager: 500 },
+                    from_player: {
+                        nickname: 'GloriAmtower',
+                        delta: { damage: 18420, avg_damage: 3684, spotted: 12, frags: 8, xp: 4200, wins: 3, blocked: 6800, battles_played: 5, battles_total: 5, avg_spotted: 2, avg_frags: 1.6, avg_xp: 840, winrate: 60, accuracy: 72 },
+                        ready: true
+                    },
+                    to_player: {
+                        nickname: 'Fors777_2016',
+                        delta: { damage: 14850, avg_damage: 2970, spotted: 8, frags: 5, xp: 3100, wins: 2, blocked: 4200, battles_played: 4, battles_total: 4, avg_spotted: 2, avg_frags: 1.3, avg_xp: 775, winrate: 50, accuracy: 65 },
+                        ready: false
+                    },
+                    battle_history: [
+                        { player: 'from', nickname: 'GloriAmtower', battle_num: 1, damage: 4200 },
+                        { player: 'to', nickname: 'Fors777_2016', battle_num: 1, damage: 3100 },
+                        { player: 'from', nickname: 'GloriAmtower', battle_num: 2, damage: 3800 },
+                        { player: 'to', nickname: 'Fors777_2016', battle_num: 2, damage: 4500 },
+                        { player: 'from', nickname: 'GloriAmtower', battle_num: 3, damage: 5100 },
+                    ],
+                    both_ready: false,
+                    winner: null
+                });
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${API_URL}/api/challenges/check`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ challenge_id: parseInt(challengeId), telegram_id: 0 })
+                });
+                const data = await resp.json();
+
+                if (data.error) {
+                    document.getElementById('loading').innerHTML = `❌ ${data.error}`;
+                    return;
+                }
+
+                if (data.snapshot_saved) {
+                    document.getElementById('loading').innerHTML =
+                        '<div class="spinner">📸</div>Снимок сохранён. Ожидаем начала боёв...';
+                    return;
+                }
+
+                renderWidget(data);
+            } catch (e) {
+                document.getElementById('loading').innerHTML = '❌ Нет подключения к серверу';
+            }
+        }
+
+        let widgetRendered = false;
+
+        function renderWidget(data) {
+            const fp = data.from_player;
+            const tp = data.to_player;
+            const ch = data.challenge;
+            const cond = COND_DISPLAY[ch.condition] || COND_DISPLAY.damage;
+            const history = data.battle_history || [];
+
+            const v1 = fp.delta[cond.avg] ?? fp.delta[cond.key] ?? 0;
+            const v2 = tp.delta[cond.avg] ?? tp.delta[cond.key] ?? 0;
+
+            const p1Leading = v1 >= v2;
+            const p1Color = p1Leading ? 'var(--lead-color)' : 'var(--lose-color)';
+            const p2Color = !p1Leading ? 'var(--lead-color)' : 'var(--lose-color)';
+
+            const v1Changed = lastV1 !== null && lastV1 !== v1;
+            const v2Changed = lastV2 !== null && lastV2 !== v2;
+            lastV1 = v1; lastV2 = v2;
+
+            const p1Battles = fp.delta.battles_played || 0;
+            const p2Battles = tp.delta.battles_played || 0;
+            const reqBattles = ch.battles || 5;
+
+            const p1Pct = Math.min(p1Battles / reqBattles * 50, 50);
+            const p2Pct = Math.min(p2Battles / reqBattles * 50, 50);
+
+            // If widget already rendered — just update values without replacing DOM
+            if (widgetRendered) {
+                // Update scores
+                const s1 = document.getElementById('ov-score1');
+                const s2 = document.getElementById('ov-score2');
+                if (s1) {
+                    s1.textContent = (typeof v1 === 'number' ? v1.toLocaleString('ru') : v1) + cond.unit;
+                    s1.style.color = p1Color;
+                    if (v1Changed) { s1.classList.remove('updated'); void s1.offsetWidth; s1.classList.add('updated'); }
+                }
+                if (s2) {
+                    s2.textContent = (typeof v2 === 'number' ? v2.toLocaleString('ru') : v2) + cond.unit;
+                    s2.style.color = p2Color;
+                    if (v2Changed) { s2.classList.remove('updated'); void s2.offsetWidth; s2.classList.add('updated'); }
+                }
+
+                // Update battles
+                const b1 = document.getElementById('ov-battles1');
+                const b2 = document.getElementById('ov-battles2');
+                if (b1) {
+                    b1.className = 'player-battles' + (p1Battles >= reqBattles ? ' battles-completed' : '');
+                    b1.innerHTML = p1Battles >= reqBattles
+                        ? `<span class="done">✅ ${p1Battles}/${reqBattles} боёв</span>`
+                        : `⚔️ ${p1Battles}/${reqBattles} боёв`;
+                }
+                if (b2) {
+                    b2.className = 'player-battles' + (p2Battles >= reqBattles ? ' battles-completed' : '');
+                    b2.innerHTML = p2Battles >= reqBattles
+                        ? `<span class="done">✅ ${p2Battles}/${reqBattles} боёв</span>`
+                        : `⚔️ ${p2Battles}/${reqBattles} боёв`;
+                }
+
+                // Update player card classes (leading/losing)
+                const c1 = document.getElementById('ov-card1');
+                const c2 = document.getElementById('ov-card2');
+                if (c1) c1.className = 'player-card ' + (p1Leading ? 'leading' : 'losing');
+                if (c2) c2.className = 'player-card ' + (!p1Leading ? 'leading' : 'losing');
+
+                // Update progress bars
+                const pf1 = document.getElementById('ov-prog1');
+                const pf2 = document.getElementById('ov-prog2');
+                if (pf1) pf1.style.width = p1Pct + '%';
+                if (pf2) pf2.style.width = p2Pct + '%';
+
+                // Update winner banner if appeared
+                const resultEl = document.getElementById('ov-result');
+                if (resultEl && data.both_ready && data.winner) {
+                    resultEl.innerHTML = `
+                        <div class="winner-banner">
+                            <div class="trophy">🏆</div>
+                            <div class="winner-name">${data.winner.nickname} ПОБЕДИЛ!</div>
+                            <div class="winner-prize">Приз: 🧀 ${(ch.wager * 2).toLocaleString('ru')}</div>
+                        </div>`;
+                }
+
+                // Update battle history
+                if (history.length > 0) {
+                    const logEl = document.getElementById('ov-history');
+                    if (logEl) {
+                        const recent = history.slice(-6);
+                        logEl.innerHTML = `
+                            <div class="battle-log-title">📋 Последние бои</div>
+                            ${recent.map(b => {
+                                const val = b[cond.key.replace('avg_','')] || b.damage || 0;
+                                const isFrom = b.player === 'from';
+                                const color = isFrom ? 'var(--p1-color)' : 'var(--p2-color)';
+                                return `
+                                    <div class="battle-entry">
+                                        <span class="be-num">#${b.battle_num}</span>
+                                        <span class="be-name" style="color:${color}">${b.nickname}</span>
+                                        <span class="be-value" style="color:${val > 0 ? 'var(--text)' : 'var(--text-muted)'}">${cond.icon} ${typeof val === 'number' ? val.toLocaleString('ru') : val}</span>
+                                    </div>`;
+                            }).join('')}`;
+                    }
+                }
+
+                return;
+            }
+
+            // ===== FIRST RENDER (full HTML) =====
+            widgetRendered = true;
+
+            // Battle history
+            let historyHtml = '';
+            if (history.length > 0) {
+                const recent = history.slice(-6);
+                historyHtml = `
+                    <div class="battle-log" id="ov-history">
+                        <div class="battle-log-title">📋 Последние бои</div>
+                        ${recent.map(b => {
+                            const val = b[cond.key.replace('avg_','')] || b.damage || 0;
+                            const isFrom = b.player === 'from';
+                            const color = isFrom ? 'var(--p1-color)' : 'var(--p2-color)';
+                            return `
+                                <div class="battle-entry">
+                                    <span class="be-num">#${b.battle_num}</span>
+                                    <span class="be-name" style="color:${color}">${b.nickname}</span>
+                                    <span class="be-value" style="color:${val > 0 ? 'var(--text)' : 'var(--text-muted)'}">${cond.icon} ${typeof val === 'number' ? val.toLocaleString('ru') : val}</span>
+                                </div>`;
+                        }).join('')}
+                    </div>`;
+            } else {
+                historyHtml = '<div class="battle-log" id="ov-history"></div>';
+            }
+
+            // Winner banner
+            let resultHtml = '';
+            if (data.both_ready && data.winner) {
+                resultHtml = `
+                    <div class="winner-banner">
+                        <div class="trophy">🏆</div>
+                        <div class="winner-name">${data.winner.nickname} ПОБЕДИЛ!</div>
+                        <div class="winner-prize">Приз: 🧀 ${(ch.wager * 2).toLocaleString('ru')}</div>
+                    </div>`;
+            }
+
+            document.getElementById('widget').innerHTML = `
+                <div class="fade-in">
+                    <div class="widget-header">
+                        <span class="icon">⚔️</span>
+                        <span class="title">PVP Челлендж</span>
+                        <span class="icon">⚔️</span>
+                    </div>
+
+                    <div class="widget-info">
+                        <div class="info-tag">🪖 <span class="val">${ch.tank_name || 'Любой'}</span></div>
+                        <div class="info-tag">${cond.icon} <span class="val">${cond.name}</span></div>
+                        <div class="info-tag">⚔️ <span class="val">${reqBattles} боёв</span></div>
+                        <div class="info-tag">🧀 <span class="val">${ch.wager}</span></div>
+                    </div>
+
+                    <div class="players-row">
+                        <div class="player-card ${p1Leading ? 'leading' : 'losing'}" id="ov-card1">
+                            <div class="player-label">Вызывающий</div>
+                            <div class="player-name">${fp.nickname}</div>
+                            <div class="player-score" id="ov-score1" style="color:${p1Color}">
+                                ${typeof v1 === 'number' ? v1.toLocaleString('ru') : v1}${cond.unit}
+                            </div>
+                            <div class="player-battles ${p1Battles >= reqBattles ? 'battles-completed' : ''}" id="ov-battles1">
+                                ${p1Battles >= reqBattles
+                                    ? `<span class="done">✅ ${p1Battles}/${reqBattles} боёв</span>`
+                                    : `⚔️ ${p1Battles}/${reqBattles} боёв`
+                                }
+                            </div>
+                        </div>
+
+                        <div class="vs-divider">
+                            <span class="vs-icon">⚔️</span>
+                            <span class="vs-text">VS</span>
+                        </div>
+
+                        <div class="player-card ${!p1Leading ? 'leading' : 'losing'}" id="ov-card2">
+                            <div class="player-label">Принявший</div>
+                            <div class="player-name">${tp.nickname}</div>
+                            <div class="player-score" id="ov-score2" style="color:${p2Color}">
+                                ${typeof v2 === 'number' ? v2.toLocaleString('ru') : v2}${cond.unit}
+                            </div>
+                            <div class="player-battles ${p2Battles >= reqBattles ? 'battles-completed' : ''}" id="ov-battles2">
+                                ${p2Battles >= reqBattles
+                                    ? `<span class="done">✅ ${p2Battles}/${reqBattles} боёв</span>`
+                                    : `⚔️ ${p2Battles}/${reqBattles} боёв`
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="progress-section">
+                        <div class="progress-labels">
+                            <span>${fp.nickname}</span>
+                            <span>${tp.nickname}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill-left" id="ov-prog1" style="width:${p1Pct}%"></div>
+                            <div style="flex:1"></div>
+                            <div class="progress-fill-right" id="ov-prog2" style="width:${p2Pct}%"></div>
+                        </div>
+                    </div>
+
+                    ${historyHtml}
+
+                    <div id="ov-result">${resultHtml || `
+                        <div class="widget-footer">
+                            <div class="footer-tag">🧀 Ставка: <span class="ft-val">${ch.wager}</span></div>
+                            <div class="footer-tag">🏆 Приз: <span class="ft-val">${(ch.wager * 2).toLocaleString('ru')} 🧀</span></div>
+                        </div>
+                    `}</div>
+
+                    <div class="brand-watermark ${showBrand ? '' : 'hide'}">⚔️ Мир Танков PVP Arena</div>
+                </div>
+            `;
+        }
+
+        // Init
+        loadWidget();
+        setInterval(loadWidget, REFRESH_INTERVAL);
+    </script>
+</body>
+
+</html>

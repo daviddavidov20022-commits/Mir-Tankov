@@ -1,0 +1,429 @@
+{
+  "players": [
+    {
+      "nick": "I_Mamont", 
+      "tank": "Erich Kn. I", 
+      "damage": 3570, 
+      "kills": 2, 
+      "account_id": "124497056"
+    }, 
+    {
+      "nick": "Fors777_2016", 
+      "tank": "T110E3", 
+      "damage": 3561, 
+      "kills": 3, 
+      "account_id": "63712847"
+    }, 
+    {
+      "nick": "PUX_76", 
+      "tank": "Erich Kn. I", 
+      "damage": 3471, 
+      "kills": 2, 
+      "account_id": "261345626"
+    }, 
+    {
+      "nick": " Oleksiy415", 
+      "tank": "\u041e\u0431. 757\u0410", 
+      "damage": 3219, 
+      "kills": 1, 
+      "account_id": "3779295"
+    }, 
+    {
+      "nick": "Masterben0727", 
+      "tank": "WT auf Pz. IV", 
+      "damage": 3124, 
+      "kills": 2, 
+      "account_id": "7351548"
+    }, 
+    {
+      "nick": "ModestAlekseevich", 
+      "tank": "Vz. 58 K", 
+      "damage": 2153, 
+      "kills": 1, 
+      "account_id": "35162094"
+    }, 
+    {
+      "nick": "63aramaS", 
+      "tank": "Vandal", 
+      "damage": 2116, 
+      "kills": 2, 
+      "account_id": "93213984"
+    }, 
+    {
+      "nick": "irbis_840", 
+      "tank": "\u041e\u0431. 757\u0410", 
+      "damage": 1674, 
+      "kills": 0, 
+      "account_id": "40698961"
+    }, 
+    {
+      "nick": "Anakondan56", 
+      "tank": "\u0421\u0422-II", 
+      "damage": 1473, 
+      "kills": 1, 
+      "account_id": "624394"
+    }, 
+    {
+      "nick": "Yurec2545", 
+      "tank": "T57 Heavy", 
+      "damage": 1473, 
+      "kills": 1, 
+      "account_id": "11386707"
+    }, 
+    {
+      "nick": "RU5L4N4T0RZ0R", 
+      "tank": "Tortoise", 
+      "damage": 801, 
+      "kills": 0, 
+      "account_id": "12502497"
+    }, 
+    {
+      "nick": "No_Frololo", 
+      "tank": "\u041e\u0431. 261", 
+      "damage": 345, 
+      "kills": 0, 
+      "account_id": "2607273"
+    }, 
+    {
+      "nick": "Bayan_95", 
+      "tank": "Char Futur 4", 
+      "damage": 0, 
+      "kills": 0, 
+      "account_id": "19993485"
+    }, 
+    {
+      "nick": "maximus2802", 
+      "tank": "\u0422-54 \u043e\u0431\u043b.", 
+      "damage": 0, 
+      "kills": 0, 
+      "account_id": "8421531"
+    }, 
+    {
+      "nick": "Paanvi", 
+      "tank": "AMX 13 90", 
+      "damage": 0, 
+      "kills": 0, 
+      "account_id": "1962781"
+    }, 
+    {
+      "nick": "AlexTestov", 
+      "tank": "Rinoceronte", 
+      "damage": 3740, 
+      "kills": 2, 
+      "account_id": "6925906"
+    }, 
+    {
+      "nick": "stan8624", 
+      "tank": "Orso", 
+      "damage": 3191, 
+      "kills": 1, 
+      "account_id": "3093363"
+    }, 
+    {
+      "nick": "1_69_TaNkIsT_69_3", 
+      "tank": "\u041e\u0431. 757\u0410", 
+      "damage": 3130, 
+      "kills": 3, 
+      "account_id": "88665104"
+    }, 
+    {
+      "nick": "_____K_I_L_E_R_____", 
+      "tank": "Concept 5", 
+      "damage": 2658, 
+      "kills": 2, 
+      "account_id": "21149010"
+    }, 
+    {
+      "nick": "Rajmont", 
+      "tank": "Erich Kn. I", 
+      "damage": 2132, 
+      "kills": 0, 
+      "account_id": "2331122"
+    }, 
+    {
+      "nick": "BOBAH_43rus_kirov", 
+      "tank": "\u041e\u0431. 278", 
+      "damage": 2005, 
+      "kills": 1, 
+      "account_id": "37121397"
+    }, 
+    {
+      "nick": "d1n91", 
+      "tank": "Strv 103-0", 
+      "damage": 1556, 
+      "kills": 0, 
+      "account_id": "6770377"
+    }, 
+    {
+      "nick": "zaharushka67", 
+      "tank": "\u041e\u0431. 261", 
+      "damage": 1554, 
+      "kills": 0, 
+      "account_id": "67918816"
+    }, 
+    {
+      "nick": "miraz_2", 
+      "tank": "\u041a\u0412-90", 
+      "damage": 1524, 
+      "kills": 0, 
+      "account_id": "265516829"
+    }, 
+    {
+      "nick": "yarilo_391", 
+      "tank": "Jagdtiger", 
+      "damage": 1329, 
+      "kills": 2, 
+      "account_id": "75742665"
+    }, 
+    {
+      "nick": "XuMuK_Men", 
+      "tank": "XM57", 
+      "damage": 628, 
+      "kills": 0, 
+      "account_id": "26855659"
+    }, 
+    {
+      "nick": "Valera015005", 
+      "tank": "T49", 
+      "damage": 555, 
+      "kills": 1, 
+      "account_id": "4001490"
+    }, 
+    {
+      "nick": "CTARYI_PCYX", 
+      "tank": "AMX 13 90", 
+      "damage": 469, 
+      "kills": 0, 
+      "account_id": "268466441"
+    }, 
+    {
+      "nick": "zik_477", 
+      "tank": "Kpz 3 Pr.07HK", 
+      "damage": 369, 
+      "kills": 0, 
+      "account_id": "122842518"
+    }, 
+    {
+      "nick": "GTGRST001", 
+      "tank": "Char Futur 4", 
+      "damage": 0, 
+      "kills": 0, 
+      "account_id": "172702579"
+    }
+  ], 
+  "battle_number": 61, 
+  "allies": [
+    {
+      "nick": "I_Mamont", 
+      "tank": "Erich Kn. I", 
+      "damage": 3570, 
+      "kills": 2, 
+      "account_id": "124497056"
+    }, 
+    {
+      "nick": "Fors777_2016", 
+      "tank": "T110E3", 
+      "damage": 3561, 
+      "kills": 3, 
+      "account_id": "63712847"
+    }, 
+    {
+      "nick": "PUX_76", 
+      "tank": "Erich Kn. I", 
+      "damage": 3471, 
+      "kills": 2, 
+      "account_id": "261345626"
+    }, 
+    {
+      "nick": " Oleksiy415", 
+      "tank": "\u041e\u0431. 757\u0410", 
+      "damage": 3219, 
+      "kills": 1, 
+      "account_id": "3779295"
+    }, 
+    {
+      "nick": "Masterben0727", 
+      "tank": "WT auf Pz. IV", 
+      "damage": 3124, 
+      "kills": 2, 
+      "account_id": "7351548"
+    }, 
+    {
+      "nick": "ModestAlekseevich", 
+      "tank": "Vz. 58 K", 
+      "damage": 2153, 
+      "kills": 1, 
+      "account_id": "35162094"
+    }, 
+    {
+      "nick": "63aramaS", 
+      "tank": "Vandal", 
+      "damage": 2116, 
+      "kills": 2, 
+      "account_id": "93213984"
+    }, 
+    {
+      "nick": "irbis_840", 
+      "tank": "\u041e\u0431. 757\u0410", 
+      "damage": 1674, 
+      "kills": 0, 
+      "account_id": "40698961"
+    }, 
+    {
+      "nick": "Anakondan56", 
+      "tank": "\u0421\u0422-II", 
+      "damage": 1473, 
+      "kills": 1, 
+      "account_id": "624394"
+    }, 
+    {
+      "nick": "Yurec2545", 
+      "tank": "T57 Heavy", 
+      "damage": 1473, 
+      "kills": 1, 
+      "account_id": "11386707"
+    }, 
+    {
+      "nick": "RU5L4N4T0RZ0R", 
+      "tank": "Tortoise", 
+      "damage": 801, 
+      "kills": 0, 
+      "account_id": "12502497"
+    }, 
+    {
+      "nick": "No_Frololo", 
+      "tank": "\u041e\u0431. 261", 
+      "damage": 345, 
+      "kills": 0, 
+      "account_id": "2607273"
+    }, 
+    {
+      "nick": "Bayan_95", 
+      "tank": "Char Futur 4", 
+      "damage": 0, 
+      "kills": 0, 
+      "account_id": "19993485"
+    }, 
+    {
+      "nick": "maximus2802", 
+      "tank": "\u0422-54 \u043e\u0431\u043b.", 
+      "damage": 0, 
+      "kills": 0, 
+      "account_id": "8421531"
+    }, 
+    {
+      "nick": "Paanvi", 
+      "tank": "AMX 13 90", 
+      "damage": 0, 
+      "kills": 0, 
+      "account_id": "1962781"
+    }
+  ], 
+  "enemies": [
+    {
+      "nick": "AlexTestov", 
+      "tank": "Rinoceronte", 
+      "damage": 3740, 
+      "kills": 2, 
+      "account_id": "6925906"
+    }, 
+    {
+      "nick": "stan8624", 
+      "tank": "Orso", 
+      "damage": 3191, 
+      "kills": 1, 
+      "account_id": "3093363"
+    }, 
+    {
+      "nick": "1_69_TaNkIsT_69_3", 
+      "tank": "\u041e\u0431. 757\u0410", 
+      "damage": 3130, 
+      "kills": 3, 
+      "account_id": "88665104"
+    }, 
+    {
+      "nick": "_____K_I_L_E_R_____", 
+      "tank": "Concept 5", 
+      "damage": 2658, 
+      "kills": 2, 
+      "account_id": "21149010"
+    }, 
+    {
+      "nick": "Rajmont", 
+      "tank": "Erich Kn. I", 
+      "damage": 2132, 
+      "kills": 0, 
+      "account_id": "2331122"
+    }, 
+    {
+      "nick": "BOBAH_43rus_kirov", 
+      "tank": "\u041e\u0431. 278", 
+      "damage": 2005, 
+      "kills": 1, 
+      "account_id": "37121397"
+    }, 
+    {
+      "nick": "d1n91", 
+      "tank": "Strv 103-0", 
+      "damage": 1556, 
+      "kills": 0, 
+      "account_id": "6770377"
+    }, 
+    {
+      "nick": "zaharushka67", 
+      "tank": "\u041e\u0431. 261", 
+      "damage": 1554, 
+      "kills": 0, 
+      "account_id": "67918816"
+    }, 
+    {
+      "nick": "miraz_2", 
+      "tank": "\u041a\u0412-90", 
+      "damage": 1524, 
+      "kills": 0, 
+      "account_id": "265516829"
+    }, 
+    {
+      "nick": "yarilo_391", 
+      "tank": "Jagdtiger", 
+      "damage": 1329, 
+      "kills": 2, 
+      "account_id": "75742665"
+    }, 
+    {
+      "nick": "XuMuK_Men", 
+      "tank": "XM57", 
+      "damage": 628, 
+      "kills": 0, 
+      "account_id": "26855659"
+    }, 
+    {
+      "nick": "Valera015005", 
+      "tank": "T49", 
+      "damage": 555, 
+      "kills": 1, 
+      "account_id": "4001490"
+    }, 
+    {
+      "nick": "CTARYI_PCYX", 
+      "tank": "AMX 13 90", 
+      "damage": 469, 
+      "kills": 0, 
+      "account_id": "268466441"
+    }, 
+    {
+      "nick": "zik_477", 
+      "tank": "Kpz 3 Pr.07HK", 
+      "damage": 369, 
+      "kills": 0, 
+      "account_id": "122842518"
+    }, 
+    {
+      "nick": "GTGRST001", 
+      "tank": "Char Futur 4", 
+      "damage": 0, 
+      "kills": 0, 
+      "account_id": "172702579"
+    }
+  ]
+}

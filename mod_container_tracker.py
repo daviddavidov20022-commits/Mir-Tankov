@@ -13,8 +13,8 @@ from gui.shared.notifications import NotificationMVC
 from gui.shared import g_eventBus, EVENT_BUS_SCOPE
 from gui.shared.utils.requesters import REQ_CRITERIA
 
-LOG_FILE = os.path.join(BigWorld.wd, 'container_results.json')
-SESSION_FILE = os.path.join(BigWorld.wd, 'container_session.json')
+LOG_FILE = r'D:\mir-tankov-bot\site\obs\container_results.json'
+SESSION_FILE = r'D:\mir-tankov-bot\site\obs\container_session.json'
 
 # Текущая сессия
 session_data = {

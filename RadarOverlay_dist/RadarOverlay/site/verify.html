@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Верификация — Мир Танков</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e14;
+            color: #E8E6E3;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            max-width: 400px;
+            width: 100%;
+            background: linear-gradient(145deg, #1a2332, #161d28);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .card--success {
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .card--error {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .card--loading {
+            border-color: rgba(200, 170, 110, 0.3);
+        }
+
+        .icon {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+        }
+
+        .title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .title--success {
+            color: #4ade80;
+        }
+
+        .title--error {
+            color: #ef4444;
+        }
+
+        .title--loading {
+            color: #C8AA6E;
+        }
+
+        .desc {
+            font-size: 0.85rem;
+            color: #9AA4B5;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: rgba(74, 222, 128, 0.08);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+        }
+
+        .info-key {
+            font-size: 0.75rem;
+            color: #5A6577;
+        }
+
+        .info-val {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #E8E6E3;
+        }
+
+        .code-box {
+            background: rgba(200, 170, 110, 0.1);
+            border: 2px dashed rgba(200, 170, 110, 0.4);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .code-label {
+            font-size: 0.65rem;
+            color: #5A6577;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+
+        .code-value {
+            font-family: 'Russo One', monospace;
+            font-size: 1.8rem;
+            color: #C8AA6E;
+            letter-spacing: 6px;
+            user-select: all;
+            cursor: pointer;
+        }
+
+        .code-hint {
+            font-size: 0.7rem;
+            color: #5A6577;
+            margin-top: 8px;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background: linear-gradient(135deg, #C8AA6E, #E8D5A3);
+            color: #0a0e14;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(200, 170, 110, 0.3);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #5A6577;
+            text-decoration: none;
+            font-size: 0.75rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #C8AA6E;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(200, 170, 110, 0.2);
+            border-top-color: #C8AA6E;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .checkmark {
+            animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+    </style>
+<script src="js/auth-interceptor.js?v=52"></script>
+</head>
+
+<body>
+    <div class="card card--loading" id="card">
+        <div class="spinner" id="spinner"></div>
+        <div class="title title--loading" id="title">Проверяем данные...</div>
+        <div class="desc" id="desc">Подождите, обрабатываем ответ от Lesta</div>
+        <div id="content"></div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        // Lesta redirects also put params in hash sometimes
+        const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+
+        const status = params.get('status') || hashParams.get('status');
+        const nickname = params.get('nickname') || hashParams.get('nickname');
+        const accountId = params.get('account_id') || hashParams.get('account_id');
+        const accessToken = params.get('access_token') || hashParams.get('access_token');
+
+        const card = document.getElementById('card');
+        const title = document.getElementById('title');
+        const desc = document.getElementById('desc');
+        const content = document.getElementById('content');
+        const spinner = document.getElementById('spinner');
+
+        setTimeout(() => {
+            spinner.style.display = 'none';
+
+            if (status === 'ok' && nickname && accountId) {
+                // УСПЕХ — генерируем код верификации
+                const verifyCode = generateCode(accountId);
+
+                card.className = 'card card--success';
+                title.className = 'title title--success';
+                title.innerHTML = '<div class="checkmark">✅</div> Авторизация успешна!';
+                desc.textContent = 'Скопируйте код и вставьте его в приложении';
+
+                content.innerHTML = `
+                    <div class="info-box">
+                        <div class="info-row">
+                            <span class="info-key">Никнейм</span>
+                            <span class="info-val">${nickname}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-key">Account ID</span>
+                            <span class="info-val">${accountId}</span>
+                        </div>
+                    </div>
+
+                    <div class="code-box">
+                        <div class="code-label">Код верификации</div>
+                        <div class="code-value" id="verifyCode" onclick="copyCode()">${verifyCode}</div>
+                        <div class="code-hint">Нажмите чтобы скопировать</div>
+                    </div>
+
+                    <button class="copy-btn" onclick="copyCode()">
+                        📋 Скопировать код
+                    </button>
+
+                    <div class="desc" style="font-size:0.7rem; line-height:1.6">
+                        <b>Как привязать аккаунт:</b><br>
+                        1. Вернитесь в приложение → <b>Профиль</b><br>
+                        2. Нажмите «У меня уже есть код»<br>
+                        3. Введите ник <b>${nickname}</b><br>
+                        4. Вставьте код <b>${verifyCode}</b><br>
+                        5. Нажмите «Привязать» ✅
+                    </div>
+                `;
+
+                // Сохраняем в localStorage (на случай общего контекста)
+                try {
+                    localStorage.setItem('wot_nickname', nickname);
+                    localStorage.setItem('wot_account_id', accountId);
+                    localStorage.setItem('wot_verified', 'true');
+                } catch (e) { }
+
+                // Передаём боту через Telegram WebApp (если внутри TG)
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.sendData(JSON.stringify({
+                        type: 'verify',
+                        nickname: nickname,
+                        account_id: accountId,
+                        code: verifyCode,
+                    }));
+                }
+            } else {
+                // ОШИБКА
+                card.className = 'card card--error';
+                title.className = 'title title--error';
+                title.textContent = '❌ Ошибка авторизации';
+                desc.textContent = 'Не удалось получить данные от Lesta. Попробуйте ещё раз.';
+                content.innerHTML = `
+                    <a href="javascript:history.back()" class="back-link">← Назад</a>
+                `;
+            }
+        }, 1000);
+
+        function generateCode(accountId) {
+            let hash = 0;
+            const str = accountId + '_MIRTANKOV_2026';
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            const code = 'MT' + Math.abs(hash).toString(36).toUpperCase().slice(0, 6);
+            return code;
+        }
+
+        function copyCode() {
+            const code = document.getElementById('verifyCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✅ Код скопирован!';
+                btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+                btn.style.color = 'white';
+                setTimeout(() => {
+                    btn.textContent = '📋 Скопировать код';
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>

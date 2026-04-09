@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Music Player v3</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+            background: transparent;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        #music-widget {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            background: rgba(10, 14, 20, 0.85);
+            border: 1px solid rgba(200, 170, 110, 0.3);
+            border-left: 4px solid #E040FB;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            transform: translateX(-120%);
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            min-width: 300px;
+        }
+
+        #music-widget.visible {
+            transform: translateX(0);
+        }
+
+        .icon { font-size: 24px; margin-right: 15px; animation: pulse 2s infinite; }
+        .info { display: flex; flex-direction: column; }
+        .label { font-size: 10px; text-transform: uppercase; color: #E040FB; letter-spacing: 1px; margin-bottom: 2px; font-weight: 700; }
+        .track-name { font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 350px; }
+        .requested-by { font-size: 11px; color: rgba(255, 255, 255, 0.6); margin-top: 2px; }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        #yt-player-wrap {
+            position: absolute;
+            top: -9999px; left: -9999px;
+            width: 1px; height: 1px;
+            overflow: hidden;
+        }
+
+        /* Debug version indicator — remove after confirming it works */
+        #version-badge {
+            position: fixed;
+            top: 4px;
+            right: 4px;
+            background: rgba(224, 64, 251, 0.8);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="version-badge">v3</div>
+
+    <div id="music-widget">
+        <div class="icon">🎵</div>
+        <div class="info">
+            <div class="label" id="status-label">Сейчас играет</div>
+            <div class="track-name" id="track-name">Ожидание заказов...</div>
+            <div class="requested-by" id="requested-by">Мир Танков</div>
+        </div>
+    </div>
+
+    <div id="yt-player-wrap">
+        <div id="yt-player"></div>
+    </div>
+
+    <script>
+        const VERSION = 'v3';
+        const API_BASE = new URLSearchParams(window.location.search).get('api') || 'https://mir-tankov-production.up.railway.app';
+        
+        console.log(`🎵 Music Widget ${VERSION} loaded. API: ${API_BASE}`);
+        
+        let player = null;
+        let isPlayerReady = false;
+        let isPlaying = false;     // TRUE = track is actively playing, NOTHING can interrupt
+        let controlTimer = null;
+        let queueTimer = null;
+
+        // ========= YOUTUBE PLAYER =========
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+
+        function onYouTubeIframeAPIReady() {
+            console.log('YT IFrame API loaded');
+            player = new YT.Player('yt-player', {
+                height: '1',
+                width: '1',
+                playerVars: { autoplay: 1, controls: 0 },
+                events: {
+                    onReady: function() {
+                        isPlayerReady = true;
+                        console.log('✅ YT Player ready');
+                        startPolling();
+                    },
+                    onStateChange: function(e) {
+                        const states = {'-1':'UNSTARTED','0':'ENDED','1':'PLAYING','2':'PAUSED','3':'BUFFERING','5':'CUED'};
+                        console.log(`YT state: ${states[e.data] || e.data} | isPlaying: ${isPlaying}`);
+                        
+                        // Track finished naturally — move to next
+                        if (e.data === YT.PlayerState.ENDED) {
+                            console.log('🏁 Track ended');
+                            onTrackFinished();
+                        }
+                        // Sometimes YT cues instead of playing — force it
+                        if (e.data === YT.PlayerState.CUED && isPlaying) {
+                            try { player.playVideo(); } catch(err) {}
+                        }
+                    },
+                    onError: function(e) {
+                        console.error('❌ YT error:', e.data);
+                        onTrackFinished();
+                    }
+                }
+            });
+        }
+
+        // ========= POLLING SYSTEM =========
+        function startPolling() {
+            console.log('🔄 Starting polling...');
+            // Control: every 2s, ALWAYS runs (even during playback)
+            if (controlTimer) clearInterval(controlTimer);
+            controlTimer = setInterval(checkControl, 2000);
+            
+            // Queue: every 4s, only picks up tracks when idle
+            if (queueTimer) clearInterval(queueTimer);
+            queueTimer = setInterval(checkQueue, 4000);
+            
+            // First check immediately
+            checkQueue();
+        }
+
+        // ========= CONTROL ENDPOINT =========
+        async function checkControl() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/stream/music/control`);
+                const data = await resp.json();
+                
+                if (data.action === 'stop') {
+                    console.log('🛑 STOP command received');
+                    forceStop();
+                } else if (data.action === 'skip') {
+                    console.log('⏭ SKIP command received');
+                    forceStop();
+                    // Queue poll will pick up next track on next interval
+                }
+            } catch(e) {
+                // Silent — don't spam console on network errors
+            }
+        }
+
+        // ========= QUEUE ENDPOINT =========
+        async function checkQueue() {
+            // NEVER interrupt a playing track
+            if (isPlaying) {
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/stream/music/next`);
+                const json = await resp.json();
+                const track = json.track;
+                
+                if (track && track.url) {
+                    console.log('📥 Got track:', track.title || track.url);
+                    playTrack(track);
+                }
+            } catch (e) {
+                console.error('Queue error:', e);
+            }
+        }
+
+        // ========= PLAYBACK =========
+        function playTrack(track) {
+            const videoId = extractVideoId(track.url);
+            if (!videoId) {
+                console.error('Bad video URL:', track.url);
+                return;
+            }
+
+            // LOCK — no other track can start until this finishes or is stopped
+            isPlaying = true;
+            console.log(`▶ Playing: ${videoId} | isPlaying = true`);
+
+            // Update widget UI
+            document.getElementById('track-name').textContent = track.title || track.url;
+            document.getElementById('requested-by').textContent = `Заказал: ${track.username || 'Аноним'}`;
+            showWidget();
+
+            // Start playback
+            if (isPlayerReady && player && player.loadVideoById) {
+                try {
+                    player.loadVideoById(videoId);
+                } catch(e) {
+                    console.error('loadVideoById failed:', e);
+                    isPlaying = false;
+                }
+            } else {
+                console.error('Player not ready');
+                isPlaying = false;
+            }
+
+            // Safety: max 10 min per track
+            setTimeout(() => {
+                if (isPlaying) {
+                    console.warn('⏰ 10min safety timeout');
+                    onTrackFinished();
+                }
+            }, 600000);
+        }
+
+        function onTrackFinished() {
+            console.log('✅ Track finished, unlocking queue');
+            isPlaying = false;
+            hideWidget();
+        }
+
+        function forceStop() {
+            console.log('🛑 Force stopping playback');
+            isPlaying = false;
+            if (player) {
+                try { player.stopVideo(); } catch(e) {}
+                try { player.clearVideo(); } catch(e) {}
+            }
+            hideWidget();
+        }
+
+        // ========= UI =========
+        function showWidget() {
+            document.getElementById('music-widget').classList.add('visible');
+        }
+
+        function hideWidget() {
+            document.getElementById('music-widget').classList.remove('visible');
+        }
+
+        // ========= UTILS =========
+        function extractVideoId(url) {
+            if (!url) return null;
+            const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/v\/|\/shorts\/)([a-zA-Z0-9_-]{11})/);
+            return m ? m[1] : null;
+        }
+
+        // ========= FALLBACK =========
+        setTimeout(() => {
+            if (!isPlayerReady) {
+                console.warn('⚠ YT API timeout, starting anyway');
+                isPlayerReady = true;
+                startPolling();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

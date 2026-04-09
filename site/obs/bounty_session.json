@@ -1,0 +1,68 @@
+{
+  "recent_hits": [
+    {
+      "name": "Ka4egar139_98", 
+      "damage": 228, 
+      "gold": 228, 
+      "time": "2026-04-09 23:20:36.151000"
+    }, 
+    {
+      "name": "Adam_Thirteen", 
+      "damage": 20, 
+      "gold": 20, 
+      "time": "2026-04-09 23:20:35.654000"
+    }, 
+    {
+      "name": "Adam_Thirteen", 
+      "damage": 24, 
+      "gold": 24, 
+      "time": "2026-04-09 23:20:35.146000"
+    }, 
+    {
+      "name": "Adam_Thirteen", 
+      "damage": 28, 
+      "gold": 28, 
+      "time": "2026-04-09 23:20:34.645000"
+    }, 
+    {
+      "name": "Adam_Thirteen", 
+      "damage": 33, 
+      "gold": 33, 
+      "time": "2026-04-09 23:20:34.151000"
+    }
+  ], 
+  "total_damage_received": 13342, 
+  "gold_rate": 1, 
+  "session_start": "2026-04-09 22:04:57.804000", 
+  "attackers": {
+    "KTS1018": 1008, 
+    "Egoist2009": 257, 
+    "BurnTiger": 435, 
+    "SuMyRaI_1": 767, 
+    "vital39": 693, 
+    "_PlONEER_": 589, 
+    "NikolaII_9": 152, 
+    "vodila75": 495, 
+    "necr007": 365, 
+    "I_Morgan_I": 182, 
+    "AG1992_okusov94": 459, 
+    "elsukvs2008": 401, 
+    "andrey124245": 198, 
+    "Fishergo": 110, 
+    "Serhio01_29": 543, 
+    "Ka4egar139_98": 640, 
+    "toxa_kinechma": 995, 
+    "triplessss": 533, 
+    "Son_of_GOD_summer_lion": 784, 
+    "__EcTb__nPo6uTue__": 590, 
+    "VOTAR_63": 387, 
+    "Hangglider": 383, 
+    "Muravey484": 564, 
+    "Adam_Thirteen": 851, 
+    "Miilliin": 413, 
+    "nilokay": 548
+  }, 
+  "participants_count": 0, 
+  "total_gold_given": 13342, 
+  "last_update": "2026-04-09 23:20:36.151000"
+}

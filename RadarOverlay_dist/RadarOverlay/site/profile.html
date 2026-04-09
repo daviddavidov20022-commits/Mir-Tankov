@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Мир Танков — Профиль</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/profile.css">
+<script src="js/auth-interceptor.js?v=52"></script>
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+
+    <!-- Header -->
+    <header class="profile-header">
+        <button class="back-btn" onclick="goBack()">
+            <span>←</span>
+        </button>
+        <div class="header-title">
+            <h1>👤 Профиль</h1>
+            <span class="header-sub">Мир Танков Клуб</span>
+        </div>
+    </header>
+
+    <!-- Avatar Section -->
+    <section class="avatar-section">
+        <div class="avatar-container">
+            <div class="avatar-ring"></div>
+            <div class="avatar-image" id="avatarImage">🪖</div>
+            <div class="avatar-level" id="avatarLevel">1</div>
+        </div>
+        <h2 class="profile-name" id="profileName">Танкист</h2>
+        <div class="profile-tag" id="profileTag">Новобранец</div>
+        <div class="club-badge">
+            <span class="club-badge__icon">⭐</span>
+            <span class="club-badge__text">Член клуба</span>
+        </div>
+    </section>
+
+    <!-- WoT Account Section -->
+    <section class="section-card" id="nicknameSection">
+        <div class="section-card__header">
+            <span class="section-card__icon">🎮</span>
+            <h3>Аккаунт Мир Танков</h3>
+        </div>
+        <div class="nickname-wrap">
+            <!-- Привязанный аккаунт -->
+            <div class="nickname-display" id="nicknameDisplay" style="display: none;">
+                <div class="nickname-saved">
+                    <span class="nickname-saved__icon" id="verifiedBadge">✅</span>
+                    <span class="nickname-saved__name" id="savedNickname">—</span>
+                </div>
+                <div class="nickname-actions">
+                    <button class="btn-icon" onclick="viewMyStats()" title="Моя статистика">
+                        📊
+                    </button>
+                    <button class="btn-icon btn-icon--edit" onclick="unlinkAccount()" title="Отвязать">
+                        🔓
+                    </button>
+                </div>
+            </div>
+
+            <!-- Привязка: шаг 1 + шаг 2 -->
+            <div id="nicknameLinkSection">
+                <!-- ШАГ 1: Кнопка Lesta -->
+                <div id="linkStep1">
+                    <p class="nickname-hint">Шаг 1: Войдите через Lesta Games, скопируйте код</p>
+                    <button class="btn-lesta" onclick="linkAccount()">
+                        <span class="btn-lesta__icon">🛡️</span>
+                        <span class="btn-lesta__text">Войти через Lesta Games</span>
+                    </button>
+                    <p class="nickname-hint" style="margin-top: 12px;">
+                        <a href="javascript:void(0)" onclick="showStep2()"
+                            style="color: #C8AA6E; text-decoration: underline; font-size: 0.75rem;">
+                            У меня уже есть код →
+                        </a>
+                    </p>
+                </div>
+
+                <!-- ШАГ 2: Ввести код -->
+                <div id="linkStep2" style="display: none;">
+                    <p class="nickname-hint">Шаг 2: Вставьте ваш ник и код верификации</p>
+                    <div class="input-group" style="margin-bottom: 8px;">
+                        <input type="text" id="verifyNickInput" class="input-field"
+                            placeholder="Ваш ник (например Fors777_2016)" autocomplete="off" autocorrect="off"
+                            maxlength="24">
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="verifyCodeInput" class="input-field"
+                            placeholder="Код (например MTN10S7B)" autocomplete="off" autocorrect="off" maxlength="10"
+                            style="text-transform: uppercase; letter-spacing: 2px; font-family: 'Russo One', monospace; text-align: center;">
+                        <button class="btn-save" onclick="verifyCode()">
+                            ✅ Привязать
+                        </button>
+                    </div>
+                    <p class="nickname-hint" style="margin-top: 8px; font-size: 0.6rem; opacity: 0.6">
+                        Код вы получили после входа через Lesta Games
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="section-card" id="quickStatsSection" style="display: none;">
+        <div class="section-card__header">
+            <span class="section-card__icon">📈</span>
+            <h3>Быстрая статистика</h3>
+        </div>
+        <div class="quick-stats-grid">
+            <div class="qs-item">
+                <div class="qs-value" id="qsBattles">—</div>
+                <div class="qs-label">Боёв</div>
+            </div>
+            <div class="qs-item">
+                <div class="qs-value" id="qsWinrate">—</div>
+                <div class="qs-label">Побед</div>
+            </div>
+            <div class="qs-item">
+                <div class="qs-value" id="qsDamage">—</div>
+                <div class="qs-label">Ср. урон</div>
+            </div>
+            <div class="qs-item">
+                <div class="qs-value" id="qsRating">—</div>
+                <div class="qs-label">Рейтинг</div>
+            </div>
+        </div>
+        <button class="btn-full-stats" onclick="viewMyStats()">
+            📊 Полная статистика →
+        </button>
+    </section>
+
+    <!-- Game Progress -->
+    <section class="section-card" id="progressSection">
+        <div class="section-card__header">
+            <span class="section-card__icon">🏆</span>
+            <h3>Прогресс в клубе</h3>
+        </div>
+        <div class="progress-list">
+            <!-- Сыр -->
+            <div class="progress-item">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">🧀 СЫР</span>
+                    <span class="progress-item__value" id="progCoins">0</span>
+                </div>
+            </div>
+
+            <!-- XP -->
+            <div class="progress-item">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">⭐ Опыт</span>
+                    <span class="progress-item__value" id="progXP">0</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-bar__fill" id="xpBar"></div>
+                </div>
+                <div class="progress-item__sub">
+                    <span id="xpProgress">0 / 100 XP</span>
+                    <span id="xpLevel">Уровень 1</span>
+                </div>
+            </div>
+
+            <!-- Сыграно сражений -->
+            <div class="progress-item progress-item--expandable" onclick="toggleBattleDetails(this)">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">⚔️ Сыграно сражений</span>
+                    <div class="progress-item__right">
+                        <span class="progress-item__value" id="progBattles">0</span>
+                        <span class="progress-item__chevron">▼</span>
+                    </div>
+                </div>
+                <div class="progress-item__details" id="battleDetails">
+                    <div class="detail-row">
+                        <span class="detail-label">🎯 1 на 1 (PvP)</span>
+                        <span class="detail-value" id="pvpCount">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">🔥 Общие</span>
+                        <span class="detail-value" id="gcCount">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">👥 Командные</span>
+                        <span class="detail-value" id="teamCount">0</span>
+                    </div>
+                    <div class="detail-row detail-row--active" id="activeRow" style="display:none;">
+                        <span class="detail-label">🟢 Активные сейчас</span>
+                        <span class="detail-value detail-value--active" id="activeCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Победы / Поражения -->
+            <div class="progress-item progress-item--expandable" onclick="toggleWinDetails(this)">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">🏆 Победы / Поражения</span>
+                    <div class="progress-item__right">
+                        <span class="progress-item__value" id="progWinLoss">0 / 0</span>
+                        <span class="progress-item__chevron">▼</span>
+                    </div>
+                </div>
+                <!-- Winrate bar -->
+                <div class="winrate-bar" id="winrateBarWrap" style="display:none;">
+                    <div class="winrate-bar__fill winrate-bar__wins" id="winrateBarWins"></div>
+                    <div class="winrate-bar__fill winrate-bar__losses" id="winrateBarLosses"></div>
+                </div>
+                <div class="winrate-label" id="winrateLabel" style="display:none;"></div>
+                <div class="progress-item__details" id="winDetails">
+                    <!-- По типам -->
+                    <div class="detail-row">
+                        <span class="detail-label">🎯 1 на 1</span>
+                        <span class="detail-value" id="pvpWinLoss">0W / 0L</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">🔥 Общие</span>
+                        <span class="detail-value" id="gcWinLoss">0W / 0L</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">👥 Командные</span>
+                        <span class="detail-value" id="teamWinLoss">0W / 0L</span>
+                    </div>
+                    <div class="detail-divider"></div>
+                    <!-- Сыр P&L -->
+                    <div class="detail-row">
+                        <span class="detail-label">📈 Выиграно 🧀</span>
+                        <span class="detail-value detail-value--green" id="cheeseWon">+0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">📉 Проиграно 🧀</span>
+                        <span class="detail-value detail-value--red" id="cheeseLost">-0</span>
+                    </div>
+                    <div class="detail-row detail-row--total">
+                        <span class="detail-label">💰 Итого по сражениям</span>
+                        <span class="detail-value" id="cheeseNet">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Серия дней -->
+            <div class="progress-item">
+                <div class="progress-item__info">
+                    <span class="progress-item__label">🔥 Серия дней</span>
+                    <span class="progress-item__value" id="progStreak">0 дн.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Achievements -->
+    <section class="section-card">
+        <div class="section-card__header">
+            <span class="section-card__icon">🎖</span>
+            <h3>Достижения</h3>
+        </div>
+        <div class="achievements-grid">
+            <div class="achievement" id="achFirst">
+                <div class="achievement__icon">🏁</div>
+                <div class="achievement__name">Первый бой</div>
+                <div class="achievement__desc">Сыграй 1 игру</div>
+            </div>
+            <div class="achievement" id="achVeteran">
+                <div class="achievement__icon">⚔️</div>
+                <div class="achievement__name">Ветеран</div>
+                <div class="achievement__desc">Сыграй 50 игр</div>
+            </div>
+            <div class="achievement" id="achRich">
+                <div class="achievement__icon">💰</div>
+                <div class="achievement__name">Богач</div>
+                <div class="achievement__desc">Накопи 5000 🧀</div>
+            </div>
+            <div class="achievement" id="achStreak">
+                <div class="achievement__icon">🔥</div>
+                <div class="achievement__name">Серия</div>
+                <div class="achievement__desc">7 дней подряд</div>
+            </div>
+            <div class="achievement achievement--locked" id="achLucky">
+                <div class="achievement__icon">🍀</div>
+                <div class="achievement__name">Везунчик</div>
+                <div class="achievement__desc">Выиграй легенд. приз</div>
+            </div>
+            <div class="achievement achievement--locked" id="achPro">
+                <div class="achievement__icon">👑</div>
+                <div class="achievement__name">Про</div>
+                <div class="achievement__desc">Достигни 10 уровня</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions-section">
+        <button class="action-btn action-btn--stats" onclick="viewMyStats()">
+            <span class="action-btn__icon">📊</span>
+            <span class="action-btn__text">Моя статистика</span>
+            <span class="action-btn__arrow">→</span>
+        </button>
+        <button class="action-btn action-btn--games" onclick="goBack()">
+            <span class="action-btn__icon">🎮</span>
+            <span class="action-btn__text">Играть</span>
+            <span class="action-btn__arrow">→</span>
+        </button>
+        <button class="action-btn" onclick="location.href='cheese.html'" style="border-color: rgba(255, 193, 7, 0.2);">
+            <span class="action-btn__icon">🧀</span>
+            <span class="action-btn__text">Купить СЫР</span>
+            <span class="action-btn__arrow">→</span>
+        </button>
+    </section>
+
+    <div class="footer-spacer"></div>
+
+    <script src="js/app.js?v=57"></script>
+    <script src="js/profile.js?v=57"></script>
+
+    <!-- ИНЛАЙН: Загрузка сыра напрямую (обходит любой кэш JS-файлов) -->
+    <script>
+    (function loadCheeseInline() {
+        const API = 'https://mir-tankov-production.up.railway.app';
+
+        function getMyId() {
+            // 1. Telegram SDK
+            try {
+                const tg = window.Telegram && window.Telegram.WebApp;
+                if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+                    const id = String(tg.initDataUnsafe.user.id);
+                    localStorage.setItem('my_telegram_id', id);
+                    return id;
+                }
+            } catch(e) {}
+            // 2. URL параметры
+            const urlId = new URLSearchParams(window.location.search).get('telegram_id');
+            if (urlId) { localStorage.setItem('my_telegram_id', urlId); return urlId; }
+            // 3. localStorage
+            return localStorage.getItem('my_telegram_id') ||
+                   localStorage.getItem('tg_user_id') ||
+                   localStorage.getItem('site_telegram_id');
+        }
+
+        function setEl(id, val) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = val;
+        }
+
+        async function fetchCheese() {
+            var tgId = getMyId();
+            if (!tgId) {
+                setEl('progCoins', 'нет ID');
+                return;
+            }
+            try {
+                var r = await fetch(API + '/api/me?telegram_id=' + tgId);
+                var d = await r.json();
+                if (d && d.cheese !== undefined && d.cheese !== null) {
+                    setEl('progCoins', d.cheese.toLocaleString());
+                }
+            } catch (e) {
+                console.error('inline cheese load failed', e);
+            }
+            // Также грузим статистику боёв
+            try {
+                var r2 = await fetch(API + '/api/profile/battle-stats?telegram_id=' + tgId);
+                var s = await r2.json();
+                if (s) {
+                    if (s.cheese_balance !== undefined) setEl('progCoins', s.cheese_balance.toLocaleString());
+                    if (s.daily) setEl('progStreak', (s.daily.current_streak || 0) + ' дн.');
+                    if (s.battles) {
+                        var b = s.battles;
+                        setEl('progBattles', b.total || 0);
+                        setEl('pvpCount', (b.pvp && b.pvp.total) || 0);
+                        setEl('gcCount', (b.global && b.global.total) || 0);
+                        setEl('teamCount', (b.team && b.team.total) || 0);
+                        setEl('progWinLoss', (b.wins || 0) + ' побед / ' + (b.losses || 0) + ' пор.');
+                        setEl('pvpWinLoss', ((b.pvp && b.pvp.wins) || 0) + ' / ' + ((b.pvp && b.pvp.losses) || 0));
+                        setEl('gcWinLoss', ((b.global && b.global.wins) || 0) + ' / ' + ((b.global && b.global.losses) || 0));
+                        setEl('teamWinLoss', ((b.team && b.team.wins) || 0) + ' / ' + ((b.team && b.team.losses) || 0));
+                    }
+                }
+            } catch(e2) {
+                console.error('inline battle-stats failed', e2);
+            }
+        }
+
+        // Запускаем после загрузки страницы
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fetchCheese);
+        } else {
+            fetchCheese();
+        }
+    })();
+    </script>
+</body>
+
+</html>

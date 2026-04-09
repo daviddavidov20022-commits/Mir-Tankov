@@ -9,7 +9,7 @@ import os
 import datetime
 from Avatar import PlayerAvatar
 
-LOG_FILE = os.path.join(BigWorld.wd, 'bounty_session.json')
+LOG_FILE = r'D:\mir-tankov-bot\site\obs\bounty_session.json'
 
 bounty_data = {
     'session_start': '',

@@ -1,0 +1,838 @@
+/* ============================================================
+   TEAM BATTLE — Команда на Команду
+   ============================================================ */
+
+/* ── Create Form ── */
+.tb-create {
+    padding: 0 4px;
+}
+
+.tb-create-step {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(200,170,110,0.1);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+}
+
+.tb-create-step:hover {
+    border-color: rgba(200,170,110,0.2);
+}
+
+.tb-step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.tb-step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C8AA6E, #8B7340);
+    color: #0a0e14;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tb-step-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.8rem;
+    color: #E8E6E3;
+}
+
+/* Condition selector */
+.tb-cond-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.tb-cond-card {
+    padding: 12px 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(200,170,110,0.1);
+    background: rgba(255,255,255,0.02);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: 'Inter', sans-serif;
+}
+
+.tb-cond-card:hover {
+    border-color: rgba(200,170,110,0.3);
+    background: rgba(200,170,110,0.06);
+}
+
+.tb-cond-card.active {
+    border-color: #C8AA6E;
+    background: rgba(200,170,110,0.12);
+    box-shadow: 0 0 12px rgba(200,170,110,0.15);
+}
+
+.tb-cond-card__icon {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+}
+
+.tb-cond-card__name {
+    font-size: 0.65rem;
+    color: #E8E6E3;
+    font-weight: 600;
+}
+
+/* Team size selector */
+.tb-size-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tb-size-btn {
+    flex: 1;
+    min-width: 50px;
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(200,170,110,0.12);
+    background: rgba(255,255,255,0.02);
+    color: #8a94a6;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+}
+
+.tb-size-btn:hover {
+    border-color: rgba(200,170,110,0.3);
+}
+
+.tb-size-btn.active {
+    border-color: #C8AA6E;
+    background: rgba(200,170,110,0.12);
+    color: #C8AA6E;
+    box-shadow: 0 0 10px rgba(200,170,110,0.12);
+}
+
+.tb-size-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.tb-size-custom input {
+    width: 60px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(200,170,110,0.15);
+    background: rgba(0,0,0,0.3);
+    color: #E8E6E3;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+}
+
+.tb-size-custom input:focus {
+    border-color: #C8AA6E;
+}
+
+.tb-size-custom span {
+    color: #5A6577;
+    font-size: 0.65rem;
+}
+
+/* Timer selector */
+.tb-timer-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tb-timer-btn {
+    flex: 1;
+    min-width: 60px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(200,170,110,0.12);
+    background: rgba(255,255,255,0.02);
+    color: #8a94a6;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+}
+
+.tb-timer-btn.active {
+    border-color: #C8AA6E;
+    background: rgba(200,170,110,0.12);
+    color: #C8AA6E;
+}
+
+/* Wager section */
+.tb-wager-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.tb-wager-wrap .emoji {
+    font-size: 1.4rem;
+}
+
+.tb-wager-wrap input {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(200,170,110,0.15);
+    background: rgba(0,0,0,0.3);
+    color: #f5d36e;
+    font-family: 'Russo One', sans-serif;
+    font-size: 1rem;
+    outline: none;
+}
+
+.tb-wager-wrap input:focus {
+    border-color: #C8AA6E;
+    box-shadow: 0 0 12px rgba(200,170,110,0.15);
+}
+
+.tb-wager-presets {
+    display: flex;
+    gap: 6px;
+}
+
+.tb-wager-preset {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(200,170,110,0.1);
+    background: rgba(200,170,110,0.04);
+    color: #C8AA6E;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+}
+
+.tb-wager-preset:hover {
+    background: rgba(200,170,110,0.12);
+}
+
+.tb-wager-hint {
+    font-size: 0.55rem;
+    color: #5A6577;
+    margin-top: 6px;
+    text-align: center;
+}
+
+/* Create button */
+.tb-create-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #C8AA6E, #8B7340);
+    color: #0a0e14;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(200,170,110,0.25);
+    margin-top: 8px;
+}
+
+.tb-create-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 28px rgba(200,170,110,0.35);
+}
+
+.tb-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── Active Battles List ── */
+.tb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tb-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(200,170,110,0.02));
+    border: 1px solid rgba(200,170,110,0.12);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fadeInUp 0.3s ease;
+}
+
+.tb-card__header {
+    padding: 14px 16px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.tb-card__info {
+    flex: 1;
+}
+
+.tb-card__title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.8rem;
+    color: #E8E6E3;
+    margin-bottom: 4px;
+}
+
+.tb-card__meta {
+    font-size: 0.6rem;
+    color: #5A6577;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tb-card__meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.tb-card__bet {
+    text-align: right;
+}
+
+.tb-card__bet-amount {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    color: #f5d36e;
+}
+
+.tb-card__bet-label {
+    font-size: 0.5rem;
+    color: #5A6577;
+}
+
+/* Team columns */
+.tb-card__teams {
+    display: flex;
+    gap: 2px;
+    padding: 0 10px 10px;
+}
+
+.tb-team {
+    flex: 1;
+    border-radius: 12px;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.tb-team--alpha {
+    background: linear-gradient(145deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02));
+    border: 1px solid rgba(59,130,246,0.15);
+}
+
+.tb-team--bravo {
+    background: linear-gradient(145deg, rgba(239,68,68,0.08), rgba(239,68,68,0.02));
+    border: 1px solid rgba(239,68,68,0.15);
+}
+
+.tb-team__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.tb-team__name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+}
+
+.tb-team--alpha .tb-team__name { color: #60a5fa; }
+.tb-team--bravo .tb-team__name { color: #f87171; }
+
+.tb-team__count {
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.tb-team--alpha .tb-team__count {
+    background: rgba(59,130,246,0.15);
+    color: #60a5fa;
+}
+
+.tb-team--bravo .tb-team__count {
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+}
+
+.tb-team__players {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tb-player {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.2);
+    font-size: 0.6rem;
+}
+
+.tb-player__name {
+    color: #E8E6E3;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 80px;
+}
+
+.tb-player__value {
+    color: #C8AA6E;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+}
+
+.tb-player--me {
+    background: rgba(200,170,110,0.1);
+    border: 1px solid rgba(200,170,110,0.15);
+}
+
+.tb-slot-empty {
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px dashed rgba(255,255,255,0.08);
+    text-align: center;
+    font-size: 0.55rem;
+    color: #3E4A5C;
+}
+
+/* Team totals */
+.tb-team__total {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tb-team__total-label {
+    font-size: 0.55rem;
+    color: #5A6577;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tb-team__total-value {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+}
+
+.tb-team--alpha .tb-team__total-value { color: #60a5fa; }
+.tb-team--bravo .tb-team__total-value { color: #f87171; }
+
+/* Join button */
+.tb-card__actions {
+    padding: 0 10px 12px;
+    display: flex;
+    gap: 6px;
+}
+
+.tb-join-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.tb-join-btn--alpha {
+    background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0.08));
+    color: #60a5fa;
+    border: 1px solid rgba(59,130,246,0.3);
+}
+
+.tb-join-btn--alpha:hover {
+    background: linear-gradient(135deg, rgba(59,130,246,0.35), rgba(59,130,246,0.15));
+    box-shadow: 0 4px 16px rgba(59,130,246,0.2);
+}
+
+.tb-join-btn--bravo {
+    background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.08));
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.3);
+}
+
+.tb-join-btn--bravo:hover {
+    background: linear-gradient(135deg, rgba(239,68,68,0.35), rgba(239,68,68,0.15));
+    box-shadow: 0 4px 16px rgba(239,68,68,0.2);
+}
+
+.tb-join-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Timer bar */
+.tb-card__timer {
+    padding: 8px 16px;
+    background: rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.6rem;
+}
+
+.tb-card__timer-label {
+    color: #5A6577;
+}
+
+.tb-card__timer-value {
+    color: #C8AA6E;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.75rem;
+}
+
+/* Status badges */
+.tb-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.55rem;
+    font-weight: 700;
+}
+
+.tb-status--waiting {
+    background: rgba(245,190,11,0.12);
+    color: #f5be0b;
+    border: 1px solid rgba(245,190,11,0.2);
+}
+
+.tb-status--active {
+    background: rgba(34,197,94,0.12);
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,0.2);
+}
+
+.tb-status--finished {
+    background: rgba(200,170,110,0.12);
+    color: #C8AA6E;
+    border: 1px solid rgba(200,170,110,0.2);
+}
+
+/* Result card */
+.tb-result {
+    padding: 16px;
+    text-align: center;
+    background: linear-gradient(145deg, rgba(200,170,110,0.06), rgba(0,0,0,0.1));
+    border-top: 1px solid rgba(200,170,110,0.1);
+}
+
+.tb-result__crown {
+    font-size: 2rem;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 0 10px rgba(245,190,11,0.4));
+}
+
+.tb-result__text {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+
+.tb-result__text--alpha { color: #60a5fa; }
+.tb-result__text--bravo { color: #f87171; }
+
+.tb-result__prize {
+    font-size: 0.7rem;
+    color: #f5d36e;
+    font-weight: 700;
+}
+
+/* VS divider */
+.tb-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0;
+}
+
+.tb-vs__badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C8AA6E, #8B7340);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.55rem;
+    color: #0a0e14;
+    box-shadow: 0 2px 12px rgba(200,170,110,0.3);
+    flex-shrink: 0;
+}
+
+/* Score bar (progress comparison) */
+.tb-score-bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px 10px;
+    background: rgba(0,0,0,0.3);
+}
+
+.tb-score-bar__alpha {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    transition: width 0.5s ease;
+    min-width: 2px;
+}
+
+.tb-score-bar__bravo {
+    background: linear-gradient(90deg, #f87171, #ef4444);
+    transition: width 0.5s ease;
+    min-width: 2px;
+}
+
+/* Section labels */
+.tb-section-label {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.72rem;
+    color: #C8AA6E;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Empty state */
+.tb-empty {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.tb-empty__icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+
+.tb-empty__title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    color: #E8E6E3;
+    margin-bottom: 6px;
+}
+
+.tb-empty__desc {
+    font-size: 0.65rem;
+    color: #5A6577;
+    line-height: 1.5;
+}
+
+/* Sub-tabs within team tab */
+.tb-subtabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    padding: 3px;
+}
+
+.tb-subtab {
+    flex: 1;
+    padding: 8px 6px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #5A6577;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.tb-subtab.active {
+    background: rgba(200,170,110,0.12);
+    color: #C8AA6E;
+}
+
+/* Battles count selector (for team battles) */
+.tb-battles-selector {
+    display: flex;
+    gap: 6px;
+}
+
+.tb-battles-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(200,170,110,0.12);
+    background: rgba(255,255,255,0.02);
+    color: #8a94a6;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.tb-battles-btn.active {
+    border-color: #C8AA6E;
+    background: rgba(200,170,110,0.12);
+    color: #C8AA6E;
+}
+
+/* Loading skeleton */
+.tb-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tb-skeleton__card {
+    height: 120px;
+    border-radius: 16px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* My battles badge */
+.tb-my-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(200,170,110,0.15);
+    font-size: 0.5rem;
+    color: #C8AA6E;
+    font-weight: 700;
+}
+
+/* Creator badge */
+.tb-creator-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(168,85,247,0.12);
+    color: #a855f7;
+    font-size: 0.5rem;
+    font-weight: 700;
+}
+
+/* ── Player Detail Modal ── */
+#tb-player-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+.tb-modal-backdrop {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+}
+
+.tb-modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: linear-gradient(145deg, #1a2032, #0d1117);
+    border: 1px solid rgba(200,170,110,0.15);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.tb-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(200,170,110,0.1);
+}
+
+.tb-modal-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 0.85rem;
+    color: #E8E6E3;
+}
+
+.tb-modal-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(200,170,110,0.15);
+    background: rgba(0,0,0,0.3);
+    color: #5A6577;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.tb-modal-close:hover {
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+    border-color: rgba(239,68,68,0.3);
+}
+
+.tb-modal-body {
+    padding: 16px 20px;
+}
