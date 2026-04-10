@@ -1,11 +1,10 @@
 {
-  "status": "stopped",
-  "session_start": "",
+  "status": "active",
+  "session_start": "2026-04-10 23:12:14",
   "total_damage_received": 0,
   "total_gold_given": 0,
   "gold_rate": 1,
   "attackers": {},
   "recent_hits": [],
-  "participants_count": 0,
-  "last_update": ""
+  "last_update": "2026-04-10 23:14:41"
 }

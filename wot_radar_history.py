@@ -289,8 +289,8 @@ class RadarApp(ctk.CTk):
         ctk.CTkButton(bf, text="📊 Экспорт CSV", command=self._export_csv, fg_color=CARD, border_width=1, border_color="#444", text_color=WHITE, height=32).pack(fill="x", pady=2)
         ctk.CTkButton(bf, text="🗑 Сброс базы", command=self._clear, fg_color="transparent", border_width=1, border_color="#333", text_color=GRAY, height=28).pack(fill="x", pady=10)
         
-        # BOUNTY TRACKER BUTTON
-        ctk.CTkButton(bf, text="🎯 Охота: УПРАВЛЕНИЕ", command=self._open_bounty_popup, fg_color=CARD, border_width=1, border_color="#f59e0b", text_color="#f59e0b", height=32).pack(fill="x", pady=5)
+        # Кнопка быстрого перехода к Охоте
+        ctk.CTkButton(bf, text="🎯 Охота на Стримера", command=lambda: self._tab('bounty'), fg_color=CARD, border_width=1, border_color="#f59e0b", text_color="#f59e0b", height=32).pack(fill="x", pady=5)
         
         self.stat_lbl = ctk.CTkLabel(sb, text="", font=("Segoe UI",12), text_color=WHITE, justify="left")
         self.stat_lbl.grid(row=5, column=0, padx=20, pady=0, sticky="w")
@@ -301,7 +301,7 @@ class RadarApp(ctk.CTk):
         c.grid_rowconfigure(2, weight=1); c.grid_columnconfigure(0, weight=1)
         tabs = ctk.CTkFrame(c, fg_color=BG, height=50); tabs.grid(row=0, column=0, sticky="ew", padx=20, pady=(18,0))
         self.tab_var = ctk.StringVar(value="battle")
-        for val, txt in [("battle","⚔ Последний бой"),("history","📋 История"),("encounters","🔄 Частые"),("subs","🌟 Подписчики"),("favs","⭐ Избранные"),("all","📊 Все")]:
+        for val, txt in [("battle","⚔ Последний бой"),("history","📋 История"),("encounters","🔄 Частые"),("subs","🌟 Подписчики"),("favs","⭐ Избранные"),("all","📊 Все"),("bounty","🎯 Охота")]:
             btn = ctk.CTkButton(tabs, text=txt, width=110, height=34, corner_radius=8,
                 fg_color=CARD if val!="battle" else GOLD, text_color=BG if val=="battle" else WHITE,
                 command=lambda v=val: self._tab(v))
@@ -318,8 +318,9 @@ class RadarApp(ctk.CTk):
 
     def _tab(self, t):
         self.tab_var.set(t)
-        for v in ("battle","history","encounters","subs","favs","all"):
-            getattr(self, f"tb_{v}").configure(fg_color=GOLD if v==t else CARD, text_color=BG if v==t else WHITE)
+        for v in ("battle","history","encounters","subs","favs","all","bounty"):
+            b = getattr(self, f"tb_{v}", None)
+            if b: b.configure(fg_color=GOLD if v==t else CARD, text_color=BG if v==t else WHITE)
         self._refresh()
 
     def _refresh(self):
@@ -333,6 +334,7 @@ class RadarApp(ctk.CTk):
         elif tab == "subs": self._render_players("subs")
         elif tab == "favs": self._render_players("favs")
         elif tab == "all": self._render_players("all")
+        elif tab == "bounty": self._render_bounty()
 
     # ──── BATTLE VIEW ────
     def _render_battle(self):
@@ -489,8 +491,135 @@ class RadarApp(ctk.CTk):
             ctk.CTkLabel(row, text=f"☠ {r['total_kills']}", text_color=RED).pack(side="right", padx=8)
             if r["count"] > 1: ctk.CTkLabel(row, text=f"×{r['count']}", font=("Segoe UI",11,"bold"), text_color=ORANGE).pack(side="right", padx=5)
 
+    def _render_bounty(self):
+        """Полная панель управления Охотой на Стримера"""
+        s = self.scroll
+        data = _bounty_read()
+        status = data.get('status', 'stopped')
+        is_active = status == 'active'
+
+        # ── ЗАГОЛОВОК ──
+        hdr = ctk.CTkFrame(s, fg_color="#1a0f00", corner_radius=12, border_width=1, border_color="#f59e0b")
+        hdr.pack(fill="x", pady=(0, 10))
+        top = ctk.CTkFrame(hdr, fg_color="transparent"); top.pack(fill="x", padx=16, pady=12)
+        ctk.CTkLabel(top, text="🎯 ОХОТА НА СТРИМЕРА", font=("Segoe UI", 20, "bold"), text_color="#f59e0b").pack(side="left")
+        st_color = GREEN if is_active else RED
+        st_text = "● АКТИВНА" if is_active else "● ОСТАНОВЛЕНА"
+        ctk.CTkLabel(top, text=st_text, font=("Segoe UI", 13, "bold"), text_color=st_color).pack(side="right")
+
+        # ── КНОПКИ УПРАВЛЕНИЯ ──
+        ctrl = ctk.CTkFrame(s, fg_color=CARD2, corner_radius=10); ctrl.pack(fill="x", pady=(0, 8))
+        ctk.CTkLabel(ctrl, text="УПРАВЛЕНИЕ СЕССИЕЙ", font=("Segoe UI", 10, "bold"), text_color=GRAY).pack(pady=(10,6))
+        brow = ctk.CTkFrame(ctrl, fg_color="transparent"); brow.pack(fill="x", padx=12, pady=(0,10))
+        ctk.CTkButton(brow, text="▶ ЗАПУСТИТЬ", fg_color="#15803d" if not is_active else CARD,
+            hover_color="#166534", text_color=WHITE, font=("Segoe UI",12,"bold"), height=38,
+            state="normal" if not is_active else "disabled",
+            command=self._bounty_start).pack(side="left", expand=True, fill="x", padx=3)
+        ctk.CTkButton(brow, text="⏹ ОСТАНОВИТЬ", fg_color=RED if is_active else CARD,
+            hover_color="#b91c1c", text_color=WHITE, font=("Segoe UI",12,"bold"), height=38,
+            state="normal" if is_active else "disabled",
+            command=self._bounty_stop).pack(side="left", expand=True, fill="x", padx=3)
+        ctk.CTkButton(brow, text="🔄 СБРОСИТЬ", fg_color="transparent",
+            border_width=1, border_color="#f59e0b", text_color="#f59e0b",
+            font=("Segoe UI",12,"bold"), height=38, command=self._bounty_reset).pack(side="left", expand=True, fill="x", padx=3)
+
+        # ── СТАТИСТИКА ТЕКУЩЕЙ СЕССИИ ──
+        total_dmg = data.get('total_damage_received', 0)
+        total_gold = data.get('total_gold_given', 0)
+        attackers = data.get('attackers', {})
+        n_attackers = len(attackers)
+        session_start = data.get('session_start', '—')
+
+        stats = ctk.CTkFrame(s, fg_color=CARD, corner_radius=10); stats.pack(fill="x", pady=(0,8))
+        ctk.CTkLabel(stats, text="ТЕКУЩАЯ СЕССИЯ", font=("Segoe UI",10,"bold"), text_color=GRAY).pack(pady=(10,6))
+        srow = ctk.CTkFrame(stats, fg_color="transparent"); srow.pack(fill="x", padx=12, pady=(0,10))
+        for lbl, val, clr in [("💥 УРОН", f"{total_dmg:,}", RED), ("💰 ЗОЛОТО", f"{total_gold:,}", GOLD), ("👥 ОХОТНИКОВ", str(n_attackers), BLUE)]:
+            cell = ctk.CTkFrame(srow, fg_color=BG, corner_radius=8); cell.pack(side="left", expand=True, fill="x", padx=3)
+            ctk.CTkLabel(cell, text=lbl, font=("Segoe UI",9), text_color=GRAY).pack(pady=(8,2))
+            ctk.CTkLabel(cell, text=val, font=("Segoe UI",16,"bold"), text_color=clr).pack(pady=(0,8))
+        if session_start:
+            ctk.CTkLabel(stats, text=f"Начало сессии: {session_start}", font=("Segoe UI",9), text_color=GRAY).pack(pady=(0,6))
+
+        # ── ТОП ОХОТНИКОВ ──
+        if attackers:
+            top5 = sorted(attackers.items(), key=lambda x: (x[1]['damage'] if isinstance(x[1],dict) else x[1]), reverse=True)[:5]
+            tf = ctk.CTkFrame(s, fg_color=CARD2, corner_radius=10); tf.pack(fill="x", pady=(0,8))
+            ctk.CTkLabel(tf, text="ТОП ОХОТНИКОВ", font=("Segoe UI",10,"bold"), text_color=GRAY).pack(pady=(10,5))
+            for i, (name, info) in enumerate(top5):
+                dmg = info['damage'] if isinstance(info,dict) else info
+                tank = info.get('tank','—') if isinstance(info,dict) else '—'
+                rw = ctk.CTkFrame(tf, fg_color=BG, corner_radius=8); rw.pack(fill="x", padx=12, pady=2)
+                ctk.CTkLabel(rw, text=f"#{i+1}", font=("Segoe UI",11,"bold"), text_color=GOLD, width=28).pack(side="left", padx=8, pady=6)
+                ctk.CTkLabel(rw, text=name, font=("Segoe UI",12,"bold"), text_color=WHITE).pack(side="left")
+                ctk.CTkLabel(rw, text=f"🪖 {tank}", font=("Segoe UI",10), text_color=GRAY).pack(side="left", padx=8)
+                ctk.CTkLabel(rw, text=f"{dmg:,}", font=("Segoe UI",13,"bold"), text_color=RED).pack(side="right", padx=12)
+            ctk.CTkFrame(tf, fg_color="transparent", height=6).pack()
+
+        # ── ССЫЛКИ НА OBS ВИДЖЕТЫ ──
+        wf = ctk.CTkFrame(s, fg_color=CARD, corner_radius=10); wf.pack(fill="x", pady=(0,8))
+        ctk.CTkLabel(wf, text="OBS ВИДЖЕТЫ", font=("Segoe UI",10,"bold"), text_color=GRAY).pack(pady=(10,6))
+        base = "https://mir-tankov-production.up.railway.app/webapp/obs"
+        for label, url in [
+            ("🎯 Трекер Охоты (основной)", f"{base}/bounty-tracker.html?theme=1"),
+            ("👥 Подписчики в бою", f"{base}/subs-in-battle.html"),
+        ]:
+            wr = ctk.CTkFrame(wf, fg_color=BG, corner_radius=8); wr.pack(fill="x", padx=12, pady=3)
+            ctk.CTkLabel(wr, text=label, font=("Segoe UI",10), text_color=WHITE).pack(side="left", padx=10, pady=8)
+            def _copy(u=url):
+                self.clipboard_clear(); self.clipboard_append(u)
+                self._log(f"📋 Скопировано: {u}")
+            ctk.CTkButton(wr, text="📋 Копировать", width=110, height=26, fg_color=CARD2,
+                text_color=BLUE, font=("Segoe UI",9), command=_copy).pack(side="right", padx=8, pady=6)
+        ctk.CTkButton(wf, text="🔗 Открыть трекер в браузере", height=30, fg_color="transparent",
+            border_width=1, border_color=BLUE, text_color=BLUE,
+            command=lambda: __import__('webbrowser').open(f"{base}/bounty-tracker.html?theme=1&demo=1")).pack(padx=12, pady=(4,10), fill="x")
+
+        # ── ИСТОРИЯ ОХОТ ──
+        history = []
+        if os.path.exists(BOUNTY_HISTORY):
+            try:
+                with open(BOUNTY_HISTORY, 'r', encoding='utf-8') as f:
+                    history = json.load(f)
+            except: pass
+
+        hf = ctk.CTkFrame(s, fg_color=CARD2, corner_radius=10); hf.pack(fill="x", pady=(0,8))
+        ctk.CTkLabel(hf, text=f"ИСТОРИЯ ОХОТ ({len(history)} сессий)", font=("Segoe UI",10,"bold"), text_color=GRAY).pack(pady=(10,5))
+
+        if not history:
+            ctk.CTkLabel(hf, text="Нет завершённых охот", font=("Segoe UI",11), text_color=GRAY).pack(pady=15)
+        else:
+            for i, sess in enumerate(history[:20]):
+                sf = ctk.CTkFrame(hf, fg_color=BG, corner_radius=8); sf.pack(fill="x", padx=12, pady=3)
+                left = ctk.CTkFrame(sf, fg_color="transparent"); left.pack(side="left", padx=10, pady=8)
+                ctk.CTkLabel(left, text=f"🎯 Охота #{len(history)-i}", font=("Segoe UI",11,"bold"), text_color="#f59e0b").pack(anchor="w")
+                ctk.CTkLabel(left, text=f"{sess.get('session_start','?')} → {sess.get('session_end','?')}", font=("Segoe UI",8), text_color=GRAY).pack(anchor="w")
+                n_atk = len(sess.get('attackers', {}))
+                ctk.CTkLabel(left, text=f"👥 {n_atk} охотник{'а' if 2<=n_atk<=4 else 'ов' if n_atk>=5 else ''}", font=("Segoe UI",9), text_color=BLUE).pack(anchor="w")
+                right = ctk.CTkFrame(sf, fg_color="transparent"); right.pack(side="right", padx=12, pady=8)
+                ctk.CTkLabel(right, text=f"💥 {sess.get('total_damage',0):,}", font=("Segoe UI",13,"bold"), text_color=RED).pack(anchor="e")
+                ctk.CTkLabel(right, text=f"💰 {sess.get('total_gold',0):,}", font=("Segoe UI",11,"bold"), text_color=GOLD).pack(anchor="e")
+        ctk.CTkFrame(hf, fg_color="transparent", height=8).pack()
+
+    def _bounty_start(self):
+        d = _bounty_read(); d['status'] = 'active'
+        if not d.get('session_start'): d['session_start'] = time.strftime("%Y-%m-%d %H:%M:%S")
+        _bounty_write(d); self._log("▶ Охота ЗАПУЩЕНА"); self._refresh()
+
+    def _bounty_stop(self):
+        d = _bounty_read(); _bounty_save_history(d)
+        d['status'] = 'stopped'; d['session_end'] = time.strftime("%Y-%m-%d %H:%M:%S")
+        _bounty_write(d); self._log("⏹ Охота ОСТАНОВЛЕНА"); self._refresh()
+
+    def _bounty_reset(self):
+        if not messagebox.askyesno("Сброс охоты", "Сбросить текущую сессию?\nДанные сохранятся в историю."): return
+        d = _bounty_read(); _bounty_save_history(d)
+        _bounty_write({'status':'stopped','session_start':'','total_damage_received':0,
+            'total_gold_given':0,'gold_rate':1,'attackers':{},'recent_hits':[],'participants_count':0,'last_update':''})
+        self._log("🔄 Охота СБРОШЕНА"); self._refresh()
+
     def _open_bounty_popup(self):
-        BountyPopup(self)
+        self._tab('bounty')
+
 
     def _empty(self, t):
         ctk.CTkLabel(self.scroll, text=t, font=("Segoe UI",14), text_color=GRAY, justify="center").pack(pady=80)
