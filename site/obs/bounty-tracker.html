@@ -16,89 +16,7 @@
             padding: 10px;
         }
 
-        /* ── ANNOUNCEMENT OVERLAY ── */
-        #announcement {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, rgba(10,8,5,0.97) 0%, rgba(20,14,4,0.97) 100%);
-            z-index: 200;
-            border: 2px solid rgba(255,215,0,0.4);
-            border-radius: 14px;
-            padding: 20px;
-            animation: annIn 0.5s ease;
-        }
-        #announcement.hide { display: none; }
-
-        .ann-cheese {
-            font-size: 3.5rem;
-            animation: cheeseFloat 1.2s ease-in-out infinite alternate;
-            margin-bottom: 8px;
-        }
-        .ann-badge {
-            font-size: 0.6rem;
-            color: #9AA4B5;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 6px;
-        }
-        .ann-name {
-            font-family: 'Russo One', sans-serif;
-            font-size: 1.7rem;
-            color: #FFD700;
-            text-shadow: 0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.3);
-            text-align: center;
-            word-break: break-all;
-            line-height: 1.1;
-            margin-bottom: 4px;
-        }
-        .ann-tank {
-            font-size: 0.8rem;
-            color: #C8AA6E;
-            margin-bottom: 14px;
-            background: rgba(200,170,110,0.1);
-            padding: 3px 10px;
-            border-radius: 20px;
-            border: 1px solid rgba(200,170,110,0.2);
-        }
-        .ann-label {
-            font-size: 0.85rem;
-            color: #E8E6E3;
-            margin-bottom: 12px;
-        }
-        .ann-gold {
-            font-family: 'Russo One', sans-serif;
-            font-size: 1.3rem;
-            color: #FFD700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .ann-gold img { width: 22px; height: 22px; }
-        .ann-gold-label {
-            font-size: 0.6rem;
-            color: #5A6577;
-            text-align: center;
-            margin-top: 2px;
-            margin-bottom: 14px;
-        }
-        .ann-progress-wrap {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 4px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 0 0 12px 12px;
-            overflow: hidden;
-        }
-        .ann-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #FFD700, #ff9900);
-            width: 100%;
-            transform-origin: left;
-        }
+        /* announcement overlay removed — replaced by subs-in-battle.html widget */
 
         /* ── MAIN WIDGET ── */
         .bounty-widget {
@@ -352,22 +270,7 @@
 </head>
 <body class="theme-1">
 
-    <!-- ANNOUNCEMENT OVERLAY — кто попался в бою -->
-    <div id="announcement" class="hide">
-        <div class="ann-cheese">🧀</div>
-        <div class="ann-badge">ПОПАЛ В БОЙ СО СТРИМЕРОМ</div>
-        <div class="ann-name" id="annName">PlayerName</div>
-        <div class="ann-tank" id="annTank">Танк</div>
-        <div class="ann-label">присоединился к охоте!</div>
-        <div class="ann-gold">
-            +<span id="annGold">0</span>&nbsp;
-            <img src="assets/currency/goldIcon.png" onerror="this.outerHTML='💰'" alt="">
-        </div>
-        <div class="ann-gold-label">за первый урон по стримеру</div>
-        <div class="ann-progress-wrap">
-            <div class="ann-progress-bar" id="annProgressBar"></div>
-        </div>
-    </div>
+    <!-- announcement removed — now in subs-in-battle.html -->
 
     <div class="bounty-widget" id="widget">
         <div style="padding: 20px; text-align: center; color: #5A6577; font-size: 0.8rem;">
@@ -380,8 +283,9 @@
         const theme = urlParams.get('theme') || '1';
         document.body.className = 'theme-' + theme;
 
+        const LOCAL_API = 'http://localhost:8091/api/bounty/session';
         const CONFIG = {
-            jsonUrl: 'bounty_session.json',
+            jsonUrl: urlParams.get('json') || 'bounty_session.json',
             refreshInterval: 1500,
             goldIcon: 'assets/currency/goldIcon.png'
         };
@@ -403,31 +307,7 @@
             } catch(e) { return '--:--'; }
         }
 
-        // ── Announcement Logic ──
-        let seenPlayers = new Set();
-        let annTimer = null;
-        let annCountTimer = null;
-
-        function showAnnouncement(name, tank, gold) {
-            const el = document.getElementById('announcement');
-            document.getElementById('annName').textContent = name;
-            document.getElementById('annTank').textContent = tank && tank !== 'Unknown' ? tank : '🪖 Танк';
-            document.getElementById('annGold').textContent = fmt(gold);
-
-            // Reset progress bar
-            const bar = document.getElementById('annProgressBar');
-            bar.style.animation = 'none';
-            bar.offsetHeight; // force reflow
-            bar.style.animation = 'annCountDown 10s linear forwards';
-
-            el.classList.remove('hide');
-            clearTimeout(annTimer);
-            clearInterval(annCountTimer);
-
-            annTimer = setTimeout(() => {
-                el.classList.add('hide');
-            }, 10000);
-        }
+        // announcement removed
 
         // ── State ──
         let lastData = null;
@@ -528,35 +408,34 @@
 
             widget.innerHTML = html;
 
-            // ── Check new players & show announcement ──
-            const newPlayers = Object.keys(data.attackers).filter(name => !seenPlayers.has(name));
-            Object.keys(data.attackers).forEach(n => seenPlayers.add(n));
-            if (newPlayers.length > 0) {
-                const name = newPlayers[0];
-                const info = data.attackers[name];
-                const gold = typeof info === 'object' ? info.damage : info;
-                const tank = typeof info === 'object' ? info.tank : '';
-                showAnnouncement(name, tank, gold);
-            }
         }
 
-        // ── Data Fetching ──
+        // ── Data Fetching (local API first, then fallback) ──
         async function loadData() {
+            let data = null;
+            // Попытка 1: локальный API (RadarHistory)
             try {
-                const resp = await fetch(CONFIG.jsonUrl + '?t=' + Date.now());
-                if (!resp.ok) return;
-                const data = await resp.json();
-                const currentTotalGold = data.total_gold_given || data.total_damage_received || 0;
-                const isNewHit = lastData && currentTotalGold > lastTotalGold;
-                if (!lastData ||
-                    data.total_damage_received !== lastData.total_damage_received ||
-                    (data.recent_hits && data.recent_hits.length !== knownHitsCount)) {
-                    lastTotalGold = currentTotalGold;
-                    lastData = data;
-                    knownHitsCount = data.recent_hits ? data.recent_hits.length : 0;
-                    renderWidget(data, isNewHit);
-                }
+                const resp = await fetch(LOCAL_API + '?t=' + Date.now(), {signal: AbortSignal.timeout(1500)});
+                if (resp.ok) data = await resp.json();
             } catch(e) {}
+            // Попытка 2: относительный JSON файл
+            if (!data) {
+                try {
+                    const resp = await fetch(CONFIG.jsonUrl + '?t=' + Date.now());
+                    if (resp.ok) data = await resp.json();
+                } catch(e) {}
+            }
+            if (!data) return;
+            const currentTotalGold = data.total_gold_given || data.total_damage_received || 0;
+            const isNewHit = lastData && currentTotalGold > lastTotalGold;
+            if (!lastData ||
+                data.total_damage_received !== lastData.total_damage_received ||
+                (data.recent_hits && data.recent_hits.length !== knownHitsCount)) {
+                lastTotalGold = currentTotalGold;
+                lastData = data;
+                knownHitsCount = data.recent_hits ? data.recent_hits.length : 0;
+                renderWidget(data, isNewHit);
+            }
         }
 
         // ── DEMO MODE ──
@@ -584,8 +463,6 @@
                 participants_count: 4
             };
 
-            // Pre-populate seenPlayers so first render doesn't trigger announcements
-            Object.keys(demo.attackers).forEach(n => seenPlayers.add(n));
             renderWidget(demo, false);
 
             // Simulate new players hitting

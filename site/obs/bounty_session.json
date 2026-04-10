@@ -1,67 +1,11 @@
 {
-  "participants_count": 0, 
-  "total_damage_received": 7306, 
-  "gold_rate": 1, 
-  "recent_hits": [
-    {
-      "time": "2026-04-10 22:36:51.972000", 
-      "tank": "КВ-90", 
-      "name": "Andron033", 
-      "gold": 32, 
-      "damage": 32
-    }, 
-    {
-      "damage": 34, 
-      "tank": "КВ-90", 
-      "name": "Andron033", 
-      "gold": 34, 
-      "time": "2026-04-10 22:36:51.875000"
-    }, 
-    {
-      "time": "2026-04-10 22:36:51.776000", 
-      "tank": "КВ-90", 
-      "damage": 33, 
-      "gold": 33, 
-      "name": "Andron033"
-    }, 
-    {
-      "name": "Andron033", 
-      "tank": "КВ-90", 
-      "damage": 33, 
-      "gold": 33, 
-      "time": "2026-04-10 22:36:51.666000"
-    }, 
-    {
-      "time": "2026-04-10 22:36:51.578000", 
-      "tank": "КВ-90", 
-      "name": "Andron033", 
-      "gold": 30, 
-      "damage": 30
-    }
-  ], 
-  "session_start": "2026-04-10 21:41:30.108000", 
-  "total_gold_given": 7306, 
-  "last_update": "2026-04-10 22:36:51.972000", 
-  "attackers": {
-    "Varvar2000": {
-      "tank": "СТ-I", 
-      "damage": 460
-    }, 
-    "shura572": 1264, 
-    "lukai15": 479, 
-    "serbin_nik": 627, 
-    "HE_BEZET_MHE": {
-      "tank": "Rinoceronte", 
-      "damage": 483
-    }, 
-    "c00per74rus": 222, 
-    " MiniPuh74": 1953, 
-    "nagibolotankov": 324, 
-    "kii": 59, 
-    "prizrak34523": 426, 
-    "Andron033": {
-      "tank": "КВ-90", 
-      "damage": 1009
-    }
-  }
+  "status": "stopped",
+  "session_start": "",
+  "total_damage_received": 0,
+  "total_gold_given": 0,
+  "gold_rate": 1,
+  "attackers": {},
+  "recent_hits": [],
+  "participants_count": 0,
+  "last_update": ""
 }

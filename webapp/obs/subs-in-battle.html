@@ -13,77 +13,178 @@
             background: transparent;
             color: #fff;
             overflow: hidden;
-            width: 380px;
-            min-height: 100px;
+            padding: 10px;
         }
 
-        /* ── Контейнер ── */
+        /* ── ОСНОВНОЙ КОНТЕЙНЕР ── */
         .widget {
-            width: 380px;
-            position: relative;
-        }
-
-        /* ── Пустое состояние ── */
-        .widget--empty {
-            display: none;
-        }
-
-        /* ── Заголовок ── */
-        .header {
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.03));
+            width: 360px;
+            background: linear-gradient(180deg, rgba(8,14,25,0.96) 0%, rgba(5,10,18,0.98) 100%);
             border: 1px solid rgba(59,130,246,0.25);
-            border-radius: 12px 12px 0 0;
-            position: relative;
+            border-radius: 16px;
             overflow: hidden;
+            box-shadow: 
+                0 10px 50px rgba(59,130,246,0.15),
+                0 0 0 1px rgba(59,130,246,0.08),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+            position: relative;
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .header::before {
+        .widget.visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        .widget.hiding {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+            transition: all 0.8s ease-in;
+        }
+
+        /* Сканирующая линия сверху */
+        .widget::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent);
-            box-shadow: 0 0 15px #3b82f6;
-            animation: headerGlow 3s ease-in-out infinite;
+            height: 3px;
+            background: linear-gradient(90deg, transparent 0%, #3b82f6 20%, #60a5fa 50%, #3b82f6 80%, transparent 100%);
+            box-shadow: 0 0 15px rgba(59,130,246,0.8), 0 0 30px rgba(59,130,246,0.4);
+            z-index: 10;
+            animation: scanline 2s ease-in-out infinite;
         }
-        .header__icon {
-            font-size: 1.6rem;
-            animation: iconBounce 2s ease-in-out infinite;
+
+        /* ── HEADER ── */
+        .header {
+            padding: 14px 18px 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(59,130,246,0.1);
+            background: linear-gradient(135deg, rgba(59,130,246,0.08), transparent);
+            position: relative;
         }
-        .header__text {
-            flex: 1;
+        .header__radar {
+            width: 42px; height: 42px;
+            position: relative;
+            flex-shrink: 0;
         }
+        .radar-ring {
+            position: absolute;
+            border: 2px solid rgba(59,130,246,0.3);
+            border-radius: 50%;
+            animation: radarPulse 2s ease-out infinite;
+        }
+        .radar-ring:nth-child(1) { inset: 0; animation-delay: 0s; }
+        .radar-ring:nth-child(2) { inset: 6px; animation-delay: 0.4s; }
+        .radar-ring:nth-child(3) { inset: 12px; animation-delay: 0.8s; border-color: rgba(59,130,246,0.5); }
+        .radar-dot {
+            position: absolute;
+            width: 6px; height: 6px;
+            background: #60a5fa;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #3b82f6, 0 0 20px rgba(59,130,246,0.5);
+        }
+        .radar-sweep {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 50%; height: 2px;
+            background: linear-gradient(90deg, #3b82f6, transparent);
+            transform-origin: left center;
+            animation: sweep 2s linear infinite;
+        }
+
+        .header__text { flex: 1; }
         .header__title {
             font-family: 'Russo One', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: #60a5fa;
             text-shadow: 0 0 10px rgba(59,130,246,0.5);
             letter-spacing: 1px;
         }
-        .header__count {
-            font-size: 0.6rem;
-            color: #9AA4B5;
-            margin-top: 1px;
+        .header__sub {
+            font-size: 0.55rem;
+            color: #5A6577;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .header__badge {
+        .header__sub span {
+            color: #8a94a6;
+        }
+        .header__count {
             font-family: 'Russo One', sans-serif;
-            font-size: 1.3rem;
+            font-size: 1.6rem;
             color: #60a5fa;
             text-shadow: 0 0 20px rgba(59,130,246,0.8);
-            animation: badgePulse 1.5s ease-in-out infinite;
+            animation: countPulse 1.5s ease-in-out infinite;
+            flex-shrink: 0;
         }
 
-        /* ── Карточки подписчиков ── */
-        .cards {
+        /* ── ТАЙМЕР ── */
+        .timer-bar {
+            height: 32px;
+            padding: 0 18px;
             display: flex;
-            flex-direction: column;
-            background: rgba(10,14,20,0.9);
-            border: 1px solid rgba(59,130,246,0.15);
-            border-top: none;
-            border-radius: 0 0 12px 12px;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .timer-bar__label {
+            font-size: 0.55rem;
+            color: #5A6577;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+        .timer-bar__track {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+        .timer-bar__fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd);
+            border-radius: 2px;
+            transition: width 1s linear;
+            position: relative;
+            box-shadow: 0 0 8px rgba(59,130,246,0.6);
+        }
+        .timer-bar__fill::after {
+            content: '';
+            position: absolute;
+            right: -2px; top: -3px;
+            width: 10px; height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #3b82f6, 0 0 20px rgba(59,130,246,0.5);
+        }
+        .timer-bar__time {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.85rem;
+            color: #60a5fa;
+            flex-shrink: 0;
+            min-width: 25px;
+            text-align: right;
+            text-shadow: 0 0 10px rgba(59,130,246,0.5);
+        }
+        .timer-bar__time.urgent {
+            color: #ef4444;
+            text-shadow: 0 0 10px rgba(239,68,68,0.5);
+            animation: urgentBlink 0.5s ease-in-out infinite;
+        }
+
+        /* ── КАРТОЧКИ ИГРОКОВ ── */
+        .cards {
+            padding: 6px 0;
+            max-height: 380px;
             overflow: hidden;
         }
 
@@ -91,48 +192,47 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 16px;
+            padding: 8px 18px;
             position: relative;
             overflow: hidden;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
             opacity: 0;
-            transform: translateX(-100px) scale(0.8);
-            animation: cardReveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform: translateX(-80px) scale(0.85);
         }
-        .sub-card:last-child { border-bottom: none; }
+        .sub-card.reveal {
+            animation: cardSlideIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
 
-        /* Фоновый блик */
-        .sub-card::before {
+        /* Блик-скан по карточке */
+        .sub-card::after {
             content: '';
             position: absolute;
-            top: 0; left: -100%; right: 0; bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-            animation: cardShine 2s ease forwards;
-            animation-delay: inherit;
+            top: 0; left: -100%; width: 80%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+            pointer-events: none;
+        }
+        .sub-card.reveal::after {
+            animation: cardShine 1.2s ease 0.5s forwards;
         }
 
-        .sub-card--ally { 
-            background: linear-gradient(90deg, rgba(74,222,128,0.08), transparent);
+        .sub-card--ally {
+            background: linear-gradient(90deg, rgba(74,222,128,0.06), transparent);
             border-left: 3px solid #4ade80;
         }
-        .sub-card--enemy { 
-            background: linear-gradient(90deg, rgba(239,68,68,0.08), transparent);
+        .sub-card--enemy {
+            background: linear-gradient(90deg, rgba(239,68,68,0.06), transparent);
             border-left: 3px solid #ef4444;
         }
 
         .sub-card__side {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             flex-shrink: 0;
-            animation: sideGlow 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 6px currentColor);
         }
 
-        .sub-card__info {
-            flex: 1;
-            min-width: 0;
-        }
+        .sub-card__info { flex: 1; min-width: 0; }
         .sub-card__nick {
             font-family: 'Russo One', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #E8E6E3;
             white-space: nowrap;
             overflow: hidden;
@@ -140,50 +240,75 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
         .sub-card__tank {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: #5A6577;
             margin-top: 1px;
         }
 
-        /* ── Сыр летит ── */
+        /* Сыр с взрывом */
         .sub-card__cheese {
             position: relative;
             flex-shrink: 0;
+            width: 36px; height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .cheese-emoji {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             display: block;
-            animation: cheeseAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             opacity: 0;
             transform: scale(0) rotate(-180deg);
         }
+        .sub-card.reveal .cheese-emoji {
+            animation: cheeseAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
         .cheese-sparkle {
             position: absolute;
-            width: 4px; height: 4px;
+            width: 3px; height: 3px;
             border-radius: 50%;
             background: #fbbf24;
             opacity: 0;
-            animation: sparkle 1s ease-out forwards;
+        }
+        .sub-card.reveal .cheese-sparkle {
+            animation: sparkle 0.8s ease-out forwards;
         }
 
-        /* ── Бейдж ТГ ── */
+        /* Бейдж "ТГ" */
         .sub-card__badge {
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             font-weight: 800;
-            padding: 3px 8px;
-            border-radius: 6px;
-            background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(59,130,246,0.1));
+            padding: 3px 7px;
+            border-radius: 5px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(59,130,246,0.08));
             border: 1px solid rgba(59,130,246,0.3);
             color: #60a5fa;
             text-transform: uppercase;
             letter-spacing: 1px;
             flex-shrink: 0;
-            animation: badgeSlide 0.5s ease forwards;
             opacity: 0;
             transform: scale(0);
         }
+        .sub-card.reveal .sub-card__badge {
+            animation: badgeSlide 0.4s ease forwards;
+        }
 
-        /* ── Летающие частицы фона ── */
+        /* ── FOOTER ── */
+        .footer {
+            padding: 7px 18px;
+            border-top: 1px solid rgba(255,255,255,0.03);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.45rem;
+            color: #3A4555;
+            letter-spacing: 0.5px;
+        }
+        .footer__brand {
+            color: #3b82f6;
+            font-weight: 700;
+        }
+
+        /* ── ЛЕТАЮЩИЕ ЧАСТИЦЫ ── */
         .bg-particles {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -195,43 +320,44 @@
             position: absolute;
             border-radius: 50%;
             opacity: 0;
-            animation: particleRise 4s ease-in-out infinite;
+            animation: particleRise 5s ease-in-out infinite;
         }
 
         /* ── АНИМАЦИИ ── */
-        @keyframes headerGlow {
-            0%, 100% { opacity: 0.6; }
+        @keyframes scanline {
+            0%, 100% { opacity: 0.5; }
             50% { opacity: 1; }
         }
-        @keyframes iconBounce {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-3px) scale(1.1); }
+        @keyframes radarPulse {
+            0% { transform: scale(1); opacity: 0.4; }
+            50% { opacity: 0.8; }
+            100% { transform: scale(1.3); opacity: 0; }
         }
-        @keyframes badgePulse {
-            0%, 100% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.15); opacity: 1; }
+        @keyframes sweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
-        @keyframes cardReveal {
-            0% { opacity: 0; transform: translateX(-100px) scale(0.8); }
-            60% { opacity: 1; transform: translateX(10px) scale(1.02); }
+        @keyframes countPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        @keyframes cardSlideIn {
+            0% { opacity: 0; transform: translateX(-80px) scale(0.85); }
+            60% { opacity: 1; transform: translateX(8px) scale(1.02); }
             100% { opacity: 1; transform: translateX(0) scale(1); }
         }
         @keyframes cardShine {
             0% { left: -100%; }
-            100% { left: 200%; }
-        }
-        @keyframes sideGlow {
-            0%, 100% { filter: drop-shadow(0 0 3px currentColor); }
-            50% { filter: drop-shadow(0 0 10px currentColor); }
+            100% { left: 250%; }
         }
         @keyframes cheeseAppear {
             0% { opacity: 0; transform: scale(0) rotate(-180deg); }
-            70% { opacity: 1; transform: scale(1.3) rotate(10deg); }
+            70% { opacity: 1; transform: scale(1.4) rotate(10deg); }
             100% { opacity: 1; transform: scale(1) rotate(0deg); }
         }
         @keyframes sparkle {
             0% { opacity: 1; transform: scale(1) translate(0, 0); }
-            100% { opacity: 0; transform: scale(0.5) translate(var(--sx), var(--sy)); }
+            100% { opacity: 0; transform: scale(0.3) translate(var(--sx), var(--sy)); }
         }
         @keyframes badgeSlide {
             0% { opacity: 0; transform: scale(0); }
@@ -240,18 +366,22 @@
         }
         @keyframes particleRise {
             0% { opacity: 0; transform: translateY(100vh) scale(0); }
-            20% { opacity: 0.6; }
-            80% { opacity: 0.3; }
+            20% { opacity: 0.5; }
+            80% { opacity: 0.2; }
             100% { opacity: 0; transform: translateY(-50px) scale(1); }
         }
+        @keyframes urgentBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
         @keyframes fadeOut {
-            to { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 0; transform: scale(0.95) translateY(-10px); }
         }
     </style>
 </head>
 <body>
     <div class="bg-particles" id="bgParticles"></div>
-    <div class="widget widget--empty" id="widget"></div>
+    <div class="widget" id="widget"></div>
 
     <script>
         // ==========================================
@@ -260,29 +390,29 @@
         const params = new URLSearchParams(window.location.search);
         const API_URL = params.get('api') || 'https://mir-tankov-production.up.railway.app';
         const RADAR_JSON = params.get('json') || 'radar_results_overlay.json';
-        const DEMO_MODE = params.get('demo') !== '0'; // demo by default, ?demo=0 to disable
-        const DEMO_ALLY_COUNT = parseInt(params.get('allies') || '2');
+        const DEMO_MODE = params.get('demo') !== '0';
+        const DEMO_ALLY_COUNT = parseInt(params.get('allies') || '3');
         const DEMO_ENEMY_COUNT = parseInt(params.get('enemies') || '1');
-        const SHOW_DURATION = parseInt(params.get('duration') || '8') * 1000; // seconds to show
+        const COUNTDOWN_SECONDS = parseInt(params.get('countdown') || '15');
         const REFRESH_MS = 2000;
 
         let lastBattleNumber = null;
-        let hideTimeout = null;
+        let countdownTimer = null;
 
         // ==========================================
-        // BACKGROUND PARTICLES
+        // PARTICLES
         // ==========================================
         function createParticles() {
             const container = document.getElementById('bgParticles');
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 15; i++) {
                 const p = document.createElement('div');
                 p.className = 'bg-particle';
                 p.style.left = Math.random() * 100 + '%';
-                p.style.width = (2 + Math.random() * 4) + 'px';
+                p.style.width = (2 + Math.random() * 3) + 'px';
                 p.style.height = p.style.width;
-                p.style.animationDuration = (3 + Math.random() * 5) + 's';
-                p.style.animationDelay = Math.random() * 4 + 's';
-                const colors = ['#3b82f6', '#60a5fa', '#fbbf24', '#4ade80'];
+                p.style.animationDuration = (4 + Math.random() * 6) + 's';
+                p.style.animationDelay = Math.random() * 5 + 's';
+                const colors = ['#3b82f6', '#60a5fa', '#fbbf24', '#4ade80', '#818cf8'];
                 p.style.background = colors[Math.floor(Math.random() * colors.length)];
                 container.appendChild(p);
             }
@@ -292,53 +422,77 @@
         // ==========================================
         // RENDER
         // ==========================================
-        function showSubscribers(subs, allData) {
+        function showWidget(subs, allData) {
             const widget = document.getElementById('widget');
-            widget.classList.remove('widget--empty');
+            widget.classList.remove('hiding');
 
-            if (hideTimeout) clearTimeout(hideTimeout);
+            const totalAllies = subs.filter(s => s.isAlly).length;
+            const totalEnemies = subs.length - totalAllies;
 
             let html = `
                 <div class="header">
-                    <div class="header__icon">📢</div>
+                    <div class="header__radar">
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-dot"></div>
+                        <div class="radar-sweep"></div>
+                    </div>
                     <div class="header__text">
                         <div class="header__title">ПОДПИСЧИКИ В БОЮ</div>
-                        <div class="header__count">Бой #${allData.battle_number || '?'} · Telegram-канал</div>
+                        <div class="header__sub">
+                            Бой #${allData.battle_number || '?'}
+                            <span>·</span>
+                            ${totalAllies > 0 ? `<span style="color:#4ade80">🟢 ${totalAllies}</span>` : ''}
+                            ${totalEnemies > 0 ? `<span style="color:#ef4444">🔴 ${totalEnemies}</span>` : ''}
+                        </div>
                     </div>
-                    <div class="header__badge">${subs.length}</div>
+                    <div class="header__count">${subs.length}</div>
                 </div>
-                <div class="cards">
+
+                <div class="timer-bar">
+                    <div class="timer-bar__label">До боя</div>
+                    <div class="timer-bar__track">
+                        <div class="timer-bar__fill" id="timerFill" style="width: 100%"></div>
+                    </div>
+                    <div class="timer-bar__time" id="timerText">${COUNTDOWN_SECONDS}</div>
+                </div>
+
+                <div class="cards" id="cardsContainer">
             `;
 
-            subs.forEach((sub, i) => {
-                const delay = 0.3 + i * 0.25;
-                const cheeseDelay = delay + 0.5;
-                const badgeDelay = delay + 0.7;
+            // Сортируем: сначала союзники, потом враги
+            const sorted = [...subs].sort((a, b) => (b.isAlly ? 1 : 0) - (a.isAlly ? 1 : 0));
+
+            sorted.forEach((sub, i) => {
                 const sideClass = sub.isAlly ? 'sub-card--ally' : 'sub-card--enemy';
                 const sideIcon = sub.isAlly ? '🟢' : '🔴';
+                const cardDelay = 0.6 + i * 0.3;
+                const cheeseDelay = cardDelay + 0.5;
+                const badgeDelay = cardDelay + 0.7;
 
-                // Sparkle offsets for cheese
+                // Sparkles
                 let sparklesHtml = '';
                 for (let s = 0; s < 6; s++) {
                     const angle = (s / 6) * Math.PI * 2;
-                    const dist = 15 + Math.random() * 15;
+                    const dist = 12 + Math.random() * 12;
                     sparklesHtml += `<div class="cheese-sparkle" style="
                         --sx: ${Math.cos(angle) * dist}px;
                         --sy: ${Math.sin(angle) * dist}px;
-                        animation-delay: ${cheeseDelay + 0.1}s;
+                        animation-delay: ${cheeseDelay + 0.15}s;
                         top: 50%; left: 50%;
                         transform: translate(-50%, -50%);
                     "></div>`;
                 }
 
                 html += `
-                    <div class="sub-card ${sideClass}" style="animation-delay: ${delay}s">
+                    <div class="sub-card ${sideClass}" data-reveal-at="${cardDelay}" id="card${i}">
                         <div class="sub-card__side">${sideIcon}</div>
                         <div class="sub-card__info">
                             <div class="sub-card__nick">${sub.nick}</div>
-                            <div class="sub-card__tank">${sub.tank || 'Загрузка...'}</div>
+                            <div class="sub-card__tank">${sub.tank || '—'}</div>
                         </div>
-                        <div class="sub-card__cheese">
+                        <div class="sub-card__cheese" style="--cheese-delay: ${cheeseDelay}s">
                             <span class="cheese-emoji" style="animation-delay: ${cheeseDelay}s">🧀</span>
                             ${sparklesHtml}
                         </div>
@@ -347,18 +501,70 @@
                 `;
             });
 
-            html += `</div>`;
+            html += `
+                </div>
+                <div class="footer">
+                    <span>Telegram · @mirtankov</span>
+                    <span class="footer__brand">МИР ТАНКОВ</span>
+                </div>
+            `;
+
             widget.innerHTML = html;
 
-            // Auto-hide
-            hideTimeout = setTimeout(() => {
-                widget.style.animation = 'fadeOut 1s ease forwards';
+            // Показываем виджет
+            requestAnimationFrame(() => {
+                widget.classList.add('visible');
+            });
+
+            // Запускаем последовательное появление карточек
+            sorted.forEach((_, i) => {
+                const card = document.getElementById(`card${i}`);
+                const delay = (0.6 + i * 0.3) * 1000;
                 setTimeout(() => {
-                    widget.classList.add('widget--empty');
-                    widget.innerHTML = '';
-                    widget.style.animation = '';
-                }, 1000);
-            }, SHOW_DURATION);
+                    if (card) card.classList.add('reveal');
+                }, delay);
+            });
+
+            // Запускаем таймер обратного отсчёта
+            startCountdown();
+        }
+
+        // ==========================================
+        // ТАЙМЕР
+        // ==========================================
+        function startCountdown() {
+            if (countdownTimer) clearInterval(countdownTimer);
+
+            let remaining = COUNTDOWN_SECONDS;
+            const fill = document.getElementById('timerFill');
+            const text = document.getElementById('timerText');
+
+            countdownTimer = setInterval(() => {
+                remaining--;
+                if (text) {
+                    text.textContent = remaining;
+                    if (remaining <= 3) {
+                        text.classList.add('urgent');
+                    }
+                }
+                if (fill) {
+                    fill.style.width = (remaining / COUNTDOWN_SECONDS * 100) + '%';
+                }
+
+                if (remaining <= 0) {
+                    clearInterval(countdownTimer);
+                    hideWidget();
+                }
+            }, 1000);
+        }
+
+        function hideWidget() {
+            const widget = document.getElementById('widget');
+            widget.classList.add('hiding');
+            widget.classList.remove('visible');
+            setTimeout(() => {
+                widget.innerHTML = '';
+            }, 1000);
         }
 
         // ==========================================
@@ -377,7 +583,7 @@
                 const enemies = data.enemies || [];
 
                 if (DEMO_MODE) {
-                    // DEMO: randomly pick subscribers
+                    // DEMO: рандомно выбираем "подписчиков"
                     const shuffledAllies = [...allies].sort(() => Math.random() - 0.5);
                     const shuffledEnemies = [...enemies].sort(() => Math.random() - 0.5);
                     const fakeAllies = shuffledAllies.slice(0, Math.min(DEMO_ALLY_COUNT, allies.length));
@@ -388,9 +594,9 @@
                         ...fakeEnemies.map(p => ({ ...p, isAlly: false }))
                     ];
 
-                    if (subs.length > 0) showSubscribers(subs, data);
+                    if (subs.length > 0) showWidget(subs, data);
                 } else {
-                    // REAL: check via API
+                    // REAL: проверяем через API
                     const allPlayers = [...allies, ...enemies];
                     const accountIds = allPlayers.map(p => p.account_id).filter(Boolean);
                     const nicknames = allPlayers.map(p => p.nick).filter(Boolean);
@@ -410,34 +616,28 @@
                                 isAlly: allies.some(a => a.nick === p.nick)
                             }));
 
-                        if (subs.length > 0) showSubscribers(subs, data);
+                        if (subs.length > 0) showWidget(subs, data);
                     }
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.warn('checkBattle error:', e);
+            }
         }
 
         // ==========================================
         // INIT
         // ==========================================
         if (params.get('demo') === 'instant') {
-            // Instant demo - show immediately with fake data, no auto-hide
-            const origShowDuration = SHOW_DURATION;
+            // Мгновенная демонстрация с фейковыми данными
             const fakeSubs = [
-                { nick: 'Jove_Hater_99', tank: 'Об. 430У', isAlly: true },
-                { nick: 'SniperPro_2026', tank: 'FV4005', isAlly: true },
-                { nick: 'Nagibator228', tank: 'EBR 105', isAlly: false },
+                { nick: 'xXx_NAGIBATOR_xXx', tank: 'Объект 430У', isAlly: true },
+                { nick: 'TankDestroyer_99', tank: 'FV4005 Stage II', isAlly: true },
+                { nick: 'SniperPro_RU', tank: 'Grille 15', isAlly: true },
+                { nick: 'EBR_Master_2026', tank: 'EBR 105', isAlly: false },
             ];
-            
-            // Override to never hide in instant demo
-            const origHide = hideTimeout;
             setTimeout(() => {
-                showSubscribers(fakeSubs, { battle_number: 42 });
-                // Cancel the auto-hide timer
-                if (hideTimeout) {
-                    clearTimeout(hideTimeout);
-                    hideTimeout = null;
-                }
-            }, 500);
+                showWidget(fakeSubs, { battle_number: 42 });
+            }, 300);
         } else {
             checkBattle();
             setInterval(checkBattle, REFRESH_MS);
