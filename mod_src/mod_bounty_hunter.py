@@ -41,18 +41,33 @@ def _dbg(msg):
 
 
 def _load_session():
-    """Загружает сессию из JSON (для синхронизации с вебом)"""
+    """Загружает ПОЛНУЮ сессию из JSON (только при входе в бой)"""
     global _session
     try:
         if os.path.exists(LOG_FILE):
             with open(LOG_FILE, 'r') as f:
                 data = json.load(f)
-            # Обновляем _session из файла
             _session.update(data)
-            _dbg('session loaded from file')
+            _dbg('session loaded from file, status=' + str(data.get('status', '?')))
     except:
         _dbg('LOAD ERROR:\n' + traceback.format_exc())
     return _session
+
+
+def _check_status():
+    """Проверяет только статус из файла (быстро, без перезагрузки данных)"""
+    try:
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, 'r') as f:
+                data = json.load(f)
+            st = data.get('status', 'active')
+            gr = data.get('gold_rate', 1)
+            _session['status'] = st
+            _session['gold_rate'] = gr
+            return st
+    except:
+        pass
+    return _session.get('status', 'active')
 
 
 def _save_session():
@@ -172,9 +187,8 @@ def _hooked_onHealthChanged(self, newHealth, oldHealth, attackerID, attackReason
         if self.id != _player_vehicle_id:
             return
 
-        # Проверяем статус сессии из файла
-        _load_session()
-        if _session.get('status') == 'stopped':
+        # Проверяем статус сессии из файла (лёгкая проверка)
+        if _check_status() == 'stopped':
             return
 
         damage = oldHealth - newHealth
