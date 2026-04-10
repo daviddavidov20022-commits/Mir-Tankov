@@ -11,6 +11,9 @@ if getattr(sys, 'frozen', False):
 else:
     APP = os.path.dirname(os.path.abspath(__file__))
 
+# ROOT — корень проекта (папка выше Radar/)
+ROOT = os.path.dirname(APP) if os.path.basename(APP) == 'Radar' else APP
+
 CFG_FILE  = os.path.join(APP, "radar_config.json")
 DATA_FILE = os.path.join(APP, "radar_data_v7.json")
 API_URL   = "https://mir-tankov-production.up.railway.app/api/users/check"
@@ -148,7 +151,7 @@ class BountyPopup(ctk.CTkToplevel):
         self.geometry("400x350")
         self.configure(fg_color=BG)
         self.attributes('-topmost', 1)
-        self.json_path = os.path.join(APP, "site", "obs", "bounty_session.json")
+        self.json_path = os.path.join(ROOT, "site", "obs", "bounty_session.json")
         
         lbl = ctk.CTkLabel(self, text="УПРАВЛЕНИЕ ОХОТОЙ", font=("Segoe UI", 16, "bold"), text_color=GOLD)
         lbl.pack(pady=(20, 10))
@@ -203,7 +206,7 @@ class BountyPopup(ctk.CTkToplevel):
         """Сохраняет текущую сессию в bounty_history.json"""
         if not d.get('session_start') or not d.get('total_damage_received'):
             return  # Пустая сессия — не сохраняем
-        history_path = os.path.join(APP, "site", "obs", "bounty_history.json")
+        history_path = os.path.join(ROOT, "site", "obs", "bounty_history.json")
         try:
             history = []
             if os.path.exists(history_path):
@@ -790,8 +793,8 @@ class RadarApp(ctk.CTk):
 # ============================================================
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-BOUNTY_JSON = os.path.join(APP, "site", "obs", "bounty_session.json")
-BOUNTY_HISTORY = os.path.join(APP, "site", "obs", "bounty_history.json")
+BOUNTY_JSON = os.path.join(ROOT, "site", "obs", "bounty_session.json")
+BOUNTY_HISTORY = os.path.join(ROOT, "site", "obs", "bounty_history.json")
 
 def _bounty_read():
     try:
