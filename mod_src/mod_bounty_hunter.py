@@ -11,13 +11,15 @@ import BigWorld
 from PlayerEvents import g_playerEvents
 
 # Пишем в папку OBS-виджета
-LOG_FILE = r'D:\mir-tankov-bot\site\obs\bounty_session.json'
-DEBUG_FILE = os.path.join(os.getcwd(), 'bounty_debug.txt')
+LOG_FILE     = r'D:\mir-tankov-bot\site\obs\bounty_session.json'
+OVERLAY_FILE = r'D:\mir-tankov-bot\site\obs\radar_results_overlay.json'
+DEBUG_FILE   = os.path.join(os.getcwd(), 'bounty_debug.txt')
 
 _arena_data = {}       # vehicle_id -> {nick, tank, team, account_id}
 _player_team = 0
 _player_vehicle_id = 0
 _capture_retries = 0
+_battle_counter = 0    # счётчик боёв для виджета подписчиков
 
 # Данные сессии
 _session = {
@@ -82,14 +84,30 @@ def _save_session():
 
 
 def _on_avatar_ready():
-    global _capture_retries
+    global _capture_retries, _battle_counter
     _capture_retries = 0
-    _dbg('=== BountyHunter: onAvatarBecomePlayer ===')
+    _battle_counter += 1
+    _dbg('=== BountyHunter: onAvatarBecomePlayer === battle #' + str(_battle_counter))
     # Сбросим данные арены для нового боя
     global _arena_data, _player_team, _player_vehicle_id
     _arena_data = {}
     _player_team = 0
     _player_vehicle_id = 0
+    # Сразу сигналим что бой начался (виджет подписчиков увидит смену battle_number)
+    try:
+        import datetime
+        signal = {
+            'battle_number': _battle_counter,
+            'status': 'loading',
+            'date': str(datetime.datetime.now().strftime('%d.%m.%Y %H:%M')),
+            'allies': [],
+            'enemies': []
+        }
+        with open(OVERLAY_FILE, 'w') as f:
+            json.dump(signal, f, indent=2, ensure_ascii=False)
+        _dbg('overlay signal written, battle #' + str(_battle_counter))
+    except:
+        _dbg('overlay write error:\n' + traceback.format_exc())
     BigWorld.callback(2.0, _capture_arena)
 
 
@@ -138,6 +156,30 @@ def _capture_arena():
             }
 
         _dbg('captured ' + str(len(_arena_data)) + ' vehicles')
+
+        # Обновляем overlay файл для виджета подписчиков с реальными игроками
+        try:
+            import datetime
+            allies = []
+            enemies = []
+            for v_id, v in _arena_data.items():
+                entry = {'nick': v['nick'], 'account_id': v['account_id'], 'tank': v.get('tank', ''), 'damage': 0, 'kills': 0}
+                if v['team'] == _player_team:
+                    allies.append(entry)
+                else:
+                    enemies.append(entry)
+            overlay = {
+                'battle_number': _battle_counter,
+                'status': 'active',
+                'date': str(datetime.datetime.now().strftime('%d.%m.%Y %H:%M')),
+                'allies': allies,
+                'enemies': enemies
+            }
+            with open(OVERLAY_FILE, 'w') as f:
+                json.dump(overlay, f, indent=2, ensure_ascii=False)
+            _dbg('overlay updated with ' + str(len(allies)) + ' allies, ' + str(len(enemies)) + ' enemies')
+        except:
+            _dbg('overlay update error:\n' + traceback.format_exc())
 
         # Загружаем сессию из файла (мог измениться через веб-API)
         _load_session()
