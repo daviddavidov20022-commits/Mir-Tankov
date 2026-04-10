@@ -1,11 +1,76 @@
 {
-  "status": "stopped",
-  "session_start": "",
-  "total_damage_received": 0,
-  "total_gold_given": 0,
-  "gold_rate": 1,
-  "attackers": {},
-  "recent_hits": [],
-  "participants_count": 0,
-  "last_update": "2026-04-10 23:32:43"
+  "status": "active", 
+  "participants_count": 0, 
+  "total_damage_received": 3445, 
+  "gold_rate": 1, 
+  "recent_hits": [
+    {
+      "time": "2026-04-10 23:46:16.086000", 
+      "tank": "114 SP2", 
+      "name": "Dmitriy_Aleksandrovich90", 
+      "gold": 627, 
+      "damage": 627
+    }, 
+    {
+      "time": "2026-04-10 23:46:11.585000", 
+      "tank": "G.W. E 100", 
+      "name": "POLIGRAFIb4_B_TPEHE", 
+      "gold": 242, 
+      "damage": 242
+    }, 
+    {
+      "time": "2026-04-10 23:46:08.296000", 
+      "tank": "Об. 261", 
+      "name": "Nekromongo", 
+      "gold": 123, 
+      "damage": 123
+    }, 
+    {
+      "time": "2026-04-10 23:45:06.673000", 
+      "tank": "ИС-7", 
+      "name": "uap56", 
+      "gold": 503, 
+      "damage": 503
+    }, 
+    {
+      "damage": 388, 
+      "tank": "ИС-7", 
+      "name": "Dermin_Lin", 
+      "gold": 388, 
+      "time": "2026-04-10 23:39:24.018000"
+    }
+  ], 
+  "session_start": "2026-04-10 23:34:21", 
+  "total_gold_given": 3445, 
+  "last_update": "2026-04-10 23:46:16.086000", 
+  "attackers": {
+    "Dermin_Lin": {
+      "tank": "ИС-7", 
+      "damage": 388
+    }, 
+    "uap56": {
+      "tank": "ИС-7", 
+      "damage": 503
+    }, 
+    "POLIGRAFIb4_B_TPEHE": {
+      "tank": "G.W. E 100", 
+      "damage": 242
+    }, 
+    "Adrjun_Miland": {
+      "tank": "Manticore", 
+      "damage": 776
+    }, 
+    "UHCJIEKTOP_KOT": {
+      "tank": "Firebird", 
+      "damage": 786
+    }, 
+    "Dmitriy_Aleksandrovich90": {
+      "tank": "114 SP2", 
+      "damage": 627
+    }, 
+    "Nekromongo": {
+      "tank": "Об. 261", 
+      "damage": 123
+    }
+  }
 }

@@ -393,7 +393,8 @@
         const DEMO_MODE = params.get('demo') !== '0';
         const DEMO_ALLY_COUNT = parseInt(params.get('allies') || '3');
         const DEMO_ENEMY_COUNT = parseInt(params.get('enemies') || '1');
-        const COUNTDOWN_SECONDS = parseInt(params.get('countdown') || '15');
+        const COUNTDOWN_SECONDS = parseInt(params.get('countdown') || '25');  // таймер виджета
+        const DELAY_SECONDS = parseInt(params.get('delay') || '5');            // задержка перед показом (чтобы появиться на 25-й секунде из 30)
         const REFRESH_MS = 2000;
 
         let lastBattleNumber = null;
@@ -511,22 +512,25 @@
 
             widget.innerHTML = html;
 
-            // Показываем виджет
-            requestAnimationFrame(() => {
-                widget.classList.add('visible');
-            });
+            // Задержка перед показом (чтобы появиться на 25-й секунде из 30)
+            setTimeout(() => {
+                // Показываем виджет
+                requestAnimationFrame(() => {
+                    widget.classList.add('visible');
+                });
 
-            // Запускаем последовательное появление карточек
-            sorted.forEach((_, i) => {
-                const card = document.getElementById(`card${i}`);
-                const delay = (0.6 + i * 0.3) * 1000;
-                setTimeout(() => {
-                    if (card) card.classList.add('reveal');
-                }, delay);
-            });
+                // Запускаем последовательное появление карточек
+                sorted.forEach((_, i) => {
+                    const card = document.getElementById(`card${i}`);
+                    const delay = (0.6 + i * 0.3) * 1000;
+                    setTimeout(() => {
+                        if (card) card.classList.add('reveal');
+                    }, delay);
+                });
 
-            // Запускаем таймер обратного отсчёта
-            startCountdown();
+                // Запускаем таймер обратного отсчёта
+                startCountdown();
+            }, DELAY_SECONDS * 1000);
         }
 
         // ==========================================
