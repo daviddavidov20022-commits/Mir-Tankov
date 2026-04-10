@@ -1,76 +1,76 @@
 {
   "status": "active", 
   "participants_count": 0, 
-  "total_damage_received": 5800, 
+  "total_damage_received": 10595, 
   "gold_rate": 1, 
   "recent_hits": [
     {
-      "time": "2026-04-10 23:54:22.681000", 
-      "tank": "Vandal", 
-      "name": " Yurigwang812018", 
-      "gold": 223, 
-      "damage": 223
+      "time": "2026-04-11 00:14:54.670000", 
+      "tank": "Manticore", 
+      "name": "elus_21", 
+      "gold": 217, 
+      "damage": 217
     }, 
     {
-      "time": "2026-04-10 23:54:19.583000", 
-      "tank": "Concept 5", 
-      "name": "CJlA6OCTb", 
-      "gold": 438, 
-      "damage": 438
+      "time": "2026-04-11 00:14:54.257000", 
+      "tank": "Firebird", 
+      "name": "CoolPain", 
+      "gold": 780, 
+      "damage": 780
     }, 
     {
-      "time": "2026-04-10 23:54:11.271000", 
-      "tank": "Concept 5", 
-      "name": "CJlA6OCTb", 
-      "gold": 407, 
-      "damage": 407
+      "time": "2026-04-11 00:14:53.764000", 
+      "tank": "Т-62А", 
+      "name": "devildrums2015", 
+      "gold": 390, 
+      "damage": 390
     }, 
     {
-      "time": "2026-04-10 23:54:06.171000", 
-      "tank": "ИС-7", 
-      "name": "vovikser", 
-      "gold": 490, 
-      "damage": 490
+      "time": "2026-04-11 00:14:41.972000", 
+      "tank": "T92 HMC", 
+      "name": "aleksand1306", 
+      "gold": 513, 
+      "damage": 513
     }, 
     {
-      "time": "2026-04-10 23:53:59.671000", 
-      "tank": "Об. 140", 
-      "name": "neminuchiynog", 
-      "gold": 342, 
-      "damage": 342
+      "damage": 595, 
+      "tank": "Żubr", 
+      "name": "fasty_1102", 
+      "gold": 595, 
+      "time": "2026-04-11 00:09:30.757000"
     }
   ], 
   "session_start": "2026-04-10 23:34:21", 
-  "total_gold_given": 5800, 
-  "last_update": "2026-04-10 23:54:22.681000", 
+  "total_gold_given": 10595, 
+  "last_update": "2026-04-11 00:14:54.670000", 
   "attackers": {
-    " Yurigwang812018": {
-      "tank": "Vandal", 
-      "damage": 223
+    "UHCJIEKTOP_KOT": {
+      "tank": "Firebird", 
+      "damage": 786
     }, 
-    "Dermin_Lin": {
-      "tank": "ИС-7", 
-      "damage": 388
+    "G_A_L_F": {
+      "tank": "T95/FV4201", 
+      "damage": 427
     }, 
-    "uap56": {
-      "tank": "ИС-7", 
-      "damage": 958
+    "mampus": {
+      "tank": "Об. 261", 
+      "damage": 265
     }, 
     "POLIGRAFIb4_B_TPEHE": {
       "tank": "G.W. E 100", 
       "damage": 242
     }, 
+    "devildrums2015": {
+      "tank": "Т-62А", 
+      "damage": 390
+    }, 
     "vovikser": {
       "tank": "ИС-7", 
       "damage": 490
     }, 
-    "Adrjun_Miland": {
-      "tank": "Manticore", 
-      "damage": 776
-    }, 
-    "UHCJIEKTOP_KOT": {
+    "CoolPain": {
       "tank": "Firebird", 
-      "damage": 786
+      "damage": 780
     }, 
     "Dmitriy_Aleksandrovich90": {
       "tank": "114 SP2", 
@@ -84,9 +84,49 @@
       "tank": "Об. 140", 
       "damage": 342
     }, 
+    "Jorafovich_O": {
+      "tank": "Grille 15", 
+      "damage": 725
+    }, 
+    "Dermin_Lin": {
+      "tank": "ИС-7", 
+      "damage": 388
+    }, 
+    "uap56": {
+      "tank": "ИС-7", 
+      "damage": 958
+    }, 
+    "aleksand1306": {
+      "tank": "T92 HMC", 
+      "damage": 513
+    }, 
+    "fasty_1102": {
+      "tank": "Żubr", 
+      "damage": 595
+    }, 
+    "elus_21": {
+      "tank": "Manticore", 
+      "damage": 217
+    }, 
+    "jon_198_1": {
+      "tank": "Condor", 
+      "damage": 533
+    }, 
+    "Adrjun_Miland": {
+      "tank": "Manticore", 
+      "damage": 776
+    }, 
     "Nekromongo": {
       "tank": "Об. 261", 
       "damage": 123
+    }, 
+    " Yurigwang812018": {
+      "tank": "Vandal", 
+      "damage": 223
+    }, 
+    "_STOP_TaM_iDi_CIODa_": {
+      "tank": "Eisbär", 
+      "damage": 350
     }
   }
 }

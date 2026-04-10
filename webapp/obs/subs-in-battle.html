@@ -389,12 +389,12 @@
         // ==========================================
         const params = new URLSearchParams(window.location.search);
         const API_URL = params.get('api') || 'https://mir-tankov-production.up.railway.app';
-        const RADAR_JSON = params.get('json') || 'radar_results_overlay.json';
+        const RADAR_JSON = params.get('json') || 'http://localhost:8091/api/overlay/battle';
         const DEMO_MODE = params.get('demo') !== '0';
         const DEMO_ALLY_COUNT = parseInt(params.get('allies') || '3');
         const DEMO_ENEMY_COUNT = parseInt(params.get('enemies') || '1');
-        const COUNTDOWN_SECONDS = parseInt(params.get('countdown') || '25');  // таймер виджета
-        const DELAY_SECONDS = parseInt(params.get('delay') || '5');            // задержка перед показом (чтобы появиться на 25-й секунде из 30)
+        const COUNTDOWN_SECONDS = parseInt(params.get('countdown') || '25');
+        const DELAY_SECONDS = parseInt(params.get('delay') || '5');
         const REFRESH_MS = 2000;
 
         let lastBattleNumber = null;

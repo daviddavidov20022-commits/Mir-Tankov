@@ -1,429 +1,219 @@
 {
-  "players": [
-    {
-      "nick": "SeDmYnD", 
-      "tank": "\u041e\u0431. 705\u0410", 
-      "damage": 3539, 
-      "kills": 3, 
-      "account_id": "16546328"
-    }, 
-    {
-      "nick": "BuzLightyear", 
-      "tank": "BZ-74-1", 
-      "damage": 3310, 
-      "kills": 1, 
-      "account_id": "88845006"
-    }, 
-    {
-      "nick": " Schnela", 
-      "tank": "\u041e\u0431. 705\u0410", 
-      "damage": 3244, 
-      "kills": 0, 
-      "account_id": "849470"
-    }, 
-    {
-      "nick": "Fors777_2016", 
-      "tank": "Firebird", 
-      "damage": 2956, 
-      "kills": 1, 
-      "account_id": "63712847"
-    }, 
-    {
-      "nick": "Lignit", 
-      "tank": "Li\u0161\u00e1k v.2", 
-      "damage": 2330, 
-      "kills": 1, 
-      "account_id": "19732291"
-    }, 
-    {
-      "nick": "Lokomativ_1", 
-      "tank": "Conway", 
-      "damage": 2040, 
-      "kills": 1, 
-      "account_id": "34065561"
-    }, 
-    {
-      "nick": "Fencer007", 
-      "tank": "Merkava LP", 
-      "damage": 1772, 
-      "kills": 1, 
-      "account_id": "20622101"
-    }, 
-    {
-      "nick": "sannydannyray", 
-      "tank": "M53/M55", 
-      "damage": 1765, 
-      "kills": 1, 
-      "account_id": "6238619"
-    }, 
-    {
-      "nick": "dmb2006ms", 
-      "tank": "B-C 155 55", 
-      "damage": 1444, 
-      "kills": 0, 
-      "account_id": "2455284"
-    }, 
-    {
-      "nick": "_HacTaHeT_4aC_Me4Tlb_", 
-      "tank": "\u041e\u0431. 257", 
-      "damage": 1373, 
-      "kills": 0, 
-      "account_id": "92469781"
-    }, 
-    {
-      "nick": "MLev1_9_9_6", 
-      "tank": "WZ-132A", 
-      "damage": 1340, 
-      "kills": 1, 
-      "account_id": "16721460"
-    }, 
-    {
-      "nick": "AlekseyTerletskiy", 
-      "tank": "Type 61", 
-      "damage": 1074, 
-      "kills": 2, 
-      "account_id": "57210289"
-    }, 
-    {
-      "nick": "probka999", 
-      "tank": "\u041a\u0412-90", 
-      "damage": 940, 
-      "kills": 2, 
-      "account_id": "12783544"
-    }, 
-    {
-      "nick": "Mann_83", 
-      "tank": "\u0422-100 \u041b\u0422", 
-      "damage": 663, 
-      "kills": 1, 
-      "account_id": "157146280"
-    }, 
-    {
-      "nick": "style3377", 
-      "tank": "T57 Heavy", 
-      "damage": 0, 
-      "kills": 0, 
-      "account_id": "29401738"
-    }, 
-    {
-      "nick": "triplessss", 
-      "tank": "\u0418\u0421-7", 
-      "damage": 3679, 
-      "kills": 0, 
-      "account_id": "16470728"
-    }, 
-    {
-      "nick": "Mayhem924", 
-      "tank": "T54E1", 
-      "damage": 1156, 
-      "kills": 0, 
-      "account_id": "3131997"
-    }, 
-    {
-      "nick": "necr007", 
-      "tank": "\u041e\u0431. 757\u0410", 
-      "damage": 1122, 
-      "kills": 2, 
-      "account_id": "4437615"
-    }, 
-    {
-      "nick": "zedsmx", 
-      "tank": "\u0421\u0422-I", 
-      "damage": 870, 
-      "kills": 0, 
-      "account_id": "1073355"
-    }, 
-    {
-      "nick": "Sania2807", 
-      "tank": "212\u0410", 
-      "damage": 850, 
-      "kills": 1, 
-      "account_id": "33410490"
-    }, 
-    {
-      "nick": "Miilliin", 
-      "tank": "113", 
-      "damage": 849, 
-      "kills": 0, 
-      "account_id": "293066494"
-    }, 
-    {
-      "nick": "shark898", 
-      "tank": "\u0421\u0435\u0440\u043f", 
-      "damage": 834, 
-      "kills": 0, 
-      "account_id": "23274163"
-    }, 
-    {
-      "nick": "H800CM", 
-      "tank": "\u0418\u0421-4", 
-      "damage": 763, 
-      "kills": 0, 
-      "account_id": "20890862"
-    }, 
-    {
-      "nick": "ckopo_bydy_tam", 
-      "tank": "G.W. Tiger", 
-      "damage": 745, 
-      "kills": 0, 
-      "account_id": "108752896"
-    }, 
-    {
-      "nick": "maksvalmont", 
-      "tank": "Firebird", 
-      "damage": 609, 
-      "kills": 0, 
-      "account_id": "14448"
-    }, 
-    {
-      "nick": "_PlONEER_", 
-      "tank": "Feuerb\u00e4r", 
-      "damage": 589, 
-      "kills": 0, 
-      "account_id": "19449369"
-    }, 
-    {
-      "nick": "kuzmich_32reg", 
-      "tank": "\u041a\u0412-90", 
-      "damage": 562, 
-      "kills": 1, 
-      "account_id": "8950788"
-    }, 
-    {
-      "nick": "Turaked", 
-      "tank": "\u0422-54 \u043e\u0431\u043b.", 
-      "damage": 505, 
-      "kills": 0, 
-      "account_id": "20989913"
-    }, 
-    {
-      "nick": "AMARA2000", 
-      "tank": "\u0422-100 \u041b\u0422", 
-      "damage": 304, 
-      "kills": 0, 
-      "account_id": "11503081"
-    }, 
-    {
-      "nick": "Piton4ik_2019", 
-      "tank": "Leopard 1", 
-      "damage": 0, 
-      "kills": 0, 
-      "account_id": "110769980"
-    }
-  ], 
-  "battle_number": 65, 
-  "allies": [
-    {
-      "nick": "SeDmYnD", 
-      "tank": "\u041e\u0431. 705\u0410", 
-      "damage": 3539, 
-      "kills": 3, 
-      "account_id": "16546328"
-    }, 
-    {
-      "nick": "BuzLightyear", 
-      "tank": "BZ-74-1", 
-      "damage": 3310, 
-      "kills": 1, 
-      "account_id": "88845006"
-    }, 
-    {
-      "nick": " Schnela", 
-      "tank": "\u041e\u0431. 705\u0410", 
-      "damage": 3244, 
-      "kills": 0, 
-      "account_id": "849470"
-    }, 
-    {
-      "nick": "Fors777_2016", 
-      "tank": "Firebird", 
-      "damage": 2956, 
-      "kills": 1, 
-      "account_id": "63712847"
-    }, 
-    {
-      "nick": "Lignit", 
-      "tank": "Li\u0161\u00e1k v.2", 
-      "damage": 2330, 
-      "kills": 1, 
-      "account_id": "19732291"
-    }, 
-    {
-      "nick": "Lokomativ_1", 
-      "tank": "Conway", 
-      "damage": 2040, 
-      "kills": 1, 
-      "account_id": "34065561"
-    }, 
-    {
-      "nick": "Fencer007", 
-      "tank": "Merkava LP", 
-      "damage": 1772, 
-      "kills": 1, 
-      "account_id": "20622101"
-    }, 
-    {
-      "nick": "sannydannyray", 
-      "tank": "M53/M55", 
-      "damage": 1765, 
-      "kills": 1, 
-      "account_id": "6238619"
-    }, 
-    {
-      "nick": "dmb2006ms", 
-      "tank": "B-C 155 55", 
-      "damage": 1444, 
-      "kills": 0, 
-      "account_id": "2455284"
-    }, 
-    {
-      "nick": "_HacTaHeT_4aC_Me4Tlb_", 
-      "tank": "\u041e\u0431. 257", 
-      "damage": 1373, 
-      "kills": 0, 
-      "account_id": "92469781"
-    }, 
-    {
-      "nick": "MLev1_9_9_6", 
-      "tank": "WZ-132A", 
-      "damage": 1340, 
-      "kills": 1, 
-      "account_id": "16721460"
-    }, 
-    {
-      "nick": "AlekseyTerletskiy", 
-      "tank": "Type 61", 
-      "damage": 1074, 
-      "kills": 2, 
-      "account_id": "57210289"
-    }, 
-    {
-      "nick": "probka999", 
-      "tank": "\u041a\u0412-90", 
-      "damage": 940, 
-      "kills": 2, 
-      "account_id": "12783544"
-    }, 
-    {
-      "nick": "Mann_83", 
-      "tank": "\u0422-100 \u041b\u0422", 
-      "damage": 663, 
-      "kills": 1, 
-      "account_id": "157146280"
-    }, 
-    {
-      "nick": "style3377", 
-      "tank": "T57 Heavy", 
-      "damage": 0, 
-      "kills": 0, 
-      "account_id": "29401738"
-    }
-  ], 
+  "status": "active", 
+  "date": "11.04.2026 00:16", 
   "enemies": [
     {
-      "nick": "triplessss", 
-      "tank": "\u0418\u0421-7", 
-      "damage": 3679, 
+      "nick": "nagib_123", 
+      "tank": "", 
+      "account_id": "91542563", 
       "kills": 0, 
-      "account_id": "16470728"
+      "damage": 0
     }, 
     {
-      "nick": "Mayhem924", 
-      "tank": "T54E1", 
-      "damage": 1156, 
+      "nick": "Mulder_524", 
+      "tank": "", 
+      "account_id": "0", 
       "kills": 0, 
-      "account_id": "3131997"
+      "damage": 0
     }, 
     {
-      "nick": "necr007", 
-      "tank": "\u041e\u0431. 757\u0410", 
-      "damage": 1122, 
-      "kills": 2, 
-      "account_id": "4437615"
-    }, 
-    {
-      "nick": "zedsmx", 
-      "tank": "\u0421\u0422-I", 
-      "damage": 870, 
+      "nick": "messiandres", 
+      "tank": "", 
+      "account_id": "4683544", 
       "kills": 0, 
-      "account_id": "1073355"
+      "damage": 0
     }, 
     {
-      "nick": "Sania2807", 
-      "tank": "212\u0410", 
-      "damage": 850, 
-      "kills": 1, 
-      "account_id": "33410490"
-    }, 
-    {
-      "nick": "Miilliin", 
-      "tank": "113", 
-      "damage": 849, 
+      "nick": "prokyror18rus", 
+      "tank": "", 
+      "account_id": "26961758", 
       "kills": 0, 
-      "account_id": "293066494"
+      "damage": 0
     }, 
     {
-      "nick": "shark898", 
-      "tank": "\u0421\u0435\u0440\u043f", 
-      "damage": 834, 
+      "nick": "_RONCHIK_", 
+      "tank": "", 
+      "account_id": "15708059", 
       "kills": 0, 
-      "account_id": "23274163"
+      "damage": 0
     }, 
     {
-      "nick": "H800CM", 
-      "tank": "\u0418\u0421-4", 
-      "damage": 763, 
+      "nick": "cheysiss_2022", 
+      "tank": "", 
+      "account_id": "166777188", 
       "kills": 0, 
-      "account_id": "20890862"
+      "damage": 0
     }, 
     {
-      "nick": "ckopo_bydy_tam", 
-      "tank": "G.W. Tiger", 
-      "damage": 745, 
+      "nick": "Jeka_249", 
+      "tank": "", 
+      "account_id": "6535272", 
       "kills": 0, 
-      "account_id": "108752896"
+      "damage": 0
     }, 
     {
-      "nick": "maksvalmont", 
-      "tank": "Firebird", 
-      "damage": 609, 
+      "nick": "Flintigen", 
+      "tank": "", 
+      "account_id": "1619437", 
       "kills": 0, 
-      "account_id": "14448"
+      "damage": 0
     }, 
     {
-      "nick": "_PlONEER_", 
-      "tank": "Feuerb\u00e4r", 
-      "damage": 589, 
+      "nick": "M_A_JIT", 
+      "tank": "", 
+      "account_id": "0", 
       "kills": 0, 
-      "account_id": "19449369"
+      "damage": 0
     }, 
     {
-      "nick": "kuzmich_32reg", 
-      "tank": "\u041a\u0412-90", 
-      "damage": 562, 
-      "kills": 1, 
-      "account_id": "8950788"
-    }, 
-    {
-      "nick": "Turaked", 
-      "tank": "\u0422-54 \u043e\u0431\u043b.", 
-      "damage": 505, 
+      "nick": "Ydgas", 
+      "tank": "", 
+      "account_id": "7828278", 
       "kills": 0, 
-      "account_id": "20989913"
+      "damage": 0
     }, 
     {
-      "nick": "AMARA2000", 
-      "tank": "\u0422-100 \u041b\u0422", 
-      "damage": 304, 
+      "nick": "TheBrainShow2017", 
+      "tank": "", 
+      "account_id": "80458301", 
       "kills": 0, 
-      "account_id": "11503081"
+      "damage": 0
     }, 
     {
-      "nick": "Piton4ik_2019", 
-      "tank": "Leopard 1", 
-      "damage": 0, 
+      "nick": "Furiya", 
+      "tank": "", 
+      "account_id": "560898", 
       "kills": 0, 
-      "account_id": "110769980"
+      "damage": 0
+    }, 
+    {
+      "nick": "Ilsaf_Garifullin", 
+      "tank": "", 
+      "account_id": "27791926", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "KSENIYA_0610", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Polyakoff71", 
+      "tank": "", 
+      "account_id": "15371664", 
+      "kills": 0, 
+      "damage": 0
     }
-  ]
+  ], 
+  "allies": [
+    {
+      "nick": "ShadowMV", 
+      "tank": "", 
+      "account_id": "359890", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Paulino2012", 
+      "tank": "", 
+      "account_id": "7951702", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "__1ShturMoviK1__", 
+      "tank": "", 
+      "account_id": "25268634", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Fors777_2016", 
+      "tank": "", 
+      "account_id": "63712847", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "slavik_mamonov", 
+      "tank": "", 
+      "account_id": "63391325", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "baha87", 
+      "tank": "", 
+      "account_id": "3735775", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Lucifer_635", 
+      "tank": "", 
+      "account_id": "37788517", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Kapitan_999_2018", 
+      "tank": "", 
+      "account_id": "90455726", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Idifin_684", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "jui_gilzu", 
+      "tank": "", 
+      "account_id": "13395632", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Oops_TeDDY_BeKa_", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "alexplay06", 
+      "tank": "", 
+      "account_id": "35540343", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "alex03031985", 
+      "tank": "", 
+      "account_id": "3590805", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "vdvalex25", 
+      "tank": "", 
+      "account_id": "5985155", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "TaHkucT_JAkHERHayT", 
+      "tank": "", 
+      "account_id": "267745398", 
+      "kills": 0, 
+      "damage": 0
+    }
+  ], 
+  "battle_number": 3
 }

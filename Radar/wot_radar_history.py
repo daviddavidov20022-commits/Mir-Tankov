@@ -867,6 +867,28 @@ class BountyHandler(BaseHTTPRequestHandler):
                 self._json_response({'sessions': h})
             except:
                 self._json_response({'sessions': []})
+        elif self.path.startswith('/api/overlay/battle'):
+            overlay_path = os.path.join(ROOT, 'site', 'obs', 'radar_results_overlay.json')
+            try:
+                if os.path.exists(overlay_path):
+                    with open(overlay_path, 'r', encoding='utf-8') as f:
+                        self._json_response(json.load(f))
+                else:
+                    self._json_response({'battle_number': 0, 'status': 'waiting', 'allies': [], 'enemies': []})
+            except:
+                self._json_response({'battle_number': 0, 'status': 'error', 'allies': [], 'enemies': []})
+        elif self.path.startswith('/obs/'):
+            fname = self.path.split('?')[0].replace('/obs/', '')
+            fpath = os.path.join(ROOT, 'site', 'obs', fname)
+            if os.path.exists(fpath) and fname.endswith('.html'):
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self._cors()
+                self.end_headers()
+                with open(fpath, 'rb') as f:
+                    self.wfile.write(f.read())
+            else:
+                self._json_response({'error': 'not found'}, 404)
         else:
             self._json_response({'error': 'not found'}, 404)
 
