@@ -1462,6 +1462,7 @@ function switchHistorySub(sub) {
         histPanel.style.display = '';
         loadGcHistory();
         if (typeof tbLoadHistoryMain === 'function') tbLoadHistoryMain();
+        if (typeof loadBountyHistory === 'function') loadBountyHistory();
     }
 }
 

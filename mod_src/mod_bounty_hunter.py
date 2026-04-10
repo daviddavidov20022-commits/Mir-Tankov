@@ -40,6 +40,21 @@ def _dbg(msg):
         pass
 
 
+def _load_session():
+    """Загружает сессию из JSON (для синхронизации с вебом)"""
+    global _session
+    try:
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, 'r') as f:
+                data = json.load(f)
+            # Обновляем _session из файла
+            _session.update(data)
+            _dbg('session loaded from file')
+    except:
+        _dbg('LOAD ERROR:\n' + traceback.format_exc())
+    return _session
+
+
 def _save_session():
     import datetime
     _session['last_update'] = str(datetime.datetime.now())
@@ -109,6 +124,9 @@ def _capture_arena():
 
         _dbg('captured ' + str(len(_arena_data)) + ' vehicles')
 
+        # Загружаем сессию из файла (мог измениться через веб-API)
+        _load_session()
+
         # Инициируем сессию если пустая
         import datetime
         if not _session['session_start']:
@@ -154,6 +172,11 @@ def _hooked_onHealthChanged(self, newHealth, oldHealth, attackerID, attackReason
         if self.id != _player_vehicle_id:
             return
 
+        # Проверяем статус сессии из файла
+        _load_session()
+        if _session.get('status') == 'stopped':
+            return
+
         damage = oldHealth - newHealth
         if damage <= 0:
             return
@@ -168,12 +191,39 @@ def _hooked_onHealthChanged(self, newHealth, oldHealth, attackerID, attackReason
         if attacker_team == _player_team and _player_team != 0:
             return
 
-        _dbg('HIT! ' + attacker_name + ' -> ' + str(damage) + ' dmg')
+        # Получаем танк атакующего из арены
+        attacker_tank = 'Unknown'
+        try:
+            player = BigWorld.player()
+            if player and hasattr(player, 'arena') and player.arena:
+                veh_info = player.arena.vehicles.get(attackerID, {})
+                v_type = veh_info.get('vehicleType', None)
+                if v_type is not None:
+                    try:
+                        attacker_tank = v_type.type.shortUserString
+                    except:
+                        try:
+                            attacker_tank = str(v_type.name).split(':')[-1]
+                        except:
+                            pass
+        except:
+            pass
 
-        # Обновляем статистику
+        _dbg('HIT! ' + attacker_name + ' (' + attacker_tank + ') -> ' + str(damage) + ' dmg')
+
+        # Обновляем статистику (объектный формат)
         if attacker_name not in _session['attackers']:
-            _session['attackers'][attacker_name] = 0
-        _session['attackers'][attacker_name] += int(damage)
+            _session['attackers'][attacker_name] = {'damage': 0, 'tank': attacker_tank}
+        
+        att = _session['attackers'][attacker_name]
+        if isinstance(att, dict):
+            att['damage'] += int(damage)
+            if att.get('tank', 'Unknown') == 'Unknown' and attacker_tank != 'Unknown':
+                att['tank'] = attacker_tank
+        else:
+            # Миграция со старого формата (число)
+            _session['attackers'][attacker_name] = {'damage': int(att) + int(damage), 'tank': attacker_tank}
+        
         _session['total_damage_received'] += int(damage)
 
         gold = int(damage * _session['gold_rate'])
@@ -182,6 +232,7 @@ def _hooked_onHealthChanged(self, newHealth, oldHealth, attackerID, attackReason
         import datetime
         hit = {
             'name': attacker_name,
+            'tank': attacker_tank,
             'damage': int(damage),
             'gold': gold,
             'time': str(datetime.datetime.now())

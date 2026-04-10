@@ -10802,6 +10802,103 @@ async def api_bounty_session(request):
         return cors_response({'error': str(e)}, 500)
 
 
+def _bounty_save_to_history(session_data):
+    """Сохраняет текущую сессию в bounty_history.json"""
+    import json as _json
+    import time as _time
+    if not session_data.get('session_start') or not session_data.get('total_damage_received'):
+        return  # Пустая сессия
+    history_path = os.path.join(os.path.dirname(__file__), 'site', 'obs', 'bounty_history.json')
+    try:
+        history = []
+        if os.path.exists(history_path):
+            with open(history_path, 'r', encoding='utf-8') as f:
+                history = _json.load(f)
+        session = {
+            'session_start': session_data.get('session_start', ''),
+            'session_end': _time.strftime("%Y-%m-%d %H:%M:%S"),
+            'total_damage': session_data.get('total_damage_received', 0),
+            'total_gold': session_data.get('total_gold_given', 0),
+            'gold_rate': session_data.get('gold_rate', 1),
+            'attackers': session_data.get('attackers', {})
+        }
+        history.insert(0, session)
+        history = history[:200]
+        with open(history_path, 'w', encoding='utf-8') as f:
+            _json.dump(history, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[BountyHistory] Save error: {e}")
+
+
+async def api_bounty_start(request):
+    """POST /api/bounty/start — запустить охоту"""
+    try:
+        import json as _json, time as _time
+        session_path = os.path.join(os.path.dirname(__file__), 'site', 'obs', 'bounty_session.json')
+        data = {}
+        if os.path.exists(session_path):
+            with open(session_path, 'r', encoding='utf-8') as f:
+                data = _json.load(f)
+        data['status'] = 'active'
+        if not data.get('session_start'):
+            data['session_start'] = _time.strftime("%Y-%m-%d %H:%M:%S")
+        data['last_update'] = _time.strftime("%Y-%m-%d %H:%M:%S")
+        with open(session_path, 'w', encoding='utf-8') as f:
+            _json.dump(data, f, indent=2, ensure_ascii=False)
+        return cors_response({'success': True, 'status': 'active'})
+    except Exception as e:
+        return cors_response({'error': str(e)}, 500)
+
+
+async def api_bounty_stop(request):
+    """POST /api/bounty/stop — остановить охоту (сохранить в историю)"""
+    try:
+        import json as _json, time as _time
+        session_path = os.path.join(os.path.dirname(__file__), 'site', 'obs', 'bounty_session.json')
+        data = {}
+        if os.path.exists(session_path):
+            with open(session_path, 'r', encoding='utf-8') as f:
+                data = _json.load(f)
+        _bounty_save_to_history(data)
+        data['status'] = 'stopped'
+        data['session_end'] = _time.strftime("%Y-%m-%d %H:%M:%S")
+        data['last_update'] = _time.strftime("%Y-%m-%d %H:%M:%S")
+        with open(session_path, 'w', encoding='utf-8') as f:
+            _json.dump(data, f, indent=2, ensure_ascii=False)
+        return cors_response({'success': True, 'status': 'stopped'})
+    except Exception as e:
+        return cors_response({'error': str(e)}, 500)
+
+
+async def api_bounty_reset(request):
+    """POST /api/bounty/reset — сбросить и начать новую охоту"""
+    try:
+        import json as _json, time as _time
+        session_path = os.path.join(os.path.dirname(__file__), 'site', 'obs', 'bounty_session.json')
+        # Сперва архивируем текущую сессию
+        if os.path.exists(session_path):
+            with open(session_path, 'r', encoding='utf-8') as f:
+                old_data = _json.load(f)
+            _bounty_save_to_history(old_data)
+        # Новая чистая сессия
+        data = {
+            'status': 'stopped',
+            'session_start': '',
+            'total_damage_received': 0,
+            'total_gold_given': 0,
+            'gold_rate': 1,
+            'attackers': {},
+            'recent_hits': [],
+            'participants_count': 0,
+            'last_update': _time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        with open(session_path, 'w', encoding='utf-8') as f:
+            _json.dump(data, f, indent=2, ensure_ascii=False)
+        return cors_response({'success': True, 'status': 'reset'})
+    except Exception as e:
+        return cors_response({'error': str(e)}, 500)
+
+
 def create_api_app():
     """Создать aiohttp приложение с API маршрутами"""
     app = web.Application(client_max_size=10 * 1024 * 1024, middlewares=[tma_auth_middleware])  # 10MB для медиа загрузок
@@ -10924,6 +11021,9 @@ def create_api_app():
     # Bounty Hunter API
     app.router.add_get("/api/bounty/history", api_bounty_history)
     app.router.add_get("/api/bounty/session", api_bounty_session)
+    app.router.add_post("/api/bounty/start", api_bounty_start)
+    app.router.add_post("/api/bounty/stop", api_bounty_stop)
+    app.router.add_post("/api/bounty/reset", api_bounty_reset)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)
