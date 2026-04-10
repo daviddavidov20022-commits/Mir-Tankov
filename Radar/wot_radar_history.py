@@ -272,8 +272,9 @@ class RadarApp(ctk.CTk):
         self.battle_list = self.db["battles"]
         self.current_view = None
         self.sub_nicks = set()
-        self.wr_cache = {}  # account_id -> {"wr": %, "battles": N}
+        self.wr_cache = {}
         self.is_monitoring = True
+        self._bounty_live = False   # флаг живого обновления bounty вкладки
         self._build_ui()
         self._start_monitor()
 
@@ -321,6 +322,7 @@ class RadarApp(ctk.CTk):
 
     def _tab(self, t):
         self.tab_var.set(t)
+        self._bounty_live = (t == 'bounty')  # включаем живой опрос только для bounty вкладки
         for v in ("battle","history","encounters","subs","favs","all","bounty"):
             b = getattr(self, f"tb_{v}", None)
             if b: b.configure(fg_color=GOLD if v==t else CARD, text_color=BG if v==t else WHITE)
@@ -561,23 +563,25 @@ class RadarApp(ctk.CTk):
         # ── ССЫЛКИ НА OBS ВИДЖЕТЫ ──
         wf = ctk.CTkFrame(s, fg_color=CARD, corner_radius=10); wf.pack(fill="x", pady=(0,8))
         ctk.CTkLabel(wf, text="OBS ВИДЖЕТЫ", font=("Segoe UI",10,"bold"), text_color=GRAY).pack(pady=(10,6))
-        base = "https://mir-tankov-production.up.railway.app/webapp/obs"
-        for label, url in [
-            ("🎯 Трекер Охоты (основной)", f"{base}/bounty-tracker.html?theme=1"),
-            ("👥 Подписчики в бою", f"{base}/subs-in-battle.html"),
+        base_local = "file:///d:/mir-tankov-bot/site/obs"
+        for label, fname, extra in [
+            ("🎯 Трекер Охоты (основной)", "bounty-tracker.html", "?theme=1"),
+            ("👥 Подписчики в бою", "subs-in-battle.html", ""),
         ]:
+            url = base_local + "/" + fname + extra
             wr = ctk.CTkFrame(wf, fg_color=BG, corner_radius=8); wr.pack(fill="x", padx=12, pady=3)
             ctk.CTkLabel(wr, text=label, font=("Segoe UI",10), text_color=WHITE).pack(side="left", padx=10, pady=8)
             def _copy(u=url):
                 self.clipboard_clear(); self.clipboard_append(u)
-                self._log(f"📋 Скопировано: {u}")
+                self._log(f"✅ Скопировано!")
             ctk.CTkButton(wr, text="📋 Копировать", width=110, height=26, fg_color=CARD2,
                 text_color=BLUE, font=("Segoe UI",9), command=_copy).pack(side="right", padx=8, pady=6)
-        ctk.CTkButton(wf, text="🔗 Открыть трекер в браузере", height=30, fg_color="transparent",
-            border_width=1, border_color=BLUE, text_color=BLUE,
-            command=lambda: __import__('webbrowser').open(f"{base}/bounty-tracker.html?theme=1&demo=1")).pack(padx=12, pady=(4,10), fill="x")
+        ctk.CTkLabel(wf, text="⚠ В OBS включи 'Allow access to local files'", font=("Segoe UI",9,"bold"), text_color=ORANGE).pack(pady=(0,8))
 
-        # ── ИСТОРИЯ ОХОТ ──
+        # Авто-обновление каждые 3 сек
+        self.after(3000, self._bounty_live_tick)
+
+                # ── ИСТОРИЯ ОХОТ ──
         history = []
         if os.path.exists(BOUNTY_HISTORY):
             try:
@@ -622,6 +626,12 @@ class RadarApp(ctk.CTk):
 
     def _open_bounty_popup(self):
         self._tab('bounty')
+
+    def _bounty_live_tick(self):
+        """Авто-обновление вкладки Охоты каждые 3 сек (live данные из боя)"""
+        if self._bounty_live and self.tab_var.get() == 'bounty':
+            self._refresh()
+        self.after(3000, self._bounty_live_tick)
 
 
     def _empty(self, t):

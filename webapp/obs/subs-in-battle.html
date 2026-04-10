@@ -629,22 +629,35 @@
         }
 
         // ==========================================
-        // INIT
+        // INIT — читаем текущий battle_number чтобы
+        // НЕ срабатывать на старые данные при загрузке
         // ==========================================
         if (params.get('demo') === 'instant') {
-            // Мгновенная демонстрация с фейковыми данными
             const fakeSubs = [
                 { nick: 'xXx_NAGIBATOR_xXx', tank: 'Объект 430У', isAlly: true },
                 { nick: 'TankDestroyer_99', tank: 'FV4005 Stage II', isAlly: true },
                 { nick: 'SniperPro_RU', tank: 'Grille 15', isAlly: true },
                 { nick: 'EBR_Master_2026', tank: 'EBR 105', isAlly: false },
             ];
-            setTimeout(() => {
-                showWidget(fakeSubs, { battle_number: 42 });
-            }, 300);
+            setTimeout(() => { showWidget(fakeSubs, { battle_number: 42 }); }, 300);
         } else {
-            checkBattle();
-            setInterval(checkBattle, REFRESH_MS);
+            // Сначала читаем текущий номер боя — запоминаем но НЕ триггерим виджет
+            (async () => {
+                try {
+                    const resp = await fetch(RADAR_JSON + '?t=' + Date.now());
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.battle_number) {
+                            lastBattleNumber = data.battle_number;
+                            console.log('[SubsWidget] Init: ignoring existing battle #' + lastBattleNumber);
+                        }
+                    }
+                } catch(e) {
+                    console.warn('[SubsWidget] Init read failed:', e);
+                }
+                // Теперь начинаем опрос — будем реагировать только на НОВЫЕ бои
+                setInterval(checkBattle, REFRESH_MS);
+            })();
         }
     </script>
 </body>
