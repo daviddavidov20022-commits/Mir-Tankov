@@ -482,11 +482,46 @@
             <script>
                 let currentBountyTheme = 1;
                 const BOUNTY_WIDGET_BASE = 'https://mir-tankov-production.up.railway.app/webapp/obs/bounty-tracker.html';
-                const BOUNTY_API = (() => {
+                
+                // Локальный API (RadarHistory app) — управляет ЛОКАЛЬНЫМ bounty_session.json
+                const LOCAL_API = 'http://localhost:8091';
+                // Удалённый API (Railway) — fallback  
+                const REMOTE_API = (() => {
                     const p = new URLSearchParams(window.location.search);
-                    const h = p.get('api') || localStorage.getItem('api_host') || localStorage.getItem('bot_api_url');
-                    return h || 'https://mir-tankov-production.up.railway.app';
+                    return p.get('api') || localStorage.getItem('api_host') || localStorage.getItem('bot_api_url') || 'https://mir-tankov-production.up.railway.app';
                 })();
+                
+                // Пробуем сначала локально, потом удалённо
+                async function bountyFetch(endpoint, method = 'POST') {
+                    // Попытка 1: локальный сервер (RadarHistory app)
+                    try {
+                        const resp = await fetch(`${LOCAL_API}${endpoint}`, {
+                            method, 
+                            headers: {'Content-Type': 'application/json'},
+                            signal: AbortSignal.timeout(2000)
+                        });
+                        if (resp.ok) {
+                            console.log('[Bounty] ✅ Локальный API:', endpoint);
+                            return await resp.json();
+                        }
+                    } catch(e) {
+                        console.log('[Bounty] Локальный API недоступен, пробуем удалённый...');
+                    }
+                    // Попытка 2: удалённый Railway сервер
+                    try {
+                        const resp = await fetch(`${REMOTE_API}${endpoint}`, {
+                            method, 
+                            headers: {'Content-Type': 'application/json'}
+                        });
+                        if (resp.ok) {
+                            console.log('[Bounty] ✅ Удалённый API:', endpoint);
+                            return await resp.json();
+                        }
+                    } catch(e) {
+                        console.error('[Bounty] ❌ Оба API недоступны');
+                    }
+                    return null;
+                }
                 
                 function bountyDemoTheme(theme, el) {
                     document.querySelectorAll('.theme-btn').forEach(b => b.style.borderColor = 'transparent');
@@ -500,34 +535,21 @@
                 
                 async function toggleBountyState(active) {
                     const endpoint = active ? '/api/bounty/start' : '/api/bounty/stop';
-                    try {
-                        const resp = await fetch(`${BOUNTY_API}${endpoint}`, {method: 'POST', headers: {'Content-Type': 'application/json'}});
-                        const data = await resp.json();
-                        if (data.success) {
-                            updateBountyButtons(active);
-                            if (!active) {
-                                // Данные НЕ обнуляются — они остаются до сброса
-                            }
-                        }
-                    } catch(e) {
-                        console.error('Bounty toggle error:', e);
+                    const data = await bountyFetch(endpoint);
+                    if (data && data.success) {
+                        updateBountyButtons(active);
                     }
                 }
                 
                 async function resetBounty() {
                     if (!confirm('Точно сбросить? Текущая сессия сохранится в историю.')) return;
-                    try {
-                        const resp = await fetch(`${BOUNTY_API}/api/bounty/reset`, {method: 'POST', headers: {'Content-Type': 'application/json'}});
-                        const data = await resp.json();
-                        if (data.success) {
-                            updateBountyButtons(false);
-                            document.getElementById('adminBountyJoinCount').innerText = '0';
-                            document.getElementById('bountyJoinCount').innerText = '0';
-                            document.getElementById('bountyStatusNotActive').style.display = 'block';
-                            document.getElementById('bountyStatusActive').style.display = 'none';
-                        }
-                    } catch(e) {
-                        console.error('Bounty reset error:', e);
+                    const data = await bountyFetch('/api/bounty/reset');
+                    if (data && data.success) {
+                        updateBountyButtons(false);
+                        document.getElementById('adminBountyJoinCount').innerText = '0';
+                        document.getElementById('bountyJoinCount').innerText = '0';
+                        document.getElementById('bountyStatusNotActive').style.display = 'block';
+                        document.getElementById('bountyStatusActive').style.display = 'none';
                     }
                 }
                 
@@ -543,15 +565,14 @@
                 
                 // Автоподгрузка статуса охоты
                 async function pollBountyStatus() {
-                    try {
-                        const resp = await fetch(`${BOUNTY_API}/api/bounty/session?t=${Date.now()}`);
-                        const data = await resp.json();
+                    const data = await bountyFetch('/api/bounty/session', 'GET');
+                    if (data) {
                         const isActive = data.status === 'active';
                         updateBountyButtons(isActive);
                         const atkCount = Object.keys(data.attackers || {}).length;
                         document.getElementById('adminBountyJoinCount').innerText = atkCount;
                         document.getElementById('bountyJoinCount').innerText = atkCount;
-                    } catch(e) {}
+                    }
                 }
                 
                 function joinBounty() {
@@ -580,9 +601,8 @@
                     container.innerHTML = '<div style="text-align:center;color:#5A6577;font-size:0.7rem;padding:16px">⏳ Загрузка...</div>';
                     
                     try {
-                        const resp = await fetch(`${BOUNTY_API}/api/bounty/history?t=${Date.now()}`);
-                        const data = await resp.json();
-                        const sessions = data.sessions || [];
+                        const data = await bountyFetch('/api/bounty/history', 'GET');
+                        const sessions = (data && data.sessions) || [];
                         
                         if (!sessions.length) {
                             container.innerHTML = `<div style="text-align:center;padding:24px">

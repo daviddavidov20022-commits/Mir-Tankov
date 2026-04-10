@@ -1,50 +1,67 @@
 {
+  "participants_count": 0, 
+  "total_damage_received": 7306, 
+  "gold_rate": 1, 
   "recent_hits": [
     {
-      "name": "kii", 
-      "damage": 59, 
-      "gold": 59, 
-      "time": "2026-04-10 22:19:00.189000"
+      "time": "2026-04-10 22:36:51.972000", 
+      "tank": "КВ-90", 
+      "name": "Andron033", 
+      "gold": 32, 
+      "damage": 32
     }, 
     {
-      "name": "serbin_nik", 
-      "damage": 627, 
-      "gold": 627, 
-      "time": "2026-04-10 22:17:33.890000"
+      "damage": 34, 
+      "tank": "КВ-90", 
+      "name": "Andron033", 
+      "gold": 34, 
+      "time": "2026-04-10 22:36:51.875000"
     }, 
     {
-      "name": "shura572", 
-      "damage": 1264, 
-      "gold": 1264, 
-      "time": "2026-04-10 22:14:52.406000"
+      "time": "2026-04-10 22:36:51.776000", 
+      "tank": "КВ-90", 
+      "damage": 33, 
+      "gold": 33, 
+      "name": "Andron033"
     }, 
     {
-      "name": "prizrak34523", 
-      "damage": 426, 
-      "gold": 426, 
-      "time": "2026-04-10 21:58:44.817000"
+      "name": "Andron033", 
+      "tank": "КВ-90", 
+      "damage": 33, 
+      "gold": 33, 
+      "time": "2026-04-10 22:36:51.666000"
     }, 
     {
-      "name": "nagibolotankov", 
-      "damage": 324, 
-      "gold": 324, 
-      "time": "2026-04-10 21:57:56.928000"
+      "time": "2026-04-10 22:36:51.578000", 
+      "tank": "КВ-90", 
+      "name": "Andron033", 
+      "gold": 30, 
+      "damage": 30
     }
   ], 
-  "total_damage_received": 5354, 
-  "gold_rate": 1, 
   "session_start": "2026-04-10 21:41:30.108000", 
+  "total_gold_given": 7306, 
+  "last_update": "2026-04-10 22:36:51.972000", 
   "attackers": {
-    "kii": 59, 
+    "Varvar2000": {
+      "tank": "СТ-I", 
+      "damage": 460
+    }, 
     "shura572": 1264, 
     "lukai15": 479, 
     "serbin_nik": 627, 
+    "HE_BEZET_MHE": {
+      "tank": "Rinoceronte", 
+      "damage": 483
+    }, 
     "c00per74rus": 222, 
     " MiniPuh74": 1953, 
     "nagibolotankov": 324, 
-    "prizrak34523": 426
-  }, 
-  "participants_count": 0, 
-  "total_gold_given": 5354, 
-  "last_update": "2026-04-10 22:19:00.189000"
+    "kii": 59, 
+    "prizrak34523": 426, 
+    "Andron033": {
+      "tank": "КВ-90", 
+      "damage": 1009
+    }
+  }
 }

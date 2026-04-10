@@ -655,5 +655,138 @@ class RadarApp(ctk.CTk):
             self.after(0, self._log, f"📊 WR загружен для {len(stats)} игроков")
         except: pass
 
+
+# ============================================================
+# LOCAL BOUNTY API SERVER (port 8091)
+# ============================================================
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+BOUNTY_JSON = os.path.join(APP, "site", "obs", "bounty_session.json")
+BOUNTY_HISTORY = os.path.join(APP, "site", "obs", "bounty_history.json")
+
+def _bounty_read():
+    try:
+        if os.path.exists(BOUNTY_JSON):
+            with open(BOUNTY_JSON, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except: pass
+    return {'status': 'stopped', 'total_damage_received': 0, 'total_gold_given': 0,
+            'gold_rate': 1, 'attackers': {}, 'recent_hits': [], 'session_start': '', 'last_update': ''}
+
+def _bounty_write(data):
+    data['last_update'] = time.strftime("%Y-%m-%d %H:%M:%S")
+    with open(BOUNTY_JSON, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+def _bounty_save_history(d):
+    if not d.get('session_start') or not d.get('total_damage_received'):
+        return
+    try:
+        history = []
+        if os.path.exists(BOUNTY_HISTORY):
+            with open(BOUNTY_HISTORY, "r", encoding="utf-8") as f:
+                history = json.load(f)
+        session = {
+            'session_start': d.get('session_start', ''),
+            'session_end': time.strftime("%Y-%m-%d %H:%M:%S"),
+            'total_damage': d.get('total_damage_received', 0),
+            'total_gold': d.get('total_gold_given', 0),
+            'gold_rate': d.get('gold_rate', 1),
+            'attackers': d.get('attackers', {})
+        }
+        history.insert(0, session)
+        history = history[:200]
+        with open(BOUNTY_HISTORY, "w", encoding="utf-8") as f:
+            json.dump(history, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[BountyLocalAPI] History save error: {e}")
+
+
+class BountyHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass  # Тихий лог
+
+    def _cors(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+
+    def _json_response(self, data, code=200):
+        self.send_response(code)
+        self.send_header('Content-Type', 'application/json')
+        self._cors()
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self._cors()
+        self.end_headers()
+
+    def do_GET(self):
+        if self.path.startswith('/api/bounty/session'):
+            self._json_response(_bounty_read())
+        elif self.path.startswith('/api/bounty/history'):
+            try:
+                h = []
+                if os.path.exists(BOUNTY_HISTORY):
+                    with open(BOUNTY_HISTORY, 'r', encoding='utf-8') as f:
+                        h = json.load(f)
+                self._json_response({'sessions': h})
+            except:
+                self._json_response({'sessions': []})
+        else:
+            self._json_response({'error': 'not found'}, 404)
+
+    def do_POST(self):
+        if self.path.startswith('/api/bounty/start'):
+            d = _bounty_read()
+            d['status'] = 'active'
+            if not d.get('session_start'):
+                d['session_start'] = time.strftime("%Y-%m-%d %H:%M:%S")
+            _bounty_write(d)
+            print("[BountyLocalAPI] ▶ Охота ЗАПУЩЕНА")
+            self._json_response({'success': True, 'status': 'active'})
+
+        elif self.path.startswith('/api/bounty/stop'):
+            d = _bounty_read()
+            _bounty_save_history(d)
+            d['status'] = 'stopped'
+            d['session_end'] = time.strftime("%Y-%m-%d %H:%M:%S")
+            _bounty_write(d)
+            print("[BountyLocalAPI] ⏹ Охота ОСТАНОВЛЕНА")
+            self._json_response({'success': True, 'status': 'stopped'})
+
+        elif self.path.startswith('/api/bounty/reset'):
+            d = _bounty_read()
+            _bounty_save_history(d)
+            new_data = {
+                'status': 'stopped',
+                'session_start': '',
+                'total_damage_received': 0, 'total_gold_given': 0, 'gold_rate': 1,
+                'attackers': {}, 'recent_hits': [], 'participants_count': 0,
+                'last_update': time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            _bounty_write(new_data)
+            print("[BountyLocalAPI] 🔄 Охота СБРОШЕНА")
+            self._json_response({'success': True, 'status': 'reset'})
+
+        else:
+            self._json_response({'error': 'not found'}, 404)
+
+
+def _start_bounty_server():
+    try:
+        server = HTTPServer(('0.0.0.0', 8091), BountyHandler)
+        print("[BountyLocalAPI] 🟢 Локальный сервер запущен на порту 8091")
+        server.serve_forever()
+    except Exception as e:
+        print(f"[BountyLocalAPI] Ошибка запуска: {e}")
+
+
 if __name__ == "__main__":
+    # Запускаем локальный API для bounty в фоне
+    bounty_thread = threading.Thread(target=_start_bounty_server, daemon=True)
+    bounty_thread.start()
     RadarApp().mainloop()
+
