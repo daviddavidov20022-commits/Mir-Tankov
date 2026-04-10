@@ -1,6 +1,24 @@
 {
   "recent_hits": [
     {
+      "name": "kii", 
+      "damage": 59, 
+      "gold": 59, 
+      "time": "2026-04-10 22:19:00.189000"
+    }, 
+    {
+      "name": "serbin_nik", 
+      "damage": 627, 
+      "gold": 627, 
+      "time": "2026-04-10 22:17:33.890000"
+    }, 
+    {
+      "name": "shura572", 
+      "damage": 1264, 
+      "gold": 1264, 
+      "time": "2026-04-10 22:14:52.406000"
+    }, 
+    {
       "name": "prizrak34523", 
       "damage": 426, 
       "gold": 426, 
@@ -11,37 +29,22 @@
       "damage": 324, 
       "gold": 324, 
       "time": "2026-04-10 21:57:56.928000"
-    }, 
-    {
-      "name": "lukai15", 
-      "damage": 479, 
-      "gold": 479, 
-      "time": "2026-04-10 21:55:07.024000"
-    }, 
-    {
-      "name": "c00per74rus", 
-      "damage": 222, 
-      "gold": 222, 
-      "time": "2026-04-10 21:55:03.025000"
-    }, 
-    {
-      "name": " MiniPuh74", 
-      "damage": 54, 
-      "gold": 54, 
-      "time": "2026-04-10 21:45:26.543000"
     }
   ], 
-  "total_damage_received": 3404, 
+  "total_damage_received": 5354, 
   "gold_rate": 1, 
   "session_start": "2026-04-10 21:41:30.108000", 
   "attackers": {
+    "kii": 59, 
+    "shura572": 1264, 
+    "lukai15": 479, 
+    "serbin_nik": 627, 
     "c00per74rus": 222, 
     " MiniPuh74": 1953, 
     "nagibolotankov": 324, 
-    "prizrak34523": 426, 
-    "lukai15": 479
+    "prizrak34523": 426
   }, 
   "participants_count": 0, 
-  "total_gold_given": 3404, 
-  "last_update": "2026-04-10 21:58:44.817000"
+  "total_gold_given": 5354, 
+  "last_update": "2026-04-10 22:19:00.189000"
 }
