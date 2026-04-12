@@ -148,17 +148,30 @@ const userData = new UserData();
 // ИНИЦИАЛИЗАЦИЯ
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Проверяем авторизацию
-    const hasTelegramWebApp = !!window.Telegram?.WebApp?.initDataUnsafe?.user;
-    const hasUrlTelegramId = new URLSearchParams(window.location.search).has('telegram_id');
+    // === Извлекаем telegram_id из всех источников ===
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTgId = urlParams.get('telegram_id');
+    const tgWebApp = window.Telegram?.WebApp?.initDataUnsafe?.user;
+
+    // 1. Из URL (бот передаёт ?telegram_id=xxx)
+    if (urlTgId) {
+        siteAuth.login(urlTgId, tgWebApp?.first_name || siteAuth.username);
+    }
+    // 2. Из Telegram WebApp SDK
+    else if (tgWebApp?.id) {
+        siteAuth.login(tgWebApp.id, tgWebApp.first_name || 'Танкист');
+    }
+
     const hasLocalTelegramId = !!localStorage.getItem('my_telegram_id');
     const isOnMainPage = window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/');
-    
-    if (!siteAuth.isLoggedIn && !hasTelegramWebApp && !hasUrlTelegramId && !hasLocalTelegramId && !isOnMainPage) {
-        // Не на главной и не залогинен никаким способом — перенаправляем
+
+    if (!siteAuth.isLoggedIn && !hasLocalTelegramId && !isOnMainPage) {
         window.location.href = 'index.html';
         return;
     }
+
+    // Сбрасываем кеш подписки — всегда берём свежее с API
+    localStorage.removeItem('is_subscribed');
 
     initUser();
     userData.updateUI();
@@ -170,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initUser() {
     const nameEl = document.getElementById('userName');
     const avatarEl = document.getElementById('userAvatar');
-    
+
     if (nameEl && siteAuth.username) {
         nameEl.textContent = siteAuth.username;
     }
