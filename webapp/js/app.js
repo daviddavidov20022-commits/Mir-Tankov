@@ -183,8 +183,8 @@ async function loadBalanceFromAPI() {
         localStorage.setItem('is_subscribed', isActive ? '1' : '0');
         updateLockCards(isActive);
 
-        // Если мы на премиум-странице и подписки нет — выгоняем на главную
-        if (!isActive) {
+        // Если мы на премиум-странице и подписки нет — выгоняем на главную (кроме админа)
+        if (!isActive && !_isAdminUser()) {
             const currentPage = window.location.pathname.split('/').pop();
             const onPremiumPage = PREMIUM_PAGES && PREMIUM_PAGES.some(p => currentPage === p);
             if (onPremiumPage) {
@@ -199,8 +199,17 @@ async function loadBalanceFromAPI() {
     }
 }
 
-// Проверяем, есть ли подписка
+// Проверяем, есть ли подписка (админ всегда premium)
+function _isAdminUser() {
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    if (tgUser && tgUser.id === ADMIN_ID) return true;
+    if (localStorage.getItem('admin_mode') === 'true') return true;
+    const myId = parseInt(localStorage.getItem('my_telegram_id'));
+    return myId === ADMIN_ID;
+}
+
 function isPremium() {
+    if (_isAdminUser()) return true;
     return localStorage.getItem('is_subscribed') === '1';
 }
 

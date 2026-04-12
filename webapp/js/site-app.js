@@ -239,8 +239,8 @@ async function loadBalanceFromAPI() {
             }
         });
 
-        // Если мы на премиум-странице и подписки нет — выгоняем
-        if (!isActive) {
+        // Если мы на премиум-странице и подписки нет — выгоняем (кроме админа)
+        if (!isActive && !siteAuth.isAdmin) {
             const currentPage = window.location.pathname.split('/').pop();
             const premiumPages = ['player.html', 'top.html', 'challenges.html', 'quiz.html', 'wheel.html', 'contest.html'];
             if (premiumPages.some(p => currentPage === p)) {
@@ -407,6 +407,7 @@ const PREMIUM_PAGES = [
 ];
 
 function isPremium() {
+    if (siteAuth.isAdmin) return true;
     return localStorage.getItem('is_subscribed') === '1';
 }
 
