@@ -253,6 +253,117 @@
         .empty-state__icon { font-size: 2rem; margin-bottom: 8px; }
         .empty-state__text { font-size: 0.75rem; }
 
+        /* ── Subscriber WOW Notification ── */
+        .sub-notify {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.92);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        .sub-notify--active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .sub-notify__title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+            color: #3b82f6;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(59,130,246,0.6);
+            animation: subTitlePulse 2s ease-in-out infinite;
+        }
+        .sub-notify__subtitle {
+            font-size: 0.55rem;
+            color: #5A6577;
+            margin-bottom: 14px;
+        }
+        .sub-notify__cards {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 90%;
+            max-width: 350px;
+        }
+        .sub-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(59,130,246,0.03));
+            border: 1px solid rgba(59,130,246,0.25);
+            transform: translateX(-80px);
+            opacity: 0;
+            animation: subCardSlide 0.6s ease forwards;
+        }
+        .sub-card--ally { border-color: rgba(74,222,128,0.3); background: linear-gradient(135deg, rgba(74,222,128,0.1), rgba(74,222,128,0.02)); }
+        .sub-card--enemy { border-color: rgba(239,68,68,0.3); background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.02)); }
+        .sub-card__side {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .sub-card__info {
+            flex: 1;
+            min-width: 0;
+        }
+        .sub-card__nick {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.75rem;
+            color: #E8E6E3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sub-card__tank {
+            font-size: 0.55rem;
+            color: #5A6577;
+        }
+        .sub-card__badge {
+            font-size: 0.5rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: rgba(59,130,246,0.2);
+            color: #60a5fa;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        /* Animated particles behind notification */
+        .sub-notify__particles {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .sub-particle {
+            position: absolute;
+            width: 3px; height: 3px;
+            border-radius: 50%;
+            background: #3b82f6;
+            opacity: 0;
+            animation: subParticleFloat 3s ease-in-out infinite;
+        }
+        @keyframes subTitlePulse {
+            0%, 100% { text-shadow: 0 0 20px rgba(59,130,246,0.6); }
+            50% { text-shadow: 0 0 40px rgba(59,130,246,0.9), 0 0 60px rgba(59,130,246,0.3); }
+        }
+        @keyframes subCardSlide {
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes subParticleFloat {
+            0% { opacity: 0; transform: translateY(100%) scale(0); }
+            30% { opacity: 0.8; }
+            100% { opacity: 0; transform: translateY(-200%) scale(1.5); }
+        }
+
         /* ── Свернуть ── */
         .titlebar__btn--toggle { font-size: 0.7rem; }
         /* Мини-режим */
@@ -280,6 +391,18 @@
             color: var(--gold);
             margin: 0;
         }
+
+        /* ── Iframe вкладки ── */
+        .tab-panel--iframe {
+            padding: 0 !important;
+            height: 100%;
+        }
+        .tab-panel--iframe iframe {
+            width: 100%;
+            height: calc(100vh - 36px - 34px);
+            border: none;
+            background: var(--bg-primary);
+        }
     </style>
 </head>
 <body>
@@ -290,14 +413,15 @@
         <span class="titlebar__battle" id="battleNum">Бой #—</span>
         <button class="titlebar__btn" onclick="toggleOpacity()" title="Прозрачность">◐</button>
         <button class="titlebar__btn titlebar__btn--toggle" onclick="toggleCollapse()" id="collapseBtn" title="Свернуть/Развернуть">▼</button>
-        <button class="titlebar__btn titlebar__btn--close" onclick="if(window.pywebview) pywebview.api.close(); else window.close();" title="Закрыть">✕</button>
+        <button class="titlebar__btn titlebar__btn--close" onclick="window.close();" title="Закрыть">✕</button>
     </div>
 
     <!-- Вкладки -->
     <div class="tabs">
-        <div class="tabs__item tabs__item--active" onclick="switchTab('battle', this)">⚔️ Бой</div>
+        <div class="tabs__item tabs__item--active" onclick="switchTab('battle', this)">⛔️ Бой</div>
+        <div class="tabs__item" onclick="switchTab('arena', this)">⚔️ Арена</div>
         <div class="tabs__item" onclick="switchTab('history', this)">📜 История</div>
-        <div class="tabs__item" onclick="switchTab('subs', this)">👥 Подписчики</div>
+        <div class="tabs__item" onclick="switchTab('subs', this)">👥 Подп.</div>
     </div>
 
     <!-- Контент -->
@@ -325,24 +449,39 @@
                 <div class="empty-state__text">Подписчики в бою</div>
             </div>
         </div>
+
+        <!-- Арена (iframe) -->
+        <div class="tab-panel tab-panel--iframe" id="panel-arena">
+            <iframe id="arenaFrame" src="about:blank" loading="lazy"></iframe>
+        </div>
+    </div>
+
+    <!-- Subscriber WOW overlay -->
+    <div class="sub-notify" id="subNotify">
+        <div class="sub-notify__particles" id="subParticles"></div>
+        <div class="sub-notify__title" id="subNotifyTitle">📢 ПОДПИСЧИКИ В БОЮ</div>
+        <div class="sub-notify__subtitle">Telegram-канал · Мир Танков</div>
+        <div class="sub-notify__cards" id="subNotifyCards"></div>
     </div>
 
     <script>
         // ===============================
         // CONFIG
         // ===============================
-        const RADAR_JSON = 'http://localhost:8090/obs/radar_results_overlay.json';
-        const RADAR_LOCAL = '../obs/radar_results_overlay.json';
-        const GAME_RADAR = 'file:///D:/Танки/World_of_Tanks_RU/radar_results.json';
         const API_URL = 'https://mir-tankov-production.up.railway.app';
-        const REFRESH_MS = 2000;
+        const MY_TG_ID = localStorage.getItem('my_telegram_id') || '6507474079';
+        const ARENA_URL = API_URL + '/challenges.html?telegram_id=' + MY_TG_ID + '&mode=overlay';
+        const REFRESH_MS = 3000; // 3 сек — оптимально (данные не меняются чаще)
         
         let currentBattle = null;
         let allBattles = [];
         let knownSubs = {};
         let opacityLevel = 1;
         let lastDataHash = '';
+        let lastRenderHash = '';
         let isCollapsed = false;
+        let arenaLoaded = false;
+        let isFetching = false; // защита от параллельных запросов
 
         // ===============================
         // TAB SWITCHING
@@ -352,6 +491,11 @@
             document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
             document.getElementById('panel-' + id).classList.add('tab-panel--active');
             btn.classList.add('tabs__item--active');
+            
+            if (id === 'arena' && !arenaLoaded) {
+                document.getElementById('arenaFrame').src = ARENA_URL;
+                arenaLoaded = true;
+            }
         }
 
         function toggleOpacity() {
@@ -366,62 +510,46 @@
                 document.body.classList.add('mini-mode');
                 btn.textContent = '+';
                 btn.title = 'Развернуть';
-                // Resize pywebview window to tiny square
-                if (window.pywebview && window.pywebview.api) {
-                    pywebview.api.minimize_window();
-                }
             } else {
                 document.body.classList.remove('mini-mode');
                 btn.textContent = '▼';
                 btn.title = 'Свернуть';
-                if (window.pywebview && window.pywebview.api) {
-                    pywebview.api.restore_window();
-                }
             }
         }
 
         // ===============================
-        // DATA LOADING
+        // DATA LOADING (1 fetch, без мерцания)
         // ===============================
         async function loadRadarData() {
-            // Пробуем несколько источников
-            const sources = [
-                'radar_results_overlay.json',
-                '/obs/radar_results_overlay.json',
-                RADAR_JSON
-            ];
+            if (isFetching) return; // не делаем параллельные запросы
+            isFetching = true;
             
-            for (const src of sources) {
-                try {
-                    const resp = await fetch(src + '?t=' + Date.now());
-                    if (!resp.ok) continue;
-                    const data = await resp.json();
-                    if (data && (data.allies || data.enemies || data.players)) {
-                        processData(data);
-                        return;
-                    }
-                } catch(e) {}
-            }
+            try {
+                const ctrl = new AbortController();
+                const timeout = setTimeout(() => ctrl.abort(), 2000);
+                const resp = await fetch('/obs/radar_results_overlay.json?t=' + Date.now(), { signal: ctrl.signal });
+                clearTimeout(timeout);
+                
+                if (resp.ok) {
+                    const text = await resp.text();
+                    // Быстрая проверка: если текст не изменился — вообще не парсим
+                    if (text === lastDataHash) { isFetching = false; return; }
+                    lastDataHash = text;
+                    
+                    try {
+                        const data = JSON.parse(text);
+                        if (data && (data.allies || data.enemies || data.players)) {
+                            processData(data);
+                        }
+                    } catch(e) {} // невалидный JSON — пропускаем
+                }
+            } catch(e) {}
             
-            // Fallback: попробуем прочитать из файловой системы через pywebview
-            if (window.pywebview && window.pywebview.api) {
-                try {
-                    const raw = await pywebview.api.read_radar_json();
-                    if (raw) {
-                        const data = JSON.parse(raw);
-                        processData(data);
-                    }
-                } catch(e) {}
-            }
+            isFetching = false;
         }
 
         function processData(data) {
             if (!data) return;
-            
-            // Проверяем изменились ли данные (фикс мерцания)
-            const hash = JSON.stringify(data);
-            if (hash === lastDataHash) return; // Данные не изменились — не перерисовываем!
-            lastDataHash = hash;
 
             // Новый бой?
             if (!currentBattle || data.battle_number !== currentBattle.battle_number) {
@@ -435,14 +563,29 @@
                 renderHistory();
                 checkSubscribers(data);
             } else {
-                // Обновились результаты текущего боя
-                currentBattle = data;
-                renderBattle(data);
+                // Тот же бой — обновляем ТОЛЬКО если реально поменялись данные
+                const newHash = buildRenderHash(data);
+                if (newHash !== lastRenderHash) {
+                    currentBattle = data;
+                    renderBattle(data);
+                }
             }
+        }
+        
+        function buildRenderHash(data) {
+            // Быстрый хеш из ключевых числовых полей (без JSON.stringify)
+            const a = data.allies || [];
+            const e = data.enemies || [];
+            let h = (data.battle_number || 0) + '|' + a.length + '|' + e.length;
+            // Суммарный урон обеих команд — самый надёжный индикатор изменений
+            let ad = 0, ed = 0;
+            for (let i = 0; i < a.length; i++) ad += (a[i].damage || 0);
+            for (let i = 0; i < e.length; i++) ed += (e[i].damage || 0);
+            return h + '|' + ad + '|' + ed;
         }
 
         // ===============================
-        // RENDER BATTLE
+        // RENDER BATTLE (без мерцания!)
         // ===============================
         function fmt(n) { return typeof n === 'number' ? n.toLocaleString('ru') : (n || '—'); }
 
@@ -453,8 +596,6 @@
 
             const totalAllyDmg = allies.reduce((s, p) => s + (p.damage || 0), 0);
             const totalEnemyDmg = enemies.reduce((s, p) => s + (p.damage || 0), 0);
-            const totalAllyKills = allies.reduce((s, p) => s + (p.kills || 0), 0);
-            const totalEnemyKills = enemies.reduce((s, p) => s + (p.kills || 0), 0);
 
             let html = `
                 <div class="summary-grid">
@@ -470,8 +611,7 @@
                         <div class="summary-card__label">Их урон</div>
                         <div class="summary-card__value summary-card__value--red">${fmt(totalEnemyDmg)}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
 
             // Союзники
             html += '<div class="team-label team-label--ally">🟢 СОЮЗНИКИ (' + allies.length + ')</div>';
@@ -479,8 +619,7 @@
                 const isSub = knownSubs[p.account_id] || knownSubs[p.nick];
                 const cls = isSub ? 'player-row--sub' : '';
                 const badge = isSub ? '<span class="player-row__badge player-row__badge--sub">ТГ</span>' : '';
-                html += `
-                    <div class="player-row ${cls}" style="animation-delay:${i * 0.03}s">
+                html += `<div class="player-row ${cls}">
                         <span class="player-row__rank">${i + 1}</span>
                         <span class="player-row__nick">${p.nick || '?'} ${badge}</span>
                         <span class="player-row__tank">${p.tank || ''}</span>
@@ -495,8 +634,7 @@
                 const isSub = knownSubs[p.account_id] || knownSubs[p.nick];
                 const cls = isSub ? 'player-row--sub' : '';
                 const badge = isSub ? '<span class="player-row__badge player-row__badge--sub">ТГ</span>' : '';
-                html += `
-                    <div class="player-row ${cls}" style="animation-delay:${i * 0.03}s">
+                html += `<div class="player-row ${cls}">
                         <span class="player-row__rank">${i + 1}</span>
                         <span class="player-row__nick">${p.nick || '?'} ${badge}</span>
                         <span class="player-row__tank">${p.tank || ''}</span>
@@ -505,7 +643,12 @@
                     </div>`;
             });
 
-            panel.innerHTML = html;
+            // Анти-мерцание: обновляем DOM ТОЛЬКО если HTML реально изменился
+            const newHash = html.length + '|' + html.slice(0, 100) + '|' + html.slice(-100);
+            if (newHash !== lastRenderHash) {
+                lastRenderHash = newHash;
+                panel.innerHTML = html;
+            }
         }
 
         // ===============================
@@ -542,14 +685,17 @@
         }
 
         // ===============================
-        // SUBSCRIBERS CHECK
+        // SUBSCRIBERS
         // ===============================
+        let lastNotifiedBattle = null;
+
         async function checkSubscribers(data) {
+            const allPlayers = [...(data.allies || []), ...(data.enemies || [])];
+            if (!allPlayers.length) return;
+
             try {
-                const allPlayers = [...(data.allies || []), ...(data.enemies || [])];
                 const accountIds = allPlayers.map(p => p.account_id).filter(Boolean);
                 const nicknames = allPlayers.map(p => p.nick).filter(Boolean);
-                
                 if (!accountIds.length && !nicknames.length) return;
 
                 const resp = await fetch(API_URL + '/api/users/check', {
@@ -564,8 +710,61 @@
                     }
                     renderBattle(data);
                     renderSubsList(data);
+                    showSubsNotification(data);
                 }
             } catch(e) {}
+        }
+
+        function showSubsNotification(data) {
+            const battleNum = data.battle_number;
+            if (lastNotifiedBattle === battleNum) return;
+            lastNotifiedBattle = battleNum;
+
+            const allPlayers = [...(data.allies || []), ...(data.enemies || [])];
+            const subs = allPlayers.filter(p => knownSubs[p.account_id] || knownSubs[p.nick]);
+            if (!subs.length) return;
+
+            const notify = document.getElementById('subNotify');
+            const cardsEl = document.getElementById('subNotifyCards');
+            const particlesEl = document.getElementById('subParticles');
+            const titleEl = document.getElementById('subNotifyTitle');
+
+            particlesEl.innerHTML = '';
+            for (let i = 0; i < 30; i++) {
+                const p = document.createElement('div');
+                p.className = 'sub-particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = (2 + Math.random() * 3) + 's';
+                p.style.animationDelay = Math.random() * 2 + 's';
+                const colors = ['#3b82f6', '#60a5fa', '#93c5fd', '#4ade80', '#fbbf24'];
+                p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                p.style.width = (2 + Math.random() * 4) + 'px';
+                p.style.height = p.style.width;
+                particlesEl.appendChild(p);
+            }
+
+            titleEl.textContent = subs.length === 1 ? '📢 ПОДПИСЧИК В БОЮ!' : `📢 ${subs.length} ПОДПИСЧИКОВ В БОЮ!`;
+
+            cardsEl.innerHTML = '';
+            subs.forEach((p, i) => {
+                const isAlly = (data.allies || []).some(a => a.nick === p.nick);
+                const card = document.createElement('div');
+                card.className = 'sub-card ' + (isAlly ? 'sub-card--ally' : 'sub-card--enemy');
+                card.style.animationDelay = (0.3 + i * 0.2) + 's';
+                card.innerHTML = `
+                    <div class="sub-card__side">${isAlly ? '🟢' : '🔴'}</div>
+                    <div class="sub-card__info">
+                        <div class="sub-card__nick">${p.nick}</div>
+                        <div class="sub-card__tank">${p.tank || 'Неизвестно'}</div>
+                    </div>
+                    <div class="sub-card__badge">ТГ</div>
+                `;
+                cardsEl.appendChild(card);
+            });
+
+            notify.classList.add('sub-notify--active');
+            setTimeout(() => notify.classList.remove('sub-notify--active'), 5000);
+            notify.onclick = () => notify.classList.remove('sub-notify--active');
         }
 
         function renderSubsList(data) {
@@ -580,7 +779,7 @@
 
             let html = '<div class="team-label" style="color:#3b82f6; background:rgba(59,130,246,0.06); border-left:3px solid #3b82f6;">👥 ПОДПИСЧИКИ В БОЮ (' + subs.length + ')</div>';
             subs.forEach((p, i) => {
-                const side = (data.allies || []).includes(p) ? '🟢' : '🔴';
+                const side = (data.allies || []).some(a => a.nick === p.nick) ? '🟢' : '🔴';
                 html += `
                     <div class="player-row player-row--sub">
                         <span class="player-row__rank">${side}</span>
@@ -601,3 +800,4 @@
     </script>
 </body>
 </html>
+

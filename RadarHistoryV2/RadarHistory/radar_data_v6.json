@@ -1,0 +1,335 @@
+{
+  "players": {
+    "TheOH": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Wilk",
+          "dmg": 3844,
+          "kills": 2
+        }
+      ]
+    },
+    "alashanmatros777": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "T57 Heavy",
+          "dmg": 3284,
+          "kills": 2
+        }
+      ]
+    },
+    "__Mk_Ultra__": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Prototipo 6",
+          "dmg": 2872,
+          "kills": 0
+        }
+      ]
+    },
+    "Geldraus": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "M-VI-Y",
+          "dmg": 2677,
+          "kills": 2
+        }
+      ]
+    },
+    "kruglov_1": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Молот",
+          "dmg": 2387,
+          "kills": 1
+        }
+      ]
+    },
+    "serega1990030": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Об. 780",
+          "dmg": 2110,
+          "kills": 0
+        }
+      ]
+    },
+    "aligator26": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Leopard PT A",
+          "dmg": 1707,
+          "kills": 0
+        }
+      ]
+    },
+    "PEHay": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Tortoise",
+          "dmg": 1257,
+          "kills": 1
+        }
+      ]
+    },
+    "bambozy": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "T49",
+          "dmg": 1035,
+          "kills": 1
+        }
+      ]
+    },
+    "MariLL_2014": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "212А",
+          "dmg": 1024,
+          "kills": 1
+        }
+      ]
+    },
+    "Pingtony": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Таран",
+          "dmg": 1017,
+          "kills": 1
+        }
+      ]
+    },
+    "fantom11391": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Conway",
+          "dmg": 885,
+          "kills": 2
+        }
+      ]
+    },
+    "aquamarinka_78": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Prototipo 6",
+          "dmg": 883,
+          "kills": 1
+        }
+      ]
+    },
+    "Fors777_2016": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Firebird",
+          "dmg": 728,
+          "kills": 1
+        }
+      ]
+    },
+    "CLITREGEZ": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "FV4005",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "TEHb700": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Ho-Ri 1",
+          "dmg": 1277,
+          "kills": 0
+        }
+      ]
+    },
+    "DRON_78rus": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Vz. 55",
+          "dmg": 1023,
+          "kills": 0
+        }
+      ]
+    },
+    " Aleks1999": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Серп",
+          "dmg": 867,
+          "kills": 0
+        }
+      ]
+    },
+    "Lady_Naya_05": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Grille 15",
+          "dmg": 770,
+          "kills": 0
+        }
+      ]
+    },
+    "bim761": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "212А",
+          "dmg": 766,
+          "kills": 0
+        }
+      ]
+    },
+    "usupov_metkij": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Niedźwiedź",
+          "dmg": 656,
+          "kills": 1
+        }
+      ]
+    },
+    "Sorayn": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Firebird",
+          "dmg": 577,
+          "kills": 0
+        }
+      ]
+    },
+    "Wermalei_2017": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "50TP",
+          "dmg": 437,
+          "kills": 0
+        }
+      ]
+    },
+    "CaHeK_qq": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "FV4005",
+          "dmg": 263,
+          "kills": 0
+        }
+      ]
+    },
+    "sv247": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Char Mle. 75",
+          "dmg": 200,
+          "kills": 0
+        }
+      ]
+    },
+    "cergei_Di": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Concept 5",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "Hirvi_88": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Cobra",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "drobos": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Char Futur 4",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "Vaarlam": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "H-3",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "_PKKA": {
+      "is_sub": false,
+      "matches": [
+        {
+          "date": "11.04.2026 01:50",
+          "tank": "Молот",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    }
+  },
+  "favorites": []
+}

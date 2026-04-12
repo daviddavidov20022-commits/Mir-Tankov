@@ -413,7 +413,7 @@
         <span class="titlebar__battle" id="battleNum">Бой #—</span>
         <button class="titlebar__btn" onclick="toggleOpacity()" title="Прозрачность">◐</button>
         <button class="titlebar__btn titlebar__btn--toggle" onclick="toggleCollapse()" id="collapseBtn" title="Свернуть/Развернуть">▼</button>
-        <button class="titlebar__btn titlebar__btn--close" onclick="if(window.pywebview) pywebview.api.close(); else window.close();" title="Закрыть">✕</button>
+        <button class="titlebar__btn titlebar__btn--close" onclick="window.close();" title="Закрыть">✕</button>
     </div>
 
     <!-- Вкладки -->
@@ -468,22 +468,20 @@
         // ===============================
         // CONFIG
         // ===============================
-        const RADAR_JSON = 'http://localhost:8090/obs/radar_results_overlay.json';
-        const RADAR_LOCAL = '../obs/radar_results_overlay.json';
-        const GAME_RADAR = 'file:///D:/Танки/World_of_Tanks_RU/radar_results.json';
         const API_URL = 'https://mir-tankov-production.up.railway.app';
         const MY_TG_ID = localStorage.getItem('my_telegram_id') || '6507474079';
         const ARENA_URL = API_URL + '/challenges.html?telegram_id=' + MY_TG_ID + '&mode=overlay';
-        const REFRESH_MS = 2000;
+        const REFRESH_MS = 3000; // 3 сек — оптимально (данные не меняются чаще)
         
         let currentBattle = null;
         let allBattles = [];
         let knownSubs = {};
         let opacityLevel = 1;
         let lastDataHash = '';
+        let lastRenderHash = '';
         let isCollapsed = false;
         let arenaLoaded = false;
-        let profileLoaded = false;
+        let isFetching = false; // защита от параллельных запросов
 
         // ===============================
         // TAB SWITCHING
@@ -494,7 +492,6 @@
             document.getElementById('panel-' + id).classList.add('tab-panel--active');
             btn.classList.add('tabs__item--active');
             
-            // Ленивая загрузка iframe
             if (id === 'arena' && !arenaLoaded) {
                 document.getElementById('arenaFrame').src = ARENA_URL;
                 arenaLoaded = true;
@@ -513,62 +510,46 @@
                 document.body.classList.add('mini-mode');
                 btn.textContent = '+';
                 btn.title = 'Развернуть';
-                // Resize pywebview window to tiny square
-                if (window.pywebview && window.pywebview.api) {
-                    pywebview.api.minimize_window();
-                }
             } else {
                 document.body.classList.remove('mini-mode');
                 btn.textContent = '▼';
                 btn.title = 'Свернуть';
-                if (window.pywebview && window.pywebview.api) {
-                    pywebview.api.restore_window();
-                }
             }
         }
 
         // ===============================
-        // DATA LOADING
+        // DATA LOADING (1 fetch, без мерцания)
         // ===============================
         async function loadRadarData() {
-            // Пробуем несколько источников
-            const sources = [
-                'radar_results_overlay.json',
-                '/obs/radar_results_overlay.json',
-                RADAR_JSON
-            ];
+            if (isFetching) return; // не делаем параллельные запросы
+            isFetching = true;
             
-            for (const src of sources) {
-                try {
-                    const resp = await fetch(src + '?t=' + Date.now());
-                    if (!resp.ok) continue;
-                    const data = await resp.json();
-                    if (data && (data.allies || data.enemies || data.players)) {
-                        processData(data);
-                        return;
-                    }
-                } catch(e) {}
-            }
+            try {
+                const ctrl = new AbortController();
+                const timeout = setTimeout(() => ctrl.abort(), 2000);
+                const resp = await fetch('/obs/radar_results_overlay.json?t=' + Date.now(), { signal: ctrl.signal });
+                clearTimeout(timeout);
+                
+                if (resp.ok) {
+                    const text = await resp.text();
+                    // Быстрая проверка: если текст не изменился — вообще не парсим
+                    if (text === lastDataHash) { isFetching = false; return; }
+                    lastDataHash = text;
+                    
+                    try {
+                        const data = JSON.parse(text);
+                        if (data && (data.allies || data.enemies || data.players)) {
+                            processData(data);
+                        }
+                    } catch(e) {} // невалидный JSON — пропускаем
+                }
+            } catch(e) {}
             
-            // Fallback: попробуем прочитать из файловой системы через pywebview
-            if (window.pywebview && window.pywebview.api) {
-                try {
-                    const raw = await pywebview.api.read_radar_json();
-                    if (raw) {
-                        const data = JSON.parse(raw);
-                        processData(data);
-                    }
-                } catch(e) {}
-            }
+            isFetching = false;
         }
 
         function processData(data) {
             if (!data) return;
-            
-            // Проверяем изменились ли данные (фикс мерцания)
-            const hash = JSON.stringify(data);
-            if (hash === lastDataHash) return; // Данные не изменились — не перерисовываем!
-            lastDataHash = hash;
 
             // Новый бой?
             if (!currentBattle || data.battle_number !== currentBattle.battle_number) {
@@ -582,14 +563,29 @@
                 renderHistory();
                 checkSubscribers(data);
             } else {
-                // Обновились результаты текущего боя
-                currentBattle = data;
-                renderBattle(data);
+                // Тот же бой — обновляем ТОЛЬКО если реально поменялись данные
+                const newHash = buildRenderHash(data);
+                if (newHash !== lastRenderHash) {
+                    currentBattle = data;
+                    renderBattle(data);
+                }
             }
+        }
+        
+        function buildRenderHash(data) {
+            // Быстрый хеш из ключевых числовых полей (без JSON.stringify)
+            const a = data.allies || [];
+            const e = data.enemies || [];
+            let h = (data.battle_number || 0) + '|' + a.length + '|' + e.length;
+            // Суммарный урон обеих команд — самый надёжный индикатор изменений
+            let ad = 0, ed = 0;
+            for (let i = 0; i < a.length; i++) ad += (a[i].damage || 0);
+            for (let i = 0; i < e.length; i++) ed += (e[i].damage || 0);
+            return h + '|' + ad + '|' + ed;
         }
 
         // ===============================
-        // RENDER BATTLE
+        // RENDER BATTLE (без мерцания!)
         // ===============================
         function fmt(n) { return typeof n === 'number' ? n.toLocaleString('ru') : (n || '—'); }
 
@@ -600,8 +596,6 @@
 
             const totalAllyDmg = allies.reduce((s, p) => s + (p.damage || 0), 0);
             const totalEnemyDmg = enemies.reduce((s, p) => s + (p.damage || 0), 0);
-            const totalAllyKills = allies.reduce((s, p) => s + (p.kills || 0), 0);
-            const totalEnemyKills = enemies.reduce((s, p) => s + (p.kills || 0), 0);
 
             let html = `
                 <div class="summary-grid">
@@ -617,8 +611,7 @@
                         <div class="summary-card__label">Их урон</div>
                         <div class="summary-card__value summary-card__value--red">${fmt(totalEnemyDmg)}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
 
             // Союзники
             html += '<div class="team-label team-label--ally">🟢 СОЮЗНИКИ (' + allies.length + ')</div>';
@@ -626,8 +619,7 @@
                 const isSub = knownSubs[p.account_id] || knownSubs[p.nick];
                 const cls = isSub ? 'player-row--sub' : '';
                 const badge = isSub ? '<span class="player-row__badge player-row__badge--sub">ТГ</span>' : '';
-                html += `
-                    <div class="player-row ${cls}" style="animation-delay:${i * 0.03}s">
+                html += `<div class="player-row ${cls}">
                         <span class="player-row__rank">${i + 1}</span>
                         <span class="player-row__nick">${p.nick || '?'} ${badge}</span>
                         <span class="player-row__tank">${p.tank || ''}</span>
@@ -642,8 +634,7 @@
                 const isSub = knownSubs[p.account_id] || knownSubs[p.nick];
                 const cls = isSub ? 'player-row--sub' : '';
                 const badge = isSub ? '<span class="player-row__badge player-row__badge--sub">ТГ</span>' : '';
-                html += `
-                    <div class="player-row ${cls}" style="animation-delay:${i * 0.03}s">
+                html += `<div class="player-row ${cls}">
                         <span class="player-row__rank">${i + 1}</span>
                         <span class="player-row__nick">${p.nick || '?'} ${badge}</span>
                         <span class="player-row__tank">${p.tank || ''}</span>
@@ -652,7 +643,12 @@
                     </div>`;
             });
 
-            panel.innerHTML = html;
+            // Анти-мерцание: обновляем DOM ТОЛЬКО если HTML реально изменился
+            const newHash = html.length + '|' + html.slice(0, 100) + '|' + html.slice(-100);
+            if (newHash !== lastRenderHash) {
+                lastRenderHash = newHash;
+                panel.innerHTML = html;
+            }
         }
 
         // ===============================
@@ -688,41 +684,15 @@
             switchTab('battle', document.querySelector('.tabs__item'));
         }
 
-        // DEMO MODE: рандомные подписчики для тестирования
-        const DEMO_MODE = true; // Поменять на false когда будут реальные подписчики
-        const DEMO_SUB_COUNT_ALLY = 2;  // Сколько фейковых подписчиков из союзников
-        const DEMO_SUB_COUNT_ENEMY = 1; // Сколько фейковых подписчиков из врагов
+        // ===============================
+        // SUBSCRIBERS
+        // ===============================
         let lastNotifiedBattle = null;
 
         async function checkSubscribers(data) {
             const allPlayers = [...(data.allies || []), ...(data.enemies || [])];
             if (!allPlayers.length) return;
 
-            if (DEMO_MODE) {
-                // === DEMO: рандомно помечаем игроков как подписчиков ===
-                const allies = data.allies || [];
-                const enemies = data.enemies || [];
-                const shuffledAllies = [...allies].sort(() => Math.random() - 0.5);
-                const shuffledEnemies = [...enemies].sort(() => Math.random() - 0.5);
-                
-                const fakeSubsAllies = shuffledAllies.slice(0, Math.min(DEMO_SUB_COUNT_ALLY, allies.length));
-                const fakeSubsEnemies = shuffledEnemies.slice(0, Math.min(DEMO_SUB_COUNT_ENEMY, enemies.length));
-                
-                // Очищаем старые подписчиков
-                for (const key in knownSubs) delete knownSubs[key];
-                
-                [...fakeSubsAllies, ...fakeSubsEnemies].forEach(p => {
-                    if (p.account_id) knownSubs[p.account_id] = true;
-                    if (p.nick) knownSubs[p.nick] = true;
-                });
-                
-                renderBattle(data);
-                renderSubsList(data);
-                showSubsNotification(data);
-                return;
-            }
-
-            // === REAL MODE: проверяем через API ===
             try {
                 const accountIds = allPlayers.map(p => p.account_id).filter(Boolean);
                 const nicknames = allPlayers.map(p => p.nick).filter(Boolean);
@@ -747,7 +717,7 @@
 
         function showSubsNotification(data) {
             const battleNum = data.battle_number;
-            if (lastNotifiedBattle === battleNum) return; // Уже показывали для этого боя
+            if (lastNotifiedBattle === battleNum) return;
             lastNotifiedBattle = battleNum;
 
             const allPlayers = [...(data.allies || []), ...(data.enemies || [])];
@@ -759,7 +729,6 @@
             const particlesEl = document.getElementById('subParticles');
             const titleEl = document.getElementById('subNotifyTitle');
 
-            // Частицы
             particlesEl.innerHTML = '';
             for (let i = 0; i < 30; i++) {
                 const p = document.createElement('div');
@@ -774,10 +743,8 @@
                 particlesEl.appendChild(p);
             }
 
-            // Заголовок
             titleEl.textContent = subs.length === 1 ? '📢 ПОДПИСЧИК В БОЮ!' : `📢 ${subs.length} ПОДПИСЧИКОВ В БОЮ!`;
 
-            // Карточки
             cardsEl.innerHTML = '';
             subs.forEach((p, i) => {
                 const isAlly = (data.allies || []).some(a => a.nick === p.nick);
@@ -795,15 +762,8 @@
                 cardsEl.appendChild(card);
             });
 
-            // Показать
             notify.classList.add('sub-notify--active');
-
-            // Авто-скрытие через 5 секунд
-            setTimeout(() => {
-                notify.classList.remove('sub-notify--active');
-            }, 5000);
-
-            // Клик для закрытия
+            setTimeout(() => notify.classList.remove('sub-notify--active'), 5000);
             notify.onclick = () => notify.classList.remove('sub-notify--active');
         }
 
@@ -840,3 +800,4 @@
     </script>
 </body>
 </html>
+

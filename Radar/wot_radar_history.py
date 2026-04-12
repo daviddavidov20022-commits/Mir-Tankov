@@ -274,7 +274,9 @@ class RadarApp(ctk.CTk):
         self.sub_nicks = set()
         self.wr_cache = {}
         self.is_monitoring = True
-        self._bounty_live = False   # флаг живого обновления bounty вкладки
+        self._bounty_live = False
+        self._last_refresh_hash = ''
+        self._last_bounty_mtime = 0
         self._build_ui()
         self._start_monitor()
 
@@ -322,15 +324,21 @@ class RadarApp(ctk.CTk):
 
     def _tab(self, t):
         self.tab_var.set(t)
-        self._bounty_live = (t == 'bounty')  # включаем живой опрос только для bounty вкладки
+        self._bounty_live = (t == 'bounty')
         for v in ("battle","history","encounters","subs","favs","all","bounty"):
             b = getattr(self, f"tb_{v}", None)
             if b: b.configure(fg_color=GOLD if v==t else CARD, text_color=BG if v==t else WHITE)
-        self._refresh()
+        self._refresh(force=True)
 
-    def _refresh(self):
-        for w in self.scroll.winfo_children(): w.destroy()
+    def _refresh(self, force=False):
         tab = self.tab_var.get()
+        # Быстрый хеш: если данные не изменились — не перерисовываем (анти-мерцание)
+        cv = self.current_view
+        h = f"{tab}|{len(self.battle_list)}|{cv.get('battle_number','') if cv else ''}|{len(self.db.get('players',{}))}|{len(self.wr_cache)}"
+        if not force and h == self._last_refresh_hash:
+            return
+        self._last_refresh_hash = h
+        for w in self.scroll.winfo_children(): w.destroy()
         self.stat_lbl.configure(text=f"🎮 Боёв: {len(self.battle_list)}\n👤 Игроков: {len(self.db.get('players',{}))}\n⭐ Избранных: {len(self.db.get('favorites',[]))}")
         self._update_battle_selector()
         if tab == "battle": self._render_battle()
@@ -628,9 +636,15 @@ class RadarApp(ctk.CTk):
         self._tab('bounty')
 
     def _bounty_live_tick(self):
-        """Авто-обновление вкладки Охоты каждые 3 сек (live данные из боя)"""
+        """Авто-обновление Охоты — только если файл данных РЕАЛЬНО изменился"""
         if self._bounty_live and self.tab_var.get() == 'bounty':
-            self._refresh()
+            try:
+                if os.path.exists(BOUNTY_JSON):
+                    mt = os.path.getmtime(BOUNTY_JSON)
+                    if mt != self._last_bounty_mtime:
+                        self._last_bounty_mtime = mt
+                        self._refresh(force=True)
+            except: pass
         self.after(3000, self._bounty_live_tick)
 
 
