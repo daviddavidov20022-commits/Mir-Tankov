@@ -5614,7 +5614,15 @@ async def api_global_challenge_create(request):
             initial_status = 'enrollment'
         else:
             enrollment_ends_at = None
-            ends_at = datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)
+            if max_battles > 0 and duration_minutes <= 0:
+                # Режим "по боям": время не ограничено, ждём пока все сыграют
+                ends_at = datetime.now(timezone.utc) + timedelta(days=365)
+            elif max_battles > 0 and duration_minutes > 0:
+                # Гибридный: и бои, и время (кто первый)
+                ends_at = datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)
+            else:
+                # Режим "по времени"
+                ends_at = datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)
             initial_status = 'active'
 
         with get_db() as conn:
@@ -5795,12 +5803,17 @@ async def api_global_challenge_active(request):
         # Если активного нет — возможно нужно закрыть те, что закончились по времени или боям
         if not ch:
             with get_db() as conn:
-                # 1. Закрываем по ВРЕМЕНИ
+                # 1. Закрываем по ВРЕМЕНИ (только если это НЕ челлендж по боям)
+                # Челлендж "по боям" имеет max_battles > 0 и ends_at далеко в будущем
                 expired = conn.execute(
-                    "SELECT id FROM global_challenges WHERE status = 'active' AND ends_at <= ?",
+                    "SELECT id, max_battles FROM global_challenges WHERE status = 'active' AND ends_at <= ?",
                     (now_utc,)
                 ).fetchall()
                 for ex in expired:
+                    # Если у челленджа лимит боёв — НЕ закрываем по времени,
+                    # только по завершению всех боёв (см. блок 2 ниже)
+                    if ex["max_battles"] and ex["max_battles"] > 0:
+                        continue
                     _internal_finish_challenge(conn, ex["id"])
                 
                 # 2. Закрываем по БОЯМ (если все участники сыграли лимит)

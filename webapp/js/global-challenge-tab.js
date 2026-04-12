@@ -540,7 +540,7 @@ function gcShowActive(ch) {
 
     const timerContainer = document.getElementById('gcTimerContainer');
 
-    const isBattleChallenge = !ch.challenge_duration_minutes || ch.challenge_duration_minutes <= 0;
+    const isBattleChallenge = ch.max_battles > 0 && (!ch.duration_minutes || ch.duration_minutes <= 0);
 
     if (timerContainer) {
 
@@ -3272,6 +3272,54 @@ function gcSetDuration(min) {
 
 
 
+function gcToggleMode() {
+
+    const maxBattles = parseInt(document.getElementById('adminGcMaxBattles')?.value) || 0;
+
+    const durationWrap = document.getElementById('durationFieldWrap');
+
+    const presetsWrap = document.getElementById('durationPresetsWrap');
+
+    const hint = document.getElementById('gcModeHint');
+
+    
+
+    if (maxBattles > 0) {
+
+        // Режим "по боям" — прячем таймер
+
+        if (durationWrap) durationWrap.style.display = 'none';
+
+        if (presetsWrap) presetsWrap.style.display = 'none';
+
+        if (hint) {
+
+            hint.style.display = '';
+
+            hint.innerHTML = `⚔️ <strong>Режим: По боям (${maxBattles})</strong> — таймера нет, челлендж закончится когда все участники сыграют ${maxBattles} боёв`;
+
+        }
+
+    } else {
+
+        // Режим "по времени" — показываем таймер
+
+        if (durationWrap) durationWrap.style.display = '';
+
+        if (presetsWrap) presetsWrap.style.display = '';
+
+        if (hint) {
+
+            hint.style.display = 'none';
+
+        }
+
+    }
+
+}
+
+
+
 function gcTogglePrizeMode() {
 
     gcPrizeModeEnabled = !gcPrizeModeEnabled;
@@ -3508,11 +3556,21 @@ async function gcLaunchChallenge() {
 
     // В призовом режиме читаем время набора из отдельного поля, в обычном — длительность челленджа
 
-    const duration = gcPrizeModeEnabled
+    let duration = gcPrizeModeEnabled
 
         ? (parseInt(document.getElementById('adminGcEnrollDuration')?.value) || 60)
 
         : (parseInt(document.getElementById('adminGcDuration')?.value) || 60);
+
+
+
+    // Если задан лимит боёв — время не отправляем (бесконечное)
+
+    if (maxBattles > 0 && !gcPrizeModeEnabled) {
+
+        duration = 0;
+
+    }
 
 
 

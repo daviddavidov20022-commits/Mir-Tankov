@@ -618,7 +618,7 @@
                     <!-- Без призового режима: таймер = продолжительность, приз = монеты -->
                     <div id="normalModeFields">
                         <div class="gc-admin__row">
-                            <div>
+                            <div id="durationFieldWrap">
                                 <label class="gc-admin__label">⏱ Длительность (мин)</label>
                                 <input type="number" class="gc-admin__input" id="adminGcDuration" value="60" min="5" max="1440">
                             </div>
@@ -627,7 +627,7 @@
                                 <input type="number" class="gc-admin__input" id="adminGcReward" value="500" min="0">
                             </div>
                         </div>
-                        <div class="gc-admin__presets">
+                        <div id="durationPresetsWrap" class="gc-admin__presets">
                             <button class="gc-preset-btn" onclick="gcSetDuration(15)">15 мин</button>
                             <button class="gc-preset-btn" onclick="gcSetDuration(30)">30 мин</button>
                             <button class="gc-preset-btn gc-preset-btn--active" onclick="gcSetDuration(60)">1 час</button>
@@ -637,10 +637,11 @@
 
                     <div class="gc-admin__row" style="margin-top:12px">
                         <div>
-                            <label class="gc-admin__label">🎯 Кол-во боёв <span style="font-size:0.5rem;color:#5A6577">(0 = без лимита)</span></label>
-                            <input type="number" class="gc-admin__input" id="adminGcMaxBattles" value="0" min="0" max="100" placeholder="0 = без лимита">
+                            <label class="gc-admin__label">🎯 Кол-во боёв <span style="font-size:0.5rem;color:#5A6577">(0 = по времени)</span></label>
+                            <input type="number" class="gc-admin__input" id="adminGcMaxBattles" value="0" min="0" max="100" placeholder="0 = по времени" oninput="gcToggleMode()">
                         </div>
                     </div>
+                    <div id="gcModeHint" style="display:none;margin-top:6px;padding:8px 12px;border-radius:10px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);font-size:0.55rem;color:#4ade80;line-height:1.5"></div>
 
                     <!-- ====== PRIZE MODE ====== -->
                     <div id="prizeModeSection" style="margin-top:16px;padding:14px;background:linear-gradient(145deg,rgba(245,190,11,0.06),rgba(200,170,110,0.02));

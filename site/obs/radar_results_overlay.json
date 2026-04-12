@@ -1,86 +1,107 @@
 {
   "status": "active", 
-  "date": "12.04.2026 19:16", 
+  "date": "12.04.2026 20:48", 
   "enemies": [
     {
-      "nick": ":Умар Дегтярёв:", 
+      "nick": "Qu1nSi", 
+      "tank": "", 
+      "account_id": "47654134", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Krk0406", 
+      "tank": "", 
+      "account_id": "1955396", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "kill_86rus", 
+      "tank": "", 
+      "account_id": "8680182", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "djgtp", 
+      "tank": "", 
+      "account_id": "11030542", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "vano70_2016", 
+      "tank": "", 
+      "account_id": "68326930", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "tark88", 
+      "tank": "", 
+      "account_id": "532501", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Kristine", 
       "tank": "", 
       "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": ":Johan Wegner:", 
+      "nick": "PaRLa_HE_MenteR", 
+      "tank": "", 
+      "account_id": "272637942", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "_ALEXEY2008_", 
+      "tank": "", 
+      "account_id": "22595030", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Shmit92", 
+      "tank": "", 
+      "account_id": "5129575", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "13serge13", 
+      "tank": "", 
+      "account_id": "1012970", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "stash_11", 
       "tank": "", 
       "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": ":Jean Durand:", 
+      "nick": "_Clavas1987", 
       "tank": "", 
       "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": ":Goffredo Manfre:", 
+      "nick": "IzmailXXX", 
       "tank": "", 
-      "account_id": "0", 
+      "account_id": "27604340", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": ":Luitpold Drossel:", 
-      "tank": "", 
-      "account_id": "0", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": ":Константин Невельской:", 
-      "tank": "", 
-      "account_id": "0", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": ":Theobald Hesse:", 
-      "tank": "", 
-      "account_id": "0", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": ":Kazutoshi Yano:", 
-      "tank": "", 
-      "account_id": "0", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": ":Данила Паляница:", 
-      "tank": "", 
-      "account_id": "0", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": ":Антон Лосев:", 
-      "tank": "", 
-      "account_id": "0", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": ":Виссарион Булатчиков:", 
-      "tank": "", 
-      "account_id": "0", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": ":Гаврила Касимов:", 
+      "nick": "axn555_2015", 
       "tank": "", 
       "account_id": "0", 
       "kills": 0, 
@@ -89,65 +110,37 @@
   ], 
   "allies": [
     {
-      "nick": "Edi14", 
+      "nick": "OTBE4AU_3A_CJlOBA_____", 
       "tank": "", 
-      "account_id": "16556384", 
+      "account_id": "8544448", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "PLAGTANK", 
+      "nick": "jonny_matt", 
       "tank": "", 
-      "account_id": "27661735", 
+      "account_id": "655619", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "RAK__groznyj", 
+      "nick": "h0oLi", 
       "tank": "", 
-      "account_id": "37146985", 
+      "account_id": "16453702", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "mvl73", 
+      "nick": "MiD9R4iK", 
       "tank": "", 
-      "account_id": "66494643", 
+      "account_id": "71233607", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "Jeka_kHz", 
+      "nick": "MrPohuj", 
       "tank": "", 
-      "account_id": "22119413", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": "dzhonemo", 
-      "tank": "", 
-      "account_id": "23163000", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": "ARKANSAS1989", 
-      "tank": "", 
-      "account_id": "15676924", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": "asd866", 
-      "tank": "", 
-      "account_id": "4603965", 
-      "kills": 0, 
-      "damage": 0
-    }, 
-    {
-      "nick": " BARS_007___2_0_1", 
-      "tank": "", 
-      "account_id": "0", 
+      "account_id": "7016072", 
       "kills": 0, 
       "damage": 0
     }, 
@@ -159,19 +152,68 @@
       "damage": 0
     }, 
     {
-      "nick": "Jihong_Tae", 
+      "nick": "dsa24", 
+      "tank": "", 
+      "account_id": "11155600", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": " artemtop05", 
       "tank": "", 
       "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "vitaha199", 
+      "nick": "beisel132", 
       "tank": "", 
-      "account_id": "3580510", 
+      "account_id": "26827720", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "POTOP12", 
+      "tank": "", 
+      "account_id": "4974946", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "voitel_82", 
+      "tank": "", 
+      "account_id": "20285420", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "_KOT_B_TPUCAX_", 
+      "tank": "", 
+      "account_id": "30438897", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Brownie_23", 
+      "tank": "", 
+      "account_id": "13960952", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "urkaberkut", 
+      "tank": "", 
+      "account_id": "6851129", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "38lom", 
+      "tank": "", 
+      "account_id": "5211260", 
       "kills": 0, 
       "damage": 0
     }
   ], 
-  "battle_number": 1
+  "battle_number": 4
 }
