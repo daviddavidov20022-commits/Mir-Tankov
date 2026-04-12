@@ -6089,8 +6089,11 @@ async def api_global_challenge_join(request):
         if (wot_nick or account_id) and (wot_nick != user.get("wot_nickname") or account_id != user.get("wot_account_id")):
             from database import update_user_wot
             if wot_nick and account_id:
-                update_user_wot(tg_id, wot_nick, account_id)
-                logger.info(f"Restored WoT data from client: {wot_nick} (ID: {account_id}) for tg={tg_id}")
+                try:
+                    update_user_wot(tg_id, wot_nick, account_id)
+                    logger.info(f"Restored WoT data from client: {wot_nick} (ID: {account_id}) for tg={tg_id}")
+                except Exception as e:
+                    logger.warning(f"Could not restore WoT data for tg={tg_id}: {e}")
 
         nickname = wot_nick or user.get("first_name") or user.get("username") or "Танкист"
 

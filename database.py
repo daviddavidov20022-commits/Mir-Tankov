@@ -591,8 +591,23 @@ def get_user_by_wot_account_id(account_id: int) -> dict | None:
         return dict(user) if user else None
 
 def update_user_wot(telegram_id: int, nickname: str, account_id: int):
-    """Привязать ник WoT к пользователю"""
+    """Привязать ник WoT к пользователю (безопасно — проверяем дупликат ника)"""
     with get_db() as conn:
+        # Проверяем: не занят ли ник другим пользователем
+        if nickname:
+            existing = conn.execute(
+                "SELECT telegram_id FROM users WHERE wot_nickname = ? AND telegram_id != ?",
+                (nickname, telegram_id)
+            ).fetchone()
+            if existing:
+                logger.warning(f"update_user_wot: nickname '{nickname}' already taken by tg={existing['telegram_id']}, skipping for tg={telegram_id}")
+                # Обновляем только account_id если он есть
+                if account_id:
+                    conn.execute(
+                        "UPDATE users SET wot_account_id = ? WHERE telegram_id = ?",
+                        (account_id, telegram_id)
+                    )
+                return
         conn.execute(
             "UPDATE users SET wot_nickname = ?, wot_account_id = ? WHERE telegram_id = ?",
             (nickname, account_id, telegram_id)
