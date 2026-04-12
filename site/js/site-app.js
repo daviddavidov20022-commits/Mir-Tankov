@@ -149,8 +149,13 @@ const userData = new UserData();
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Проверяем авторизацию
-    if (!siteAuth.isLoggedIn && !window.location.pathname.includes('index.html') && !window.location.pathname.endsWith('/')) {
-        // Не на главной и не залогинен — перенаправляем
+    const hasTelegramWebApp = !!window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const hasUrlTelegramId = new URLSearchParams(window.location.search).has('telegram_id');
+    const hasLocalTelegramId = !!localStorage.getItem('my_telegram_id');
+    const isOnMainPage = window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/');
+    
+    if (!siteAuth.isLoggedIn && !hasTelegramWebApp && !hasUrlTelegramId && !hasLocalTelegramId && !isOnMainPage) {
+        // Не на главной и не залогинен никаким способом — перенаправляем
         window.location.href = 'index.html';
         return;
     }
@@ -174,10 +179,13 @@ function initUser() {
     }
 }
 
-// Загрузить баланс из БД
+// Загрузить баланс и подписку из API
 async function loadBalanceFromAPI() {
     const tgId = siteAuth.getTelegramId();
     if (!tgId) return;
+
+    // Сбрасываем кеш подписки — всегда берём свежее с сервера
+    localStorage.removeItem('is_subscribed');
 
     try {
         const resp = await fetch(`${API_BASE}/api/me?telegram_id=${tgId}`);
@@ -193,6 +201,39 @@ async function loadBalanceFromAPI() {
             localStorage.setItem('site_username', name);
             const nameEl = document.getElementById('userName');
             if (nameEl) nameEl.textContent = name;
+        }
+
+        // === ПОДПИСКА ===
+        const isActive = !!(data.subscription && data.subscription.active);
+        localStorage.setItem('is_subscribed', isActive ? '1' : '0');
+
+        // Обновляем замки на карточках
+        document.querySelectorAll('.feature-card[data-premium="1"]').forEach(card => {
+            if (isActive) {
+                card.classList.remove('feature-card--locked');
+                const lock = card.querySelector('.lock-overlay');
+                if (lock) lock.remove();
+            } else {
+                if (!card.classList.contains('feature-card--locked')) {
+                    card.classList.add('feature-card--locked');
+                    if (!card.querySelector('.lock-overlay')) {
+                        const lockEl = document.createElement('div');
+                        lockEl.className = 'lock-overlay';
+                        lockEl.innerHTML = '🔒';
+                        card.appendChild(lockEl);
+                    }
+                }
+            }
+        });
+
+        // Если мы на премиум-странице и подписки нет — выгоняем
+        if (!isActive) {
+            const currentPage = window.location.pathname.split('/').pop();
+            const premiumPages = ['player.html', 'top.html', 'challenges.html', 'quiz.html', 'wheel.html', 'contest.html'];
+            if (premiumPages.some(p => currentPage === p)) {
+                window.location.href = tgId ? `index.html?telegram_id=${tgId}` : 'index.html';
+                return;
+            }
         }
     } catch (e) {
         console.log('API недоступно, используем localStorage');
@@ -346,10 +387,49 @@ function claimDailyBonus() {
     checkDailyBonus();
 }
 
-// ==========================================
-// НАВИГАЦИЯ
-// ==========================================
+// Список страниц, требующих подписки
+const PREMIUM_PAGES = [
+    'player.html', 'top.html', 'challenges.html',
+    'quiz.html', 'wheel.html', 'contest.html'
+];
+
+function isPremium() {
+    return localStorage.getItem('is_subscribed') === '1';
+}
+
+function showPaywall() {
+    const existing = document.getElementById('paywallOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'paywallOverlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `
+        <div style="background:linear-gradient(145deg,#1a2332,#161d28);border:2px solid rgba(255,193,7,0.3);border-radius:24px;padding:36px 28px;text-align:center;max-width:360px;width:100%;">
+            <div style="font-size:4rem;margin-bottom:12px;">🔒</div>
+            <div style="font-family:'Russo One',sans-serif;font-size:1.4rem;color:#FFC107;margin-bottom:12px;">ПРЕМИУМ ФУНКЦИЯ</div>
+            <div style="font-size:0.9rem;color:#aaa;margin-bottom:24px;line-height:1.5;">
+                Эта функция доступна только подписчикам закрытого клуба.<br>
+                Оформите подписку через бота <b>@Mir_tankov_privat_bot</b>
+            </div>
+            <button onclick="openGame('subscribe.html')" style="width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#FFC107,#FF9800);color:#1a1a1a;font-family:'Russo One',sans-serif;font-size:0.95rem;cursor:pointer;margin-bottom:10px;">👑 Оформить подписку</button>
+            <button onclick="document.getElementById('paywallOverlay').remove()" style="width:100%;padding:12px;border:1px solid rgba(255,255,255,0.1);border-radius:14px;background:transparent;color:#888;font-size:0.85rem;cursor:pointer;">Назад</button>
+        </div>
+    `;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+}
+
 function openGame(url) {
+    // Проверяем, требует ли страница подписки
+    const pageName = url.split('?')[0].split('/').pop();
+    const needsPremium = PREMIUM_PAGES.some(p => pageName === p);
+
+    if (needsPremium && !isPremium()) {
+        showPaywall();
+        return;
+    }
+
     // Add timestamp to bypass Telegram WebView cache
     const sep = url.includes('?') ? '&' : '?';
     url += `${sep}_t=${Date.now()}`;
