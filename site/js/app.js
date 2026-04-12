@@ -308,7 +308,7 @@ const PREMIUM_PAGES = [
     'challenges.html', // Арена
     'quiz.html',       // Танковая Викторина
     'wheel.html',      // Колесо Фортуны
-    'cheese.html',     // Сыр (дополнительные функции)
+    // cheese.html НЕ блокируем — это страница покупки, всем доступна
     'contest.html',    // Голосование
 ];
 // Бесплатные страницы: stats.html, donate.html (Спасибо), subscribe.html, profile.html...
