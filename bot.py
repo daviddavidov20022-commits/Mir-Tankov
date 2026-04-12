@@ -4782,6 +4782,28 @@ async def api_check_challenge_results(request):
             except Exception as e:
                 logger.warning(f"Notify challenge result failed: {e}")
 
+            # Push event to stream result widget
+            try:
+                import time as _time
+                challenge_result_events.append({
+                    "type": "pvp",
+                    "condition": condition,
+                    "from_name": from_start.get("nickname", "Игрок 1"),
+                    "to_name": to_start.get("nickname", "Игрок 2"),
+                    "from_score": from_delta.get(dk, 0),
+                    "to_score": to_delta.get(dk, 0),
+                    "winner_name": winner_name,
+                    "tank_name": ch.get("tank_name", ""),
+                    "battles": required_battles,
+                    "prize": prize,
+                    "challenge_id": challenge_id,
+                    "shown": False,
+                    "timestamp": _time.time(),
+                })
+                logger.info(f"Challenge result event pushed to stream widget: {winner_name} won #{challenge_id}")
+            except Exception as e:
+                logger.warning(f"Push challenge result event failed: {e}")
+
         return cors_response(result)
     except Exception as e:
         logger.error(f"API check_challenge error: {e}")
@@ -8361,6 +8383,7 @@ async def api_stream_channels_save(request):
 # ДОНАТЫ И ЗАКАЗ МУЗЫКИ
 # ==========================================
 donate_events = collections.deque(maxlen=50)
+challenge_result_events = collections.deque(maxlen=30)  # OBS виджет результатов челленджей
 music_queue = []
 music_control = {"action": "none"}  # "none", "skip", "stop"
 DONATE_MIN = 10  # минимальный донат
@@ -8809,6 +8832,18 @@ async def api_stream_donate_latest(request):
     try:
         # Найти первый непоказанный донат
         for event in donate_events:
+            if not event.get("shown"):
+                event["shown"] = True
+                return cors_response({"event": event})
+        return cors_response({"event": None})
+    except Exception as e:
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_stream_challenge_results_latest(request):
+    """GET /api/stream/challenge-results/latest — OBS виджет забирает последние результаты челленджей"""
+    try:
+        for event in challenge_result_events:
             if not event.get("shown"):
                 event["shown"] = True
                 return cors_response({"event": event})
@@ -11220,6 +11255,7 @@ def create_api_app():
     app.router.add_post("/api/stream/donate/ai", api_stream_donate_ai)
     app.router.add_get("/api/stream/donate/latest", api_stream_donate_latest)
     app.router.add_get("/api/stream/donate/history", api_stream_donate_history)
+    app.router.add_get("/api/stream/challenge-results/latest", api_stream_challenge_results_latest)
     app.router.add_post("/api/stream/music/request", api_stream_music_request)
     app.router.add_get("/api/stream/music/queue", api_stream_music_queue)
     app.router.add_get("/api/stream/music/next", api_stream_music_next)
