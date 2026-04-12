@@ -372,10 +372,8 @@
     <script src="js/app.js"></script>
     <script>
         function goBack() {
-            if (window.Telegram && Telegram.WebApp) {
-                try { Telegram.WebApp.close(); } catch(e) {}
-            }
-            window.history.back();
+            const myId = localStorage.getItem('my_telegram_id') || new URLSearchParams(window.location.search).get('telegram_id') || '';
+            window.location.href = myId ? `index.html?telegram_id=${myId}` : 'index.html';
         }
         function openGame(page) {
             const tgId = new URLSearchParams(window.location.search).get('telegram_id') || '';
