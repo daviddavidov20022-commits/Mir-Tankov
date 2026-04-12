@@ -301,6 +301,32 @@ async def on_chat_member_updated(event: ChatMemberUpdated):
 
 
 # ==========================================
+# КОМАНДА /groupid — узнать ID группы/канала
+# ==========================================
+@dp.message(Command("groupid"))
+async def cmd_groupid(message: types.Message):
+    """Напиши /groupid в своей группе — бот ответит ID этой группы."""
+    chat = message.chat
+    if chat.type in ("group", "supergroup", "channel"):
+        await message.answer(
+            f"✅ <b>ID этого чата:</b>\n"
+            f"<code>{chat.id}</code>\n\n"
+            f"📋 Название: {chat.title}\n"
+            f"📌 Тип: {chat.type}\n\n"
+            f"Скопируй этот ID и добавь в .env и Railway:\n"
+            f"<code>CHANNEL_ID={chat.id}</code>",
+            parse_mode="HTML"
+        )
+    else:
+        await message.answer(
+            "⚠️ Эту команду нужно отправить <b>внутри группы</b>, а не в личке боту!\n\n"
+            "1. Добавь бота в свою платную группу\n"
+            "2. Напиши там <code>/groupid</code>",
+            parse_mode="HTML"
+        )
+
+
+# ==========================================
 # КОМАНДА /start
 # ==========================================
 @dp.message(CommandStart())
@@ -3312,30 +3338,39 @@ async def api_me(request):
                 pass
 
         # === ПРОВЕРКА ПОДПИСКИ ===
-        # 1. Читаем из БД
-        from database import check_subscription as _check_sub
-        sub_info = _check_sub(user_tg_id)
-        sub_active = sub_info and sub_info.get("active", False)
+        # Если задан ID группы — членство в группе = подписка (источник правды)
+        # Если группы нет — проверяем БД (старая схема с промокодами/оплатой через бота)
 
-        # 2. Если есть канал — дополнительно проверяем РЕАЛЬНОЕ членство
-        if PRIVATE_CHANNEL_ID and sub_active:
+        sub_info = {"active": False}
+
+        if PRIVATE_CHANNEL_ID:
+            # ГЛАВНЫЙ СПОСОБ: проверяем членство в платной группе
             try:
                 member = await bot.get_chat_member(PRIVATE_CHANNEL_ID, user_tg_id)
-                # Статусы «в канале»: member, administrator, creator
-                in_channel = member.status in ("member", "administrator", "creator")
-                if not in_channel:
-                    # Пользователь кикнут — деактивируем подписку в БД
+                in_group = member.status in ("member", "administrator", "creator")
+                sub_info = {"active": in_group, "source": "group"}
+                if not in_group:
+                    # Не в группе — деактивируем в БД на всякий случай
                     from database import get_db
                     with get_db() as conn:
                         u_row = conn.execute("SELECT id FROM users WHERE telegram_id = ?", (user_tg_id,)).fetchone()
                         if u_row:
                             conn.execute("UPDATE subscriptions SET is_active = 0 WHERE user_id = ?", (u_row["id"],))
-                    sub_active = False
-                    sub_info = {"active": False}
-                    logger.info(f"User {user_tg_id} kicked from channel — subscription deactivated")
             except Exception as ch_err:
-                # Если бот не может проверить канал (нет прав) — доверяем БД
-                logger.warning(f"Cannot check channel membership for {user_tg_id}: {ch_err}")
+                # Бот не может проверить группу (не добавлен) — fallback на БД
+                logger.warning(f"Cannot check group membership for {user_tg_id}: {ch_err}")
+                from database import check_subscription as _check_sub
+                db_sub = _check_sub(user_tg_id)
+                sub_info = db_sub if db_sub else {"active": False}
+        else:
+            # Нет группы — используем БД (промокоды / платежи через бота)
+            from database import check_subscription as _check_sub
+            db_sub = _check_sub(user_tg_id)
+            sub_info = db_sub if db_sub else {"active": False}
+
+        # Админ всегда имеет полный доступ
+        if is_admin:
+            sub_info = {"active": True, "source": "admin"}
 
         return cors_response({
             "telegram_id": user_tg_id,
@@ -3346,7 +3381,7 @@ async def api_me(request):
             "avatar": user.get("avatar"),
             "cheese": cheese,
             "is_admin": is_admin,
-            "subscription": sub_info if sub_info else {"active": False},
+            "subscription": sub_info,
         })
     except Exception as e:
         logger.error(f"API me error: {e}")
