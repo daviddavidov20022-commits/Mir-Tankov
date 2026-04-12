@@ -51,17 +51,27 @@
            LAYOUT 1: CLASSIC (Вертикальный)
            ═══════════════════════════════════ */
         .L1 {
-            width: 380px;
-            border-radius: 14px;
+            width: 420px;
+            border-radius: 18px;
             position: relative;
             overflow: hidden;
-            padding: 2px
+            padding: 1px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03)
         }
 
         .L1 .wi {
-            padding: 20px;
+            padding: 20px 24px;
             position: relative;
-            border-radius: 12px
+            border-radius: 16px
+        }
+
+        .L1 .wi::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--ac, #C8AA6E), transparent);
+            opacity: 0.6
         }
 
         .L1 .w-badge {
@@ -93,16 +103,18 @@
         }
 
         .L1 .w-icon {
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             display: inline-block;
-            filter: drop-shadow(0 0 8px rgba(245, 190, 11, .5));
+            filter: drop-shadow(0 0 8px rgba(200,170,110,.3));
             margin-bottom: 2px
         }
 
         .L1 .w-ttl {
             font-family: 'Russo One', sans-serif;
-            font-size: 1.3rem;
-            line-height: 1.2
+            font-size: 0.95rem;
+            line-height: 1.2;
+            letter-spacing: 2px;
+            text-transform: uppercase
         }
 
         .L1 .w-desc {
@@ -118,8 +130,8 @@
 
         .L1 .w-tv {
             font-family: 'Russo One', sans-serif;
-            font-size: 4rem;
-            letter-spacing: 4px;
+            font-size: 2.2rem;
+            letter-spacing: 3px;
             line-height: 1
         }
 
@@ -141,9 +153,12 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 14px;
+            padding: 14px 16px;
             margin-bottom: 12px;
-            border-radius: 8px
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(0,0,0,0.35);
+            transition: all 0.3s ease
         }
 
         .L1 .w-av {
@@ -198,9 +213,11 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 7px 12px;
-            margin-bottom: 3px;
-            border-radius: 5px
+            padding: 8px 14px;
+            margin-bottom: 4px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.3s ease
         }
 
         .L1 .w-lr {
@@ -900,11 +917,11 @@
             combined:        { icon: '<img src="img/military/cond_combined.png" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:2px">', unit: 'суммарки', short: 'СУМ',  color: '#ff9800' },
         };
         const THEMES = {
-            gold: { bg: 'rgba(26,21,8,{o})', ac: '#f5d36e', acD: '#8B6914', tc: '#ffeeb0', ts: '0 0 15px rgba(245,211,110,.4),0 2px 0 #a07c2a,0 4px 8px rgba(0,0,0,.7)' },
-            neon: { bg: 'rgba(15,5,32,{o})', ac: '#a855f7', acD: '#6d28d9', tc: '#d8b4fe', ts: '0 0 15px rgba(168,85,247,.5),0 2px 0 #6d28d9' },
-            military: { bg: 'rgba(15,26,10,{o})', ac: '#22c55e', acD: '#14532d', tc: '#bbf7d0', ts: '0 0 15px rgba(34,197,94,.4),0 2px 0 #14532d' },
-            fire: { bg: 'rgba(26,8,0,{o})', ac: '#ff6b35', acD: '#b33d00', tc: '#ffd4b0', ts: '0 0 15px rgba(255,107,53,.5),0 2px 0 #b33d00' },
-            ice: { bg: 'rgba(4,10,20,{o})', ac: '#38bdf8', acD: '#0369a1', tc: '#bae6fd', ts: '0 0 15px rgba(56,189,248,.5),0 2px 0 #0369a1' },
+            gold: { bg: 'rgba(10,14,20,{o})', ac: '#C8AA6E', acD: '#8B7340', tc: '#E8E6E3', ts: '0 0 12px rgba(200,170,110,.3),0 2px 4px rgba(0,0,0,.6)' },
+            neon: { bg: 'rgba(10,8,22,{o})', ac: '#a855f7', acD: '#6d28d9', tc: '#E8E6E3', ts: '0 0 12px rgba(168,85,247,.3),0 2px 4px rgba(0,0,0,.6)' },
+            military: { bg: 'rgba(10,14,10,{o})', ac: '#6b8a3d', acD: '#3d5a1e', tc: '#E8E6E3', ts: '0 0 12px rgba(107,138,61,.3),0 2px 4px rgba(0,0,0,.6)' },
+            fire: { bg: 'rgba(14,10,8,{o})', ac: '#f97316', acD: '#b33d00', tc: '#E8E6E3', ts: '0 0 12px rgba(249,115,22,.3),0 2px 4px rgba(0,0,0,.6)' },
+            ice: { bg: 'rgba(5,10,20,{o})', ac: '#38bdf8', acD: '#0369a1', tc: '#E8E6E3', ts: '0 0 12px rgba(56,189,248,.3),0 2px 4px rgba(0,0,0,.6)' },
         };
 
         const T = THEMES[themeName] || THEMES.gold;
@@ -918,32 +935,37 @@
             const isEnroll = currentPhase === 'enrollment';
             const ctaText = ch.prize_cta || '';
             
-            return `<div class="L1" style="background:linear-gradient(180deg,${AC}22,${AC}08)">
-                <div class="wi" style="background:${BG}">
+            return `<div class="L1" style="background:linear-gradient(145deg,${AC}18,${AC}06);border:1px solid ${AC}25">
+                <div class="wi" style="background:linear-gradient(145deg,${BG},${BG.replace(/[\d.]+\)$/, m => (parseFloat(m)+0.03).toFixed(2)+')')})">
                     ${showLive ? `<div class="w-badge" style="background:linear-gradient(135deg,#f44,#c00)">LIVE</div>` : ''}
-                    <div class="w-hdr">
+                    <div class="w-hdr" style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
                         <div class="w-icon">${ch.icon || '🔥'}</div>
-                        <div class="w-ttl" style="color:${T.tc};text-shadow:${T.ts}">${ch.title || 'Челлендж'}</div>
-                        ${ch.description ? `<div class="w-desc">${ch.description}</div>` : ''}
+                        <div class="w-ttl" style="color:${AC};letter-spacing:2px">${ch.title || 'Челлендж'}</div>
+                        <div class="w-icon">${ch.icon || '🔥'}</div>
                     </div>
-                    ${showTimer ? `<div class="w-time"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div><div id="wTimerLabel" style="font-size:.5rem;color:${AC};opacity:.6;letter-spacing:2px;margin-top:2px"></div></div>` : ''}
-                    <div class="w-row"><span>👥 <span class="w-rv" style="color:${AC}">${ch.participants_count || 0}</span> игроков</span><span>${ch.prize_description ? `🏆 <span class="w-rv" style="color:${AC}">${ch.prize_description}</span>` : `🧀 <span class="w-rv" style="color:${AC}">${ch.reward_coins || 0}</span> приз`}</span></div>
+                    ${ch.description ? `<div class="w-desc" style="text-align:center;color:#8a94a6;font-size:.6rem;margin-bottom:6px">${ch.description}</div>` : ''}
+                    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px;flex-wrap:wrap">
+                        <span style="font-size:.6rem;color:#5A6577;display:flex;align-items:center;gap:4px">👥 <span style="color:#8a94a6;font-weight:600">${ch.participants_count || 0} игроков</span></span>
+                        <span style="font-size:.6rem;color:#5A6577;display:flex;align-items:center;gap:4px">${ch.prize_description ? `🏆 <span style="color:#8a94a6;font-weight:600">${ch.prize_description}</span>` : `🧀 <span style="color:#8a94a6;font-weight:600">${ch.reward_coins || 0} приз</span>`}</span>
+                    </div>
+                    ${showTimer ? `<div class="w-time" style="text-align:center;margin:0 0 12px"><div class="w-tv" id="wTimer" style="color:${T.tc};text-shadow:${T.ts}">--:--</div><div id="wTimerLabel" style="font-size:.5rem;color:${AC};opacity:.6;letter-spacing:2px;margin-top:2px"></div></div>` : ''}
                     ${ch.prize_image_url ? `<div style="text-align:center;margin:6px 0"><img src="${ch.prize_image_url}" alt="Приз" style="max-width:120px;max-height:60px;border-radius:8px;border:1px solid ${AC}33;object-fit:contain" onerror="this.style.display='none'"></div>` : ''}
                     ${isEnroll && ctaText ? `<div style="text-align:center;margin:8px 4px;padding:8px 12px;background:linear-gradient(135deg,${AC}15,${AC}08);border:1px solid ${AC}22;border-radius:8px;font-size:.55rem;color:${T.tc};line-height:1.4;opacity:.9">${ctaText}</div>` : ''}
                     ${buildCondBadges((ch.condition || 'damage').split(','))}
-                    ${!isEnroll && showMe && me ? `<div class="w-me" style="border:1px solid ${AC}33;background:${AC}0d">
-                        <div class="w-av" style="background:linear-gradient(135deg,${AC},${T.acD});color:${T.bg.split(',')[0].replace('rgba(', '')};border:2px solid ${AC}">${(me.nickname || 'T').substring(0, 2).toUpperCase()}</div>
-                        <div class="w-mn" style="color:${AC}">${me.nickname || 'Танкист'}</div>
-                        <div class="w-ms"><div class="w-msv" style="color:${T.tc};text-shadow:0 0 10px ${AC}44">${formatCondValue(me, ch)}</div><div class="w-msu">${cond.unit}</div></div>
+                    ${!isEnroll && showMe && me ? `<div class="w-me" style="border:1px solid ${AC}20;background:rgba(0,0,0,0.35)">
+                        <div class="w-av" style="background:linear-gradient(135deg,${AC},${T.acD});color:#0a0e14;border:2px solid ${AC}">${(me.nickname || 'T').substring(0, 2).toUpperCase()}</div>
+                        <div class="w-mn" style="color:${T.tc}">${me.nickname || 'Танкист'}</div>
+                        <div class="w-ms"><div class="w-msv" style="color:${T.tc}">${formatCondValue(me, ch)}</div><div class="w-msu" style="color:#5A6577">${cond.unit}</div></div>
                     </div>`: ''}
-                    ${!isEnroll && showTop ? `<div class="w-lbt">Top ${topCount} Leaderboard</div>${top3.map((p, i) => {
-                const n = p.nickname || 'Танкист'; const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesTag = showBattles && maxB > 0 ? `<div class="w-lb-battles" style="background:${AC}18;color:${AC}">${p.battles_played || 0}/${maxB}</div>` : ''; return `<div class="w-li" style="background:${AC}${['14', '08', '06'][i] || '04'};border:1px solid ${AC}${['22', '11', '0a'][i] || '08'}">
-                        <div class="w-lr" style="color:${T.tc}">${i + 1}</div>
+                    ${!isEnroll && showTop ? `<div class="w-lbt" style="color:#5A6577;font-size:.5rem;letter-spacing:1.5px;margin-bottom:8px">🏆 TOP ${topCount} LEADERBOARD</div>${top3.map((p, i) => {
+                const n = p.nickname || 'Танкист'; const isMe = p.telegram_id === myId; const maxB = ch.max_battles || 0; const battlesTag = showBattles && maxB > 0 ? `<div class="w-lb-battles" style="background:${AC}18;color:${AC}">${p.battles_played || 0}/${maxB}</div>` : ''; return `<div class="w-li" style="background:rgba(0,0,0,${['0.3','0.2','0.15'][i] || '0.1'});border:1px solid rgba(255,255,255,${['0.06','0.04','0.03'][i] || '0.02'})">
+                        <div class="w-lr" style="color:${['#ffd700','#c0c0c0','#cd7f32'][i] || '#5A6577'}">${i + 1}</div>
                         <div class="w-la" style="background:linear-gradient(135deg,${AC},${T.acD})">${n.substring(0, 2).toUpperCase()}</div>
                         <div class="w-ln">${isMe ? '⭐ ' : ''}${n}</div>
                         ${battlesTag}
                         <div class="w-lv" style="color:${AC}">${formatCondValue(p, ch)}</div>
                     </div>`}).join('')}` : ''}
+                    <div style="text-align:center;padding-top:8px;margin-top:8px;font-size:.42rem;color:rgba(255,255,255,0.12);letter-spacing:1px;text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.03)">⚔ МИР ТАНКОВ PVP ARENA</div>
                 </div></div>`;
         }
 
