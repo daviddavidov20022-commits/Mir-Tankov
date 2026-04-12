@@ -118,6 +118,16 @@ VERIFY_REDIRECT_URL = WEBAPP_URL + "verify.html"
 _admin_env = os.getenv("ADMIN_ID", "")
 ADMIN_ID = int(_admin_env) if _admin_env.strip() else None
 
+# ID приватного Telegram-канала (платная подписка)
+# Нужен чтобы при кике из канала автоматически деактивировать подписку
+# Узнать: перешли любое сообщение из канала боту @userinfobot
+_channel_env = os.getenv("CHANNEL_ID", "").strip()
+PRIVATE_CHANNEL_ID = int(_channel_env) if _channel_env else None
+if PRIVATE_CHANNEL_ID:
+    logger.info(f"Приватный канал для проверки подписки: {PRIVATE_CHANNEL_ID}")
+else:
+    logger.warning("CHANNEL_ID не задан в .env — проверка членства в канале отключена")
+
 # Twitch бот для отправки сообщений в чат
 # Получить токен: https://twitchapps.com/tmi/
 TWITCH_BOT_NICK = os.getenv("TWITCH_BOT_NICK", "")  # ник бота на Twitch (lowercase)
@@ -245,10 +255,57 @@ TIER_LIST = ["legendary", "epic", "rare", "uncommon", "common"]
 
 
 # ==========================================
+# ОБРАБОТЧИК КИКА ИЗ КАНАЛА
+# ==========================================
+from aiogram.types import ChatMemberUpdated
+
+@dp.chat_member()
+async def on_chat_member_updated(event: ChatMemberUpdated):
+    """Срабатывает при любом изменении статуса участника в чате/канале.
+    При кике из PRIVATE_CHANNEL_ID автоматически деактивирует подписку в БД."""
+    if not PRIVATE_CHANNEL_ID:
+        return
+    if event.chat.id != PRIVATE_CHANNEL_ID:
+        return
+
+    old_status = event.old_chat_member.status if event.old_chat_member else None
+    new_status = event.new_chat_member.status if event.new_chat_member else None
+    tg_id = event.new_chat_member.user.id
+
+    was_member = old_status in ("member", "administrator", "creator")
+    now_gone   = new_status in ("kicked", "left", "banned")
+
+    if was_member and now_gone:
+        logger.info(f"User {tg_id} left/kicked from channel. Deactivating subscription...")
+        try:
+            from database import get_db
+            with get_db() as conn:
+                u_row = conn.execute("SELECT id FROM users WHERE telegram_id = ?", (tg_id,)).fetchone()
+                if u_row:
+                    conn.execute("UPDATE subscriptions SET is_active = 0 WHERE user_id = ?", (u_row["id"],))
+                    logger.info(f"Subscription deactivated for user {tg_id}")
+        except Exception as e:
+            logger.error(f"Error deactivating subscription on kick: {e}")
+
+        try:
+            await event.bot.send_message(
+                tg_id,
+                "❌ <b>Ваша подписка деактивирована.</b>\n\n"
+                "Вы были удалены из приватного канала. "
+                "Доступны только бесплатные функции приложения.\n\n"
+                "Чтобы восстановить доступ — оформите подписку заново.",
+                parse_mode="HTML"
+            )
+        except Exception:
+            pass
+
+
+# ==========================================
 # КОМАНДА /start
 # ==========================================
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
+
     # Регистрируем пользователя в БД
     get_or_create_user(
         telegram_id=message.from_user.id,
@@ -3254,6 +3311,32 @@ async def api_me(request):
             except:
                 pass
 
+        # === ПРОВЕРКА ПОДПИСКИ ===
+        # 1. Читаем из БД
+        from database import check_subscription as _check_sub
+        sub_info = _check_sub(user_tg_id)
+        sub_active = sub_info and sub_info.get("active", False)
+
+        # 2. Если есть канал — дополнительно проверяем РЕАЛЬНОЕ членство
+        if PRIVATE_CHANNEL_ID and sub_active:
+            try:
+                member = await bot.get_chat_member(PRIVATE_CHANNEL_ID, user_tg_id)
+                # Статусы «в канале»: member, administrator, creator
+                in_channel = member.status in ("member", "administrator", "creator")
+                if not in_channel:
+                    # Пользователь кикнут — деактивируем подписку в БД
+                    from database import get_db
+                    with get_db() as conn:
+                        u_row = conn.execute("SELECT id FROM users WHERE telegram_id = ?", (user_tg_id,)).fetchone()
+                        if u_row:
+                            conn.execute("UPDATE subscriptions SET is_active = 0 WHERE user_id = ?", (u_row["id"],))
+                    sub_active = False
+                    sub_info = {"active": False}
+                    logger.info(f"User {user_tg_id} kicked from channel — subscription deactivated")
+            except Exception as ch_err:
+                # Если бот не может проверить канал (нет прав) — доверяем БД
+                logger.warning(f"Cannot check channel membership for {user_tg_id}: {ch_err}")
+
         return cors_response({
             "telegram_id": user_tg_id,
             "wot_nickname": user.get("wot_nickname"),
@@ -3263,6 +3346,7 @@ async def api_me(request):
             "avatar": user.get("avatar"),
             "cheese": cheese,
             "is_admin": is_admin,
+            "subscription": sub_info if sub_info else {"active": False},
         })
     except Exception as e:
         logger.error(f"API me error: {e}")
@@ -11185,7 +11269,8 @@ async def main():
 
 
     # Запускаем бот
-    await dp.start_polling(bot)
+    # ВАЖНО: chat_member нужен для отслеживания кика из канала
+    await dp.start_polling(bot, allowed_updates=["message", "callback_query", "chat_member", "inline_query", "chosen_inline_result"])
 
 
 if __name__ == "__main__":
