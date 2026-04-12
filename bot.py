@@ -2647,6 +2647,88 @@ async def process_promo_code(message: types.Message, state: FSMContext):
 
 
 # ==========================================
+# АДМИН: БЕСПЛАТНОЕ ПРИГЛАШЕНИЕ — /invite
+# ==========================================
+@dp.message(Command("invite"))
+async def cmd_invite(message: types.Message):
+    """Админ-команда: /invite <telegram_id или @username>
+    Создаёт одноразовую ссылку и отправляет пользователю приглашение в группу.
+    Пример: /invite 5777704879 или /invite @Moskva604"""
+    if not ADMIN_ID or message.from_user.id != ADMIN_ID:
+        await message.answer("❌ Только для администратора")
+        return
+
+    if not PRIVATE_CHANNEL_ID:
+        await message.answer("❌ CHANNEL_ID не задан в .env — не могу создать ссылку")
+        return
+
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer(
+            "📋 <b>Как использовать:</b>\n\n"
+            "<code>/invite 5777704879</code> — по Telegram ID\n"
+            "<code>/invite @username</code> — по юзернейму\n\n"
+            "Бот создаст персональную ссылку и отправит пользователю.",
+            parse_mode="HTML"
+        )
+        return
+
+    target = args[1].strip()
+
+    # Определяем telegram_id
+    target_tg_id = None
+
+    if target.startswith("@"):
+        # Ищем по username в БД
+        username = target.lstrip("@")
+        try:
+            from database import get_db
+            with get_db() as conn:
+                row = conn.execute(
+                    "SELECT telegram_id FROM users WHERE username = ? COLLATE NOCASE", (username,)
+                ).fetchone()
+                if row:
+                    target_tg_id = row["telegram_id"]
+        except Exception:
+            pass
+        if not target_tg_id:
+            await message.answer(f"❌ Пользователь @{username} не найден в базе.\nПопробуй по Telegram ID.")
+            return
+    else:
+        try:
+            target_tg_id = int(target)
+        except ValueError:
+            await message.answer("❌ Укажи число (Telegram ID) или @username")
+            return
+
+    # Регистрируем пользователя если не существует
+    get_or_create_user(target_tg_id)
+
+    # Активируем подписку в БД (бесплатная, 365 дней)
+    result = create_subscription(target_tg_id, "month", "admin_invite")
+
+    # Отправляем ссылку в группу
+    invited = await invite_user_to_group(target_tg_id)
+
+    if invited:
+        await message.answer(
+            f"✅ <b>Приглашение отправлено!</b>\n\n"
+            f"👤 ID: <code>{target_tg_id}</code>\n"
+            f"🔗 Персональная ссылка создана и отправлена пользователю.\n\n"
+            f"Как только он перейдёт по ссылке — получит полный доступ.",
+            parse_mode="HTML"
+        )
+    else:
+        await message.answer(
+            f"⚠️ Подписка активирована в БД, но ссылку отправить не удалось.\n"
+            f"ID: <code>{target_tg_id}</code>\n\n"
+            f"Возможно пользователь заблокировал бота. "
+            f"Отправь ему ссылку вручную.",
+            parse_mode="HTML"
+        )
+
+
+# ==========================================
 # БЫСТРЫЙ ПРОМОКОД — /go (Админ, 1 клик!)
 # ==========================================
 import random
