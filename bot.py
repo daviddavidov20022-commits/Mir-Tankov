@@ -301,6 +301,48 @@ async def on_chat_member_updated(event: ChatMemberUpdated):
 
 
 # ==========================================
+# ХЕЛПЕР: ПРИГЛАСИТЬ В ПЛАТНУЮ ГРУППУ
+# ==========================================
+async def invite_user_to_group(user_id: int) -> bool:
+    """Создаёт одноразовую ссылку и отправляет пользователю приглашение в платную группу.
+    Возвращает True если успешно."""
+    if not PRIVATE_CHANNEL_ID:
+        return False
+    try:
+        # Сначала пробуем сразу добавить (если пользователь уже вступал)
+        try:
+            member = await bot.get_chat_member(PRIVATE_CHANNEL_ID, user_id)
+            if member.status in ("member", "administrator", "creator"):
+                logger.info(f"User {user_id} already in group")
+                return True
+        except Exception:
+            pass
+
+        # Создаём одноразовую персональную ссылку (действует 24ч, 1 использование)
+        invite_link = await bot.create_chat_invite_link(
+            PRIVATE_CHANNEL_ID,
+            expire_date=int(__import__('time').time()) + 86400,  # 24 часа
+            member_limit=1,
+            name=f"sub_{user_id}"
+        )
+
+        await bot.send_message(
+            user_id,
+            f"🎉 <b>Подписка активирована!</b>\n\n"
+            f"🔗 Ваша персональная ссылка для входа в закрытую группу:\n"
+            f"{invite_link.invite_link}\n\n"
+            f"⚠️ <i>Ссылка одноразовая и действует 24 часа.</i>\n"
+            f"После вступления в группу — полный доступ к приложению!",
+            parse_mode="HTML"
+        )
+        logger.info(f"Invite link sent to user {user_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to create invite link for {user_id}: {e}")
+        return False
+
+
+# ==========================================
 # КОМАНДА /groupid — узнать ID группы/канала
 # ==========================================
 @dp.message(Command("groupid"))
@@ -2046,9 +2088,12 @@ async def sub_buy(callback: CallbackQuery):
             f"💰 Стоимость: <b>{result['price']}₽</b>\n"
             f"📅 Действует до: <b>{result['expires_at']}</b>\n\n"
             f"Добро пожаловать в закрытый клуб! 🪖\n\n"
-            f"<i>⚠️ Тестовый режим: оплата не взимается</i>",
+            f"<i>⚠️ Тестовый режим: оплата не взимается</i>\n\n"
+            f"⏳ Генерирую вашу ссылку в закрытую группу...",
             parse_mode="HTML",
         )
+        # Отправляем ссылку в группу
+        await invite_user_to_group(callback.from_user.id)
     else:
         await callback.answer(f"❌ {result.get('error', 'Ошибка')}", show_alert=True)
 
@@ -2436,6 +2481,9 @@ async def process_successful_payment(message: types.Message):
             parse_mode="HTML",
         )
 
+        # Приглашаем в закрытую группу
+        await invite_user_to_group(message.from_user.id)
+
         # Уведомление админу
         if ADMIN_ID:
             try:
@@ -2574,9 +2622,11 @@ async def process_promo_code(message: types.Message, state: FSMContext):
             f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"✅ Подписка: <b>{result['days']} дней</b>\n"
             f"📅 До: <b>{result['expires_at']}</b>\n\n"
-            f"Теперь нажмите /start чтобы войти! 🚀",
+            f"⏳ Генерирую вашу ссылку в закрытую группу...",
             parse_mode="HTML",
         )
+        # Приглашаем в закрытую группу
+        await invite_user_to_group(message.from_user.id)
 
         # Предлагаем привязать ник
         nick = get_wot_nickname(message.from_user.id)
