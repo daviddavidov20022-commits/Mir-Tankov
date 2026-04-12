@@ -142,12 +142,14 @@ const BOT_API_URL_APP = 'https://mir-tankov-production.up.railway.app';
 document.addEventListener('DOMContentLoaded', () => {
     initUser();
     userData.updateUI();
+    // Сбрасываем кеш подписки при каждой загрузке — всегда берём свежее с API
+    localStorage.removeItem('is_subscribed');
     loadBalanceFromAPI();
     createParticles();
     checkDailyBonus();
 });
 
-// Загрузить баланс из БД (единый источник правды)
+// Загрузить баланс и статус подписки из API (единый источник правды)
 async function loadBalanceFromAPI() {
     try {
         // Определяем telegram_id
@@ -171,18 +173,28 @@ async function loadBalanceFromAPI() {
         const resp = await fetch(`${BOT_API_URL_APP}/api/me?telegram_id=${tgId}`);
         const data = await resp.json();
         if (data.cheese !== undefined && data.cheese !== null) {
-            // Синхронизируем localStorage с БД
             userData.data.coins = data.cheese;
             userData.save();
             userData.updateUI();
         }
-        // Сохраняем статус подписки
-        const isActive = data.subscription && data.subscription.active;
+
+        // Статус подписки — всегда берём с сервера, кеш не доверяем
+        const isActive = !!(data.subscription && data.subscription.active);
         localStorage.setItem('is_subscribed', isActive ? '1' : '0');
-        // Обновляем визуальные замки на карточках
         updateLockCards(isActive);
+
+        // Если мы на премиум-странице и подписки нет — выгоняем на главную
+        if (!isActive) {
+            const currentPage = window.location.pathname.split('/').pop();
+            const onPremiumPage = PREMIUM_PAGES && PREMIUM_PAGES.some(p => currentPage === p);
+            if (onPremiumPage) {
+                const myId = localStorage.getItem('my_telegram_id');
+                window.location.href = myId ? `index.html?telegram_id=${myId}` : 'index.html';
+                return;
+            }
+        }
     } catch (e) {
-        // API не доступно — показываем localStorage
+        // API не доступно — используем кеш (но не доверяем ему надолго)
         console.log('API недоступно, используем localStorage');
     }
 }
