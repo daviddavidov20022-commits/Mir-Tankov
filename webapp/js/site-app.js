@@ -149,8 +149,13 @@ const userData = new UserData();
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Проверяем авторизацию
-    if (!siteAuth.isLoggedIn && !window.location.pathname.includes('index.html') && !window.location.pathname.endsWith('/')) {
-        // Не на главной и не залогинен — перенаправляем
+    const hasTelegramWebApp = !!window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const hasUrlTelegramId = new URLSearchParams(window.location.search).has('telegram_id');
+    const hasLocalTelegramId = !!localStorage.getItem('my_telegram_id');
+    const isOnMainPage = window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/');
+    
+    if (!siteAuth.isLoggedIn && !hasTelegramWebApp && !hasUrlTelegramId && !hasLocalTelegramId && !isOnMainPage) {
+        // Не на главной и не залогинен никаким способом — перенаправляем
         window.location.href = 'index.html';
         return;
     }
