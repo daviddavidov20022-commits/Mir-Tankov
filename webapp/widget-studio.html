@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎨 Widget Studio — Мир Танков</title>
+    <title>рџЋЁ Widget Studio вЂ” РњРёСЂ РўР°РЅРєРѕРІ</title>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=Rajdhani:wght@400;600;700&family=Exo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,20 +36,20 @@
             align-items: flex-start;
         }
 
-        /* LEFT PANEL — no sticky, let page scroll */
+        /* LEFT PANEL вЂ” no sticky, let page scroll */
         .panel {
             width: 340px; flex-shrink: 0;
             display: flex; flex-direction: column; gap: 10px;
             padding-bottom: 20px;
         }
-        /* thin scrollbar on desktop — purely cosmetic */
+        /* thin scrollbar on desktop вЂ” purely cosmetic */
         .panel::-webkit-scrollbar { width: 4px; }
         .panel::-webkit-scrollbar-thumb { background: rgba(200,170,110,0.2); border-radius: 4px; }
 
 
         /* WIDGET TYPE TABS */
         .type-tabs {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
             background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px;
         }
         .type-tab {
@@ -125,7 +125,7 @@
         .action-btn--primary:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(200,170,110,0.25); }
         .action-btn--secondary { background: rgba(200,170,110,0.06); border: 1px solid var(--border2); color: var(--gold); font-size: 0.7rem; }
 
-        /* RIGHT — PREVIEW */
+        /* RIGHT вЂ” PREVIEW */
         .preview-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .preview-label {
             font-family: 'Russo One'; font-size: 0.65rem; color: var(--text3);
@@ -202,7 +202,7 @@
             }
             .preview-container { min-height: 300px; }
             /* type tabs 2x2 on narrow screens */
-            .type-tabs { grid-template-columns: repeat(2, 1fr); }
+            .type-tabs { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 <script src="js/auth-interceptor.js?v=52"></script>
@@ -210,10 +210,10 @@
 <body>
 
 <div class="studio-header">
-    <button class="studio-header__back" onclick="goBack()">←</button>
+    <button class="studio-header__back" onclick="goBack()">в†ђ</button>
     <div>
-        <div class="studio-header__title">🎨 WIDGET STUDIO</div>
-        <div class="studio-header__sub">КОНСТРУКТОР OBS ВИДЖЕТОВ</div>
+        <div class="studio-header__title">рџЋЁ WIDGET STUDIO</div>
+        <div class="studio-header__sub">РљРћРќРЎРўР РЈРљРўРћР  OBS Р’РР”Р–Р•РўРћР’</div>
     </div>
 </div>
 
@@ -223,85 +223,88 @@
         <!-- Widget Type -->
         <div class="type-tabs">
             <div class="type-tab active" data-type="pvp" onclick="selectType('pvp')">
-                <span class="type-tab__icon">⚔️</span> 1 на 1
+                <span class="type-tab__icon">вљ”пёЏ</span> 1 РЅР° 1
             </div>
             <div class="type-tab" data-type="global" onclick="selectType('global')">
-                <span class="type-tab__icon">🔥</span> Общий
+                <span class="type-tab__icon">рџ”Ґ</span> РћР±С‰РёР№
             </div>
             <div class="type-tab" data-type="team" onclick="selectType('team')">
-                <span class="type-tab__icon">👥</span> Команды
+                <span class="type-tab__icon">рџ‘Ґ</span> РљРѕРјР°РЅРґС‹
             </div>
             <div class="type-tab" data-type="vote" onclick="selectType('vote')">
-                <span class="type-tab__icon">🗳️</span> Голосование
+                <span class="type-tab__icon">рџ—іпёЏ</span> Р“РѕР»РѕСЃРѕРІР°РЅРёРµ
+            </div>
+            <div class="type-tab" data-type="result" onclick="selectType('result')">
+                <span class="type-tab__icon">рџЏ†</span> Р РµР·СѓР»СЊС‚Р°С‚С‹
             </div>
         </div>
 
         <!-- Theme Presets -->
         <div class="ctrl-group">
-            <div class="ctrl-group__title">🎭 Тема</div>
+            <div class="ctrl-group__title">рџЋ­ РўРµРјР°</div>
             <div class="preset-grid" id="presetGrid">
                 <div class="preset-btn active" data-preset="gold" onclick="applyPreset('gold')">
-                    <span class="preset-btn__icon">🏆</span> Золото
+                    <span class="preset-btn__icon">рџЏ†</span> Р—РѕР»РѕС‚Рѕ
                 </div>
                 <div class="preset-btn" data-preset="neon" onclick="applyPreset('neon')">
-                    <span class="preset-btn__icon">💜</span> Неон
+                    <span class="preset-btn__icon">рџ’њ</span> РќРµРѕРЅ
                 </div>
                 <div class="preset-btn" data-preset="military" onclick="applyPreset('military')">
-                    <span class="preset-btn__icon">🪖</span> Военная
+                    <span class="preset-btn__icon">рџЄ–</span> Р’РѕРµРЅРЅР°СЏ
                 </div>
                 <div class="preset-btn" data-preset="fire" onclick="applyPreset('fire')">
-                    <span class="preset-btn__icon">🔥</span> Огонь
+                    <span class="preset-btn__icon">рџ”Ґ</span> РћРіРѕРЅСЊ
                 </div>
                 <div class="preset-btn" data-preset="ice" onclick="applyPreset('ice')">
-                    <span class="preset-btn__icon">❄️</span> Лёд
+                    <span class="preset-btn__icon">вќ„пёЏ</span> Р›С‘Рґ
                 </div>
                 <div class="preset-btn" data-preset="blood" onclick="applyPreset('blood')">
-                    <span class="preset-btn__icon">🩸</span> Кровь
+                    <span class="preset-btn__icon">рџ©ё</span> РљСЂРѕРІСЊ
                 </div>
                 <div class="preset-btn" data-preset="cyber" onclick="applyPreset('cyber')">
-                    <span class="preset-btn__icon">🤖</span> Кибер
+                    <span class="preset-btn__icon">рџ¤–</span> РљРёР±РµСЂ
                 </div>
                 <div class="preset-btn" data-preset="minimal" onclick="applyPreset('minimal')">
-                    <span class="preset-btn__icon">⬜</span> Минимал
+                    <span class="preset-btn__icon">в¬њ</span> РњРёРЅРёРјР°Р»
                 </div>
                 <div class="preset-btn" data-preset="retro" onclick="applyPreset('retro')">
-                    <span class="preset-btn__icon">👾</span> Ретро
+                    <span class="preset-btn__icon">рџ‘ѕ</span> Р РµС‚СЂРѕ
                 </div>
             </div>
         </div>
 
         <!-- Colors -->
         <div class="ctrl-group">
-            <div class="ctrl-group__title">🎨 Цвета</div>
+            <div class="ctrl-group__title">рџЋЁ Р¦РІРµС‚Р°</div>
             <div class="ctrl-row">
-                <label>Акцент</label>
+                <label>РђРєС†РµРЅС‚</label>
                 <input type="color" class="ctrl-color" id="clrAccent" value="#C8AA6E" onchange="updatePreview()">
             </div>
             <div class="ctrl-row">
-                <label>Фон</label>
+                <label>Р¤РѕРЅ</label>
                 <input type="color" class="ctrl-color" id="clrBg" value="#0a0e14" onchange="updatePreview()">
             </div>
             <div class="ctrl-row">
-                <label>Текст</label>
+                <label>РўРµРєСЃС‚</label>
                 <input type="color" class="ctrl-color" id="clrText" value="#E8E6E3" onchange="updatePreview()">
             </div>
             <div class="ctrl-row">
-                <label>Рамка</label>
+                <label>Р Р°РјРєР°</label>
                 <input type="color" class="ctrl-color" id="clrBorder" value="#C8AA6E" onchange="updatePreview()">
             </div>
         </div>
 
         <!-- Font -->
         <div class="ctrl-group">
-            <div class="ctrl-group__title">🔤 Шрифт заголовков</div>
+            <div class="ctrl-group__title">рџ”¤ РЁСЂРёС„С‚ Р·Р°РіРѕР»РѕРІРєРѕРІ</div>
             <div id="fontList">
                 <div class="font-option active" data-font="Russo One" onclick="selectFont(this)">
                     <div class="font-option__name">Russo One</div>
-                    <div class="font-option__sample" style="font-family:'Russo One'">PVP ЧЕЛЛЕНДЖ 12345</div>
+                    <div class="font-option__sample" style="font-family:'Russo One'">PVP Р§Р•Р›Р›Р•РќР”Р– 12345</div>
                 </div>
                 <div class="font-option" data-font="Orbitron" onclick="selectFont(this)">
                     <div class="font-option__name">Orbitron</div>
-                    <div class="font-option__sample" style="font-family:'Orbitron'">PVP ЧЕЛЛЕНДЖ 12345</div>
+                    <div class="font-option__sample" style="font-family:'Orbitron'">PVP Р§Р•Р›Р›Р•РќР”Р– 12345</div>
                 </div>
                 <div class="font-option" data-font="Press Start 2P" onclick="selectFont(this)">
                     <div class="font-option__name">Press Start 2P</div>
@@ -309,30 +312,30 @@
                 </div>
                 <div class="font-option" data-font="Rajdhani" onclick="selectFont(this)">
                     <div class="font-option__name">Rajdhani</div>
-                    <div class="font-option__sample" style="font-family:'Rajdhani';font-weight:700">PVP ЧЕЛЛЕНДЖ 12345</div>
+                    <div class="font-option__sample" style="font-family:'Rajdhani';font-weight:700">PVP Р§Р•Р›Р›Р•РќР”Р– 12345</div>
                 </div>
                 <div class="font-option" data-font="Exo 2" onclick="selectFont(this)">
                     <div class="font-option__name">Exo 2</div>
-                    <div class="font-option__sample" style="font-family:'Exo 2';font-weight:800">PVP ЧЕЛЛЕНДЖ 12345</div>
+                    <div class="font-option__sample" style="font-family:'Exo 2';font-weight:800">PVP Р§Р•Р›Р›Р•РќР”Р– 12345</div>
                 </div>
             </div>
         </div>
 
         <!-- Size & Layout -->
         <div class="ctrl-group">
-            <div class="ctrl-group__title">📐 Размеры</div>
+            <div class="ctrl-group__title">рџ“ђ Р Р°Р·РјРµСЂС‹</div>
             <div class="ctrl-row">
-                <label>Масштаб</label>
+                <label>РњР°СЃС€С‚Р°Р±</label>
                 <input type="range" class="ctrl-range" id="cfgScale" value="100" min="60" max="150" oninput="updatePreview()">
                 <span class="ctrl-range-val" id="cfgScaleVal">1.0x</span>
             </div>
             <div class="ctrl-row">
-                <label>Скругление</label>
+                <label>РЎРєСЂСѓРіР»РµРЅРёРµ</label>
                 <input type="range" class="ctrl-range" id="cfgRadius" value="18" min="0" max="40" oninput="updatePreview()">
                 <span class="ctrl-range-val" id="cfgRadiusVal">18px</span>
             </div>
             <div class="ctrl-row">
-                <label>Прозрачность фона</label>
+                <label>РџСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ С„РѕРЅР°</label>
                 <input type="range" class="ctrl-range" id="cfgOpacity" value="94" min="0" max="100" oninput="updatePreview()">
                 <span class="ctrl-range-val" id="cfgOpacityVal">94%</span>
             </div>
@@ -340,38 +343,38 @@
 
         <!-- Layout (type-specific) -->
         <div class="ctrl-group" id="layoutGroup">
-            <div class="ctrl-group__title">📋 Макет</div>
+            <div class="ctrl-group__title">рџ“‹ РњР°РєРµС‚</div>
             <div class="ctrl-row">
-                <label>Стиль</label>
+                <label>РЎС‚РёР»СЊ</label>
                 <select class="ctrl-select" id="cfgLayout" onchange="updatePreview()">
-                    <option value="full">Полный</option>
-                    <option value="compact">Компактный</option>
-                    <option value="minimal">Минимальный</option>
+                    <option value="full">РџРѕР»РЅС‹Р№</option>
+                    <option value="compact">РљРѕРјРїР°РєС‚РЅС‹Р№</option>
+                    <option value="minimal">РњРёРЅРёРјР°Р»СЊРЅС‹Р№</option>
                 </select>
             </div>
         </div>
 
         <!-- Toggles -->
         <div class="ctrl-group">
-            <div class="ctrl-group__title">👁 Элементы</div>
-            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showHeader" checked onchange="updatePreview()"> Заголовок</label></div>
-            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showInfo" checked onchange="updatePreview()"> Инфо-строка</label></div>
-            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showHistory" checked onchange="updatePreview()"> История боёв</label></div>
-            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showProgress" checked onchange="updatePreview()"> Прогресс-бар</label></div>
-            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showFooter" checked onchange="updatePreview()"> Футер</label></div>
-            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showGlow" onchange="updatePreview()"> Свечение рамки</label></div>
-            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showBrand" checked onchange="updatePreview()"> Водяной знак</label></div>
+            <div class="ctrl-group__title">рџ‘Ѓ Р­Р»РµРјРµРЅС‚С‹</div>
+            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showHeader" checked onchange="updatePreview()"> Р—Р°РіРѕР»РѕРІРѕРє</label></div>
+            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showInfo" checked onchange="updatePreview()"> РРЅС„Рѕ-СЃС‚СЂРѕРєР°</label></div>
+            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showHistory" checked onchange="updatePreview()"> РСЃС‚РѕСЂРёСЏ Р±РѕС‘РІ</label></div>
+            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showProgress" checked onchange="updatePreview()"> РџСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂ</label></div>
+            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showFooter" checked onchange="updatePreview()"> Р¤СѓС‚РµСЂ</label></div>
+            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showGlow" onchange="updatePreview()"> РЎРІРµС‡РµРЅРёРµ СЂР°РјРєРё</label></div>
+            <div class="ctrl-row"><label><input type="checkbox" class="ctrl-checkbox" id="showBrand" checked onchange="updatePreview()"> Р’РѕРґСЏРЅРѕР№ Р·РЅР°Рє</label></div>
         </div>
 
         <!-- Actions -->
-        <button class="action-btn action-btn--primary" onclick="saveAndCopy()">📋 Скопировать OBS ссылку</button>
-        <button class="action-btn action-btn--secondary" onclick="resetAll()">🔄 Сброс по умолчанию</button>
+        <button class="action-btn action-btn--primary" onclick="saveAndCopy()">рџ“‹ РЎРєРѕРїРёСЂРѕРІР°С‚СЊ OBS СЃСЃС‹Р»РєСѓ</button>
+        <button class="action-btn action-btn--secondary" onclick="resetAll()">рџ”„ РЎР±СЂРѕСЃ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ</button>
     </div>
 
-    <!-- RIGHT — PREVIEW -->
+    <!-- RIGHT вЂ” PREVIEW -->
     <div class="preview-area">
         <div class="preview-label">
-            👁 ПРЕДПРОСМОТР
+            рџ‘Ѓ РџР Р•Р”РџР РћРЎРњРћРўР 
             <div class="preview-bg-btns">
                 <div class="preview-bg-btn active" style="background:#1a1a2e" onclick="setBg('dark',this)"></div>
                 <div class="preview-bg-btn" style="background:#00b140" onclick="setBg('green',this)"></div>
@@ -384,8 +387,8 @@
             <div id="widgetPreview"></div>
         </div>
         <div class="obs-bar">
-            <input type="text" id="obsUrl" readonly placeholder="Выберите тип виджета и настройте параметры">
-            <button onclick="copyUrl()">📋 Копировать</button>
+            <input type="text" id="obsUrl" readonly placeholder="Р’С‹Р±РµСЂРёС‚Рµ С‚РёРї РІРёРґР¶РµС‚Р° Рё РЅР°СЃС‚СЂРѕР№С‚Рµ РїР°СЂР°РјРµС‚СЂС‹">
+            <button onclick="copyUrl()">рџ“‹ РљРѕРїРёСЂРѕРІР°С‚СЊ</button>
         </div>
     </div>
 </div>
@@ -393,9 +396,9 @@
 <div class="toast-msg" id="toast"><span id="toastText"></span></div>
 
 <script>
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 // STATE
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 let currentType = 'pvp';
 let currentFont = 'Russo One';
 let currentPreset = 'gold';
@@ -404,19 +407,21 @@ const WIDGET_URLS = {
     pvp: 'overlay.html',
     global: 'gc-widget.html',
     team: 'tb-widget.html',
-    vote: 'dc-widget.html'
+    vote: 'dc-widget.html',
+    result: 'obs/challenge-result.html'
 };
 
 const WIDGET_TITLES = {
-    pvp: '⚔️ PVP Челлендж',
-    global: '🔥 Общий Челлендж',
-    team: '👥 Командное Сражение',
-    vote: '🗳️ Голосование'
+    pvp: 'вљ”пёЏ PVP Р§РµР»Р»РµРЅРґР¶',
+    global: 'рџ”Ґ РћР±С‰РёР№ Р§РµР»Р»РµРЅРґР¶',
+    team: 'рџ‘Ґ РљРѕРјР°РЅРґРЅРѕРµ РЎСЂР°Р¶РµРЅРёРµ',
+    vote: 'рџ—іпёЏ Р“РѕР»РѕСЃРѕРІР°РЅРёРµ',
+    result: 'рџЏ† Р РµР·СѓР»СЊС‚Р°С‚С‹ Live'
 };
 
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 // PRESETS
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const PRESETS = {
     gold:     { accent: '#C8AA6E', bg: '#0a0e14', text: '#E8E6E3', border: '#C8AA6E' },
     neon:     { accent: '#a855f7', bg: '#0b0815', text: '#e8e6e3', border: '#a855f7' },
@@ -429,20 +434,21 @@ const PRESETS = {
     retro:    { accent: '#fbbf24', bg: '#1a1005', text: '#fef3c7', border: '#f59e0b' }
 };
 
-// Theme → overlay.html param mapping
+// Theme в†’ overlay.html param mapping
 const PRESET_TO_THEME = {
     gold: 'gold', neon: 'neon', military: 'military', fire: 'fire',
     ice: 'ice', blood: 'blood', cyber: 'cyber', minimal: 'gold', retro: 'gold'
 };
 
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 // DEMO DATA per type
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const DEMOS = {
     pvp: () => renderPvpDemo(),
     global: () => renderGlobalDemo(),
     team: () => renderTeamDemo(),
-    vote: () => renderVoteDemo()
+    vote: () => renderVoteDemo(),
+    result: () => renderResultDemo()
 };
 
 function hexToRgb(hex) {
@@ -471,9 +477,9 @@ function getCfg() {
     };
 }
 
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 // TYPE SELECT
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 function selectType(type) {
     currentType = type;
     document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
@@ -508,9 +514,9 @@ function setBg(mode, btn) {
     btn.classList.add('active');
 }
 
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 // RENDER PREVIEW
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 function updatePreview() {
     // Update labels
     document.getElementById('cfgScaleVal').textContent = (getCfg().scale).toFixed(1) + 'x';
@@ -541,44 +547,44 @@ function wrapWidget(cfg, innerHtml) {
     ">
         <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,${cfg.accent},transparent);opacity:0.6;"></div>
         ${innerHtml}
-        ${cfg.showBrand ? `<div style="text-align:center;padding-top:8px;margin-top:6px;font-size:${0.45*cfg.scale}rem;color:rgba(255,255,255,0.12);letter-spacing:1px;text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.03);">⚔️ Мир Танков Клуб</div>` : ''}
+        ${cfg.showBrand ? `<div style="text-align:center;padding-top:8px;margin-top:6px;font-size:${0.45*cfg.scale}rem;color:rgba(255,255,255,0.12);letter-spacing:1px;text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.03);">вљ”пёЏ РњРёСЂ РўР°РЅРєРѕРІ РљР»СѓР±</div>` : ''}
     </div>`;
 }
 
-// ═══ PVP DEMO ═══
+// в•ђв•ђв•ђ PVP DEMO в•ђв•ђв•ђ
 function renderPvpDemo() {
     const cfg = getCfg();
     const ar = hexToRgb(cfg.accent);
     const s = cfg.scale;
     let h = '';
     if (cfg.showHeader) h += `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;">
-        <span style="font-size:${1.1*s}rem">⚔️</span>
-        <span style="font-family:'${cfg.font}',sans-serif;font-size:${0.85*s}rem;color:${cfg.accent};letter-spacing:2px;text-transform:uppercase;">PVP Челлендж</span>
-        <span style="font-size:${1.1*s}rem">⚔️</span>
+        <span style="font-size:${1.1*s}rem">вљ”пёЏ</span>
+        <span style="font-family:'${cfg.font}',sans-serif;font-size:${0.85*s}rem;color:${cfg.accent};letter-spacing:2px;text-transform:uppercase;">PVP Р§РµР»Р»РµРЅРґР¶</span>
+        <span style="font-size:${1.1*s}rem">вљ”пёЏ</span>
     </div>`;
     if (cfg.showInfo) h += `<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
-        <span style="font-size:${0.6*s}rem;color:#5A6577">🪖 <span style="color:#8a94a6;font-weight:600">Объект 140</span></span>
-        <span style="font-size:${0.6*s}rem;color:#5A6577">💥 <span style="color:#8a94a6;font-weight:600">УРОН</span></span>
-        <span style="font-size:${0.6*s}rem;color:#5A6577">⚔️ <span style="color:#8a94a6;font-weight:600">5 боёв</span></span>
-        <span style="font-size:${0.6*s}rem;color:#5A6577">🧀 <span style="color:#8a94a6;font-weight:600">500</span></span>
+        <span style="font-size:${0.6*s}rem;color:#5A6577">рџЄ– <span style="color:#8a94a6;font-weight:600">РћР±СЉРµРєС‚ 140</span></span>
+        <span style="font-size:${0.6*s}rem;color:#5A6577">рџ’Ґ <span style="color:#8a94a6;font-weight:600">РЈР РћРќ</span></span>
+        <span style="font-size:${0.6*s}rem;color:#5A6577">вљ”пёЏ <span style="color:#8a94a6;font-weight:600">5 Р±РѕС‘РІ</span></span>
+        <span style="font-size:${0.6*s}rem;color:#5A6577">рџ§Ђ <span style="color:#8a94a6;font-weight:600">500</span></span>
     </div>`;
     // Players
     h += `<div style="display:flex;align-items:stretch;gap:12px;margin-bottom:14px;">
         <div style="flex:1;text-align:center;padding:${14*s}px ${10*s}px;background:rgba(0,0,0,0.35);border-radius:${14*s}px;border:1px solid rgba(74,222,128,0.2);box-shadow:0 0 20px rgba(74,222,128,0.05);">
-            <div style="font-size:${0.55*s}rem;color:#5A6577;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Вызывающий</div>
+            <div style="font-size:${0.55*s}rem;color:#5A6577;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Р’С‹Р·С‹РІР°СЋС‰РёР№</div>
             <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.8*s}rem;color:${cfg.text};margin-bottom:8px">GloriAmtower</div>
             <div style="font-size:${2.2*s}rem;font-family:'${cfg.font}',sans-serif;color:#4ade80;line-height:1;margin-bottom:6px">18 420</div>
-            <div style="font-size:${0.65*s}rem;color:#8a94a6;display:inline-block;padding:4px 12px;background:rgba(34,197,94,0.1);border-radius:10px;border:1px solid rgba(34,197,94,0.3);color:#4ade80;font-weight:700">✅ 5/5 боёв</div>
+            <div style="font-size:${0.65*s}rem;color:#8a94a6;display:inline-block;padding:4px 12px;background:rgba(34,197,94,0.1);border-radius:10px;border:1px solid rgba(34,197,94,0.3);color:#4ade80;font-weight:700">вњ… 5/5 Р±РѕС‘РІ</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:36px;">
-            <span style="font-size:${1.6*s}rem;filter:drop-shadow(0 0 8px rgba(${ar},0.25))">⚔️</span>
+            <span style="font-size:${1.6*s}rem;filter:drop-shadow(0 0 8px rgba(${ar},0.25))">вљ”пёЏ</span>
             <span style="font-family:'${cfg.font}',sans-serif;font-size:0.5rem;color:rgba(${ar},0.4);letter-spacing:2px">VS</span>
         </div>
         <div style="flex:1;text-align:center;padding:${14*s}px ${10*s}px;background:rgba(0,0,0,0.35);border-radius:${14*s}px;border:1px solid rgba(239,68,68,0.15);">
-            <div style="font-size:${0.55*s}rem;color:#5A6577;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Принявший</div>
+            <div style="font-size:${0.55*s}rem;color:#5A6577;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">РџСЂРёРЅСЏРІС€РёР№</div>
             <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.8*s}rem;color:${cfg.text};margin-bottom:8px">Fors777_2016</div>
             <div style="font-size:${2.2*s}rem;font-family:'${cfg.font}',sans-serif;color:#ef4444;line-height:1;margin-bottom:6px">14 850</div>
-            <div style="font-size:${0.65*s}rem;color:#8a94a6;display:inline-block;padding:4px 12px;background:rgba(0,0,0,0.3);border-radius:10px;border:1px solid rgba(255,255,255,0.06);font-weight:600">⚔️ 4/5 боёв</div>
+            <div style="font-size:${0.65*s}rem;color:#8a94a6;display:inline-block;padding:4px 12px;background:rgba(0,0,0,0.3);border-radius:10px;border:1px solid rgba(255,255,255,0.06);font-weight:600">вљ”пёЏ 4/5 Р±РѕС‘РІ</div>
         </div>
     </div>`;
     if (cfg.showProgress) h += `<div style="margin-bottom:14px;">
@@ -590,72 +596,72 @@ function renderPvpDemo() {
         </div>
     </div>`;
     if (cfg.showHistory) h += `<div style="border-top:1px solid rgba(255,255,255,0.04);padding-top:10px;margin-bottom:10px;">
-        <div style="font-size:${0.55*s}rem;color:#5A6577;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase">📋 Последние бои</div>
+        <div style="font-size:${0.55*s}rem;color:#5A6577;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase">рџ“‹ РџРѕСЃР»РµРґРЅРёРµ Р±РѕРё</div>
         <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;margin-bottom:3px;font-size:${0.6*s}rem;background:rgba(255,255,255,0.02)">
-            <span style="color:#5A6577;min-width:18px">#5</span><span style="flex:1;color:#60a5fa">GloriAmtower</span><span style="font-weight:700;min-width:50px;text-align:right">💥 5 100</span>
+            <span style="color:#5A6577;min-width:18px">#5</span><span style="flex:1;color:#60a5fa">GloriAmtower</span><span style="font-weight:700;min-width:50px;text-align:right">рџ’Ґ 5 100</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;margin-bottom:3px;font-size:${0.6*s}rem;background:rgba(255,255,255,0.02)">
-            <span style="color:#5A6577;min-width:18px">#4</span><span style="flex:1;color:#f59e0b">Fors777_2016</span><span style="font-weight:700;min-width:50px;text-align:right">💥 4 500</span>
+            <span style="color:#5A6577;min-width:18px">#4</span><span style="flex:1;color:#f59e0b">Fors777_2016</span><span style="font-weight:700;min-width:50px;text-align:right">рџ’Ґ 4 500</span>
         </div>
     </div>`;
     if (cfg.showFooter) h += `<div style="display:flex;justify-content:center;gap:16px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04);">
-        <span style="font-size:${0.55*s}rem;color:#5A6577">🧀 Ставка: <span style="color:${cfg.accent};font-weight:700">500</span></span>
-        <span style="font-size:${0.55*s}rem;color:#5A6577">🏆 Приз: <span style="color:${cfg.accent};font-weight:700">1 000 🧀</span></span>
+        <span style="font-size:${0.55*s}rem;color:#5A6577">рџ§Ђ РЎС‚Р°РІРєР°: <span style="color:${cfg.accent};font-weight:700">500</span></span>
+        <span style="font-size:${0.55*s}rem;color:#5A6577">рџЏ† РџСЂРёР·: <span style="color:${cfg.accent};font-weight:700">1 000 рџ§Ђ</span></span>
     </div>`;
     document.getElementById('widgetPreview').innerHTML = wrapWidget(cfg, h);
 }
 
-// ═══ GLOBAL DEMO ═══
+// в•ђв•ђв•ђ GLOBAL DEMO в•ђв•ђв•ђ
 function renderGlobalDemo() {
     const cfg = getCfg();
     const s = cfg.scale;
     let h = '';
     if (cfg.showHeader) h += `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;">
-        <span style="font-size:${1.1*s}rem">🔥</span>
-        <span style="font-family:'${cfg.font}',sans-serif;font-size:${0.85*s}rem;color:${cfg.accent};letter-spacing:2px;text-transform:uppercase;">Общий Челлендж</span>
+        <span style="font-size:${1.1*s}rem">рџ”Ґ</span>
+        <span style="font-family:'${cfg.font}',sans-serif;font-size:${0.85*s}rem;color:${cfg.accent};letter-spacing:2px;text-transform:uppercase;">РћР±С‰РёР№ Р§РµР»Р»РµРЅРґР¶</span>
     </div>`;
     if (cfg.showInfo) h += `<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px;">
-        <span style="font-size:${0.6*s}rem;color:#5A6577">💥 <span style="color:#8a94a6;font-weight:600">Макс. урон</span></span>
-        <span style="font-size:${0.6*s}rem;color:#5A6577">👥 <span style="color:#8a94a6;font-weight:600">8 игроков</span></span>
-        <span style="font-size:${0.6*s}rem;color:#5A6577">🏆 <span style="color:#8a94a6;font-weight:600">3000 🧀</span></span>
+        <span style="font-size:${0.6*s}rem;color:#5A6577">рџ’Ґ <span style="color:#8a94a6;font-weight:600">РњР°РєСЃ. СѓСЂРѕРЅ</span></span>
+        <span style="font-size:${0.6*s}rem;color:#5A6577">рџ‘Ґ <span style="color:#8a94a6;font-weight:600">8 РёРіСЂРѕРєРѕРІ</span></span>
+        <span style="font-size:${0.6*s}rem;color:#5A6577">рџЏ† <span style="color:#8a94a6;font-weight:600">3000 рџ§Ђ</span></span>
     </div>`;
     // Top 3
     const players = [{n:'TankDestroyer',v:12450,b:5},{n:'GloriAmtower',v:10800,b:4},{n:'Fors777_2016',v:9200,b:5}];
-    const medals = ['🥇','🥈','🥉'];
+    const medals = ['рџҐ‡','рџҐ€','рџҐ‰'];
     const colors = ['#fbbf24','#94a3b8','#cd7f32'];
     players.forEach((p,i) => {
         h += `<div style="display:flex;align-items:center;gap:10px;padding:${10*s}px ${12*s}px;margin-bottom:6px;border-radius:12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.04);">
             <span style="font-size:${1.2*s}rem">${medals[i]}</span>
             <div style="flex:1">
                 <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.75*s}rem;color:${cfg.text}">${p.n}</div>
-                <div style="font-size:${0.55*s}rem;color:#5A6577">⚔️ ${p.b}/5 боёв</div>
+                <div style="font-size:${0.55*s}rem;color:#5A6577">вљ”пёЏ ${p.b}/5 Р±РѕС‘РІ</div>
             </div>
             <div style="text-align:right">
                 <div style="font-family:'${cfg.font}',sans-serif;font-size:${1*s}rem;color:${colors[i]}">${p.v.toLocaleString()}</div>
-                <div style="font-size:${0.5*s}rem;color:#5A6577">урон</div>
+                <div style="font-size:${0.5*s}rem;color:#5A6577">СѓСЂРѕРЅ</div>
             </div>
         </div>`;
     });
     if (cfg.showFooter) h += `<div style="display:flex;justify-content:center;gap:16px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04);margin-top:4px;">
-        <span style="font-size:${0.55*s}rem;color:#5A6577">🏆 Приз: <span style="color:${cfg.accent};font-weight:700">3 000 🧀</span></span>
-        <span style="font-size:${0.55*s}rem;color:#5A6577">⏱ <span style="color:${cfg.accent};font-weight:700">02:45:00</span></span>
+        <span style="font-size:${0.55*s}rem;color:#5A6577">рџЏ† РџСЂРёР·: <span style="color:${cfg.accent};font-weight:700">3 000 рџ§Ђ</span></span>
+        <span style="font-size:${0.55*s}rem;color:#5A6577">вЏ± <span style="color:${cfg.accent};font-weight:700">02:45:00</span></span>
     </div>`;
     document.getElementById('widgetPreview').innerHTML = wrapWidget(cfg, h);
 }
 
-// ═══ TEAM DEMO ═══
+// в•ђв•ђв•ђ TEAM DEMO в•ђв•ђв•ђ
 function renderTeamDemo() {
     const cfg = getCfg();
     const s = cfg.scale;
     let h = '';
     if (cfg.showHeader) h += `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
-        <span style="font-size:${1.1*s}rem">👥</span>
-        <span style="font-family:'${cfg.font}',sans-serif;font-size:${0.85*s}rem;color:${cfg.accent};letter-spacing:2px;text-transform:uppercase;">Командное Сражение</span>
+        <span style="font-size:${1.1*s}rem">рџ‘Ґ</span>
+        <span style="font-family:'${cfg.font}',sans-serif;font-size:${0.85*s}rem;color:${cfg.accent};letter-spacing:2px;text-transform:uppercase;">РљРѕРјР°РЅРґРЅРѕРµ РЎСЂР°Р¶РµРЅРёРµ</span>
     </div>`;
     // Two teams
     h += `<div style="display:flex;gap:12px;margin-bottom:12px;">
         <div style="flex:1;padding:${12*s}px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:14px;text-align:center;">
-            <div style="font-size:${0.55*s}rem;color:#5A6577;text-transform:uppercase;margin-bottom:4px">🔵 Команда A</div>
+            <div style="font-size:${0.55*s}rem;color:#5A6577;text-transform:uppercase;margin-bottom:4px">рџ”µ РљРѕРјР°РЅРґР° A</div>
             <div style="font-family:'${cfg.font}',sans-serif;font-size:${1.8*s}rem;color:#60a5fa;line-height:1;margin-bottom:6px">24 600</div>
             <div style="font-size:${0.6*s}rem;color:#8a94a6">Player1, Player2</div>
         </div>
@@ -663,33 +669,33 @@ function renderTeamDemo() {
             <span style="font-family:'${cfg.font}',sans-serif;font-size:${0.7*s}rem;color:rgba(255,255,255,0.2)">VS</span>
         </div>
         <div style="flex:1;padding:${12*s}px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:14px;text-align:center;">
-            <div style="font-size:${0.55*s}rem;color:#5A6577;text-transform:uppercase;margin-bottom:4px">🔴 Команда B</div>
+            <div style="font-size:${0.55*s}rem;color:#5A6577;text-transform:uppercase;margin-bottom:4px">рџ”ґ РљРѕРјР°РЅРґР° B</div>
             <div style="font-family:'${cfg.font}',sans-serif;font-size:${1.8*s}rem;color:#f87171;line-height:1;margin-bottom:6px">19 300</div>
             <div style="font-size:${0.6*s}rem;color:#8a94a6">Player3, Player4</div>
         </div>
     </div>`;
     if (cfg.showFooter) h += `<div style="display:flex;justify-content:center;gap:16px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04);">
-        <span style="font-size:${0.55*s}rem;color:#5A6577">🧀 Ставка: <span style="color:${cfg.accent};font-weight:700">300</span></span>
-        <span style="font-size:${0.55*s}rem;color:#5A6577">⚔️ Боёв: <span style="color:${cfg.accent};font-weight:700">5</span></span>
+        <span style="font-size:${0.55*s}rem;color:#5A6577">рџ§Ђ РЎС‚Р°РІРєР°: <span style="color:${cfg.accent};font-weight:700">300</span></span>
+        <span style="font-size:${0.55*s}rem;color:#5A6577">вљ”пёЏ Р‘РѕС‘РІ: <span style="color:${cfg.accent};font-weight:700">5</span></span>
     </div>`;
     document.getElementById('widgetPreview').innerHTML = wrapWidget(cfg, h);
 }
 
-// ═══ VOTE DEMO ═══
+// в•ђв•ђв•ђ VOTE DEMO в•ђв•ђв•ђ
 function renderVoteDemo() {
     const cfg = getCfg();
     const s = cfg.scale;
     const ar = hexToRgb(cfg.accent);
     let h = '';
     if (cfg.showHeader) h += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(${ar},0.12);">
-        <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.85*s}rem;color:${cfg.accent};display:flex;align-items:center;gap:6px">🗳️ Лучший донат вечера</div>
-        <div style="font-size:${0.6*s}rem;color:#f5d36e;font-weight:700">🎁 Приз!</div>
+        <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.85*s}rem;color:${cfg.accent};display:flex;align-items:center;gap:6px">рџ—іпёЏ Р›СѓС‡С€РёР№ РґРѕРЅР°С‚ РІРµС‡РµСЂР°</div>
+        <div style="font-size:${0.6*s}rem;color:#f5d36e;font-weight:700">рџЋЃ РџСЂРёР·!</div>
     </div>`;
-    if (cfg.showInfo) h += `<div style="font-family:'${cfg.font}',sans-serif;font-size:${0.9*s}rem;color:${cfg.accent};text-align:center;padding:8px;background:rgba(${ar},0.06);border-radius:10px;margin-bottom:12px;letter-spacing:2px">⏱ 00:45:12</div>`;
+    if (cfg.showInfo) h += `<div style="font-family:'${cfg.font}',sans-serif;font-size:${0.9*s}rem;color:${cfg.accent};text-align:center;padding:8px;background:rgba(${ar},0.06);border-radius:10px;margin-bottom:12px;letter-spacing:2px">вЏ± 00:45:12</div>`;
     const entries = [
-        {n:'TankMaster', msg:'Шутка: Танк зашёл в бар...', votes:42},
-        {n:'CheeseLover', msg:'Стих: Розы красные...', votes:38},
-        {n:'ProPlayer', msg:'Когда купил премиум танк...', votes:25},
+        {n:'TankMaster', msg:'РЁСѓС‚РєР°: РўР°РЅРє Р·Р°С€С‘Р» РІ Р±Р°СЂ...', votes:42},
+        {n:'CheeseLover', msg:'РЎС‚РёС…: Р РѕР·С‹ РєСЂР°СЃРЅС‹Рµ...', votes:38},
+        {n:'ProPlayer', msg:'РљРѕРіРґР° РєСѓРїРёР» РїСЂРµРјРёСѓРј С‚Р°РЅРє...', votes:25},
     ];
     const rankBgs = ['linear-gradient(135deg,#f5d36e,#C8AA6E)','linear-gradient(135deg,#94a3b8,#64748b)','linear-gradient(135deg,#cd7f32,#a0522d)'];
     const rankClrs = ['#0a0e14','#0a0e14','#fff'];
@@ -704,16 +710,68 @@ function renderVoteDemo() {
             </div>
             <div style="position:relative;text-align:right">
                 <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.8*s}rem;color:${cfg.accent}">${e.votes}</div>
-                <div style="font-size:0.4rem;color:#5A6577">голосов</div>
+                <div style="font-size:0.4rem;color:#5A6577">РіРѕР»РѕСЃРѕРІ</div>
             </div>
         </div>`;
     });
     document.getElementById('widgetPreview').innerHTML = wrapWidget(cfg, h);
 }
 
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђ RESULT DEMO (Challenge result popup) в•ђв•ђв•ђ
+function renderResultDemo() {
+    const cfg = getCfg();
+    const s = cfg.scale;
+    const ar = hexToRgb(cfg.accent);
+    let h = '';
+
+    // Trophy header
+    h += `<div style="text-align:center;margin-bottom:14px;">
+        <span style="font-size:${2.4*s}rem;display:block;margin-bottom:4px;filter:drop-shadow(0 0 20px rgba(255,215,0,0.5))">рџЏ†</span>
+        <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.65*s}rem;color:${cfg.accent};letter-spacing:3px;text-transform:uppercase;">вљ”пёЏ PVP Р§Р•Р›Р›Р•РќР”Р– вЂ” Р—РђР’Р•Р РЁРЃРќ</div>
+    </div>`;
+
+    // Winner section
+    h += `<div style="text-align:center;padding:12px 20px;margin-bottom:14px;border-radius:14px;
+        background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(34,197,94,0.03));
+        border:1px solid rgba(74,222,128,0.2);">
+        <div style="font-size:${0.5*s}rem;color:#4ade80;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">рџЏ† РџРћР‘Р•Р”РРўР•Р›Р¬</div>
+        <div style="font-family:'${cfg.font}',sans-serif;font-size:${1.2*s}rem;color:#4ade80;text-shadow:0 0 20px rgba(74,222,128,0.3)">GloriAmtower</div>
+    </div>`;
+
+    // VS row
+    h += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;padding:${10*s}px ${12*s}px;border-radius:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(74,222,128,0.2);text-align:center;">
+            <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.68*s}rem;color:${cfg.text};margin-bottom:6px">GloriAmtower</div>
+            <div style="font-family:'${cfg.font}',sans-serif;font-size:${1.3*s}rem;color:#4ade80;line-height:1">18 420</div>
+        </div>
+        <div style="font-family:'${cfg.font}',sans-serif;font-size:0.45rem;color:rgba(${ar},0.3);letter-spacing:2px">VS</div>
+        <div style="flex:1;padding:${10*s}px ${12*s}px;border-radius:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(239,68,68,0.15);text-align:center;">
+            <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.68*s}rem;color:${cfg.text};margin-bottom:6px">Fors777_2016</div>
+            <div style="font-family:'${cfg.font}',sans-serif;font-size:${1.3*s}rem;color:#ef4444;line-height:1">14 850</div>
+        </div>
+    </div>`;
+
+    // Info strip
+    if (cfg.showInfo) h += `<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px;">
+        <span style="font-size:${0.55*s}rem;color:#5A6577">рџЄ– <span style="color:#8a94a6;font-weight:600">РћР±СЉРµРєС‚ 140</span></span>
+        <span style="font-size:${0.55*s}rem;color:#5A6577">рџ’Ґ <span style="color:#8a94a6;font-weight:600">РЈР РћРќ</span></span>
+        <span style="font-size:${0.55*s}rem;color:#5A6577">вљ”пёЏ <span style="color:#8a94a6;font-weight:600">5 Р±РѕС‘РІ</span></span>
+    </div>`;
+
+    // Prize bar
+    if (cfg.showFooter) h += `<div style="text-align:center;padding:10px;border-radius:12px;
+        background:linear-gradient(135deg,rgba(${ar},0.06),rgba(${ar},0.02));
+        border:1px solid rgba(${ar},0.15);">
+        <div style="font-family:'${cfg.font}',sans-serif;font-size:${0.95*s}rem;color:${cfg.accent};text-shadow:0 0 12px rgba(${ar},0.4)">рџ§Ђ 2 000</div>
+        <div style="font-size:${0.45*s}rem;color:#5A6577;letter-spacing:1px;margin-top:2px">Р’Р«РР“Р Р«РЁ</div>
+    </div>`;
+
+    document.getElementById('widgetPreview').innerHTML = wrapWidget(cfg, h);
+}
+
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 // GENERATE URL
-// ═══════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 function generateUrl() {
     const cfg = getCfg();
     const base = 'https://daviddavidov20022-commits.github.io/Mir-Tankov/site/' + WIDGET_URLS[currentType];
@@ -747,8 +805,17 @@ function generateUrl() {
         p.set('border', cfg.border.replace('#', ''));
         p.set('r', cfg.radius);
         p.set('op', cfg.opacity);
+    } else if (currentType === 'result') {
+        // Challenge result popup widget
+        p.set('test', '1'); // always add test button for preview
+        const theme = PRESET_TO_THEME[currentPreset] || 'gold';
+        if (theme !== 'gold') p.set('theme', theme);
+        p.set('accent', cfg.accent.replace('#', ''));
+        if (cfg.scale !== 1) p.set('scale', cfg.scale);
+        if (!cfg.showGlow) {} else p.set('glow', '1');
+        p.set('duration', '10000');
     } else {
-        // GC / Team — pass theme-like params
+        // GC / Team вЂ” pass theme-like params
         p.set('id', '1');
         p.set('accent', cfg.accent.replace('#', ''));
         if (cfg.scale !== 1) p.set('scale', cfg.scale);
@@ -760,10 +827,10 @@ function generateUrl() {
 function copyUrl() {
     const url = document.getElementById('obsUrl').value;
     if (!url) return;
-    navigator.clipboard.writeText(url).then(() => showToast('📋 OBS URL скопирован!')).catch(() => {
+    navigator.clipboard.writeText(url).then(() => showToast('рџ“‹ OBS URL СЃРєРѕРїРёСЂРѕРІР°РЅ!')).catch(() => {
         // fallback
         const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
-        showToast('📋 OBS URL скопирован!');
+        showToast('рџ“‹ OBS URL СЃРєРѕРїРёСЂРѕРІР°РЅ!');
     });
 }
 
@@ -771,7 +838,7 @@ function saveAndCopy() {
     localStorage.setItem('widget_studio_config', JSON.stringify({ type: currentType, preset: currentPreset, font: currentFont, ...getCfg() }));
     generateUrl();
     copyUrl();
-    showToast('💾 Сохранено и скопировано!');
+    showToast('рџ’ѕ РЎРѕС…СЂР°РЅРµРЅРѕ Рё СЃРєРѕРїРёСЂРѕРІР°РЅРѕ!');
 }
 
 function resetAll() {
@@ -791,7 +858,7 @@ function resetAll() {
     document.querySelectorAll('.font-option').forEach(f => f.classList.remove('active'));
     document.querySelector('[data-font="Russo One"]').classList.add('active');
     updatePreview();
-    showToast('🔄 Сброшено!');
+    showToast('рџ”„ РЎР±СЂРѕС€РµРЅРѕ!');
 }
 
 function goBack() {
@@ -822,3 +889,4 @@ updatePreview();
 </script>
 </body>
 </html>
+
