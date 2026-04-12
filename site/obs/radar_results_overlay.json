@@ -1,57 +1,177 @@
 {
   "status": "active", 
-  "date": "12.04.2026 02:09", 
-  "enemies": [], 
-  "allies": [
+  "date": "12.04.2026 19:16", 
+  "enemies": [
     {
-      "nick": "ABIK2026", 
+      "nick": ":Умар Дегтярёв:", 
       "tank": "", 
-      "account_id": "294712529", 
+      "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "GloriAmtower", 
+      "nick": ":Johan Wegner:", 
       "tank": "", 
-      "account_id": "101862451", 
+      "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "3Jlou44uTep", 
+      "nick": ":Jean Durand:", 
       "tank": "", 
-      "account_id": "31487031", 
+      "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "Sanya110681", 
+      "nick": ":Goffredo Manfre:", 
       "tank": "", 
-      "account_id": "20713884", 
+      "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "RAKO_LOVE", 
+      "nick": ":Luitpold Drossel:", 
       "tank": "", 
-      "account_id": "117354874", 
+      "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "astvadz_", 
+      "nick": ":Константин Невельской:", 
       "tank": "", 
-      "account_id": "32849636", 
+      "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }, 
     {
-      "nick": "SERZHANT_DROBOVIK", 
+      "nick": ":Theobald Hesse:", 
       "tank": "", 
-      "account_id": "29984431", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": ":Kazutoshi Yano:", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": ":Данила Паляница:", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": ":Антон Лосев:", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": ":Виссарион Булатчиков:", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": ":Гаврила Касимов:", 
+      "tank": "", 
+      "account_id": "0", 
       "kills": 0, 
       "damage": 0
     }
   ], 
-  "battle_number": 25
+  "allies": [
+    {
+      "nick": "Edi14", 
+      "tank": "", 
+      "account_id": "16556384", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "PLAGTANK", 
+      "tank": "", 
+      "account_id": "27661735", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "RAK__groznyj", 
+      "tank": "", 
+      "account_id": "37146985", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "mvl73", 
+      "tank": "", 
+      "account_id": "66494643", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Jeka_kHz", 
+      "tank": "", 
+      "account_id": "22119413", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "dzhonemo", 
+      "tank": "", 
+      "account_id": "23163000", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "ARKANSAS1989", 
+      "tank": "", 
+      "account_id": "15676924", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "asd866", 
+      "tank": "", 
+      "account_id": "4603965", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": " BARS_007___2_0_1", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Fors777_2016", 
+      "tank": "", 
+      "account_id": "63712847", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "Jihong_Tae", 
+      "tank": "", 
+      "account_id": "0", 
+      "kills": 0, 
+      "damage": 0
+    }, 
+    {
+      "nick": "vitaha199", 
+      "tank": "", 
+      "account_id": "3580510", 
+      "kills": 0, 
+      "damage": 0
+    }
+  ], 
+  "battle_number": 1
 }
