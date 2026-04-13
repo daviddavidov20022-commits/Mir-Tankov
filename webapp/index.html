@@ -49,6 +49,54 @@
         .qa-card__title{font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3;margin-bottom:2px;}
         .qa-card__cost{font-size:0.65rem;color:#FFC107;}
         .qa-card__desc{font-size:0.6rem;color:#5A6577;margin-top:2px;}
+
+        /* WoT Online Counter Widget */
+        .wot-online-widget{
+            margin-top:28px;
+            padding:16px 22px;
+            background:linear-gradient(135deg,rgba(15,20,30,0.85),rgba(20,25,35,0.9));
+            border:1px solid rgba(200,170,110,0.12);
+            border-radius:16px;
+            backdrop-filter:blur(10px);
+            position:relative;
+            overflow:hidden;
+            animation:wotWidgetIn 0.6s ease-out;
+        }
+        @keyframes wotWidgetIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+        .wot-online-widget::before{
+            content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;
+            background:radial-gradient(circle,rgba(34,197,94,0.06),transparent 70%);pointer-events:none;
+        }
+        .wot-online-total{
+            display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;
+        }
+        .wot-online-pulse{
+            width:10px;height:10px;border-radius:50%;background:#22c55e;
+            box-shadow:0 0 8px rgba(34,197,94,0.6);
+            animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0;
+        }
+        @keyframes onlinePulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+        .wot-online-number{
+            font-family:'Russo One',sans-serif;font-size:1.8rem;
+            background:linear-gradient(90deg,#22c55e,#4ade80);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            letter-spacing:1px;
+        }
+        .wot-online-label{
+            font-size:0.7rem;color:#9AA4B5;text-transform:uppercase;letter-spacing:1px;
+        }
+        .wot-online-servers{
+            display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+        }
+        @media(max-width:480px){.wot-online-servers{grid-template-columns:repeat(3,1fr);}}
+        .wot-srv{
+            padding:6px 8px;border-radius:8px;text-align:center;
+            background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);
+            transition:all 0.3s;
+        }
+        .wot-srv:hover{border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.05);}
+        .wot-srv__name{font-size:0.6rem;color:#5A6577;font-weight:600;margin-bottom:2px;}
+        .wot-srv__count{font-family:'Russo One',sans-serif;font-size:0.85rem;color:#E8E6E3;}
     </style>
 <script src="js/auth-interceptor.js?v=52"></script>
 </head>
@@ -189,6 +237,16 @@
                     <div class="hero__stat-value">4</div>
                     <div class="hero__stat-label">Площадки</div>
                 </div>
+            </div>
+
+            <!-- 🔥 WoT Online Counter — живой счётчик -->
+            <div class="wot-online-widget" id="wotOnlineWidget" style="display:none;">
+                <div class="wot-online-total">
+                    <div class="wot-online-pulse"></div>
+                    <div class="wot-online-number" id="wotOnlineTotal">—</div>
+                    <div class="wot-online-label">танкистов в бою</div>
+                </div>
+                <div class="wot-online-servers" id="wotOnlineServers"></div>
             </div>
         </div>
     </section>
@@ -747,7 +805,7 @@
             }
         }
 
-        // Load total users count
+         // Load total users count
         async function loadUsersCount() {
             try {
                 const resp = await fetch(`${API_BASE_LANDING}/api/stats/total_users`);
@@ -760,6 +818,65 @@
                 const el = document.getElementById('heroUsersCount');
                 if (el) el.textContent = '100+';
             }
+        }
+
+        // Load WoT online stats
+        async function loadWotOnline() {
+            try {
+                const resp = await fetch(`${API_BASE_LANDING}/api/wot/online`);
+                const data = await resp.json();
+                
+                if (!data.total || data.total === 0) return;
+                
+                const widget = document.getElementById('wotOnlineWidget');
+                const totalEl = document.getElementById('wotOnlineTotal');
+                const serversEl = document.getElementById('wotOnlineServers');
+                
+                if (!widget || !totalEl) return;
+                
+                // Animated counter
+                const target = data.total;
+                const current = parseInt(totalEl.textContent.replace(/\D/g, '')) || 0;
+                if (current === 0) {
+                    // First load — animate from 0
+                    animateCounter(totalEl, 0, target, 1200);
+                } else {
+                    // Update — smooth transition
+                    animateCounter(totalEl, current, target, 600);
+                }
+                
+                // Server grid
+                if (data.servers && data.servers.length > 0) {
+                    serversEl.innerHTML = data.servers.map(s => {
+                        const count = s.online.toLocaleString('ru-RU');
+                        // Color intensity based on population
+                        const maxPop = Math.max(...data.servers.map(x => x.online));
+                        const intensity = Math.round((s.online / maxPop) * 100);
+                        const color = intensity > 70 ? '#4ade80' : intensity > 40 ? '#facc15' : '#9AA4B5';
+                        return `<div class="wot-srv">
+                            <div class="wot-srv__name">${s.name}</div>
+                            <div class="wot-srv__count" style="color:${color}">${count}</div>
+                        </div>`;
+                    }).join('');
+                }
+                
+                widget.style.display = '';
+            } catch (e) {
+                console.warn('WoT online load error:', e);
+            }
+        }
+        
+        function animateCounter(el, from, to, duration) {
+            const start = performance.now();
+            const diff = to - from;
+            function step(ts) {
+                const progress = Math.min((ts - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+                const current = Math.round(from + diff * eased);
+                el.textContent = current.toLocaleString('ru-RU');
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
         }
 
         // Scroll-reveal animations
@@ -908,6 +1025,10 @@
             
             setTimeout(checkLandingStreams, 1000);
             setInterval(checkLandingStreams, 120000);
+
+            // WoT серверный онлайн — загрузить и обновлять каждые 2 мин
+            setTimeout(loadWotOnline, 500);
+            setInterval(loadWotOnline, 120000);
 
             // Load daily reward if logged in
             if (siteAuth.isLoggedIn) {

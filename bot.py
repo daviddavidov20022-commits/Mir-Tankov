@@ -7855,6 +7855,66 @@ async def api_top_players(request):
         return cors_response({"error": str(e)}, 500)
 
 
+async def api_wot_online(request):
+    """GET /api/wot/online — живая статистика онлайна серверов Мир Танков"""
+    try:
+        # ── TTL Cache 120 сек — данные обновляются раз в 2 мин ──
+        cached = cache.get("wot_online")
+        if cached is not None:
+            return cached
+
+        import aiohttp, re as _re
+
+        result = {"total": 0, "servers": [], "source": "kttc.ru", "timestamp": None}
+
+        try:
+            timeout = aiohttp.ClientTimeout(total=10)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(
+                    "https://kttc.ru/wot/ru/online/",
+                    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+                ) as resp:
+                    raw = await resp.read()
+                    html = raw.decode("utf-8", errors="ignore")
+
+            # Ищем секцию с серверами WoT (содержит RU1, RU2 и т.д.)
+            sections = _re.findall(r'<section[^>]*>(.*?)</section>', html, _re.DOTALL)
+            for section in sections:
+                pairs = _re.findall(r'<b>(\d+)</b>.*?<b>(RU\d+)</b>', section, _re.DOTALL)
+                if pairs and len(pairs) >= 3:  # WoT имеет 7+ серверов
+                    servers = []
+                    total = 0
+                    for online_str, name in pairs:
+                        online = int(online_str)
+                        servers.append({"name": name, "online": online})
+                        total += online
+                    
+                    servers.sort(key=lambda s: int(s["name"].replace("RU", "")))
+                    
+                    result["servers"] = servers
+                    result["total"] = total
+                    
+                    # Ищем официальный total из kttc
+                    total_match = _re.findall(r'(\d+)\s*(?:чел|игрок)', section)
+                    if total_match:
+                        result["total"] = int(total_match[0])
+                    
+                    import time
+                    result["timestamp"] = int(time.time())
+                    break
+
+        except Exception as e:
+            logger.warning(f"WoT online scrape error: {e}")
+            result["error"] = "Данные временно недоступны"
+
+        response = cors_response(result)
+        cache.set("wot_online", response, ttl=120)  # Кеш 2 минуты
+        return response
+    except Exception as e:
+        logger.error(f"API wot_online error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
 async def api_stats_total_users(request):
     """GET /api/stats/total_users — количество зарегистрированных пользователей"""
     try:
@@ -11298,6 +11358,7 @@ def create_api_app():
 
     # Stats API
     app.router.add_get("/api/stats/total_users", api_stats_total_users)
+    app.router.add_get("/api/wot/online", api_wot_online)
 
     # Streams API
     app.router.add_get("/api/streams/status", api_streams_status)
