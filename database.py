@@ -1,5 +1,9 @@
 """
-Модуль базы данных — SQLite для экосистемы «Мир Танков»
+Модуль базы данных — SQLite / PostgreSQL для экосистемы «Мир Танков»
+
+Автоматически определяет бэкенд:
+- DATABASE_URL установлен → PostgreSQL (масштабируемый)
+- DATABASE_URL не установлен → SQLite (локальный)
 
 Таблицы:
 - users: пользователи бота (telegram_id, nickname, coins, xp, level)
@@ -18,49 +22,31 @@ from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
-# Используем постоянное хранилище Railway Volume если доступно
-# В Railway Dashboard нужно добавить Volume с путём /data
-_volume_path = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "")
-if _volume_path and os.path.isdir(_volume_path):
-    DB_PATH = os.path.join(_volume_path, "ecosystem.db")
-else:
-    DB_PATH = os.path.join(os.path.dirname(__file__), "ecosystem.db")
+# ── Универсальный движок БД ──
+from db_engine import get_connection, get_read_connection, DB_TYPE, SQLITE_PATH
 
-logger.info(f"Database path: {DB_PATH}")
+DB_PATH = SQLITE_PATH  # Для обратной совместимости
+
+logger.info(f"Database module: using {DB_TYPE}")
 
 
 @contextmanager
 def get_db(write=True):
     """
     Контекстный менеджер для подключения к БД.
+    Поддерживает SQLite и PostgreSQL (через db_engine).
     write=True (по умолчанию) — включает автоматический commit/rollback.
     write=False — только чтение, без commit.
     """
-    conn = sqlite3.connect(DB_PATH, timeout=20, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    
-    # Режим WAL для параллельной работы чтения и записи
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA synchronous=NORMAL")  # Ускоряет запись, безопасно для WAL
-    conn.execute("PRAGMA busy_timeout=20000")  # Ждать разблокировки до 20 секунд
-    
-    try:
+    with get_connection(write=write) as conn:
         yield conn
-        if write:
-            conn.commit()
-    except Exception as e:
-        if write:
-            conn.rollback()
-        logger.error(f"Database error: {e}")
-        raise
-    finally:
-        conn.close()
 
 @contextmanager
 def get_db_read():
     """Специальный менеджер только для чтения — максимально быстрый и без блокировок"""
-    with get_db(write=False) as conn:
+    with get_read_connection() as conn:
         yield conn
+
 
 
 def init_db():
