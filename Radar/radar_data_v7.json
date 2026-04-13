@@ -2139,6 +2139,20 @@
           "tank": "Gendarme",
           "dmg": 7577,
           "kills": 3
+        },
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Concept 5",
+          "dmg": 5826,
+          "kills": 1
+        },
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Orso",
+          "dmg": 848,
+          "kills": 0
         }
       ]
     },
@@ -2294,6 +2308,510 @@
           "date": "11.04.2026 22:37",
           "tank": "Unknown",
           "dmg": 501,
+          "kills": 0
+        }
+      ]
+    },
+    "prannik82": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Merkava LP",
+          "dmg": 5612,
+          "kills": 3
+        }
+      ]
+    },
+    "JEKA_PIWO": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "TVP T 50/51",
+          "dmg": 5530,
+          "kills": 1
+        }
+      ]
+    },
+    "jeka_zorin": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Wilk",
+          "dmg": 4409,
+          "kills": 0
+        }
+      ]
+    },
+    "vitek200315": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Progetto 65",
+          "dmg": 3992,
+          "kills": 0
+        }
+      ]
+    },
+    "Vov4ik_47rus": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Об. 140",
+          "dmg": 2329,
+          "kills": 1
+        }
+      ]
+    },
+    "valdis_85": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "EBR 105",
+          "dmg": 1117,
+          "kills": 1
+        }
+      ]
+    },
+    "51922": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Unknown",
+          "dmg": 4952,
+          "kills": 2
+        }
+      ]
+    },
+    "4496573": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Unknown",
+          "dmg": 2715,
+          "kills": 1
+        }
+      ]
+    },
+    "13903250": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Unknown",
+          "dmg": 2485,
+          "kills": 0
+        }
+      ]
+    },
+    "80149319": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Unknown",
+          "dmg": 2383,
+          "kills": 0
+        }
+      ]
+    },
+    "20909402": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Unknown",
+          "dmg": 2367,
+          "kills": 1
+        }
+      ]
+    },
+    "7474798": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Unknown",
+          "dmg": 2143,
+          "kills": 0
+        }
+      ]
+    },
+    "4862068": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 106,
+          "date": "13.04.2026 15:22",
+          "tank": "Unknown",
+          "dmg": 1211,
+          "kills": 0
+        }
+      ]
+    },
+    "kiryvbg": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Concept 5",
+          "dmg": 2690,
+          "kills": 0
+        }
+      ]
+    },
+    "krasavchik77777777777777": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "60TP",
+          "dmg": 2140,
+          "kills": 1
+        }
+      ]
+    },
+    "DJ_Filimon": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Champion",
+          "dmg": 2009,
+          "kills": 0
+        }
+      ]
+    },
+    "9l_Mory4u": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "EBR 105",
+          "dmg": 1620,
+          "kills": 1
+        }
+      ]
+    },
+    "MaxLunev_1": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "FV215b 183",
+          "dmg": 1213,
+          "kills": 0
+        }
+      ]
+    },
+    "Kalyuzhnyi96": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "MT-58",
+          "dmg": 1198,
+          "kills": 0
+        }
+      ]
+    },
+    "vank2014": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "ConquerorGC",
+          "dmg": 1195,
+          "kills": 0
+        }
+      ]
+    },
+    "Jen_Psaki": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "ИС-7",
+          "dmg": 1027,
+          "kills": 0
+        }
+      ]
+    },
+    "catanamoRN": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "B-C 155 58",
+          "dmg": 862,
+          "kills": 0
+        }
+      ]
+    },
+    "roman_sidorichev": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "AMX 13 105",
+          "dmg": 656,
+          "kills": 1
+        }
+      ]
+    },
+    " Tumultika_Best_Do_It": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "T57 Heavy",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "c975vr": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "E 100",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "BISMARK1210": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "StuG Maus",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "_ALIK_71_Rus": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Таран",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "B_AHrAPe_TEMHO": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "ИС-7",
+          "dmg": 5144,
+          "kills": 4
+        }
+      ]
+    },
+    "ubicatankoff": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Minotauro",
+          "dmg": 3182,
+          "kills": 2
+        }
+      ]
+    },
+    "Mu4a4oo": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "ИС-7",
+          "dmg": 2979,
+          "kills": 3
+        }
+      ]
+    },
+    "Mnepox98": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Об. 705А",
+          "dmg": 2743,
+          "kills": 1
+        }
+      ]
+    },
+    "houstondst": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "B-C 155 58",
+          "dmg": 2424,
+          "kills": 0
+        }
+      ]
+    },
+    "BODITELb_VAL9": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Об. 430У",
+          "dmg": 2177,
+          "kills": 1
+        }
+      ]
+    },
+    "FENIKSANDREY": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "FV215b 183",
+          "dmg": 2116,
+          "kills": 2
+        }
+      ]
+    },
+    "GimliDen": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "T57 Heavy",
+          "dmg": 2057,
+          "kills": 0
+        }
+      ]
+    },
+    " ming501": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Manticore",
+          "dmg": 1993,
+          "kills": 0
+        }
+      ]
+    },
+    "Gleb2GlebPresenin": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "BZT-70",
+          "dmg": 1509,
+          "kills": 1
+        }
+      ]
+    },
+    "Doomedium": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "WZ-111 5A",
+          "dmg": 1453,
+          "kills": 0
+        }
+      ]
+    },
+    "deniskin663": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Об. 261",
+          "dmg": 1293,
+          "kills": 1
+        }
+      ]
+    },
+    " wcx96101980": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "Т-62А",
+          "dmg": 780,
+          "kills": 0
+        }
+      ]
+    },
+    " xxxCOMMANDUST": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "EBR 105",
+          "dmg": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "19NagibatoR96": {
+      "is_sub": false,
+      "matches": [
+        {
+          "battle": 107,
+          "date": "13.04.2026 15:33",
+          "tank": "FV215b 183",
+          "dmg": 0,
           "kills": 0
         }
       ]
@@ -3721,6 +4239,332 @@
         }
       ],
       "winner": "ally"
+    },
+    {
+      "battle_number": 106,
+      "date": "13.04.2026 15:22",
+      "allies": [
+        {
+          "nick": "GloriAmtower",
+          "tank": "Concept 5",
+          "damage": 5826,
+          "kills": 1,
+          "account_id": "101862451"
+        },
+        {
+          "nick": "prannik82",
+          "tank": "Merkava LP",
+          "damage": 5612,
+          "kills": 3,
+          "account_id": "6999610"
+        },
+        {
+          "nick": "JEKA_PIWO",
+          "tank": "TVP T 50/51",
+          "damage": 5530,
+          "kills": 1,
+          "account_id": "255465190"
+        },
+        {
+          "nick": "jeka_zorin",
+          "tank": "Wilk",
+          "damage": 4409,
+          "kills": 0,
+          "account_id": "6429835"
+        },
+        {
+          "nick": "vitek200315",
+          "tank": "Progetto 65",
+          "damage": 3992,
+          "kills": 0,
+          "account_id": "13996651"
+        },
+        {
+          "nick": "Vov4ik_47rus",
+          "tank": "Об. 140",
+          "damage": 2329,
+          "kills": 1,
+          "account_id": "22939808"
+        },
+        {
+          "nick": "valdis_85",
+          "tank": "EBR 105",
+          "damage": 1117,
+          "kills": 1,
+          "account_id": "12847559"
+        }
+      ],
+      "enemies": [
+        {
+          "nick": "51922",
+          "tank": "Unknown",
+          "damage": 4952,
+          "kills": 2,
+          "account_id": "51922"
+        },
+        {
+          "nick": "4496573",
+          "tank": "Unknown",
+          "damage": 2715,
+          "kills": 1,
+          "account_id": "4496573"
+        },
+        {
+          "nick": "13903250",
+          "tank": "Unknown",
+          "damage": 2485,
+          "kills": 0,
+          "account_id": "13903250"
+        },
+        {
+          "nick": "80149319",
+          "tank": "Unknown",
+          "damage": 2383,
+          "kills": 0,
+          "account_id": "80149319"
+        },
+        {
+          "nick": "20909402",
+          "tank": "Unknown",
+          "damage": 2367,
+          "kills": 1,
+          "account_id": "20909402"
+        },
+        {
+          "nick": "7474798",
+          "tank": "Unknown",
+          "damage": 2143,
+          "kills": 0,
+          "account_id": "7474798"
+        },
+        {
+          "nick": "4862068",
+          "tank": "Unknown",
+          "damage": 1211,
+          "kills": 0,
+          "account_id": "4862068"
+        }
+      ],
+      "winner": "ally"
+    },
+    {
+      "battle_number": 107,
+      "date": "13.04.2026 15:33",
+      "allies": [
+        {
+          "nick": "kiryvbg",
+          "tank": "Concept 5",
+          "damage": 2690,
+          "kills": 0,
+          "account_id": "47749098"
+        },
+        {
+          "nick": "krasavchik77777777777777",
+          "tank": "60TP",
+          "damage": 2140,
+          "kills": 1,
+          "account_id": "8488628"
+        },
+        {
+          "nick": "DJ_Filimon",
+          "tank": "Champion",
+          "damage": 2009,
+          "kills": 0,
+          "account_id": "105686330"
+        },
+        {
+          "nick": "9l_Mory4u",
+          "tank": "EBR 105",
+          "damage": 1620,
+          "kills": 1,
+          "account_id": "156011"
+        },
+        {
+          "nick": "MaxLunev_1",
+          "tank": "FV215b 183",
+          "damage": 1213,
+          "kills": 0,
+          "account_id": "36518388"
+        },
+        {
+          "nick": "Kalyuzhnyi96",
+          "tank": "MT-58",
+          "damage": 1198,
+          "kills": 0,
+          "account_id": "19384638"
+        },
+        {
+          "nick": "vank2014",
+          "tank": "ConquerorGC",
+          "damage": 1195,
+          "kills": 0,
+          "account_id": "26074150"
+        },
+        {
+          "nick": "Jen_Psaki",
+          "tank": "ИС-7",
+          "damage": 1027,
+          "kills": 0,
+          "account_id": "18934834"
+        },
+        {
+          "nick": "catanamoRN",
+          "tank": "B-C 155 58",
+          "damage": 862,
+          "kills": 0,
+          "account_id": "11130529"
+        },
+        {
+          "nick": "GloriAmtower",
+          "tank": "Orso",
+          "damage": 848,
+          "kills": 0,
+          "account_id": "101862451"
+        },
+        {
+          "nick": "roman_sidorichev",
+          "tank": "AMX 13 105",
+          "damage": 656,
+          "kills": 1,
+          "account_id": "15731152"
+        },
+        {
+          "nick": " Tumultika_Best_Do_It",
+          "tank": "T57 Heavy",
+          "damage": 0,
+          "kills": 0,
+          "account_id": "46939733"
+        },
+        {
+          "nick": "c975vr",
+          "tank": "E 100",
+          "damage": 0,
+          "kills": 0,
+          "account_id": "6179738"
+        },
+        {
+          "nick": "BISMARK1210",
+          "tank": "StuG Maus",
+          "damage": 0,
+          "kills": 0,
+          "account_id": "16379040"
+        },
+        {
+          "nick": "_ALIK_71_Rus",
+          "tank": "Таран",
+          "damage": 0,
+          "kills": 0,
+          "account_id": "172160656"
+        }
+      ],
+      "enemies": [
+        {
+          "nick": "B_AHrAPe_TEMHO",
+          "tank": "ИС-7",
+          "damage": 5144,
+          "kills": 4,
+          "account_id": "105791310"
+        },
+        {
+          "nick": "ubicatankoff",
+          "tank": "Minotauro",
+          "damage": 3182,
+          "kills": 2,
+          "account_id": "20762366"
+        },
+        {
+          "nick": "Mu4a4oo",
+          "tank": "ИС-7",
+          "damage": 2979,
+          "kills": 3,
+          "account_id": "1741290"
+        },
+        {
+          "nick": "Mnepox98",
+          "tank": "Об. 705А",
+          "damage": 2743,
+          "kills": 1,
+          "account_id": "298092473"
+        },
+        {
+          "nick": "houstondst",
+          "tank": "B-C 155 58",
+          "damage": 2424,
+          "kills": 0,
+          "account_id": "1208143"
+        },
+        {
+          "nick": "BODITELb_VAL9",
+          "tank": "Об. 430У",
+          "damage": 2177,
+          "kills": 1,
+          "account_id": "12262172"
+        },
+        {
+          "nick": "FENIKSANDREY",
+          "tank": "FV215b 183",
+          "damage": 2116,
+          "kills": 2,
+          "account_id": "4413156"
+        },
+        {
+          "nick": "GimliDen",
+          "tank": "T57 Heavy",
+          "damage": 2057,
+          "kills": 0,
+          "account_id": "12335729"
+        },
+        {
+          "nick": " ming501",
+          "tank": "Manticore",
+          "damage": 1993,
+          "kills": 0,
+          "account_id": "2520048"
+        },
+        {
+          "nick": "Gleb2GlebPresenin",
+          "tank": "BZT-70",
+          "damage": 1509,
+          "kills": 1,
+          "account_id": "1549235"
+        },
+        {
+          "nick": "Doomedium",
+          "tank": "WZ-111 5A",
+          "damage": 1453,
+          "kills": 0,
+          "account_id": "1708011"
+        },
+        {
+          "nick": "deniskin663",
+          "tank": "Об. 261",
+          "damage": 1293,
+          "kills": 1,
+          "account_id": "3215234"
+        },
+        {
+          "nick": " wcx96101980",
+          "tank": "Т-62А",
+          "damage": 780,
+          "kills": 0,
+          "account_id": "77875109"
+        },
+        {
+          "nick": " xxxCOMMANDUST",
+          "tank": "EBR 105",
+          "damage": 0,
+          "kills": 0,
+          "account_id": "72358126"
+        },
+        {
+          "nick": "19NagibatoR96",
+          "tank": "FV215b 183",
+          "damage": 0,
+          "kills": 0,
+          "account_id": "7092730"
+        }
+      ],
+      "winner": "enemy"
     }
   ]
 }

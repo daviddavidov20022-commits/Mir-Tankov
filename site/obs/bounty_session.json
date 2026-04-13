@@ -1,53 +1,73 @@
 {
   "status": "stopped",
   "participants_count": 0,
-  "total_damage_received": 3627,
+  "total_damage_received": 6157,
   "gold_rate": 1,
   "recent_hits": [
     {
-      "time": "2026-04-11 01:28:09.389000",
-      "tank": "Vz. 55",
-      "name": "DRON_78rus",
-      "gold": 487,
-      "damage": 487
+      "time": "2026-04-13 15:31:02.406000",
+      "tank": "Об. 705А",
+      "name": "Mnepox98",
+      "gold": 219,
+      "damage": 219
     },
     {
-      "time": "2026-04-11 01:26:50.991000",
-      "tank": "212А",
-      "name": "bim761",
-      "gold": 470,
-      "damage": 470
+      "time": "2026-04-13 15:31:01.104000",
+      "tank": "T57 Heavy",
+      "name": "GimliDen",
+      "gold": 421,
+      "damage": 421
     },
     {
-      "time": "2026-04-11 01:26:48.194000",
-      "tank": "Grille 15",
-      "name": "Lady_Naya_05",
-      "gold": 770,
-      "damage": 770
+      "time": "2026-04-13 15:31:00.210000",
+      "tank": "Minotauro",
+      "name": "ubicatankoff",
+      "gold": 526,
+      "damage": 526
     },
     {
-      "damage": 130,
-      "tank": "BZ-74-1",
-      "name": "serj_black",
-      "gold": 130,
-      "time": "2026-04-11 00:59:31.805000"
+      "time": "2026-04-13 15:30:54.616000",
+      "tank": "T57 Heavy",
+      "name": "GimliDen",
+      "gold": 397,
+      "damage": 397
     },
     {
-      "damage": 41,
-      "tank": "Об. 261/4",
-      "name": "_58_",
-      "gold": 41,
-      "time": "2026-04-11 00:59:30.812000"
+      "time": "2026-04-13 15:30:52.008000",
+      "tank": "Minotauro",
+      "name": "ubicatankoff",
+      "gold": 525,
+      "damage": 525
     }
   ],
   "session_start": "2026-04-11 00:51:55",
-  "session_end": "2026-04-11 23:08:36",
-  "total_gold_given": 3627,
-  "last_update": "2026-04-11 23:08:36",
+  "session_end": "2026-04-13 16:37:47",
+  "total_gold_given": 6157,
+  "last_update": "2026-04-13 16:37:47",
   "attackers": {
     "Lady_Naya_05": {
       "tank": "Grille 15",
       "damage": 770
+    },
+    "DRON_78rus": {
+      "tank": "Vz. 55",
+      "damage": 487
+    },
+    "BODITELb_VAL9": {
+      "tank": "Об. 430У",
+      "damage": 442
+    },
+    "serj_black": {
+      "tank": "BZ-74-1",
+      "damage": 130
+    },
+    "Mnepox98": {
+      "tank": "Об. 705А",
+      "damage": 219
+    },
+    "GimliDen": {
+      "tank": "T57 Heavy",
+      "damage": 818
     },
     "vikenton_2017": {
       "tank": "B-C 155 58",
@@ -57,17 +77,13 @@
       "tank": "Об. 261/4",
       "damage": 1514
     },
+    "ubicatankoff": {
+      "tank": "Minotauro",
+      "damage": 1051
+    },
     "bim761": {
       "tank": "212А",
       "damage": 470
-    },
-    "serj_black": {
-      "tank": "BZ-74-1",
-      "damage": 130
-    },
-    "DRON_78rus": {
-      "tank": "Vz. 55",
-      "damage": 487
     }
   }
 }
