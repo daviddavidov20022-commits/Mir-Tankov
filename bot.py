@@ -11518,6 +11518,11 @@ async def main():
     # Фоновый мониторинг активных PVP челленджей (freeze + auto-finish)
     asyncio.create_task(challenge_monitor_loop())
 
+    # Фоновый Stats Worker — обновляет статистику каждые 15 сек без блокировки бота
+    from stats_worker import run_worker_background
+    asyncio.create_task(run_worker_background())
+    logger.info("Stats Worker запущен (фоновый режим)")
+
     # Запускаем серверное чтение Twitch чата
     twitch_ch = stream_config.get('twitch', {}).get('channel', 'iserveri')
     if twitch_ch:
