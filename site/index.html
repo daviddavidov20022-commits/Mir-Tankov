@@ -240,44 +240,16 @@
             </div>
 
             <!-- 🔥 WoT Online Counter — живой счётчик -->
-            <div class="wot-online-widget" id="wotOnlineWidget" style="display:none;">
+            <div class="wot-online-widget" id="wotOnlineWidget">
                 <div class="wot-online-total">
                     <div class="wot-online-pulse"></div>
-                    <div class="wot-online-number" id="wotOnlineTotal">—</div>
+                    <div class="wot-online-number" id="wotOnlineTotal">···</div>
                     <div class="wot-online-label">танкистов в бою</div>
                 </div>
-                <div class="wot-online-servers" id="wotOnlineServers"></div>
+                <div class="wot-online-servers" id="wotOnlineServers"><div style="grid-column:1/-1;text-align:center;font-size:0.65rem;color:#5A6577;">загрузка серверов...</div></div>
             </div>
         </div>
     </section>
-
-    <!-- ==========================================
-         TWITCH PLAYER (always visible)
-         ========================================== -->
-    <div class="twitch-player-section" id="twitchPlayerSection" style="max-width:900px;margin:20px auto 0;padding:0 20px;display:none;">
-        <div style="background:linear-gradient(145deg,#1a2332,#161d28);border:1px solid rgba(145,70,255,0.15);border-radius:20px;overflow:hidden;position:relative;">
-            <div style="position:relative;padding-top:56.25%;background:#000;">
-                <iframe id="twitchEmbed"
-                    src=""
-                    style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
-                    allowfullscreen>
-                </iframe>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,0.3);">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:1.2rem;">📺</span>
-                    <div>
-                        <div style="font-family:'Russo One',sans-serif;font-size:0.8rem;color:#E8E6E3;" id="twitchTitle">ISERVERI — Live</div>
-                        <div style="font-size:0.65rem;color:#5A6577;" id="twitchSubtitle">Twitch · serverenok</div>
-                    </div>
-                </div>
-                <div id="twitchViewerBadge" style="display:none;padding:4px 10px;border-radius:6px;background:rgba(239,68,68,0.15);color:#ef4444;font-size:0.65rem;font-weight:700;">
-                    <span style="display:inline-block;width:6px;height:6px;background:#ef4444;border-radius:50%;margin-right:4px;animation:pulse 1.5s infinite;"></span>
-                    <span id="twitchViewerCount">0</span> зрителей
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- DAILY REWARD BANNER (shown when logged in) -->
     <div class="daily-reward-section" id="dailyRewardSection" style="margin-top:30px;margin-bottom:20px;">
@@ -768,38 +740,7 @@
                     if (navLiveDot) navLiveDot.style.display = 'none';
                 }
 
-                // Twitch player — always show, use best live source
-                const twitchSection = document.getElementById('twitchPlayerSection');
-                const twitchEmbed = document.getElementById('twitchEmbed');
-                const twitchBadge = document.getElementById('twitchViewerBadge');
-                const twitchTitle = document.getElementById('twitchTitle');
-                
-                if (twitchSection && twitchEmbed) {
-                    twitchSection.style.display = '';
-                    const host = window.location.hostname || 'localhost';
-                    
-                    if (!twitchEmbed.src || twitchEmbed.src === '' || twitchEmbed.src === window.location.href) {
-                        if (data.twitch && data.twitch.live) {
-                            twitchEmbed.src = `https://player.twitch.tv/?channel=serverenok&parent=${host}&muted=true`;
-                        } else if (data.vkplay && data.vkplay.live) {
-                            twitchEmbed.src = `https://vkplay.live/iserveri/embed`;
-                        } else {
-                            // Offline — show Twitch channel anyway
-                            twitchEmbed.src = `https://player.twitch.tv/?channel=serverenok&parent=${host}&muted=true`;
-                        }
-                    }
-                    
-                    if (anyLive) {
-                        twitchBadge.style.display = '';
-                        document.getElementById('twitchViewerCount').textContent = totalViewers;
-                        twitchTitle.textContent = 'ISERVERI — LIVE 🔴';
-                        twitchSection.querySelector('div').style.borderColor = 'rgba(239,68,68,0.25)';
-                    } else {
-                        twitchBadge.style.display = 'none';
-                        twitchTitle.textContent = 'ISERVERI — Канал';
-                        twitchSection.querySelector('div').style.borderColor = 'rgba(145,70,255,0.15)';
-                    }
-                }
+
             } catch (e) {
                 console.warn('Stream check error:', e);
             }
@@ -822,35 +763,30 @@
 
         // Load WoT online stats
         async function loadWotOnline() {
+            const totalEl = document.getElementById('wotOnlineTotal');
+            const serversEl = document.getElementById('wotOnlineServers');
+            if (!totalEl) return;
+
             try {
                 const resp = await fetch(`${API_BASE_LANDING}/api/wot/online`);
                 const data = await resp.json();
                 
-                if (!data.total || data.total === 0) return;
-                
-                const widget = document.getElementById('wotOnlineWidget');
-                const totalEl = document.getElementById('wotOnlineTotal');
-                const serversEl = document.getElementById('wotOnlineServers');
-                
-                if (!widget || !totalEl) return;
+                if (!data.total || data.total === 0) {
+                    totalEl.textContent = '—';
+                    serversEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:0.65rem;color:#5A6577;">нет данных</div>';
+                    return;
+                }
                 
                 // Animated counter
                 const target = data.total;
                 const current = parseInt(totalEl.textContent.replace(/\D/g, '')) || 0;
-                if (current === 0) {
-                    // First load — animate from 0
-                    animateCounter(totalEl, 0, target, 1200);
-                } else {
-                    // Update — smooth transition
-                    animateCounter(totalEl, current, target, 600);
-                }
+                animateCounter(totalEl, current, target, current === 0 ? 1200 : 600);
                 
                 // Server grid
                 if (data.servers && data.servers.length > 0) {
+                    const maxPop = Math.max(...data.servers.map(x => x.online));
                     serversEl.innerHTML = data.servers.map(s => {
                         const count = s.online.toLocaleString('ru-RU');
-                        // Color intensity based on population
-                        const maxPop = Math.max(...data.servers.map(x => x.online));
                         const intensity = Math.round((s.online / maxPop) * 100);
                         const color = intensity > 70 ? '#4ade80' : intensity > 40 ? '#facc15' : '#9AA4B5';
                         return `<div class="wot-srv">
@@ -859,10 +795,13 @@
                         </div>`;
                     }).join('');
                 }
-                
-                widget.style.display = '';
             } catch (e) {
                 console.warn('WoT online load error:', e);
+                // Не скрываем, показываем что данные недоступны
+                if (totalEl.textContent === '···') {
+                    totalEl.textContent = '—';
+                    serversEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:0.65rem;color:#5A6577;">временно недоступно</div>';
+                }
             }
         }
         
