@@ -50,53 +50,77 @@
         .qa-card__cost{font-size:0.65rem;color:#FFC107;}
         .qa-card__desc{font-size:0.6rem;color:#5A6577;margin-top:2px;}
 
-        /* WoT Online Counter Widget */
+        /* WoT Online Counter — Compact Design */
         .wot-online-widget{
-            margin-top:28px;
-            padding:16px 22px;
-            background:linear-gradient(135deg,rgba(15,20,30,0.85),rgba(20,25,35,0.9));
-            border:1px solid rgba(200,170,110,0.12);
-            border-radius:16px;
-            backdrop-filter:blur(10px);
-            position:relative;
-            overflow:hidden;
-            animation:wotWidgetIn 0.6s ease-out;
-        }
-        @keyframes wotWidgetIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-        .wot-online-widget::before{
-            content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;
-            background:radial-gradient(circle,rgba(34,197,94,0.06),transparent 70%);pointer-events:none;
-        }
-        .wot-online-total{
-            display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;
-        }
-        .wot-online-pulse{
-            width:10px;height:10px;border-radius:50%;background:#22c55e;
-            box-shadow:0 0 8px rgba(34,197,94,0.6);
-            animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0;
-        }
-        @keyframes onlinePulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
-        .wot-online-number{
-            font-family:'Russo One',sans-serif;font-size:1.8rem;
-            background:linear-gradient(90deg,#22c55e,#4ade80);
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-            letter-spacing:1px;
-        }
-        .wot-online-label{
-            font-size:0.7rem;color:#9AA4B5;text-transform:uppercase;letter-spacing:1px;
-        }
-        .wot-online-servers{
-            display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
-        }
-        @media(max-width:480px){.wot-online-servers{grid-template-columns:repeat(3,1fr);}}
-        .wot-srv{
-            padding:6px 8px;border-radius:8px;text-align:center;
-            background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);
+            margin-top:20px;padding:10px 16px;
+            background:linear-gradient(135deg,rgba(15,20,30,0.8),rgba(20,28,38,0.85));
+            border:1px solid rgba(34,197,94,0.1);border-radius:12px;
+            position:relative;overflow:hidden;cursor:pointer;
             transition:all 0.3s;
         }
-        .wot-srv:hover{border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.05);}
-        .wot-srv__name{font-size:0.6rem;color:#5A6577;font-weight:600;margin-bottom:2px;}
-        .wot-srv__count{font-family:'Russo One',sans-serif;font-size:0.85rem;color:#E8E6E3;}
+        .wot-online-widget:hover{border-color:rgba(34,197,94,0.25);box-shadow:0 4px 20px rgba(34,197,94,0.06);}
+        .wot-online-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+        .wot-online-left{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+        .wot-online-pulse{
+            width:8px;height:8px;border-radius:50%;background:#22c55e;
+            box-shadow:0 0 6px rgba(34,197,94,0.6);
+            animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0;
+        }
+        @keyframes onlinePulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+        .wot-online-number{
+            font-family:'Russo One',sans-serif;font-size:1.15rem;
+            background:linear-gradient(90deg,#22c55e,#4ade80);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            letter-spacing:0.5px;
+        }
+        .wot-online-label{font-size:0.6rem;color:#5A6577;text-transform:uppercase;letter-spacing:0.5px;}
+        .wot-online-servers{display:flex;gap:6px;flex:1;justify-content:flex-end;flex-wrap:wrap;}
+        .wot-srv{
+            padding:3px 7px;border-radius:6px;text-align:center;
+            background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04);
+            display:flex;align-items:center;gap:4px;
+        }
+        .wot-srv__name{font-size:0.55rem;color:#5A6577;font-weight:600;}
+        .wot-srv__count{font-family:'Russo One',sans-serif;font-size:0.7rem;color:#C8D0DC;}
+        .wot-chart-hint{font-size:0.55rem;color:#3A4555;text-align:center;margin-top:6px;}
+        /* Chart Modal */
+        .wot-chart-overlay{
+            position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;
+            display:none;align-items:center;justify-content:center;padding:16px;
+            backdrop-filter:blur(4px);animation:fadeIn 0.2s;
+        }
+        .wot-chart-overlay.open{display:flex;}
+        @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+        .wot-chart-modal{
+            background:linear-gradient(145deg,#0f1520,#141d2a);
+            border:1px solid rgba(200,170,110,0.12);border-radius:16px;
+            width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:20px;
+            animation:slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+        .wot-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+        .wot-chart-title{font-family:'Russo One',sans-serif;font-size:1rem;color:#E8E6E3;}
+        .wot-chart-close{background:none;border:none;color:#5A6577;font-size:1.4rem;cursor:pointer;padding:4px 8px;}
+        .wot-chart-close:hover{color:#E8E6E3;}
+        .wot-chart-tabs{display:flex;gap:6px;margin-bottom:14px;}
+        .wot-chart-tab{
+            padding:5px 12px;border-radius:8px;font-size:0.65rem;font-weight:600;
+            background:rgba(255,255,255,0.04);color:#5A6577;border:1px solid rgba(255,255,255,0.06);
+            cursor:pointer;transition:all 0.2s;
+        }
+        .wot-chart-tab.active{background:rgba(34,197,94,0.12);color:#4ade80;border-color:rgba(34,197,94,0.2);}
+        .wot-chart-canvas-wrap{position:relative;height:200px;margin-bottom:14px;background:rgba(0,0,0,0.2);border-radius:10px;overflow:hidden;}
+        .wot-chart-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+        .wot-chart-stat{text-align:center;padding:8px;background:rgba(255,255,255,0.03);border-radius:8px;}
+        .wot-chart-stat__val{font-family:'Russo One',sans-serif;font-size:1rem;color:#E8E6E3;}
+        .wot-chart-stat__label{font-size:0.6rem;color:#5A6577;margin-top:2px;}
+        @media(max-width:480px){
+            .wot-online-servers{display:none;}
+            .wot-online-label{display:none;}
+            .wot-online-number{font-size:1rem;}
+            .wot-chart-hint{display:block;}
+        }
+        @media(min-width:481px){.wot-chart-hint{display:none;}}
     </style>
 <script src="js/auth-interceptor.js?v=52"></script>
 </head>
@@ -239,17 +263,52 @@
                 </div>
             </div>
 
-            <!-- 🔥 WoT Online Counter — живой счётчик -->
-            <div class="wot-online-widget" id="wotOnlineWidget">
-                <div class="wot-online-total">
-                    <div class="wot-online-pulse"></div>
-                    <div class="wot-online-number" id="wotOnlineTotal">···</div>
-                    <div class="wot-online-label">танкистов в бою</div>
+            <!-- 🔥 WoT Online Counter — compact -->
+            <div class="wot-online-widget" id="wotOnlineWidget" onclick="openOnlineChart()">
+                <div class="wot-online-row">
+                    <div class="wot-online-left">
+                        <div class="wot-online-pulse"></div>
+                        <div class="wot-online-number" id="wotOnlineTotal">···</div>
+                        <div class="wot-online-label">в игре</div>
+                    </div>
+                    <div class="wot-online-servers" id="wotOnlineServers"></div>
                 </div>
-                <div class="wot-online-servers" id="wotOnlineServers"><div style="grid-column:1/-1;text-align:center;font-size:0.65rem;color:#5A6577;">загрузка серверов...</div></div>
+                <div class="wot-chart-hint">📊 нажми для графика</div>
             </div>
         </div>
     </section>
+
+    <!-- Chart Modal -->
+    <div class="wot-chart-overlay" id="wotChartOverlay" onclick="if(event.target===this)closeOnlineChart()">
+        <div class="wot-chart-modal">
+            <div class="wot-chart-header">
+                <div class="wot-chart-title">📊 Онлайн — История</div>
+                <button class="wot-chart-close" onclick="closeOnlineChart()">✕</button>
+            </div>
+            <div class="wot-chart-tabs" id="wotChartTabs">
+                <div class="wot-chart-tab active" data-days="1">24 часа</div>
+                <div class="wot-chart-tab" data-days="7">7 дней</div>
+                <div class="wot-chart-tab" data-days="30">Месяц</div>
+            </div>
+            <div class="wot-chart-canvas-wrap">
+                <canvas id="wotChartCanvas" width="560" height="200"></canvas>
+            </div>
+            <div class="wot-chart-stats" id="wotChartStats">
+                <div class="wot-chart-stat">
+                    <div class="wot-chart-stat__val" id="wotStatAvg">—</div>
+                    <div class="wot-chart-stat__label">Средний</div>
+                </div>
+                <div class="wot-chart-stat">
+                    <div class="wot-chart-stat__val" id="wotStatPeak" style="color:#4ade80">—</div>
+                    <div class="wot-chart-stat__label">Пик</div>
+                </div>
+                <div class="wot-chart-stat">
+                    <div class="wot-chart-stat__val" id="wotStatMin" style="color:#f97316">—</div>
+                    <div class="wot-chart-stat__label">Минимум</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- DAILY REWARD BANNER (shown when logged in) -->
     <div class="daily-reward-section" id="dailyRewardSection" style="margin-top:30px;margin-bottom:20px;">
@@ -761,7 +820,7 @@
             }
         }
 
-        // Load WoT online stats
+        // Load WoT online stats (compact)
         async function loadWotOnline() {
             const totalEl = document.getElementById('wotOnlineTotal');
             const serversEl = document.getElementById('wotOnlineServers');
@@ -773,35 +832,28 @@
                 
                 if (!data.total || data.total === 0) {
                     totalEl.textContent = '—';
-                    serversEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:0.65rem;color:#5A6577;">нет данных</div>';
                     return;
                 }
                 
-                // Animated counter
                 const target = data.total;
                 const current = parseInt(totalEl.textContent.replace(/\D/g, '')) || 0;
                 animateCounter(totalEl, current, target, current === 0 ? 1200 : 600);
                 
-                // Server grid
+                // Compact server pills (top 5 by population)
                 if (data.servers && data.servers.length > 0) {
-                    const maxPop = Math.max(...data.servers.map(x => x.online));
-                    serversEl.innerHTML = data.servers.map(s => {
-                        const count = s.online.toLocaleString('ru-RU');
+                    const sorted = [...data.servers].sort((a, b) => b.online - a.online);
+                    const top5 = sorted.slice(0, 5);
+                    const maxPop = top5[0].online;
+                    serversEl.innerHTML = top5.map(s => {
+                        const k = (s.online / 1000).toFixed(0) + 'k';
                         const intensity = Math.round((s.online / maxPop) * 100);
                         const color = intensity > 70 ? '#4ade80' : intensity > 40 ? '#facc15' : '#9AA4B5';
-                        return `<div class="wot-srv">
-                            <div class="wot-srv__name">${s.name}</div>
-                            <div class="wot-srv__count" style="color:${color}">${count}</div>
-                        </div>`;
+                        return `<div class="wot-srv"><span class="wot-srv__name">${s.name}</span><span class="wot-srv__count" style="color:${color}">${k}</span></div>`;
                     }).join('');
                 }
             } catch (e) {
-                console.warn('WoT online load error:', e);
-                // Не скрываем, показываем что данные недоступны
-                if (totalEl.textContent === '···') {
-                    totalEl.textContent = '—';
-                    serversEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:0.65rem;color:#5A6577;">временно недоступно</div>';
-                }
+                console.warn('WoT online error:', e);
+                if (totalEl.textContent === '···') totalEl.textContent = '—';
             }
         }
         
@@ -810,12 +862,137 @@
             const diff = to - from;
             function step(ts) {
                 const progress = Math.min((ts - start) / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
-                const current = Math.round(from + diff * eased);
-                el.textContent = current.toLocaleString('ru-RU');
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.round(from + diff * eased).toLocaleString('ru-RU');
                 if (progress < 1) requestAnimationFrame(step);
             }
             requestAnimationFrame(step);
+        }
+
+        // ── Chart Modal ──
+        function openOnlineChart() {
+            document.getElementById('wotChartOverlay').classList.add('open');
+            loadOnlineHistory(1);
+            // Tab clicks
+            document.querySelectorAll('.wot-chart-tab').forEach(tab => {
+                tab.onclick = () => {
+                    document.querySelectorAll('.wot-chart-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    loadOnlineHistory(parseInt(tab.dataset.days));
+                };
+            });
+        }
+        function closeOnlineChart() {
+            document.getElementById('wotChartOverlay').classList.remove('open');
+        }
+
+        async function loadOnlineHistory(days) {
+            try {
+                const resp = await fetch(`${API_BASE_LANDING}/api/wot/online/history?days=${days}`);
+                const data = await resp.json();
+                
+                // Stats
+                if (data.stats) {
+                    const fmt = n => n ? n.toLocaleString('ru-RU') : '—';
+                    document.getElementById('wotStatAvg').textContent = fmt(data.stats.avg);
+                    document.getElementById('wotStatPeak').textContent = fmt(data.stats.peak);
+                    document.getElementById('wotStatMin').textContent = fmt(data.stats.min);
+                }
+                
+                // Draw chart
+                if (data.history && data.history.length > 0) {
+                    drawOnlineChart(data.history, days);
+                } else {
+                    const canvas = document.getElementById('wotChartCanvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#5A6577';
+                    ctx.font = '13px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Данные пока собираются...', canvas.width / 2, canvas.height / 2);
+                }
+            } catch (e) {
+                console.warn('History load error:', e);
+            }
+        }
+
+        function drawOnlineChart(history, days) {
+            const canvas = document.getElementById('wotChartCanvas');
+            const wrap = canvas.parentElement;
+            canvas.width = wrap.clientWidth;
+            canvas.height = wrap.clientHeight;
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            const pad = { top: 20, right: 12, bottom: 30, left: 50 };
+            const cW = W - pad.left - pad.right;
+            const cH = H - pad.top - pad.bottom;
+            
+            ctx.clearRect(0, 0, W, H);
+            
+            const values = history.map(h => h.avg);
+            const minV = Math.min(...values) * 0.9;
+            const maxV = Math.max(...values) * 1.05;
+            const range = maxV - minV || 1;
+            
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = pad.top + (cH / 4) * i;
+                ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+                // Y labels
+                const val = maxV - (range / 4) * i;
+                ctx.fillStyle = '#5A6577';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText((val / 1000).toFixed(0) + 'k', pad.left - 6, y + 3);
+            }
+            
+            // X labels
+            ctx.textAlign = 'center';
+            const labelCount = Math.min(6, history.length);
+            for (let i = 0; i < labelCount; i++) {
+                const idx = Math.round(i * (history.length - 1) / (labelCount - 1));
+                const x = pad.left + (idx / (history.length - 1)) * cW;
+                const t = history[idx].time;
+                let label;
+                if (days <= 1) {
+                    label = t.substring(11, 16); // HH:MM
+                } else if (days <= 7) {
+                    label = t.substring(5, 10).replace('-', '/'); // MM/DD
+                } else {
+                    label = t.substring(5, 10).replace('-', '/');
+                }
+                ctx.fillStyle = '#5A6577';
+                ctx.fillText(label, x, H - 8);
+            }
+            
+            // Area fill
+            ctx.beginPath();
+            ctx.moveTo(pad.left, pad.top + cH);
+            for (let i = 0; i < values.length; i++) {
+                const x = pad.left + (i / (values.length - 1)) * cW;
+                const y = pad.top + cH - ((values[i] - minV) / range) * cH;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(pad.left + cW, pad.top + cH);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+            grad.addColorStop(0, 'rgba(34,197,94,0.2)');
+            grad.addColorStop(1, 'rgba(34,197,94,0.01)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
+            // Line
+            ctx.beginPath();
+            for (let i = 0; i < values.length; i++) {
+                const x = pad.left + (i / (values.length - 1)) * cW;
+                const y = pad.top + cH - ((values[i] - minV) / range) * cH;
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
 
         // Scroll-reveal animations

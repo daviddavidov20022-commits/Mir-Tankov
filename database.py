@@ -197,6 +197,17 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_promo_code ON promo_codes(code);
         """)
 
+        # ===== WoT ONLINE HISTORY =====
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS wot_online_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                total_online INTEGER NOT NULL,
+                servers_json TEXT,
+                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_wot_online_time ON wot_online_history(recorded_at);
+        """)
+
         # Уникальность ника WoT (один ник — один Telegram)
         try:
             conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_wot_nick ON users(wot_nickname) WHERE wot_nickname IS NOT NULL")

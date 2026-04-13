@@ -7863,7 +7863,7 @@ async def api_wot_online(request):
         if cached is not None:
             return cached
 
-        import aiohttp, re as _re
+        import aiohttp, re as _re, json as _json
 
         result = {"total": 0, "servers": [], "source": "kttc.ru", "timestamp": None}
 
@@ -7901,6 +7901,21 @@ async def api_wot_online(request):
                     
                     import time
                     result["timestamp"] = int(time.time())
+                    
+                    # ── Сохраняем в историю ──
+                    try:
+                        db = get_db()
+                        db.execute(
+                            "INSERT INTO wot_online_history (total_online, servers_json) VALUES (?, ?)",
+                            (result["total"], _json.dumps(result["servers"], ensure_ascii=False))
+                        )
+                        db.commit()
+                        # Чистим данные старше 31 дня
+                        db.execute("DELETE FROM wot_online_history WHERE recorded_at < datetime('now', '-31 days')")
+                        db.commit()
+                    except Exception as e:
+                        logger.warning(f"WoT online history save error: {e}")
+                    
                     break
 
         except Exception as e:
@@ -7912,6 +7927,78 @@ async def api_wot_online(request):
         return response
     except Exception as e:
         logger.error(f"API wot_online error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_wot_online_history(request):
+    """GET /api/wot/online/history?days=7 — история онлайна серверов"""
+    try:
+        cached = cache.get("wot_online_history")
+        if cached is not None:
+            return cached
+
+        days = int(request.query.get("days", "7"))
+        days = min(days, 31)  # Максимум 31 день
+
+        db = get_db_read()
+        # Группируем по 30-мин интервалам для компактности
+        # Для 1-3 дней — каждые 10 мин, для 7+ — каждые 30 мин
+        if days <= 3:
+            interval_min = 10
+        elif days <= 7:
+            interval_min = 30
+        else:
+            interval_min = 60
+
+        rows = db.execute("""
+            SELECT 
+                strftime('%%Y-%%m-%%dT%%H:', recorded_at) || 
+                    printf('%%02d', (CAST(strftime('%%M', recorded_at) AS INTEGER) / ?) * ?) || ':00' as time_bucket,
+                ROUND(AVG(total_online)) as avg_online,
+                MAX(total_online) as max_online,
+                MIN(total_online) as min_online,
+                COUNT(*) as samples
+            FROM wot_online_history
+            WHERE recorded_at >= datetime('now', ?)
+            GROUP BY time_bucket
+            ORDER BY time_bucket ASC
+        """, (interval_min, interval_min, f"-{days} days")).fetchall()
+
+        history = []
+        for r in rows:
+            history.append({
+                "time": r["time_bucket"],
+                "avg": int(r["avg_online"]),
+                "max": int(r["max_online"]),
+                "min": int(r["min_online"]),
+            })
+
+        # Статистика за период
+        stats_row = db.execute("""
+            SELECT 
+                ROUND(AVG(total_online)) as avg_online,
+                MAX(total_online) as peak_online,
+                MIN(total_online) as min_online
+            FROM wot_online_history
+            WHERE recorded_at >= datetime('now', ?)
+        """, (f"-{days} days",)).fetchone()
+
+        result = {
+            "history": history,
+            "days": days,
+            "interval_min": interval_min,
+            "stats": {
+                "avg": int(stats_row["avg_online"]) if stats_row["avg_online"] else 0,
+                "peak": int(stats_row["peak_online"]) if stats_row["peak_online"] else 0,
+                "min": int(stats_row["min_online"]) if stats_row["min_online"] else 0,
+            }
+        }
+
+        response = cors_response(result)
+        cache.set("wot_online_history", response, ttl=300)  # Кеш 5 мин
+        return response
+    except Exception as e:
+        logger.error(f"API wot_online_history error: {e}")
         return cors_response({"error": str(e)}, 500)
 
 
@@ -11359,6 +11446,7 @@ def create_api_app():
     # Stats API
     app.router.add_get("/api/stats/total_users", api_stats_total_users)
     app.router.add_get("/api/wot/online", api_wot_online)
+    app.router.add_get("/api/wot/online/history", api_wot_online_history)
 
     # Streams API
     app.router.add_get("/api/streams/status", api_streams_status)
