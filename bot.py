@@ -7858,17 +7858,19 @@ async def api_top_players(request):
 async def api_wot_online(request):
     """GET /api/wot/online — живая статистика онлайна серверов Мир Танков"""
     try:
-        # ── TTL Cache 120 сек — данные обновляются раз в 2 мин ──
+        # ── TTL Cache 120 сек ──
         cached = cache.get("wot_online")
         if cached is not None:
             return cached
 
-        import aiohttp, re as _re, json as _json
+        import aiohttp, re as _re, json as _json, time as _time
 
         result = {"total": 0, "servers": [], "source": "kttc.ru", "timestamp": None}
+        fetched = False
 
+        # Попытка 1: scrape kttc.ru
         try:
-            timeout = aiohttp.ClientTimeout(total=10)
+            timeout = aiohttp.ClientTimeout(total=8)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(
                     "https://kttc.ru/wot/ru/online/",
@@ -7877,32 +7879,26 @@ async def api_wot_online(request):
                     raw = await resp.read()
                     html = raw.decode("utf-8", errors="ignore")
 
-            # Ищем секцию с серверами WoT (содержит RU1, RU2 и т.д.)
             sections = _re.findall(r'<section[^>]*>(.*?)</section>', html, _re.DOTALL)
             for section in sections:
                 pairs = _re.findall(r'<b>(\d+)</b>.*?<b>(RU\d+)</b>', section, _re.DOTALL)
-                if pairs and len(pairs) >= 3:  # WoT имеет 7+ серверов
+                if pairs and len(pairs) >= 3:
                     servers = []
                     total = 0
                     for online_str, name in pairs:
                         online = int(online_str)
                         servers.append({"name": name, "online": online})
                         total += online
-                    
                     servers.sort(key=lambda s: int(s["name"].replace("RU", "")))
-                    
                     result["servers"] = servers
                     result["total"] = total
-                    
-                    # Ищем официальный total из kttc
                     total_match = _re.findall(r'(\d+)\s*(?:чел|игрок)', section)
                     if total_match:
                         result["total"] = int(total_match[0])
-                    
-                    import time
-                    result["timestamp"] = int(time.time())
-                    
-                    # ── Сохраняем в историю ──
+                    result["timestamp"] = int(_time.time())
+                    fetched = True
+
+                    # Сохраняем в историю
                     try:
                         db = get_db()
                         db.execute(
@@ -7910,23 +7906,62 @@ async def api_wot_online(request):
                             (result["total"], _json.dumps(result["servers"], ensure_ascii=False))
                         )
                         db.commit()
-                        # Чистим данные старше 31 дня
                         db.execute("DELETE FROM wot_online_history WHERE recorded_at < datetime('now', '-31 days')")
                         db.commit()
-                    except Exception as e:
-                        logger.warning(f"WoT online history save error: {e}")
-                    
+                    except Exception:
+                        pass
                     break
-
         except Exception as e:
-            logger.warning(f"WoT online scrape error: {e}")
-            result["error"] = "Данные временно недоступны"
+            logger.warning(f"WoT online kttc scrape failed: {e}")
+
+        # Попытка 2: последние данные из БД (если scrape не сработал)
+        if not fetched:
+            try:
+                db = get_db_read()
+                row = db.execute(
+                    "SELECT total_online, servers_json, recorded_at FROM wot_online_history ORDER BY id DESC LIMIT 1"
+                ).fetchone()
+                if row:
+                    result["total"] = row["total_online"]
+                    result["servers"] = _json.loads(row["servers_json"]) if row["servers_json"] else []
+                    result["source"] = "cache-db"
+                    result["timestamp"] = int(_time.time())
+            except Exception:
+                pass
 
         response = cors_response(result)
-        cache.set("wot_online", response, ttl=120)  # Кеш 2 минуты
+        ttl = 120 if fetched else 30  # Кешируем меньше если данные из БД
+        cache.set("wot_online", response, ttl=ttl)
         return response
     except Exception as e:
         logger.error(f"API wot_online error: {e}")
+        return cors_response({"error": str(e)}, 500)
+
+
+async def api_wot_online_report(request):
+    """POST /api/wot/online/report — клиент отправляет данные онлайна (fallback)"""
+    try:
+        import json as _json
+        body = await request.json()
+        total = int(body.get("total", 0))
+        servers = body.get("servers", [])
+
+        if total < 1000 or total > 2000000:  # Валидация
+            return cors_response({"error": "invalid data"}, 400)
+
+        db = get_db()
+        db.execute(
+            "INSERT INTO wot_online_history (total_online, servers_json) VALUES (?, ?)",
+            (total, _json.dumps(servers, ensure_ascii=False))
+        )
+        db.commit()
+
+        # Обновляем кеш
+        result = {"total": total, "servers": servers, "source": "client", "timestamp": __import__('time').time()}
+        cache.set("wot_online", cors_response(result), ttl=120)
+
+        return cors_response({"ok": True})
+    except Exception as e:
         return cors_response({"error": str(e)}, 500)
 
 
@@ -11446,6 +11481,7 @@ def create_api_app():
     # Stats API
     app.router.add_get("/api/stats/total_users", api_stats_total_users)
     app.router.add_get("/api/wot/online", api_wot_online)
+    app.router.add_post("/api/wot/online/report", api_wot_online_report)
     app.router.add_get("/api/wot/online/history", api_wot_online_history)
 
     # Streams API
