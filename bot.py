@@ -3375,6 +3375,8 @@ async def handle_any(message: types.Message, state: FSMContext):
 # ==========================================
 # REST API — AIOHTTP СЕРВЕР
 # ==========================================
+from cache import cache
+
 API_PORT = int(os.getenv("API_PORT", "8081"))
 
 
@@ -5782,6 +5784,11 @@ def _internal_finish_challenge(conn, challenge_id):
 async def api_global_challenge_active(request):
     """GET /api/global-challenge/active?challenge_id=X — получить активный или конкретный челлендж"""
     try:
+        # ── TTL Cache: 1000 юзеров за 3 сек = 1 реальный запрос в БД ──
+        cache_key = f"gc_active_{request.query.get('challenge_id', 'latest')}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
         from database import get_db, get_db_read
         from datetime import datetime, timezone
 
@@ -6002,7 +6009,9 @@ async def api_global_challenge_active(request):
                 elif val and " " in str(val):
                     ch[date_key] = str(val).replace(" ", "T")
 
-        return cors_response({"challenge": ch, "status": ch.get("status", "active")})
+        response = cors_response({"challenge": ch, "status": ch.get("status", "active")})
+        cache.set(cache_key, response, ttl=3)  # Кеш на 3 сек
+        return response
     except Exception as e:
         logger.error(f"API global_challenge_active error: {e}")
         return cors_response({"error": str(e)}, 500)
@@ -6258,6 +6267,8 @@ async def api_global_challenge_refresh_stats(request):
         try:
             result = await asyncio.wait_for(_do_refresh_stats(), timeout=180)  # 3 мин для 3000+ игроков
             _gc_last_refresh_time = time.time()
+            # Сбрасываем кеш чтобы свежие данные стали доступны сразу
+            cache.invalidate_prefix("gc_")
             # Сохраняем данные ответа, а не сам Response (его нельзя переиспользовать)
             try:
                 _gc_last_refresh_data = {"success": True, "updated": result._updated_count if hasattr(result, '_updated_count') else 0}
@@ -7046,6 +7057,12 @@ async def api_global_challenge_wheel_data(request):
         if not challenge_id:
             return cors_response({"error": "challenge_id required"}, 400)
 
+        # ── TTL Cache: виджет полит каждые 2 сек ──
+        wh_cache_key = f"gc_wheel_{challenge_id}"
+        cached = cache.get(wh_cache_key)
+        if cached is not None:
+            return cached
+
         with get_db_read() as conn:
             ch = conn.execute("SELECT * FROM global_challenges WHERE id = ?", (challenge_id,)).fetchone()
             if not ch:
@@ -7098,7 +7115,7 @@ async def api_global_challenge_wheel_data(request):
                 else:
                     p["chance_percent"] = round((p["multiplier"] / total_weight * 100) if total_weight > 0 else 0, 1)
 
-        return cors_response({
+        response = cors_response({
             "challenge": {
                 "id": ch_data["id"],
                 "title": ch_data["title"],
@@ -7114,6 +7131,8 @@ async def api_global_challenge_wheel_data(request):
             "total_count": len(result),
             "eliminated_count": len(eliminated_ids)
         })
+        cache.set(wh_cache_key, response, ttl=3)
+        return response
     except Exception as e:
         logger.error(f"API wheel_data error: {e}")
         return cors_response({"error": str(e)}, 500)
@@ -7803,6 +7822,11 @@ async def api_daily_claim(request):
 async def api_top_players(request):
     """GET /api/top/players — получить всех пользователей с привязанным WoT аккаунтом"""
     try:
+        # ── TTL Cache 30 сек — список игроков не меняется быстро ──
+        cached = cache.get("top_players")
+        if cached is not None:
+            return cached
+
         from database import get_db
         with get_db() as conn:
             rows = conn.execute("""
@@ -7823,7 +7847,9 @@ async def api_top_players(request):
                 "avatar": r["avatar"],
             })
 
-        return cors_response({"players": players, "total": len(players)})
+        response = cors_response({"players": players, "total": len(players)})
+        cache.set("top_players", response, ttl=30)
+        return response
     except Exception as e:
         logger.error(f"API top_players error: {e}")
         return cors_response({"error": str(e)}, 500)
@@ -7832,8 +7858,14 @@ async def api_top_players(request):
 async def api_stats_total_users(request):
     """GET /api/stats/total_users — количество зарегистрированных пользователей"""
     try:
+        # ── TTL Cache 60 сек — counter ──
+        cached = cache.get("total_users")
+        if cached is not None:
+            return cached
         total = get_total_users()
-        return cors_response({"total": total})
+        response = cors_response({"total": total})
+        cache.set("total_users", response, ttl=60)
+        return response
     except Exception as e:
         logger.error(f"API stats_total_users error: {e}")
         return cors_response({"error": str(e)}, 500)
@@ -10295,6 +10327,12 @@ async def api_team_battle_widget(request):
         if not battle_id:
             return cors_response({"error": "battle_id required"}, 400)
 
+        # ── TTL Cache 3 сек — OBS виджет полит каждые 2 сек ──
+        tb_cache_key = f"tb_widget_{battle_id}"
+        cached = cache.get(tb_cache_key)
+        if cached is not None:
+            return cached
+
         with get_db() as conn:
             battle = conn.execute("SELECT * FROM team_battles WHERE id = ?", (battle_id,)).fetchone()
             if not battle:
@@ -10310,7 +10348,9 @@ async def api_team_battle_widget(request):
             b["alpha_total"] = sum(p["current_value"] for p in participants if p["team"] == "alpha")
             b["bravo_total"] = sum(p["current_value"] for p in participants if p["team"] == "bravo")
 
-        return cors_response({"battle": b})
+        response = cors_response({"battle": b})
+        cache.set(tb_cache_key, response, ttl=3)
+        return response
     except Exception as e:
         logger.error(f"API team_battle_widget error: {e}")
         return cors_response({"error": str(e)}, 500)
@@ -10755,6 +10795,12 @@ async def api_donate_contest_widget(request):
         if not contest_id:
             return cors_response({"error": "contest_id обязателен"}, 400)
 
+        # ── TTL Cache 3 сек — OBS виджет ──
+        dc_cache_key = f"dc_widget_{contest_id}"
+        cached = cache.get(dc_cache_key)
+        if cached is not None:
+            return cached
+
         with get_db() as conn:
             contest = conn.execute("SELECT * FROM donate_contests WHERE id = ?", (contest_id,)).fetchone()
             if not contest:
@@ -10782,13 +10828,15 @@ async def api_donate_contest_widget(request):
                 (contest_id,)
             ).fetchone()["total"]
 
-        return cors_response({
+        response = cors_response({
             "contest": dict(contest),
             "top_entries": [dict(e) for e in top_entries],
             "total_entries": total_entries,
             "total_votes": total_votes,
             "total_cheese": total_cheese,
         })
+        cache.set(dc_cache_key, response, ttl=3)
+        return response
     except Exception as e:
         logger.error(f"Donate contest widget error: {e}")
         return cors_response({"error": str(e)}, 500)
@@ -11327,6 +11375,11 @@ def create_api_app():
     app.router.add_post("/api/bounty/start", api_bounty_start)
     app.router.add_post("/api/bounty/stop", api_bounty_stop)
     app.router.add_post("/api/bounty/reset", api_bounty_reset)
+
+    # Cache Stats (admin)
+    async def api_cache_stats(request):
+        return cors_response(cache.stats())
+    app.router.add_get("/api/admin/cache-stats", api_cache_stats)
 
     # Finance / Accounting (admin only)
     app.router.add_get("/api/admin/finance", api_admin_finance)
