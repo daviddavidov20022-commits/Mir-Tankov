@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISERVERI — Мир Танков Клуб</title>
-    <meta name="description" content="ISERVERI — стример Мир Танков. Клуб с мини-играми, статистикой WN8, челленджами, стримами и эксклюзивным контентом. Присоединяйся!">
-    <meta name="keywords" content="Мир Танков, World of Tanks, стример, ISERVERI, клуб, WN8, статистика">
-    <meta property="og:title" content="ISERVERI — Мир Танков Клуб">
-    <meta property="og:description" content="Стримы, мини-игры, статистика WN8 и закрытый клуб для настоящих танкистов">
+    <title>TankHub — Платформа для сражений</title>
+    <meta name="description" content="TankHub — платформа для сражений в Мир Танков. PvP арена, статистика WN8, челленджи и турниры. Присоединяйся!">
+    <meta name="keywords" content="TankHub, Мир Танков, World of Tanks, PvP, арена, WN8, статистика">
+    <meta property="og:title" content="TankHub — Платформа для сражений">
+    <meta property="og:description" content="PvP арена, челленджи, статистика WN8 и турниры для танкистов">
     <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -147,14 +147,14 @@
                     </svg>
                 </div>
                 <div>
-                    <div class="navbar-brand__text">МИР ТАНКОВ</div>
-                    <div class="navbar-brand__sub">Клуб ISERVERI</div>
+                    <div class="navbar-brand__text">TANKHUB</div>
+                    <div class="navbar-brand__sub">Платформа для сражений</div>
                 </div>
             </a>
 
             <div class="navbar-links" id="navbarLinks">
                 <a href="#features">Возможности</a>
-                <a href="player.html" onclick="event.preventDefault(); openGame('player.html')">Донат 🧀</a>
+                <a href="player.html" onclick="event.preventDefault(); openGame('player.html')">Донат ⚙️</a>
                 <a href="stats.html" onclick="event.preventDefault(); openGame('stats.html')">Статистика</a>
                 <a href="subscribe.html" onclick="event.preventDefault(); openGame('subscribe.html')">Подписка</a>
             </div>
@@ -180,7 +180,7 @@
     <!-- Mobile nav panel -->
     <div class="mobile-nav-panel" id="mobileNavPanel">
         <a href="#features" onclick="closeMobileNav()">🎮 Возможности</a>
-        <a href="player.html" onclick="event.preventDefault(); openGame('player.html')">🧀 Донат</a>
+        <a href="player.html" onclick="event.preventDefault(); openGame('player.html')">⚙️ Донат</a>
         <a href="stats.html" onclick="event.preventDefault(); openGame('stats.html')">📊 Статистика</a>
         <a href="subscribe.html" onclick="event.preventDefault(); openGame('subscribe.html')">💎 Подписка</a>
         <a href="profile.html" onclick="event.preventDefault(); openGame('profile.html')" id="mobileProfileLink" style="display:none;">👤 Профиль</a>
@@ -213,7 +213,7 @@
                 <span></span><span></span><span></span><span></span><span></span>
             </div>
 
-            <p class="hero__tagline">Стример Мир Танков</p>
+            <p class="hero__tagline">Платформа для сражений в Мир Танков</p>
             <p class="hero__subtitle">
                 Закрытый клуб для ценителей танковых баталий. Мини-игры, статистика WN8, 
                 челленджи с призами, AI-донаты и живые стримы на всех площадках!
@@ -224,17 +224,17 @@
                     🚀 Присоединиться
                 </button>
                 <a class="hero__btn hero__btn--secondary" href="#" onclick="event.preventDefault(); openGame('player.html')">
-                    🧀 Донат Хаб
+                    ⚙️ Донат Хаб
                 </a>
             </div>
 
             <!-- Logged-in hero actions (hidden by default) -->
             <div class="hero__actions" id="heroLoggedActions" style="display:none;">
                 <a class="hero__btn hero__btn--primary" href="#" onclick="event.preventDefault(); openGame('player.html')">
-                    🧀 Донат Хаб
+                    ⚙️ Донат Хаб
                 </a>
                 <a class="hero__btn hero__btn--secondary" href="#features">
-                    🎮 Возможности клуба
+                    🎮 Возможности TankHub
                 </a>
             </div>
 
@@ -323,15 +323,15 @@
     <!-- DAILY REWARD BANNER (shown when logged in) -->
     <div class="daily-reward-section" id="dailyRewardSection" style="margin-top:30px;margin-bottom:20px;">
         <div class="daily-card" id="dailyCard" onclick="claimDailyReward()">
-            <div class="daily-icon" id="dailyIcon">🧀</div>
+            <div class="daily-icon" id="dailyIcon">⚙️</div>
             <div class="daily-info">
                 <div class="daily-title" id="dailyTitle">Ежедневная награда</div>
                 <div class="daily-streak" id="dailyStreak">Стрик: <strong>0 дней</strong></div>
                 <div class="daily-progress" id="dailyProgress"></div>
-                <div class="daily-tiers">Дни 1-7: 15🧀 · 8-14: 25🧀 · 15-21: 35🧀 · 22-30: 50🧀</div>
+                <div class="daily-tiers">Дни 1-7: 15⚙️ · 8-14: 25⚙️ · 15-21: 35⚙️ · 22-30: 50⚙️</div>
             </div>
             <div class="daily-reward-amount">
-                <div class="daily-reward-val" id="dailyAmount">15 🧀</div>
+                <div class="daily-reward-val" id="dailyAmount">15 ⚙️</div>
                 <div class="daily-reward-label" id="dailyLabel">Забрать</div>
             </div>
         </div>
@@ -341,10 +341,10 @@
     <div class="quick-actions" id="quickActionsSection">
         <div class="quick-actions-grid">
             <div class="qa-card" onclick="openDonateModal()">
-                <div class="qa-card__icon">🧀</div>
+                <div class="qa-card__icon">⚙️</div>
                 <div class="qa-card__info">
                     <div class="qa-card__title">Донат на стрим</div>
-                    <div class="qa-card__cost">от 200 🧀</div>
+                        <div class="qa-card__cost">от 200 ⚙️</div>
                     <div class="qa-card__desc">Отправь сообщение стримеру</div>
                 </div>
             </div>
@@ -352,7 +352,7 @@
                 <div class="qa-card__icon">🎵</div>
                 <div class="qa-card__info">
                     <div class="qa-card__title">Заказ музыки</div>
-                    <div class="qa-card__cost">250 🧀</div>
+                    <div class="qa-card__cost">250 ⚙️</div>
                     <div class="qa-card__desc">Закажи трек на стрим</div>
                 </div>
             </div>
@@ -362,8 +362,8 @@
             <div class="qa-card" onclick="openGame('guide.html')" style="border-color:rgba(255,193,7,0.2);background:linear-gradient(145deg,#1d1a10,#1a1810);">
                 <div class="qa-card__icon">📖</div>
                 <div class="qa-card__info">
-                    <div class="qa-card__title" style="color:#FFC107;">Что такое СЫР?</div>
-                    <div class="qa-card__desc">Узнай как заработать, потратить и приумножить 🧀</div>
+                    <div class="qa-card__title" style="color:#FFC107;">Что такое Сталь?</div>
+                    <div class="qa-card__desc">Узнай как заработать, потратить и приумножить ⚙️</div>
                 </div>
             </div>
         </div>
@@ -411,7 +411,7 @@
                 </div>
                 <div>
                     <div class="feature-card__title">Донаты и Музыка</div>
-                    <div class="feature-card__desc">Донат на стрим, AI-генерация и заказ музыки за 🧀</div>
+                    <div class="feature-card__desc">Донат на стрим, AI-генерация и заказ музыки за ⚙️</div>
                 </div>
             </div>
 
@@ -434,7 +434,7 @@
                 </div>
                 <div>
                     <div class="feature-card__title">Колесо Фортуны</div>
-                    <div class="feature-card__desc">Крути и выигрывай до 1000 сыра каждый день</div>
+                    <div class="feature-card__desc">Крути и выигрывай до 1000 Стали каждый день</div>
                 </div>
             </div>
 
@@ -483,7 +483,7 @@
                 </div>
                 <div>
                     <div class="feature-card__title">Ежедневная Награда</div>
-                    <div class="feature-card__desc">Заходи каждый день — получай до 50🧀. 30 дней = 2 подписки!</div>
+                    <div class="feature-card__desc">Заходи каждый день — получай до 50⚙️. 30 дней = 2 подписки!</div>
                 </div>
             </div>
         </div>
@@ -633,8 +633,8 @@
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-brand">
-                <span class="footer-brand__name">МИР ТАНКОВ</span>
-                <span>© 2026 Клуб ISERVERI</span>
+                <span class="footer-brand__name">TANKHUB</span>
+                <span>© 2026 Платформа для сражений</span>
             </div>
 
             <div class="footer-links">

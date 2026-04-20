@@ -225,14 +225,14 @@ def save_config(config):
 def get_default_config():
     return {
         "prizes": [
-            {"name": "1000 сыр", "icon": "💰", "coins": 1000, "xp": 50, "color": "#C8AA6E", "weight": 2, "tier": "legendary"},
-            {"name": "50 сыр", "icon": "🧀", "coins": 50, "xp": 5, "color": "#2D5A27", "weight": 20, "tier": "common"},
-            {"name": "500 сыр", "icon": "💎", "coins": 500, "xp": 30, "color": "#4A5568", "weight": 5, "tier": "epic"},
-            {"name": "25 сыр", "icon": "🧀", "coins": 25, "xp": 3, "color": "#5C6B3C", "weight": 25, "tier": "common"},
-            {"name": "250 сыр", "icon": "🏅", "coins": 250, "xp": 15, "color": "#8B7340", "weight": 10, "tier": "rare"},
-            {"name": "10 сыр", "icon": "🔩", "coins": 10, "xp": 1, "color": "#1A3A15", "weight": 30, "tier": "common"},
-            {"name": "100 сыр", "icon": "⭐", "coins": 100, "xp": 10, "color": "#3D5A80", "weight": 15, "tier": "uncommon"},
-            {"name": "75 сыр", "icon": "🎖️", "coins": 75, "xp": 8, "color": "#6B5B3C", "weight": 18, "tier": "uncommon"},
+            {"name": "1000 Стали", "icon": "💰", "coins": 1000, "xp": 50, "color": "#C8AA6E", "weight": 2, "tier": "legendary"},
+            {"name": "50 Стали", "icon": "⚙️", "coins": 50, "xp": 5, "color": "#2D5A27", "weight": 20, "tier": "common"},
+            {"name": "500 Стали", "icon": "💎", "coins": 500, "xp": 30, "color": "#4A5568", "weight": 5, "tier": "epic"},
+            {"name": "25 Стали", "icon": "⚙️", "coins": 25, "xp": 3, "color": "#5C6B3C", "weight": 25, "tier": "common"},
+            {"name": "250 Стали", "icon": "🏅", "coins": 250, "xp": 15, "color": "#8B7340", "weight": 10, "tier": "rare"},
+            {"name": "10 Стали", "icon": "🔩", "coins": 10, "xp": 1, "color": "#1A3A15", "weight": 30, "tier": "common"},
+            {"name": "100 Стали", "icon": "⭐", "coins": 100, "xp": 10, "color": "#3D5A80", "weight": 15, "tier": "uncommon"},
+            {"name": "75 Стали", "icon": "🎖️", "coins": 75, "xp": 8, "color": "#6B5B3C", "weight": 18, "tier": "uncommon"},
         ],
         "settings": {
             "freeSpinsPerDay": 1,
@@ -394,7 +394,7 @@ async def cmd_start(message: types.Message):
             keyboard=[
                 [
                     KeyboardButton(
-                        text="🚀 Войти в Мир Танков",
+                        text="🚀 Войти в TankHub",
                         web_app=WebAppInfo(url=user_webapp_url),
                     )
                 ]
@@ -406,15 +406,15 @@ async def cmd_start(message: types.Message):
         days_left = sub['days_left'] if sub and sub.get('active') else '∞'
 
         await message.answer(
-            "🪖 <b>Добро пожаловать, Танкист!</b>\n\n"
+            "⚔️ <b>Добро пожаловать в TankHub!</b>\n\n"
             f"✅ Подписка активна ({days_left} дн.)\n\n"
             "🎰 Крути <b>Колесо Фортуны</b> и выигрывай!\n"
             "📊 Статистика: /stats\n"
             "🎯 Челленджи: /challenge\n"
-            "⚔️ Ивенты: /event\n"
+            "⚔️ Арена: /arena\n"
             "🔥 Донат: /donate\n"
             "👤 Мой профиль: /profile\n\n"
-            "Нажми кнопку <b>«🚀 Войти в Мир Танков»</b> внизу 👇",
+            "Нажми кнопку <b>«🚀 Войти в TankHub»</b> внизу 👇",
             parse_mode="HTML",
             reply_markup=reply_keyboard,
         )
@@ -436,13 +436,13 @@ async def cmd_start(message: types.Message):
         ])
 
         await message.answer(
-            "🪖 <b>Добро пожаловать в Мир Танков!</b>\n\n"
-            "🔒 Это <b>закрытый клуб</b> для подписчиков.\n\n"
+            "⚔️ <b>Добро пожаловать в TankHub!</b>\n\n"
+            "🔒 Это <b>платформа для сражений</b> в Мир Танков.\n\n"
             "💎 <b>Что даёт подписка:</b>\n"
-            "├ 🎰 Колесо Фортуны\n"
-            "├ 📊 Полная статистика + WN8\n"
+            "├ ⚔️ Арена PvP — вызовы на бой\n"
             "├ 🎯 Челленджи с призами\n"
-            "├ ⚔️ Арена — вызовы на бой\n"
+            "├ 📊 Полная статистика + WN8\n"
+            "├ 🎰 Колесо Фортуны\n"
             "├ 🤖 AI-ассистент\n"
             "└ 🏅 Значок подписчика\n\n"
             "💰 <b>От 490₽/мес</b> (250 ⭐)\n"
@@ -468,7 +468,7 @@ async def free_stats_from_start(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(
         "🔍 <b>ПОИСК ИГРОКА</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "Введите никнейм игрока Мир Танков:",
+        "Введите никнейм игрока:",
         parse_mode="HTML",
     )
 
@@ -508,7 +508,7 @@ async def cmd_stats(message: types.Message, state: FSMContext):
     await message.answer(
         "🔍 <b>ПОИСК ИГРОКА</b>\n"
         "━━━━━━━━━━━━━━━━━━━\n\n"
-        "Введите <b>никнейм</b> игрока Мир Танков:\n\n"
+        "Введите <b>никнейм</b> игрока:\n\n"
         "<i>Например: Tank_Master_2026</i>",
         parse_mode="HTML",
     )
@@ -618,7 +618,7 @@ async def show_admin_menu(message_or_callback):
         "━━━━━━━━━━━━━━━━━━━\n\n"
         f"🎁 Призов на колесе: <b>{prizes_count}</b>\n"
         f"🎟 Бесплатных вращений/день: <b>{settings.get('freeSpinsPerDay', 1)}</b>\n"
-        f"🪙 Цена вращения: <b>{settings.get('spinCostCoins', 50)} монет</b>\n"
+        f"🪙 Цена вращения: <b>{settings.get('spinCostCoins', 50)} Стали</b>\n"
         f"⭐ Цена Stars: <b>{settings.get('spinCostStars', 5)} Stars</b>\n"
         f"🔄 Вращений за Stars: <b>{settings.get('buySpinsAmount', 5)}</b>\n\n"
         "Выберите действие:"
@@ -663,7 +663,7 @@ async def admin_prizes_list(callback: CallbackQuery):
         tier = TIER_NAMES.get(prize.get("tier", "common"), "🪙 Обычный")
         text += (
             f"<b>{i+1}.</b> {prize.get('icon', '🎁')} {prize.get('name', '?')}\n"
-            f"    💰 {prize.get('coins', 0)} монет  |  🎯 {chance}%  |  {tier}\n\n"
+            f"    💰 {prize.get('coins', 0)} Стали  |  🎯 {chance}%  |  {tier}\n\n"
         )
 
     # Кнопки для каждого приза
@@ -706,7 +706,7 @@ async def admin_edit_prize(callback: CallbackQuery):
         f"━━━━━━━━━━━━━━━━━━━\n\n"
         f"📝 Название: <b>{prize.get('name', '?')}</b>\n"
         f"🎨 Иконка: {prize.get('icon', '🎁')}\n"
-        f"💰 Монеты: <b>{prize.get('coins', 0)}</b>\n"
+        f"💰 Стали: <b>{prize.get('coins', 0)}</b>\n"
         f"🎯 Вес (шанс): <b>{prize.get('weight', 1)}</b> ({chance}%)\n"
         f"🏆 Редкость: {tier_name}\n"
         f"🎨 Цвет: {prize.get('color', '#333')}\n\n"
@@ -719,7 +719,7 @@ async def admin_edit_prize(callback: CallbackQuery):
             InlineKeyboardButton(text="🎨 Иконка", callback_data=f"edit_icon_{index}"),
         ],
         [
-            InlineKeyboardButton(text="💰 Монеты", callback_data=f"edit_coins_{index}"),
+            InlineKeyboardButton(text="💰 Стали", callback_data=f"edit_coins_{index}"),
             InlineKeyboardButton(text="🎯 Вес", callback_data=f"edit_weight_{index}"),
         ],
         [
@@ -744,7 +744,7 @@ async def edit_prize_name(callback: CallbackQuery, state: FSMContext):
     await state.update_data(prize_index=index)
     await callback.message.edit_text(
         f"📝 Введите <b>новое название</b> для приза #{index+1}:\n\n"
-        f"Например: <i>500 монет</i>, <i>Премиум танк</i>, <i>XP бонус</i>",
+        f"Например: <i>500 Стали</i>, <i>Премиум танк</i>, <i>XP бонус</i>",
         parse_mode="HTML",
     )
     await callback.answer()
@@ -797,7 +797,7 @@ async def edit_prize_coins(callback: CallbackQuery, state: FSMContext):
     await state.set_state(AdminStates.waiting_prize_coins)
     await state.update_data(prize_index=index)
     await callback.message.edit_text(
-        f"💰 Введите <b>количество монет</b> для приза #{index+1}:\n\n"
+        f"💰 Введите <b>количество Стали</b> для приза #{index+1}:\n\n"
         f"Введите число (например: <i>100</i>, <i>500</i>, <i>1000</i>)",
         parse_mode="HTML",
     )
@@ -823,7 +823,7 @@ async def process_prize_coins(message: types.Message, state: FSMContext):
     save_config(config)
 
     await state.clear()
-    await message.answer(f"✅ Монеты приза #{index+1}: <b>{coins}</b>", parse_mode="HTML")
+    await message.answer(f"✅ Стали приза #{index+1}: <b>{coins}</b>", parse_mode="HTML")
     await show_admin_menu(message)
 
 
@@ -1014,7 +1014,7 @@ async def admin_add_prize(callback: CallbackQuery, state: FSMContext):
         "➕ <b>ДОБАВЛЕНИЕ НОВОГО ПРИЗА</b>\n"
         "━━━━━━━━━━━━━━━━━━━\n\n"
         "📝 Шаг 1/4: Введите <b>название</b> приза:\n\n"
-        "<i>Например: 500 монет, VIP статус, Премиум танк</i>",
+        "<i>Например: 500 Стали, VIP статус, Премиум танк</i>",
         parse_mode="HTML",
     )
     await callback.answer()
@@ -1036,7 +1036,7 @@ async def new_prize_icon(message: types.Message, state: FSMContext):
     await state.update_data(new_icon=message.text.strip()[:4])
     await state.set_state(AdminStates.waiting_new_prize_coins)
     await message.answer(
-        "💰 Шаг 3/4: Введите <b>количество монет</b>:\n\n"
+        "💰 Шаг 3/4: Введите <b>количество Стали</b>:\n\n"
         "<i>Число от 1 до 10000</i>",
         parse_mode="HTML",
     )
@@ -1109,7 +1109,7 @@ async def new_prize_weight(message: types.Message, state: FSMContext):
     await message.answer(
         f"✅ <b>Приз добавлен!</b>\n\n"
         f"{new_prize['icon']} {new_prize['name']}\n"
-        f"💰 {new_prize['coins']} монет  |  🎯 Вес: {weight}  |  {TIER_NAMES[tier]}",
+        f"💰 {new_prize['coins']} Стали  |  🎯 Вес: {weight}  |  {TIER_NAMES[tier]}",
         parse_mode="HTML",
     )
     await show_admin_menu(message)
@@ -1127,14 +1127,14 @@ async def admin_settings(callback: CallbackQuery):
         "⚙️ <b>НАСТРОЙКИ КОЛЕСА</b>\n"
         "━━━━━━━━━━━━━━━━━━━\n\n"
         f"🎟 Бесплатных вращений/день: <b>{s.get('freeSpinsPerDay', 1)}</b>\n"
-        f"🪙 Цена вращения за монеты: <b>{s.get('spinCostCoins', 50)}</b>\n"
+        f"⚙️ Цена вращения за Сталь: <b>{s.get('spinCostCoins', 50)}</b>\n"
         f"⭐ Цена за Stars: <b>{s.get('spinCostStars', 5)}</b>\n"
         f"🔄 Вращений за Stars: <b>{s.get('buySpinsAmount', 5)}</b>"
     )
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=f"🎟 Бесп. вращений: {s.get('freeSpinsPerDay', 1)}", callback_data="set_freeSpins")],
-        [InlineKeyboardButton(text=f"🪙 Цена монеты: {s.get('spinCostCoins', 50)}", callback_data="set_spinCost")],
+        [InlineKeyboardButton(text=f"⚙️ Цена Стали: {s.get('spinCostCoins', 50)}", callback_data="set_spinCost")],
         [InlineKeyboardButton(text=f"⭐ Цена Stars: {s.get('spinCostStars', 5)}", callback_data="set_starsCost")],
         [InlineKeyboardButton(text=f"🔄 Кол-во за Stars: {s.get('buySpinsAmount', 5)}", callback_data="set_buyAmount")],
         [InlineKeyboardButton(text="◀️ Назад", callback_data="admin_back")],
@@ -1150,7 +1150,7 @@ async def set_setting(callback: CallbackQuery, state: FSMContext):
 
     labels = {
         "set_freeSpins": ("freeSpinsPerDay", "Бесплатных вращений в день", "1-10"),
-        "set_spinCost": ("spinCostCoins", "Цена вращения (монеты)", "10-10000"),
+        "set_spinCost": ("spinCostCoins", "Цена вращения (Сталь)", "10-10000"),
         "set_starsCost": ("spinCostStars", "Цена в Stars", "1-1000"),
         "set_buyAmount": ("buySpinsAmount", "Кол-во вращений за Stars", "1-100"),
     }
@@ -1595,7 +1595,7 @@ async def cmd_profile(message: types.Message):
         f"🆔 ID: <code>{message.from_user.id}</code>\n"
         f"👤 Имя: <b>{message.from_user.first_name or '—'}</b>\n"
         f"🎮 WoT: <b>{nick_text}</b>\n\n"
-        f"🪙 Монеты: <b>{user.get('coins', 0)}</b>\n"
+        f"⚙️ Сталь: <b>{user.get('coins', 0)}</b>\n"
         f"⭐ XP: <b>{user.get('xp', 0)}</b>\n"
         f"📊 Уровень: <b>{user.get('level', 1)}</b>\n\n"
         f"💎 Подписка: {sub_text}\n\n"
@@ -1789,9 +1789,9 @@ async def challenge_submit_value(message: types.Message, state: FSMContext):
     if result.get("completed"):
         await message.answer(
             f"🎉 <b>ЧЕЛЛЕНДЖ ВЫПОЛНЕН!</b>\n\n"
-            f"🪙 +{result['reward_coins']} монет\n"
+            f"⚙️ +{result['reward_coins']} Стали\n"
             f"⭐ +{result['reward_xp']} XP\n\n"
-            f"Отличная работа, Танкист! 🪖",
+            f"Отличная работа, боец! ⚔️",
             parse_mode="HTML",
         )
     else:
@@ -2398,7 +2398,7 @@ async def process_successful_payment(message: types.Message):
         except (IndexError, ValueError):
             stars = payment.total_amount
 
-        # Бонус монет x2
+        # Бонус Стали x2
         bonus_coins = stars * 2
         add_coins(message.from_user.id, bonus_coins, f"Донат {stars} Stars")
         add_xp(message.from_user.id, 50)
@@ -2407,7 +2407,7 @@ async def process_successful_payment(message: types.Message):
             f"🔥 <b>СПАСИБО ЗА ПОДДЕРЖКУ!</b>\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"💫 Донат: <b>{stars} Stars</b>\n"
-            f"💰 Бонус: <b>+{bonus_coins} монет</b>\n"
+            f"⚙️ Бонус: <b>+{bonus_coins} Стали</b>\n"
             f"✨ +50 XP\n\n"
             f"🏅 Вы — спонсор проекта!\n"
             f"Ваше имя на доске почёта 📢\n\n"
@@ -2475,7 +2475,7 @@ async def process_successful_payment(message: types.Message):
             f"{discount_text}"
             f"📅 Действует до: <b>{result['expires_at']}</b>\n\n"
             f"🎁 <b>Бонус за покупку:</b>\n"
-            f"├ 💰 +{bonus_coins} монет\n"
+            f"├ ⚙️ +{bonus_coins} Стали\n"
             f"└ ✨ +100 XP\n\n"
             f"Спасибо за поддержку! 🪖❤️",
             parse_mode="HTML",
@@ -2540,7 +2540,7 @@ async def cmd_donate(message: types.Message):
         f"🎁 <b>Спонсор получает:</b>\n"
         f"├ 🏅 Значок спонсора в профиле\n"
         f"├ 📢 Имя на доске почёта\n"
-        f"├ 💰 Бонусные монеты (x2 от суммы)\n"
+        f"├ ⚙️ Бонусная Сталь (x2 от суммы)\n"
         f"└ ❤️ Нашу вечную благодарность!\n\n"
         f"{sep}\n"
         f"Выберите сумму:"
@@ -2579,7 +2579,7 @@ async def process_donate(callback: CallbackQuery):
             f"Донат: {stars} Stars\n\n"
             f"✅ Значок спонсора\n"
             f"✅ Имя на доске почёта\n"
-            f"✅ Бонусные монеты (x2)\n"
+            f"✅ Бонусная Сталь (x2)\n"
             f"❤️ Спасибо за поддержку!"
         ),
         payload=f"donate_{stars}_{callback.from_user.id}",
@@ -3123,7 +3123,7 @@ async def _process_verify_code(message: types.Message, code: str):
                         f"✅ Ник: <b>{nick}</b>\n"
                         f"🆔 ID: <code>{player['account_id']}</code>\n"
                         f"🛡️ Подтверждено через Lesta OAuth\n\n"
-                        "🎁 <b>Бонус:</b> +100 монет, +50 XP\n\n"
+                        "🎁 <b>Бонус:</b> +100 Стали, +50 XP\n\n"
                         "Теперь у вас значок ✅ в профиле!\n"
                         "Арена и челленджи доступны ⚔️",
                         parse_mode="HTML",
@@ -3155,24 +3155,24 @@ async def _process_verify_code(message: types.Message, code: str):
 
 
 # ==========================================
-# КОМАНДА /cheese — Покупка СЫР (🧀)
+# КОМАНДА /cheese — Покупка СТАЛИ (⚙️)
 # ==========================================
 
-# Пакеты сыра: {amount: stars_price}
+# Пакеты Стали: {amount: stars_price}
 # 1 Star ≈ 1.95₽ → 50 Stars ≈ 100₽
 CHEESE_PACKAGES = {
-    50: {"stars": 25, "label": "50 🧀"},
-    100: {"stars": 50, "label": "100 🧀"},
-    250: {"stars": 125, "label": "250 🧀"},
-    500: {"stars": 250, "label": "500 🧀"},
-    1000: {"stars": 500, "label": "1 000 🧀"},
-    2500: {"stars": 1250, "label": "2 500 🧀"},
+    50: {"stars": 25, "label": "50 ⚙️"},
+    100: {"stars": 50, "label": "100 ⚙️"},
+    250: {"stars": 125, "label": "250 ⚙️"},
+    500: {"stars": 250, "label": "500 ⚙️"},
+    1000: {"stars": 500, "label": "1 000 ⚙️"},
+    2500: {"stars": 1250, "label": "2 500 ⚙️"},
 }
 
 
 @dp.message(Command("cheese"))
 async def cmd_cheese(message: types.Message):
-    """Меню покупки сыра"""
+    """Меню покупки Стали"""
     get_or_create_user(
         telegram_id=message.from_user.id,
         username=message.from_user.username,
@@ -3182,13 +3182,13 @@ async def cmd_cheese(message: types.Message):
     balance = get_cheese_balance(message.from_user.id)
 
     text = (
-        "🧀 <b>ОБМЕННИК — КУПИТЬ СЫР</b>\n"
+        "⚙️ <b>ОБМЕННИК — КУПИТЬ СТАЛЬ</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"💰 Твой баланс: <b>{balance} 🧀</b>\n\n"
-        "🔄 Курс: <b>1 ₽ = 1 🧀</b>\n\n"
-        "🧀 СЫР — единая внутренняя валюта:\n"
-        "├ 🎰 Колесо Фортуны — 50 🧀 / вращение\n"
-        "├ ⚔️ Арена PvP — ставки от 10 🧀\n"
+        f"💰 Твой баланс: <b>{balance} ⚙️</b>\n\n"
+        "🔄 Курс: <b>1 ₽ = 1 ⚙️</b>\n\n"
+        "⚙️ СТАЛЬ — единая валюта TankHub:\n"
+        "├ 🎰 Колесо Фортуны — 50 ⚙️ / вращение\n"
+        "├ ⚔️ Арена PvP — ставки от 10 ⚙️\n"
         "└ 🎁 Будущие фишки\n\n"
         "Выбери пакет 👇"
     )
@@ -3197,7 +3197,7 @@ async def cmd_cheese(message: types.Message):
     for amount, pkg in CHEESE_PACKAGES.items():
         buttons.append([
             InlineKeyboardButton(
-                text=f"🧀 {pkg['label']} — {pkg['stars']} ⭐",
+                text=f"⚙️ {pkg['label']} — {pkg['stars']} ⭐",
                 callback_data=f"buy_cheese_{amount}"
             )
         ])
@@ -3217,7 +3217,7 @@ async def cmd_cheese(message: types.Message):
 
 @dp.callback_query(F.data.startswith("buy_cheese_"))
 async def buy_cheese_callback(callback: CallbackQuery):
-    """Обработка покупки сыра через Stars"""
+    """Обработка покупки Стали через Stars"""
     amount = int(callback.data.split("_")[-1])
     pkg = CHEESE_PACKAGES.get(amount)
 
@@ -3230,8 +3230,8 @@ async def buy_cheese_callback(callback: CallbackQuery):
     # Создаём invoice через Telegram Stars
     try:
         await callback.message.answer_invoice(
-            title=f"🧀 {pkg['label']} СЫР",
-            description=f"Покупка {amount} единиц внутренней валюты 🧀 СЫР для Мир Танков Клуб",
+            title=f"⚙️ {pkg['label']} Стали",
+            description=f"Покупка {amount} единиц Стали — внутренней валюты TankHub",
             payload=f"cheese_{amount}_{callback.from_user.id}",
             currency="XTR",  # Telegram Stars
             prices=[types.LabeledPrice(label=f"{pkg['label']}", amount=pkg["stars"])],
