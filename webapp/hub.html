@@ -135,16 +135,72 @@
         </div>
     </section>
 
-    <!-- ═══ QUICK JOIN (for non-logged users) ═══ -->
+    <!-- ═══ 1. BATTLE PASS ═══ -->
+    <section class="hub-section" style="margin-top:20px">
+        <div class="battle-pass" id="battlePassSection">
+            <div class="battle-pass__header">
+                <div class="battle-pass__title">⚡ Сезон «Стальной шторм»</div>
+                <div class="battle-pass__level" id="bpLevel">Ур. 3</div>
+            </div>
+            <div class="battle-pass__bar"><div class="battle-pass__bar-fill" id="bpBar" style="width:35%"></div></div>
+            <div class="battle-pass__tiers">
+                <div class="battle-pass__tier battle-pass__tier--unlocked"><div class="battle-pass__tier-icon">🧀</div><div class="battle-pass__tier-label">50</div></div>
+                <div class="battle-pass__tier battle-pass__tier--unlocked"><div class="battle-pass__tier-icon">🎫</div><div class="battle-pass__tier-label">Тикет</div></div>
+                <div class="battle-pass__tier battle-pass__tier--unlocked"><div class="battle-pass__tier-icon">⚔️</div><div class="battle-pass__tier-label">Дуэль</div></div>
+                <div class="battle-pass__tier"><div class="battle-pass__tier-icon">🏅</div><div class="battle-pass__tier-label">Бейдж</div></div>
+                <div class="battle-pass__tier battle-pass__tier--locked"><div class="battle-pass__tier-icon">💎</div><div class="battle-pass__tier-label">200</div></div>
+                <div class="battle-pass__tier battle-pass__tier--locked"><div class="battle-pass__tier-icon">👑</div><div class="battle-pass__tier-label">VIP</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ 2. DAILY MISSIONS ═══ -->
+    <section class="hub-section" style="margin-top:20px">
+        <div class="hub-section__header"><h2 class="hub-section__title">🎯 Ежедневные миссии</h2></div>
+        <div class="daily-missions" id="dailyMissions">
+            <div class="mission-card"><div class="mission-card__icon">👀</div><div class="mission-card__info"><div class="mission-card__title">Зайди на платформу</div><div class="mission-card__desc">Просто открой приложение</div><div class="mission-card__progress"><div class="mission-card__progress-bar" style="width:100%"></div></div></div><div class="mission-card__reward">+15 🧀</div></div>
+            <div class="mission-card"><div class="mission-card__icon">📊</div><div class="mission-card__info"><div class="mission-card__title">Проверь статистику</div><div class="mission-card__desc">Открой страницу статистики</div><div class="mission-card__progress"><div class="mission-card__progress-bar" style="width:0%"></div></div></div><div class="mission-card__reward">+25 🧀</div></div>
+            <div class="mission-card"><div class="mission-card__icon">⚔️</div><div class="mission-card__info"><div class="mission-card__title">Вызови на дуэль</div><div class="mission-card__desc">Создай или прими вызов на арене</div><div class="mission-card__progress"><div class="mission-card__progress-bar" style="width:0%"></div></div></div><div class="mission-card__reward">+50 🧀</div></div>
+        </div>
+    </section>
+
+    <!-- ═══ 3. ACHIEVEMENTS ═══ -->
+    <section class="hub-section" style="margin-top:20px">
+        <div class="hub-section__header"><h2 class="hub-section__title">🏅 Достижения</h2></div>
+        <div class="achievements-row">
+            <div class="achievement achievement--unlocked" title="Новичок">🪖</div>
+            <div class="achievement achievement--unlocked" title="Первый бой">⚔️</div>
+            <div class="achievement achievement--unlocked" title="Коллекционер">🧀</div>
+            <div class="achievement" title="Дуэлянт">🏆</div>
+            <div class="achievement achievement--locked" title="Легенда">👑</div>
+            <div class="achievement achievement--locked" title="Снайпер">🎯</div>
+            <div class="achievement achievement--locked" title="Стратег">🧠</div>
+            <div class="achievement achievement--locked" title="Ветеран">⭐</div>
+        </div>
+    </section>
+
+    <!-- ═══ 4. LIVE FEED ═══ -->
+    <section class="hub-section" style="margin-top:20px">
+        <div class="hub-section__header"><h2 class="hub-section__title">📡 Активность</h2></div>
+        <div class="live-feed" id="liveFeed"></div>
+    </section>
+
+    <!-- ═══ 5. MINI GAME ═══ -->
+    <section class="hub-section" style="margin-top:20px">
+        <div class="mini-game" id="miniGame" onclick="playMiniGame()">
+            <div class="mini-game__icon" id="mgIcon">🎰</div>
+            <div class="mini-game__title">Угадай Танк</div>
+            <div class="mini-game__desc" id="mgDesc">Угадай танк по силуэту и получи сыр!</div>
+            <button class="mini-game__btn" id="mgBtn">🎮 Играть</button>
+        </div>
+    </section>
+
+    <!-- ═══ QUICK JOIN ═══ -->
     <section class="hub-section" id="joinSection" style="margin-top:32px;display:none">
         <div class="hub-empty">
             <div class="hub-empty__icon">🚀</div>
-            <div class="hub-empty__text">
-                Войди через Telegram бота, чтобы открыть все возможности
-            </div>
-            <a href="https://t.me/Mir_tankov_privat_bot?start=hub" class="hub-empty__cta">
-                Начать в Telegram
-            </a>
+            <div class="hub-empty__text">Войди через Telegram бота</div>
+            <a href="https://t.me/Mir_tankov_privat_bot?start=hub" class="hub-empty__cta">Начать в Telegram</a>
         </div>
     </section>
 
@@ -535,6 +591,38 @@
 
             btn.disabled = false;
             btn.textContent = '🚀 Войти';
+        }
+
+        // ══════ LIVE FEED ══════
+        const feedEvents = [
+            {icon:'⚔️',text:'<strong>TankMaster</strong> вызвал на дуэль',time:'1м'},
+            {icon:'🏆',text:'<strong>Fors777</strong> выиграл челлендж',time:'3м'},
+            {icon:'🧀',text:'<strong>ProTanker</strong> получил 200 сыра',time:'5м'},
+            {icon:'📊',text:'<strong>NightWolf</strong> проверил WN8',time:'7м'},
+            {icon:'🔴',text:'<strong>ISERVERI</strong> начал стрим',time:'10м'},
+            {icon:'🎰',text:'<strong>SteelRain</strong> крутанул колесо',time:'12м'},
+        ];
+        function renderFeed(){
+            const el=document.getElementById('liveFeed');
+            if(!el)return;
+            el.innerHTML=feedEvents.slice(0,4).map(e=>`<div class="feed-item"><div class="feed-item__icon">${e.icon}</div><div class="feed-item__text">${e.text}</div><div class="feed-item__time">${e.time}</div></div>`).join('');
+        }
+        setTimeout(renderFeed,800);
+
+        // ══════ MINI GAME ══════
+        const tanks=['Т-34','ИС-7','Maus','КВ-2','Leopard 1','Об.140','E 100','AMX 50B'];
+        let mgAnswer='';
+        function playMiniGame(){
+            mgAnswer=tanks[Math.floor(Math.random()*tanks.length)];
+            const hint=mgAnswer[0]+'•'.repeat(mgAnswer.length-2)+mgAnswer[mgAnswer.length-1];
+            document.getElementById('mgDesc').textContent=`Подсказка: ${hint}`;
+            document.getElementById('mgBtn').textContent='🤔 '+mgAnswer;
+            document.getElementById('mgIcon').textContent='🎯';
+            setTimeout(()=>{
+                document.getElementById('mgDesc').textContent='Это был '+mgAnswer+'! +10 🧀';
+                document.getElementById('mgBtn').textContent='🎮 Ещё раз';
+                document.getElementById('mgIcon').textContent='✅';
+            },2000);
         }
     </script>
 
