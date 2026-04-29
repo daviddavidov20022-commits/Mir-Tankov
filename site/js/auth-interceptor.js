@@ -41,6 +41,17 @@
                     }
                 }
             }
+
+            // ── TankHub: inject streamer context ──
+            const streamerId = new URLSearchParams(window.location.search).get('streamer_id')
+                || sessionStorage.getItem('hub_streamer_id');
+            if (streamerId) {
+                if (config.headers instanceof Headers) {
+                    config.headers.set('X-Streamer-Id', String(streamerId));
+                } else if (!Array.isArray(config.headers)) {
+                    config.headers['X-Streamer-Id'] = String(streamerId);
+                }
+            }
         }
         
         return originalFetch(resource, config);

@@ -123,10 +123,42 @@
         }
         @media(min-width:481px){.wot-chart-hint{display:none;}}
     </style>
-<script src="js/auth-interceptor.js?v=52"></script>
+<script src="js/auth-interceptor.js?v=53"></script>
+<script src="js/hub-state.js"></script>
 </head>
 
 <body class="landing-page">
+    <!-- TankHub: redirect to hub.html as default entry point -->
+    <script>
+        (function() {
+            const p = new URLSearchParams(window.location.search);
+            
+            // If streamer_id is in URL, go to streamer page
+            const sid = p.get('streamer_id');
+            if (sid) {
+                window.location.replace('streamer.html' + window.location.search);
+                return;
+            }
+            
+            // If opened from Telegram WebApp — always go to Hub
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+                window.location.replace('hub.html' + window.location.search);
+                return;
+            }
+            
+            // If ?hub=1 — go to Hub
+            if (p.get('hub') === '1') {
+                window.location.replace('hub.html' + window.location.search);
+                return;
+            }
+
+            // If ?nohub=1 — stay on old landing (for testing)
+            if (p.get('nohub') === '1') return;
+
+            // Default: redirect everyone to Hub
+            window.location.replace('hub.html' + window.location.search);
+        })();
+    </script>
     <!-- 3D Canvas particle system -->
     <canvas id="heroCanvas"></canvas>
 
