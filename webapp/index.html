@@ -123,10 +123,27 @@
         }
         @media(min-width:481px){.wot-chart-hint{display:none;}}
     </style>
-<script src="js/auth-interceptor.js?v=52"></script>
+<script src="js/auth-interceptor.js?v=53"></script>
+<script src="js/hub-state.js"></script>
 </head>
 
 <body class="landing-page">
+    <!-- TankHub: redirect to hub if ?hub=1 or streamer_id is set -->
+    <script>
+        (function() {
+            const p = new URLSearchParams(window.location.search);
+            if (p.get('hub') === '1') {
+                window.location.replace('hub.html' + window.location.search);
+                return;
+            }
+            // If streamer_id is in URL, redirect to streamer page
+            const sid = p.get('streamer_id');
+            if (sid) {
+                window.location.replace('streamer.html' + window.location.search);
+                return;
+            }
+        })();
+    </script>
     <!-- 3D Canvas particle system -->
     <canvas id="heroCanvas"></canvas>
 
@@ -153,6 +170,7 @@
             </a>
 
             <div class="navbar-links" id="navbarLinks">
+                <a href="hub.html" style="color:#C8AA6E;font-weight:700">🎮 TankHub</a>
                 <a href="#features">Возможности</a>
                 <a href="player.html" onclick="event.preventDefault(); openGame('player.html')">Донат ⚙️</a>
                 <a href="stats.html" onclick="event.preventDefault(); openGame('stats.html')">Статистика</a>

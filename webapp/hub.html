@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TankHub — Платформа Мир Танков</title>
+    <meta name="description" content="TankHub — платформа для стримеров и игроков Мир Танков. Челленджи, PvP арена, стримы и сообщество.">
+    <meta property="og:title" content="TankHub — Платформа Мир Танков">
+    <meta property="og:description" content="Присоединяйся к платформе для стримеров и игроков Мир Танков!">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/hub.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <script src="js/auth-interceptor.js"></script>
+    <script src="js/hub-state.js"></script>
+</head>
+
+<body class="hub-page">
+
+    <!-- ═══ HEADER ═══ -->
+    <header class="hub-header" id="hubHeader">
+        <div class="hub-header__inner">
+            <a href="hub.html" class="hub-header__logo">
+                <span class="hub-header__logo-icon">🎮</span>
+                <span class="hub-header__logo-text">TANK<span class="accent">HUB</span></span>
+            </a>
+            <div class="hub-header__user" id="hubUserBtn" onclick="handleUserClick()">
+                <span id="hubUserName">Войти</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══ HERO ═══ -->
+    <section class="hub-hero">
+        <div class="hub-hero__badge">
+            <span class="hub-hero__badge-dot"></span>
+            ПЛАТФОРМА МИР ТАНКОВ
+        </div>
+        <h1 class="hub-hero__title">
+            Найди своё <span class="fire">сражение</span>
+        </h1>
+        <p class="hub-hero__subtitle">
+            Платформа для стримеров и игроков Мир Танков.<br>
+            Арена, челленджи, стримы и сообщество — всё в одном месте.
+        </p>
+
+        <!-- Stats -->
+        <div class="hub-stats">
+            <div class="hub-stat">
+                <div class="hub-stat__value" id="hubTotalStreamers">—</div>
+                <div class="hub-stat__label">Стримеров</div>
+            </div>
+            <div class="hub-stat-sep"></div>
+            <div class="hub-stat">
+                <div class="hub-stat__value" id="hubTotalPlayers">—</div>
+                <div class="hub-stat__label">Игроков</div>
+            </div>
+            <div class="hub-stat-sep"></div>
+            <div class="hub-stat">
+                <div class="hub-stat__value" id="hubTotalChallenges">—</div>
+                <div class="hub-stat__label">Челленджей</div>
+            </div>
+        </div>
+
+        <!-- Role Selector -->
+        <div class="hub-roles" id="hubRoles">
+            <button class="hub-role-btn" id="roleFan" onclick="selectRole('fan')">
+                <span class="hub-role-btn__icon">🪖</span>
+                Я Игрок
+            </button>
+            <button class="hub-role-btn" id="roleStreamer" onclick="selectRole('streamer')">
+                <span class="hub-role-btn__icon">🎬</span>
+                Я Стример
+            </button>
+        </div>
+    </section>
+
+    <!-- ═══ SEARCH ═══ -->
+    <div class="hub-search">
+        <input type="text" class="hub-search__input" id="hubSearchInput" 
+               placeholder="🔍 Поиск стримера по нику..."
+               oninput="filterStreamers(this.value)">
+    </div>
+
+    <!-- ═══ FEATURED / LIVE STREAMERS ═══ -->
+    <section class="hub-section" id="liveSection" style="display:none">
+        <div class="hub-section__header">
+            <h2 class="hub-section__title">🔴 Сейчас в эфире</h2>
+        </div>
+        <div class="hub-streamers-grid" id="liveStreamersGrid"></div>
+    </section>
+
+    <!-- ═══ ALL STREAMERS ═══ -->
+    <section class="hub-section">
+        <div class="hub-section__header">
+            <h2 class="hub-section__title">🏆 Стримеры платформы</h2>
+        </div>
+        <div class="hub-streamers-grid" id="allStreamersGrid">
+            <!-- Loading skeletons -->
+            <div class="hub-skeleton" style="height:150px"></div>
+            <div class="hub-skeleton" style="height:150px"></div>
+            <div class="hub-skeleton" style="height:150px"></div>
+        </div>
+    </section>
+
+    <!-- ═══ FEATURES ═══ -->
+    <section class="hub-section" style="margin-top:24px">
+        <div class="hub-section__header">
+            <h2 class="hub-section__title">✨ Возможности платформы</h2>
+        </div>
+        <div class="hub-features">
+            <div class="hub-feature">
+                <div class="hub-feature__icon">⚔️</div>
+                <div class="hub-feature__title">PvP Арена</div>
+                <div class="hub-feature__desc">1v1 дуэли на любых танках с реальными ставками</div>
+            </div>
+            <div class="hub-feature">
+                <div class="hub-feature__icon">🏆</div>
+                <div class="hub-feature__title">Челленджи</div>
+                <div class="hub-feature__desc">Глобальные и командные турниры с призами</div>
+            </div>
+            <div class="hub-feature">
+                <div class="hub-feature__icon">📊</div>
+                <div class="hub-feature__title">Статистика</div>
+                <div class="hub-feature__desc">WN8, WR и детальная аналитика игрока</div>
+            </div>
+            <div class="hub-feature">
+                <div class="hub-feature__icon">🎬</div>
+                <div class="hub-feature__title">OBS Виджеты</div>
+                <div class="hub-feature__desc">Виджеты для стримов, настраиваемые в реальном времени</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ QUICK JOIN (for non-logged users) ═══ -->
+    <section class="hub-section" id="joinSection" style="margin-top:32px;display:none">
+        <div class="hub-empty">
+            <div class="hub-empty__icon">🚀</div>
+            <div class="hub-empty__text">
+                Войди через Telegram бота, чтобы открыть все возможности
+            </div>
+            <a href="https://t.me/Mir_tankov_privat_bot?start=hub" class="hub-empty__cta">
+                Начать в Telegram
+            </a>
+        </div>
+    </section>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="hub-footer">
+        <div class="hub-footer__text">
+            🎮 TANK<span class="accent">HUB</span> — Мир Танков Платформа · 2026
+        </div>
+    </footer>
+
+    <!-- ═══ LOGIN OVERLAY ═══ -->
+    <div id="loginOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+        <div style="background:linear-gradient(145deg,#1a2332,#0f1520);border:2px solid rgba(200,170,110,0.3);border-radius:24px;padding:36px 28px;text-align:center;max-width:360px;width:100%">
+            <div style="font-size:3.5rem;margin-bottom:12px">🎮</div>
+            <div style="font-family:'Russo One',sans-serif;font-size:1.3rem;color:#E8E6E3;margin-bottom:8px">ВХОД В TANKHUB</div>
+            <div style="font-size:0.8rem;color:#8B95A5;margin-bottom:24px;line-height:1.5">Введите ваш Telegram ID или WoT никнейм</div>
+            <input id="loginInput" type="text" placeholder="Telegram ID или Ник" 
+                   style="width:100%;padding:14px 18px;border:1px solid rgba(200,170,110,0.2);border-radius:12px;background:rgba(255,255,255,0.04);color:#E8E6E3;font-size:0.9rem;font-family:Inter,sans-serif;outline:none;margin-bottom:8px;box-sizing:border-box"
+                   onkeydown="if(event.key==='Enter')doHubLogin()">
+            <div id="loginError" style="font-size:0.7rem;color:#ef4444;margin-bottom:12px;min-height:16px"></div>
+            <button id="loginBtn" onclick="doHubLogin()" 
+                    style="width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#C8AA6E,#E8D5A3);color:#0a0e14;font-family:'Russo One',sans-serif;font-size:0.9rem;cursor:pointer;margin-bottom:10px">
+                🚀 Войти
+            </button>
+            <button onclick="closeLogin()" 
+                    style="width:100%;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:12px;background:transparent;color:#5A6577;font-size:0.75rem;cursor:pointer">
+                Назад
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = TankHub.apiBase;
+        let allStreamersData = [];
+        let isLoggedIn = false;
+
+        // ══════════════════════════════════
+        // INIT
+        // ══════════════════════════════════
+        document.addEventListener('DOMContentLoaded', async () => {
+            TankHub.init();
+            
+            // Check login state
+            const myId = TankHub.myId || parseInt(localStorage.getItem('my_telegram_id'));
+            isLoggedIn = !!myId;
+
+            if (isLoggedIn) {
+                document.getElementById('hubUserName').textContent = localStorage.getItem('site_username') || localStorage.getItem('wot_nickname') || `ID: ${myId}`;
+                document.getElementById('joinSection').style.display = 'none';
+            } else {
+                document.getElementById('joinSection').style.display = '';
+            }
+
+            // Set saved role
+            const savedRole = TankHub.role;
+            if (savedRole) {
+                highlightRole(savedRole);
+            }
+
+            // Load platform stats
+            loadPlatformStats();
+
+            // Load streamers
+            await loadAllStreamers();
+        });
+
+        // ══════════════════════════════════
+        // ROLE SELECTOR
+        // ══════════════════════════════════
+        function selectRole(role) {
+            TankHub.setRole(role);
+            highlightRole(role);
+
+            if (role === 'streamer' && !isLoggedIn) {
+                showLogin();
+                return;
+            }
+
+            if (role === 'streamer' && isLoggedIn) {
+                // Navigate to own streamer page
+                const myId = TankHub.myId || parseInt(localStorage.getItem('my_telegram_id'));
+                TankHub.setCurrentStreamer(myId);
+                window.location.href = `streamer.html?streamer_id=${myId}&telegram_id=${myId}&_t=${Date.now()}`;
+            }
+        }
+
+        function highlightRole(role) {
+            document.getElementById('roleFan').classList.toggle('hub-role-btn--active', role === 'fan');
+            document.getElementById('roleStreamer').classList.toggle('hub-role-btn--active', role === 'streamer');
+        }
+
+        // ══════════════════════════════════
+        // LOAD STREAMERS
+        // ══════════════════════════════════
+        async function loadAllStreamers() {
+            const grid = document.getElementById('allStreamersGrid');
+            
+            try {
+                // Try multiple endpoints
+                let streamers = [];
+                
+                // 1. Try /api/bloggers/
+                try {
+                    const resp = await fetch(`${API_BASE}/api/bloggers/`);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (Array.isArray(data)) streamers = data;
+                        else if (data.bloggers) streamers = data.bloggers;
+                    }
+                } catch (e) {}
+
+                // 2. If no streamers from API, use known streamer(s) + admin
+                if (streamers.length === 0) {
+                    // Fallback: fetch the main admin user as the first streamer
+                    try {
+                        const meResp = await fetch(`${API_BASE}/api/me?telegram_id=6507474079`);
+                        if (meResp.ok) {
+                            const meData = await meResp.json();
+                            streamers = [{
+                                telegram_id: 6507474079,
+                                display_name: meData.wot_nickname || meData.first_name || 'ISERVERI',
+                                wot_nickname: meData.wot_nickname || 'ISERVERI',
+                                avatar: '🎬',
+                                is_live: false,
+                                fans_count: 0,
+                                challenges_count: 0,
+                                rank: '🥇',
+                            }];
+                        }
+                    } catch (e) {}
+
+                    // If still nothing, show a hardcoded entry
+                    if (streamers.length === 0) {
+                        streamers = [{
+                            telegram_id: 6507474079,
+                            display_name: 'ISERVERI',
+                            wot_nickname: 'ISERVERI',
+                            avatar: '🎬',
+                            is_live: false,
+                            fans_count: 100,
+                            challenges_count: 15,
+                            rank: '🥇',
+                        }];
+                    }
+                }
+
+                allStreamersData = streamers;
+                renderStreamers(streamers);
+
+                // Check live status
+                checkLiveStreamers(streamers);
+
+            } catch (e) {
+                console.warn('[Hub] Load streamers error:', e);
+                grid.innerHTML = `
+                    <div class="hub-empty">
+                        <div class="hub-empty__icon">⚠️</div>
+                        <div class="hub-empty__text">Не удалось загрузить список стримеров</div>
+                    </div>`;
+            }
+        }
+
+        function renderStreamers(streamers) {
+            const grid = document.getElementById('allStreamersGrid');
+            if (!streamers || streamers.length === 0) {
+                grid.innerHTML = `
+                    <div class="hub-empty" style="grid-column:1/-1">
+                        <div class="hub-empty__icon">🎬</div>
+                        <div class="hub-empty__text">Пока нет стримеров.<br>Стань первым!</div>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = streamers.map((s, i) => {
+                const name = s.display_name || s.wot_nickname || s.first_name || `Streamer #${s.telegram_id}`;
+                const wotNick = s.wot_nickname || '';
+                const fans = s.fans_count || 0;
+                const challenges = s.challenges_count || 0;
+                const isLive = s.is_live || false;
+                const isFeatured = i === 0;
+                const rank = s.rank || ['🥇','🥈','🥉','⭐'][Math.min(i, 3)];
+
+                return `
+                <div class="hub-streamer-card hub-fade-in ${isFeatured ? 'hub-streamer-card--featured' : ''}" 
+                     onclick="openStreamer(${s.telegram_id}, '${name.replace(/'/g, "\\'")}')">
+                    <span class="hub-streamer-card__rank">${rank}</span>
+                    <div class="hub-streamer-card__top">
+                        <div class="hub-streamer-card__avatar">
+                            ${s.avatar_url ? `<img src="${s.avatar_url}" alt="${name}">` : (s.avatar || '🎬')}
+                            ${isLive ? '<div class="hub-streamer-card__live-dot"></div>' : ''}
+                        </div>
+                        <div class="hub-streamer-card__info">
+                            <div class="hub-streamer-card__name">${name}</div>
+                            ${wotNick ? `<div class="hub-streamer-card__wot">🪖 ${wotNick}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="hub-streamer-card__stats">
+                        <div class="hub-streamer-card__stat">
+                            <div class="hub-streamer-card__stat-val">${fans > 0 ? fans.toLocaleString() : '—'}</div>
+                            <div class="hub-streamer-card__stat-lbl">Фанатов</div>
+                        </div>
+                        <div class="hub-streamer-card__stat">
+                            <div class="hub-streamer-card__stat-val">${challenges > 0 ? challenges : '—'}</div>
+                            <div class="hub-streamer-card__stat-lbl">Челленджей</div>
+                        </div>
+                        <div class="hub-streamer-card__stat">
+                            <div class="hub-streamer-card__stat-val">${isLive ? '🔴 LIVE' : '⚫'}</div>
+                            <div class="hub-streamer-card__stat-lbl">Статус</div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // ══════════════════════════════════
+        // SEARCH / FILTER
+        // ══════════════════════════════════
+        function filterStreamers(query) {
+            if (!query || query.length < 2) {
+                renderStreamers(allStreamersData);
+                return;
+            }
+            const q = query.toLowerCase();
+            const filtered = allStreamersData.filter(s => {
+                const name = (s.display_name || s.wot_nickname || '').toLowerCase();
+                return name.includes(q);
+            });
+            renderStreamers(filtered);
+        }
+
+        // ══════════════════════════════════
+        // LIVE CHECK
+        // ══════════════════════════════════
+        async function checkLiveStreamers(streamers) {
+            try {
+                const resp = await fetch(`${API_BASE}/api/streams/status`);
+                if (!resp.ok) return;
+                const data = await resp.json();
+                
+                const anyLive = Object.values(data).some(s => s && s.live);
+                if (anyLive) {
+                    // Mark the main streamer as live
+                    streamers.forEach(s => {
+                        if (s.telegram_id === 6507474079) {
+                            s.is_live = true;
+                        }
+                    });
+                    
+                    // Show live section
+                    const liveStreamers = streamers.filter(s => s.is_live);
+                    if (liveStreamers.length > 0) {
+                        document.getElementById('liveSection').style.display = '';
+                        document.getElementById('liveStreamersGrid').innerHTML = 
+                            liveStreamers.map(s => renderLiveCard(s)).join('');
+                    }
+                    
+                    // Re-render all
+                    renderStreamers(streamers);
+                }
+            } catch (e) {}
+        }
+
+        function renderLiveCard(s) {
+            const name = s.display_name || s.wot_nickname || 'Стример';
+            return `
+            <div class="hub-streamer-card hub-streamer-card--featured hub-fade-in" 
+                 onclick="openStreamer(${s.telegram_id}, '${name.replace(/'/g, "\\'")}')">
+                <div class="hub-streamer-card__top">
+                    <div class="hub-streamer-card__avatar">
+                        ${s.avatar || '🎬'}
+                        <div class="hub-streamer-card__live-dot"></div>
+                    </div>
+                    <div class="hub-streamer-card__info">
+                        <div class="hub-streamer-card__name">${name}</div>
+                        <div class="hub-streamer-card__wot" style="color:#ef4444">🔴 Сейчас в эфире</div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // ══════════════════════════════════
+        // PLATFORM STATS
+        // ══════════════════════════════════
+        async function loadPlatformStats() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/stats/total_users`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const el = document.getElementById('hubTotalPlayers');
+                    if (el && data.total) el.textContent = data.total.toLocaleString();
+                }
+            } catch (e) {}
+
+            // For now set static counts
+            const streamersEl = document.getElementById('hubTotalStreamers');
+            if (streamersEl) streamersEl.textContent = allStreamersData.length || '1';
+            
+            const challengesEl = document.getElementById('hubTotalChallenges');
+            if (challengesEl) challengesEl.textContent = '—';
+        }
+
+        // ══════════════════════════════════
+        // NAVIGATION
+        // ══════════════════════════════════
+        function openStreamer(streamerId, name) {
+            TankHub.setCurrentStreamer(streamerId, name);
+            const myId = TankHub.myId || localStorage.getItem('my_telegram_id') || '';
+            window.location.href = `streamer.html?streamer_id=${streamerId}&telegram_id=${myId}&_t=${Date.now()}`;
+        }
+
+        // ══════════════════════════════════
+        // AUTH
+        // ══════════════════════════════════
+        function handleUserClick() {
+            if (isLoggedIn) {
+                // Show user menu or go to profile
+                const myId = TankHub.myId || localStorage.getItem('my_telegram_id');
+                window.location.href = `profile.html?telegram_id=${myId}&_t=${Date.now()}`;
+            } else {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+
+        function closeLogin() {
+            document.getElementById('loginOverlay').style.display = 'none';
+        }
+
+        async function doHubLogin() {
+            const input = document.getElementById('loginInput');
+            const errorEl = document.getElementById('loginError');
+            const value = input.value.trim();
+            
+            if (!value) {
+                errorEl.textContent = 'Введите Telegram ID или никнейм';
+                return;
+            }
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Проверяем...';
+            errorEl.textContent = '';
+
+            try {
+                const isNumber = /^\d+$/.test(value);
+                
+                if (isNumber) {
+                    const resp = await fetch(`${API_BASE}/api/me?telegram_id=${value}`);
+                    const data = await resp.json();
+                    
+                    if (data.telegram_id) {
+                        const name = data.wot_nickname || data.first_name || data.username || 'Танкист';
+                        localStorage.setItem('my_telegram_id', String(data.telegram_id));
+                        localStorage.setItem('site_telegram_id', String(data.telegram_id));
+                        localStorage.setItem('site_username', name);
+                        
+                        isLoggedIn = true;
+                        document.getElementById('hubUserName').textContent = name;
+                        closeLogin();
+                        document.getElementById('joinSection').style.display = 'none';
+                    } else {
+                        errorEl.textContent = 'Пользователь не найден';
+                    }
+                } else {
+                    const resp = await fetch(`${API_BASE}/api/users/search?q=${encodeURIComponent(value)}`);
+                    const data = await resp.json();
+                    
+                    if (data.users && data.users.length > 0) {
+                        const user = data.users[0];
+                        localStorage.setItem('my_telegram_id', String(user.telegram_id));
+                        localStorage.setItem('site_telegram_id', String(user.telegram_id));
+                        localStorage.setItem('site_username', user.wot_nickname || user.first_name || value);
+                        
+                        isLoggedIn = true;
+                        document.getElementById('hubUserName').textContent = user.wot_nickname || user.first_name || value;
+                        closeLogin();
+                        document.getElementById('joinSection').style.display = 'none';
+                    } else {
+                        errorEl.textContent = 'Игрок не найден. Попробуйте Telegram ID.';
+                    }
+                }
+            } catch (e) {
+                errorEl.textContent = 'Ошибка подключения к серверу';
+            }
+
+            btn.disabled = false;
+            btn.textContent = '🚀 Войти';
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Стример — TankHub</title>
+    <meta name="description" content="Профиль стримера на платформе TankHub — Мир Танков">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/hub.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <script src="js/auth-interceptor.js"></script>
+    <script src="js/hub-state.js"></script>
+</head>
+
+<body class="hub-page">
+
+    <!-- ═══ HEADER ═══ -->
+    <header class="hub-header">
+        <div class="hub-header__inner">
+            <a href="hub.html" class="hub-header__logo">
+                <span class="hub-header__logo-icon">🎮</span>
+                <span class="hub-header__logo-text">TANK<span class="accent">HUB</span></span>
+            </a>
+            <div class="hub-header__user" id="headerUserBtn" onclick="handleHeaderUserClick()">
+                <span id="headerUserName">👤</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══ BACK BUTTON ═══ -->
+    <div class="streamer-profile" style="padding-top:16px">
+        <a href="hub.html" class="hub-back-btn">← Каталог</a>
+    </div>
+
+    <!-- ═══ STREAMER HERO ═══ -->
+    <div class="streamer-profile">
+        <div class="streamer-hero">
+            <div class="streamer-hero__avatar" id="streamerAvatar">🎬</div>
+            <h1 class="streamer-hero__name" id="streamerName">Загрузка...</h1>
+            <div class="streamer-hero__wot" id="streamerWot"></div>
+
+            <div class="streamer-hero__stats">
+                <div class="streamer-hero__stat">
+                    <div class="streamer-hero__stat-val" id="streamerFans">—</div>
+                    <div class="streamer-hero__stat-lbl">Фанатов</div>
+                </div>
+                <div class="streamer-hero__stat">
+                    <div class="streamer-hero__stat-val" id="streamerChallenges">—</div>
+                    <div class="streamer-hero__stat-lbl">Челленджей</div>
+                </div>
+                <div class="streamer-hero__stat">
+                    <div class="streamer-hero__stat-val" id="streamerStatus">⚫</div>
+                    <div class="streamer-hero__stat-lbl">Стрим</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ ACTIONS GRID ═══ -->
+        <div class="streamer-actions" id="streamerActions">
+            <!-- Filled by JS -->
+        </div>
+
+        <!-- ═══ ACTIVE CHALLENGES PREVIEW ═══ -->
+        <section class="streamer-challenges" id="activeChallengesSection" style="display:none">
+            <div class="hub-section__header">
+                <h2 class="hub-section__title">🔥 Активные челленджи</h2>
+            </div>
+            <div id="activeChallengesList"></div>
+        </section>
+
+        <!-- ═══ OWNER PANEL (only for the streamer themselves) ═══ -->
+        <section id="ownerPanel" style="display:none;margin-top:24px">
+            <div class="hub-section__header">
+                <h2 class="hub-section__title">⚙️ Управление</h2>
+            </div>
+            <div class="streamer-actions">
+                <div class="streamer-action-btn" onclick="openInContext('admin.html')">
+                    <span class="streamer-action-btn__icon">👑</span>
+                    <span class="streamer-action-btn__text">Админ</span>
+                    <span class="streamer-action-btn__desc">Пользователи, подписки</span>
+                </div>
+                <div class="streamer-action-btn" onclick="openInContext('widget-studio.html')">
+                    <span class="streamer-action-btn__icon">🎨</span>
+                    <span class="streamer-action-btn__text">Виджеты</span>
+                    <span class="streamer-action-btn__desc">Настройка OBS</span>
+                </div>
+                <div class="streamer-action-btn" onclick="openInContext('finance.html')">
+                    <span class="streamer-action-btn__icon">💰</span>
+                    <span class="streamer-action-btn__text">Финансы</span>
+                    <span class="streamer-action-btn__desc">Донаты и статистика</span>
+                </div>
+                <div class="streamer-action-btn" onclick="openInContext('design-editor.html')">
+                    <span class="streamer-action-btn__icon">✏️</span>
+                    <span class="streamer-action-btn__text">Дизайн</span>
+                    <span class="streamer-action-btn__desc">Редактор стиля</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="hub-footer">
+        <div class="hub-footer__text">
+            🎮 TANK<span class="accent">HUB</span> · <span id="footerStreamerName">—</span>
+        </div>
+    </footer>
+
+    <script>
+        const API_BASE = TankHub.apiBase;
+        let currentStreamer = null;
+        let isOwner = false;
+
+        // ══════════════════════════════════
+        // INIT
+        // ══════════════════════════════════
+        document.addEventListener('DOMContentLoaded', async () => {
+            TankHub.init();
+
+            const params = new URLSearchParams(window.location.search);
+            const streamerId = parseInt(params.get('streamer_id'));
+            
+            if (!streamerId) {
+                window.location.href = 'hub.html';
+                return;
+            }
+
+            TankHub.setCurrentStreamer(streamerId);
+            
+            const myId = TankHub.myId || parseInt(localStorage.getItem('my_telegram_id'));
+            isOwner = myId && myId === streamerId;
+
+            // Load header user
+            if (myId) {
+                document.getElementById('headerUserName').textContent = 
+                    localStorage.getItem('site_username') || localStorage.getItem('wot_nickname') || `ID: ${myId}`;
+            }
+
+            // Load streamer profile
+            await loadStreamerProfile(streamerId);
+
+            // Build action buttons
+            buildActions();
+
+            // Load active challenges
+            loadActiveChallenges(streamerId);
+
+            // Show owner panel
+            if (isOwner) {
+                document.getElementById('ownerPanel').style.display = '';
+            }
+        });
+
+        // ══════════════════════════════════
+        // LOAD STREAMER PROFILE
+        // ══════════════════════════════════
+        async function loadStreamerProfile(streamerId) {
+            try {
+                const resp = await fetch(`${API_BASE}/api/me?telegram_id=${streamerId}`);
+                if (!resp.ok) throw new Error('API error');
+                const data = await resp.json();
+                currentStreamer = data;
+
+                // Update UI
+                const name = data.wot_nickname || data.first_name || data.username || `Стример #${streamerId}`;
+                document.title = `${name} — TankHub`;
+                document.getElementById('streamerName').textContent = name;
+                document.getElementById('footerStreamerName').textContent = name;
+                
+                if (data.wot_nickname) {
+                    document.getElementById('streamerWot').textContent = `🪖 ${data.wot_nickname}`;
+                }
+
+                // Stats
+                if (data.cheese !== undefined) {
+                    // Could show cheese balance for the streamer
+                }
+
+            } catch (e) {
+                console.warn('[Streamer] Profile load error:', e);
+                document.getElementById('streamerName').textContent = `Стример #${streamerId}`;
+            }
+
+            // Try to check stream status
+            try {
+                const resp = await fetch(`${API_BASE}/api/streams/status`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const anyLive = Object.values(data).some(s => s && s.live);
+                    if (anyLive) {
+                        document.getElementById('streamerStatus').textContent = '🔴 LIVE';
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // ══════════════════════════════════
+        // BUILD ACTIONS
+        // ══════════════════════════════════
+        function buildActions() {
+            const grid = document.getElementById('streamerActions');
+            const params = new URLSearchParams(window.location.search);
+            const streamerId = params.get('streamer_id');
+
+            grid.innerHTML = `
+                <div class="streamer-action-btn streamer-action-btn--primary" onclick="openInContext('challenges.html')">
+                    <span class="streamer-action-btn__icon">⚔️</span>
+                    <span class="streamer-action-btn__text">Арена</span>
+                    <span class="streamer-action-btn__desc">PvP дуэли и челленджи</span>
+                </div>
+                <div class="streamer-action-btn" onclick="openInContext('global-challenge.html')">
+                    <span class="streamer-action-btn__icon">🏆</span>
+                    <span class="streamer-action-btn__text">Общий Челлендж</span>
+                    <span class="streamer-action-btn__desc">Глобальные турниры</span>
+                </div>
+                <div class="streamer-action-btn" onclick="openInContext('friends.html')">
+                    <span class="streamer-action-btn__icon">👥</span>
+                    <span class="streamer-action-btn__text">Друзья</span>
+                    <span class="streamer-action-btn__desc">Социальная сеть</span>
+                </div>
+                <div class="streamer-action-btn" onclick="openInContext('stats.html')">
+                    <span class="streamer-action-btn__icon">📊</span>
+                    <span class="streamer-action-btn__text">Статистика</span>
+                    <span class="streamer-action-btn__desc">WN8 и аналитика</span>
+                </div>
+                <div class="streamer-action-btn" onclick="openInContext('cheese.html')">
+                    <span class="streamer-action-btn__icon">🧀</span>
+                    <span class="streamer-action-btn__text">Магазин Сыра</span>
+                    <span class="streamer-action-btn__desc">Внутренняя валюта</span>
+                </div>
+                <div class="streamer-action-btn" onclick="openInContext('profile.html')">
+                    <span class="streamer-action-btn__icon">👤</span>
+                    <span class="streamer-action-btn__text">Мой Профиль</span>
+                    <span class="streamer-action-btn__desc">Настройки и WoT</span>
+                </div>
+            `;
+        }
+
+        // ══════════════════════════════════
+        // ACTIVE CHALLENGES
+        // ══════════════════════════════════
+        async function loadActiveChallenges(streamerId) {
+            try {
+                const resp = await fetch(`${API_BASE}/api/global-challenges/active`);
+                if (!resp.ok) return;
+                const data = await resp.json();
+                
+                if (data && (data.challenge || (Array.isArray(data) && data.length > 0))) {
+                    const section = document.getElementById('activeChallengesSection');
+                    section.style.display = '';
+                    
+                    const challenges = Array.isArray(data) ? data : [data.challenge || data];
+                    const list = document.getElementById('activeChallengesList');
+                    
+                    list.innerHTML = challenges.filter(c => c && c.title).map(c => `
+                        <div class="streamer-challenge-card" onclick="openInContext('challenges.html?tab=challenge')">
+                            <div class="streamer-challenge-card__icon">${c.icon || '🔥'}</div>
+                            <div class="streamer-challenge-card__info">
+                                <div class="streamer-challenge-card__title">${c.title}</div>
+                                <div class="streamer-challenge-card__meta">${c.participants_count || 0} участников</div>
+                            </div>
+                            <div class="streamer-challenge-card__reward">🧀 ${c.reward_coins || 0}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {}
+        }
+
+        // ══════════════════════════════════
+        // NAVIGATION WITH CONTEXT
+        // ══════════════════════════════════
+        function openInContext(url) {
+            const sep = url.includes('?') ? '&' : '?';
+            let fullUrl = url + `${sep}_t=${Date.now()}`;
+            
+            const myId = TankHub.myId || localStorage.getItem('my_telegram_id');
+            if (myId) fullUrl += `&telegram_id=${myId}`;
+            
+            const streamerId = TankHub.streamerId || new URLSearchParams(window.location.search).get('streamer_id');
+            if (streamerId) fullUrl += `&streamer_id=${streamerId}`;
+            
+            window.location.href = fullUrl;
+        }
+
+        function handleHeaderUserClick() {
+            const myId = TankHub.myId || localStorage.getItem('my_telegram_id');
+            if (myId) {
+                openInContext('profile.html');
+            } else {
+                window.location.href = 'hub.html';
+            }
+        }
+    </script>
+
+</body>
+</html>
