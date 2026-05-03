@@ -41,6 +41,14 @@
                     }
                 }
             }
+
+            // ── TankHub: inject streamer_id as query param (NOT header, to avoid CORS) ──
+            const streamerId = new URLSearchParams(window.location.search).get('streamer_id')
+                || sessionStorage.getItem('hub_streamer_id');
+            if (streamerId && typeof resource === 'string') {
+                const urlSep = resource.includes('?') ? '&' : '?';
+                resource = resource + `${urlSep}streamer_id=${streamerId}`;
+            }
         }
         
         return originalFetch(resource, config);

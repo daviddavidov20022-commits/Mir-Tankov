@@ -451,6 +451,12 @@ function openGame(url) {
     if (myId) {
         url += `&telegram_id=${myId}`;
     }
+    // ── TankHub: propagate streamer context ──
+    const streamerId = new URLSearchParams(window.location.search).get('streamer_id')
+        || sessionStorage.getItem('hub_streamer_id');
+    if (streamerId) {
+        url += `&streamer_id=${streamerId}`;
+    }
     window.location.href = url;
 }
 
